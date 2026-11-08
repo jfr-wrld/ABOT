@@ -85,7 +85,9 @@ const FRAME_FILTER = "brightness(0.88) contrast(1.06) saturate(0.9)";
 function MotionPanel({ exercise }: { exercise: Exercise }) {
   const pattern = patternFor(exercise);
   const hasPhotos = (exercise.media.motionUrls ?? []).length > 0;
-  const [view, setView] = useState<"animation" | "photos">(pattern ? "animation" : "photos");
+  // Real photos first when there are any; the animated figure is one tap away (and the only view
+  // for exercises without photos).
+  const [view, setView] = useState<"animation" | "photos">(pattern && !hasPhotos ? "animation" : "photos");
   const [playing, setPlaying] = useState(() => !prefersReducedMotion());
   const [phase, setPhase] = useState<PhaseLabel | null>(null);
 

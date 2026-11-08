@@ -31,6 +31,9 @@ test("motion tab animates the rep with accurate phases and can be paused", async
   await openHowTo(page, "/exercises/bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
   await expect(media.getByRole("tab", { name: "Motion" })).toHaveAttribute("aria-selected", "true");
+  // Real photos show first; the animated figure is one tap away.
+  await expect(media.getByRole("button", { name: "Photos" })).toHaveAttribute("aria-pressed", "true");
+  await media.getByRole("button", { name: "Animation" }).click();
   await expect(media.getByRole("img", { name: "Bench Press (Barbell) animation" })).toBeVisible();
   const phase = media.getByTestId("motion-phase");
   // Bench press starts at lockout: lowering first (eccentric), then pressing (concentric).
@@ -49,7 +52,6 @@ test("photos view crossfades the start and end frames", async ({ page }) => {
   await serveFrames(page);
   await openHowTo(page, "/exercises/bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
-  await media.getByRole("button", { name: "Photos" }).click();
   await expect(media.getByRole("button", { name: "Photos" })).toHaveAttribute("aria-pressed", "true");
   const phase = media.getByTestId("motion-phase");
   await expect(phase).toHaveText("Start position");
@@ -60,13 +62,16 @@ test("sideways and rotating movements animate from the front, photos still one t
   await serveFrames(page);
   await openHowTo(page, "/exercises/hip-abduction-machine");
   const media = page.getByRole("region", { name: "Exercise media" });
+  await media.getByRole("button", { name: "Animation" }).click();
   await expect(media.getByRole("img", { name: "Hip Abduction (Machine) animation" })).toBeVisible();
   await expect(media.getByTestId("motion-phase")).toHaveText(/Concentric|Eccentric/);
   await media.getByRole("button", { name: "Photos" }).click();
   await expect(media.getByTestId("motion-phase")).toHaveText(/position/);
 
   await openHowTo(page, "/exercises/russian-twist");
-  await expect(page.getByRole("region", { name: "Exercise media" }).getByTestId("motion-phase")).toHaveText("Alternate");
+  const twist = page.getByRole("region", { name: "Exercise media" });
+  if (await twist.getByRole("button", { name: "Animation" }).count()) await twist.getByRole("button", { name: "Animation" }).click();
+  await expect(twist.getByTestId("motion-phase")).toHaveText("Alternate");
 });
 
 test("missing images show a text fallback instead of a broken box", async ({ page }) => {

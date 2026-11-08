@@ -141,9 +141,12 @@ Owner brief 2026-11-08: a moment of completion, then the numbers, with motion.
 ## Exercise detail
 
 Owner brief 2026-11-08: revamp it with pictures, icons and motion.
-- **Hero**: the exercise photo blurred into a backdrop; the movement itself looping in a black
-  panel (the app's own figure, worked muscles lit); the name; muscle and gear with their icons;
-  a floating back pill (and edit/delete for custom exercises).
+- **Hero**: the exercise's two real photos (start and end position, free-exercise-db) across the
+  full width, crossfading every 0.9 s like a GIF, with Start/End dots and a pause button; the
+  back pill floats over it. Owner's call: real photos read more clearly than the stick figure.
+  Offline it shows the photo bundled with the app; with no photo at all, the animated figure.
+  Then the name, and muscle and gear with their icons. How to's Motion tab also opens on Photos,
+  with Animation one tap away.
 - Four tiles count up: best e1RM (Cyan) or most reps for bodyweight, heaviest, workouts, last done.
 - Summary keeps the body map and records; the e1RM line draws itself and carries a trend chip
   (first to latest point, Volt when up). History cards show a relative day and a load bar per set.

@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { addExercise, freshStart, logSet, startEmptyWorkout } from "./helpers";
 
@@ -86,4 +88,20 @@ test("the workout capsule sits above a detail page's action bar, not over it", a
   const c = (await capsule.boundingBox())!;
   const b = (await bar.boundingBox())!;
   expect(c.y + c.height).toBeLessThanOrEqual(b.y);
+});
+
+test("the exercise page shows its real start and end photos alternating", async ({ page }) => {
+  // Answer the dataset's photo URLs with a local frame so the test runs offline.
+  const frame = await readFile(path.join(__dirname, "fixtures", "frame0.jpg"));
+  await page.route("https://raw.githubusercontent.com/**", (r) => r.fulfill({ body: frame, contentType: "image/jpeg" }));
+  await page.goto("/exercises/bench-press-barbell");
+  await expect(page.getByRole("img", { name: "Bench Press (Barbell), start position" })).toBeAttached();
+  await expect(page.getByRole("img", { name: "Bench Press (Barbell), end position" })).toBeAttached();
+  const phase = page.getByTestId("hero-phase");
+  await expect(phase).toHaveText("Start");
+  await expect(phase).toHaveText("End", { timeout: 3000 });
+  await page.getByRole("button", { name: "Pause photos" }).click();
+  const held = await phase.textContent();
+  await page.waitForTimeout(1500);
+  await expect(phase).toHaveText(held ?? "");
 });

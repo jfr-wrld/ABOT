@@ -27,9 +27,7 @@ import { formatWeight, toDisplay } from "@/lib/units";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel, type Exercise } from "@/types/workout";
 import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
-import { ExerciseThumb, exercisePhoto } from "@/components/exercise/ExerciseThumb";
-import { MotionFigure } from "@/components/motion/MotionFigure";
-import { patternFor } from "@/components/motion/patterns";
+import { PhotoLoop } from "@/components/exercise/PhotoLoop";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { relativeDay } from "@/lib/home";
 import { useNow } from "@/lib/useNow";
@@ -277,66 +275,45 @@ function MusclesWorked({ exercise }: { exercise: Exercise }) {
 
 
 /**
- * The top of the page: the exercise's photo blurred into a backdrop, the movement itself looping
- * in a black panel (worked muscles lit), the name, and the muscle and gear with their icons.
+ * The top of the page: the exercise's own start and end photos alternating like a GIF across the
+ * full width, with the back pill over them; then the name, and the muscle and gear with icons.
  */
 function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.ReactNode }) {
-  const pattern = patternFor(exercise);
-  const photo = exercisePhoto(exercise);
-  const reduce = useReducedMotion();
   return (
-    <header className="relative overflow-hidden border-b border-line">
-      {photo && (
-        <div aria-hidden="true" className="absolute inset-0 scale-125 bg-cover bg-center" style={{ backgroundImage: `url(${photo})` }} />
-      )}
-      <div aria-hidden="true" className="absolute inset-0 bg-bg/75 backdrop-blur-xl" />
-      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-bg to-transparent" />
-      <div className="relative flex flex-col gap-4 px-4 pb-4 pt-[max(12px,env(safe-area-inset-top))]">
-        <div className="flex items-center justify-between">
-          <Link
-            href="/exercises"
-            className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-black/40 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-black/60"
-          >
-            <ChevronLeft aria-hidden="true" size={18} />
-            Exercises
-          </Link>
-          {actions}
-        </div>
-        <Rise order={0}>
-          <div className="flex items-end gap-4">
-            <div aria-hidden="true" className="w-28 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black p-1">
-              {pattern ? (
-                <MotionFigure pattern={pattern} exercise={exercise} playing={!reduce} onPhase={noop} />
-              ) : (
-                <ExerciseThumb exercise={exercise} size={104} />
-              )}
-            </div>
-            <div className="min-w-0 pb-1">
-              <h1 className="text-2xl font-bold leading-tight tracking-tight">{exercise.name}</h1>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-muted">
-                <span className="inline-flex items-center gap-1.5 text-text">
-                  <MuscleIcon muscle={exercise.primaryMuscles[0]} size={24} />
-                  {primaryMusclesLabel(exercise)}
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="text-accent">
-                    <EquipmentIcon equipment={exercise.equipment} size={20} />
-                  </span>
-                  {EQUIPMENT_LABELS[exercise.equipment]}
-                </span>
-              </div>
-              {exercise.secondaryMuscles.length > 0 && (
-                <p className="mt-1 text-xs text-text-muted">also {exercise.secondaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}</p>
-              )}
-            </div>
-          </div>
-        </Rise>
+    <header className="relative">
+      <PhotoLoop exercise={exercise} className="aspect-[4/3] max-h-[52vh] w-full" />
+      <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-6 pt-[max(12px,env(safe-area-inset-top))]">
+        <Link
+          href="/exercises"
+          className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-black/50 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-black/70"
+        >
+          <ChevronLeft aria-hidden="true" size={18} />
+          Exercises
+        </Link>
+        {actions}
       </div>
+      <Rise order={0} className="px-4 pt-4">
+        <h1 className="text-2xl font-bold leading-tight tracking-tight">{exercise.name}</h1>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-muted">
+          <span className="inline-flex items-center gap-1.5 text-text">
+            <MuscleIcon muscle={exercise.primaryMuscles[0]} size={24} />
+            {primaryMusclesLabel(exercise)}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-accent">
+              <EquipmentIcon equipment={exercise.equipment} size={20} />
+            </span>
+            {EQUIPMENT_LABELS[exercise.equipment]}
+          </span>
+          {exercise.secondaryMuscles.length > 0 && (
+            <span className="text-xs">also {exercise.secondaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}</span>
+          )}
+        </div>
+      </Rise>
     </header>
   );
 }
 
-const noop = () => {};
 
 /** Four figures at a glance, counting up: best, heaviest, how often, how recently. */
 function QuickStats({ exercise, recent, unit }: { exercise: Exercise; recent: WorkoutSession[]; unit: WeightUnit }) {
