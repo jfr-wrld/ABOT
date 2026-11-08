@@ -1,10 +1,10 @@
 name: Android APK
 
-# Builds a debug APK on every push to a claude/* branch or main, and on demand.
+# Builds a debug APK on every push to main, a claude/* or feature/* branch, and on demand.
 # Download it from the run's "Artifacts" section and install it on a phone.
 on:
   push:
-    branches: [main, "claude/**"]
+    branches: [main, "claude/**", "feature/**"]
   workflow_dispatch:
 
 jobs:
