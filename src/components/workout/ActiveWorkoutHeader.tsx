@@ -53,7 +53,7 @@ export function ActiveWorkoutHeader({
               onClick={() => setStartOpen(true)}
               aria-haspopup="dialog"
               aria-label={`Duration ${formatDuration(duration)}. Adjust start time`}
-              className="-mx-1 rounded-ctl px-1 text-lg font-bold tabular-nums underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
+              className="-mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-lg font-bold tabular-nums underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
             >
               {formatDuration(duration)}
             </button>
@@ -71,7 +71,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-ctl bg-surface px-3 py-2">
       <dt className="text-[11px] font-semibold uppercase text-text-muted">{label}</dt>
-      <dd className="text-lg font-bold tabular-nums">{value}</dd>
+      <dd className="flex min-h-11 items-center text-lg font-bold tabular-nums">{value}</dd>
     </div>
   );
 }
