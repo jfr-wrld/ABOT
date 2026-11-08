@@ -108,7 +108,7 @@ function SignedIn({ now }: { now: number }) {
         {retry && (
           <Button onClick={() => void s.syncNow()}>{status.tone === "error" ? "Try again" : "Back up now"}</Button>
         )}
-        <Link href="/settings#sync" className={LINK}>
+        <Link href="/settings?section=data" className={LINK}>
           Backup &amp; Sync settings
         </Link>
       </div>

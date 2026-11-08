@@ -40,6 +40,8 @@ function pickSettings(s: SettingsState): StoredSettings {
     showRpe: s.showRpe,
     profileName: s.profileName,
     profileHandle: s.profileHandle,
+    language: s.language,
+    theme: s.theme,
     bodyweightKg: s.bodyweightKg,
     heightCm: s.heightCm,
     profilePhoto: s.profilePhoto,

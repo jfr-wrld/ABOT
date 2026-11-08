@@ -17,7 +17,7 @@ const configured = SUPABASE !== null && process.env.E2E_REUSE_SERVER !== "1";
 
 test("Settings explains Backup & Sync and keeps Export available", async ({ page }) => {
   await freshStart(page);
-  await page.goto("/settings");
+  await page.goto("/settings?section=data");
   const section = page.getByRole("region", { name: "Backup & Sync" });
   await expect(section).toBeVisible();
   if (configured) {
@@ -89,7 +89,7 @@ test.describe("signed in (Supabase answered by the test)", () => {
     await finishWorkout(page);
 
     await signInAs(page);
-    await page.goto("/settings");
+    await page.goto("/settings?section=data");
     const section = page.getByRole("region", { name: "Backup & Sync" });
     await expect(section.getByText("Signed in as lifter@example.com")).toBeVisible();
     await expect(section.getByRole("status")).toHaveText(/Backed up just now/);
@@ -105,12 +105,19 @@ test.describe("signed in (Supabase answered by the test)", () => {
 
     // Sync now with nothing new pushes nothing more.
     const before = pushed.length;
-    await page.goto("/settings");
+    await page.goto("/settings?section=data");
     await section.getByRole("button", { name: "Sync now" }).click();
     await expect(section.getByRole("status")).toHaveText(/Backed up just now/);
     expect(pushed.length).toBe(before);
 
-    await section.getByRole("button", { name: "Sign out" }).click();
+    // Sign out sits at the bottom of the Settings list and asks first.
+    await page.goto("/settings");
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page.getByRole("dialog", { name: "Sign out of ABOT?" })).toContainText("stay on this phone");
+    await page.getByRole("dialog").getByRole("button", { name: "Sign out" }).click();
+    await expect(page.getByRole("button", { name: "Sign out" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Sign in to back up/ })).toBeVisible();
+    await page.goto("/settings?section=data");
     await expect(section.getByRole("button", { name: "Sign in with Google to Backup & Sync" })).toBeVisible();
     await page.goto("/routines");
     await expect(page.getByRole("heading", { name: "Cloud Pull Day" })).toBeVisible();

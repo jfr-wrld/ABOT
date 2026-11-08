@@ -75,12 +75,10 @@ export function SyncSection() {
               another device and kept on this phone.
             </p>
           )}
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button variant="primary" onClick={() => void s.syncNow()} disabled={s.phase === "syncing"}>
-              {s.phase === "error" ? "Try again" : "Sync now"}
-            </Button>
-            <Button onClick={() => void s.signOut()}>Sign out</Button>
-          </div>
+          {/* Sign out lives at the bottom of the Settings list. */}
+          <Button variant="primary" onClick={() => void s.syncNow()} disabled={s.phase === "syncing"} className="mt-3 w-full">
+            {s.phase === "error" ? "Try again" : "Sync now"}
+          </Button>
         </>
       )}
 

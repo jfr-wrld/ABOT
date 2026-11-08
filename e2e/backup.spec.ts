@@ -14,7 +14,7 @@ test("export, wipe the device, import with replace", async ({ page }, info) => {
   await logSet(page, 1, "100", "5");
   await finishWorkout(page);
 
-  await page.goto("/settings");
+  await page.goto("/settings?section=data");
   await expectNoHorizontalOverflow(page);
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -29,7 +29,7 @@ test("export, wipe the device, import with replace", async ({ page }, info) => {
 
   await freshStart(page);
   await expect(page.getByText("Backup Day")).toHaveCount(0);
-  await page.goto("/settings");
+  await page.goto("/settings?section=data");
   await page.getByLabel("Import backup").setInputFiles(file);
   await expect(page.getByText(/1 workout, 0 routines, 0 custom exercises/)).toBeVisible();
   await page.getByRole("button", { name: "Replace all my data" }).click();
@@ -42,7 +42,7 @@ test("export, wipe the device, import with replace", async ({ page }, info) => {
 test("an invalid file shows why it was refused", async ({ page }, info) => {
   const file = info.outputPath("bad.json");
   await writeFile(file, "{ not json");
-  await page.goto("/settings");
+  await page.goto("/settings?section=data");
   await page.getByLabel("Import backup").setInputFiles(file);
   await expect(page.getByRole("alert").filter({ hasText: "This file is not valid JSON" })).toBeVisible();
 });

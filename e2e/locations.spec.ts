@@ -13,7 +13,7 @@ async function addGym(page: Page, name: string) {
 }
 
 test("machine records and previous sets are kept per gym", async ({ page }) => {
-  await page.goto("/settings");
+  await page.goto("/settings?section=workout");
   await expect(page.getByText("No gyms yet.")).toBeVisible();
   await addGym(page, "Gym A");
   await addGym(page, "Gym B");

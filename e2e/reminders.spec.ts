@@ -15,7 +15,7 @@ async function shownNotifications(page: Page) {
 }
 
 async function turnOn(page: Page) {
-  await page.goto("/settings");
+  await page.goto("/settings?section=notifications");
   const panel = page.getByRole("region", { name: "Workout schedule" });
   await panel.getByRole("switch", { name: "Workout reminders" }).click();
   return panel;

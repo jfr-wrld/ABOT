@@ -45,7 +45,7 @@ test("height switches to feet and inches with lbs, and back", async ({ page }) =
   await page.goto("/profile?tab=about");
   await page.getByLabel("Height in cm").fill("170");
   await waitForSavedSetting(page, "heightCm", 170);
-  await page.goto("/settings");
+  await page.goto("/settings?section=general");
   await page.getByText("lbs", { exact: true }).click();
   await waitForSavedSetting(page, "weightUnit", "lbs");
   await page.goto("/profile?tab=about");
@@ -53,7 +53,7 @@ test("height switches to feet and inches with lbs, and back", async ({ page }) =
   await expect(page.getByLabel("Height, inches")).toHaveValue("7");
   await page.getByLabel("Height, inches").fill("11");
   await waitForSavedSetting(page, "heightCm", 180.3);
-  await page.goto("/settings");
+  await page.goto("/settings?section=general");
   await page.getByText("kg", { exact: true }).click();
   await waitForSavedSetting(page, "weightUnit", "kg");
   await page.goto("/profile?tab=about");

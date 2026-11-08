@@ -242,7 +242,14 @@ export interface UserSettings {
   heightCm: number | null;
   /** Square JPEG data URL (256px), made on the device from a picked photo. */
   profilePhoto: string | null;
+  /** "auto" follows the phone: Indonesian when its language is Indonesian, else English. */
+  language: AppLanguage;
+  /** "system" follows the phone's light or dark mode. */
+  theme: AppTheme;
 }
+
+export type AppLanguage = "auto" | "en" | "id";
+export type AppTheme = "system" | "dark" | "light";
 
 /** One weigh-in per local calendar day; `id` is that day as "YYYY-MM-DD". */
 export interface BodyweightEntry {
@@ -268,6 +275,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   activeLocationId: null,
   profileName: "",
   profileHandle: "",
+  language: "auto",
+  theme: "system",
   bodyweightKg: null,
   heightCm: null,
   profilePhoto: null,

@@ -123,7 +123,7 @@ function GoogleSignIn({ from }: { from: string | null }) {
         <Link href={away} className={PRIMARY_LINK}>
           Done
         </Link>
-        <Link href="/settings#sync" className={SECONDARY_LINK}>
+        <Link href="/settings?section=data" className={SECONDARY_LINK}>
           Backup &amp; Sync settings
         </Link>
       </>

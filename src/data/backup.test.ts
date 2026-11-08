@@ -40,6 +40,20 @@ describe("export and parse", () => {
     expect(parsed.counts).toEqual({ sessions: 1, routines: 1, exercises: 0, locations: 0, dropped: 0 });
   });
 
+  it("keeps language and theme, and falls back for unknown values", async () => {
+    const repo = await seeded();
+    const backup = await exportBackup(repo);
+    const settings = (lang: unknown, theme: unknown) => {
+      const raw = JSON.parse(JSON.stringify(backup));
+      raw.data.settings = { ...(raw.data.settings ?? {}), language: lang, theme };
+      const parsed = parseBackup(JSON.stringify(raw));
+      if (!parsed.ok) throw new Error(parsed.error);
+      return parsed.backup.data.settings;
+    };
+    expect(settings("id", "light")).toMatchObject({ language: "id", theme: "light" });
+    expect(settings("fr", 3)).toMatchObject({ language: "auto", theme: "system" });
+  });
+
   it("rejects text that is not JSON", () => {
     expect(parseBackup("not json")).toEqual({ ok: false, error: "This file is not valid JSON" });
   });

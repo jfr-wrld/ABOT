@@ -66,6 +66,8 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     showRpe: typeof raw.showRpe === "boolean" ? raw.showRpe : true,
     profileName: typeof raw.profileName === "string" ? raw.profileName.trim().slice(0, PROFILE_LIMITS.nameMax) : "",
     profileHandle: typeof raw.profileHandle === "string" ? normalizeHandle(raw.profileHandle) : "",
+    language: raw.language === "en" || raw.language === "id" ? raw.language : "auto",
+    theme: raw.theme === "dark" || raw.theme === "light" ? raw.theme : "system",
     bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
     profilePhoto: normalizePhoto(raw.profilePhoto),
