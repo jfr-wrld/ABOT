@@ -1,38 +1,96 @@
-import { mergeLog, type KvKey, type KvValues, type Repository, type RepoSnapshot, type Table } from "./types";
+import {
+  KIND_TABLES,
+  TABLE_KINDS,
+  TRACKED_KV,
+  kvApply,
+  kvChanges,
+  kvItems,
+  kvPayload,
+  mergeLog,
+  nextStamp,
+  type KvKey,
+  type KvValues,
+  type Repository,
+  type RepoSnapshot,
+  type SyncKind,
+  type SyncRecord,
+  type SyncStatusRow,
+  type Table,
+  type TableName,
+} from "./types";
 
 /** Copies on the way in and out, like IndexedDB, so callers never share references with storage. */
 const clone = <T>(v: T): T => structuredClone(v);
-
-function memoryTable<T extends { id: string }>(): Table<T> & { map: Map<string, T> } {
-  const map = new Map<string, T>();
-  return {
-    map,
-    async all() {
-      return [...map.values()].map(clone);
-    },
-    async put(item) {
-      map.set(item.id, clone(item));
-    },
-    async remove(id) {
-      map.delete(id);
-    },
-  };
-}
+const key = (kind: SyncKind, id: string) => `${kind}:${id}`;
 
 /** Used by tests and as the fallback when IndexedDB cannot be opened (data lasts for the tab). */
 export function createMemoryRepository(): Repository {
-  const sessions = memoryTable<RepoSnapshot["sessions"][number]>();
-  const routines = memoryTable<RepoSnapshot["routines"][number]>();
-  const exercises = memoryTable<RepoSnapshot["exercises"][number]>();
-  const locations = memoryTable<RepoSnapshot["locations"][number]>();
+  const tables = {
+    sessions: new Map<string, RepoSnapshot["sessions"][number]>(),
+    routines: new Map<string, RepoSnapshot["routines"][number]>(),
+    exercises: new Map<string, RepoSnapshot["exercises"][number]>(),
+    locations: new Map<string, RepoSnapshot["locations"][number]>(),
+  };
   const kv = new Map<KvKey, unknown>();
+  const status = new Map<string, SyncStatusRow>();
   let catalog: RepoSnapshot["exercises"] = [];
 
+  function mark(kind: SyncKind, id: string, deleted: boolean) {
+    const prev = status.get(key(kind, id));
+    status.set(key(kind, id), {
+      kind,
+      id,
+      status: "pending_sync",
+      localUpdatedAt: nextStamp(prev),
+      lastSyncedAt: prev?.lastSyncedAt ?? null,
+      deleted,
+    });
+  }
+
+  function setKv(k: KvKey, value: unknown, track: boolean) {
+    if (track && TRACKED_KV.includes(k)) for (const c of kvChanges(k, kv.get(k), value)) mark(c.kind, c.id, c.deleted);
+    kv.set(k, clone(value));
+  }
+
+  function table<N extends TableName>(name: N): Table<RepoSnapshot[N][number]> {
+    const map = tables[name] as Map<string, RepoSnapshot[N][number]>;
+    return {
+      async all() {
+        return [...map.values()].map(clone);
+      },
+      async put(item) {
+        map.set(item.id, clone(item));
+        mark(TABLE_KINDS[name], item.id, false);
+      },
+      async remove(id) {
+        if (!map.delete(id)) return;
+        mark(TABLE_KINDS[name], id, true);
+      },
+    };
+  }
+
+  function putRows(name: TableName, rows: { id: string }[]) {
+    const map = tables[name] as Map<string, { id: string }>;
+    for (const row of rows) {
+      map.set(row.id, clone(row));
+      mark(TABLE_KINDS[name], row.id, false);
+    }
+  }
+
+  function record(kind: SyncKind, id: string, s: SyncStatusRow | null): SyncRecord | null {
+    const name = KIND_TABLES[kind];
+    const payload = name
+      ? tables[name].get(id)
+      : kvPayload(kind, id, { settings: kv.get("settings"), bodyweightLog: kv.get("bodyweightLog"), exerciseMedia: kv.get("exerciseMedia") });
+    if (payload === undefined) return null;
+    return { kind, id, payload: clone(payload), updatedAt: s?.localUpdatedAt ?? 0, deleted: false };
+  }
+
   const repo: Repository = {
-    sessions,
-    routines,
-    exercises,
-    locations,
+    sessions: table("sessions"),
+    routines: table("routines"),
+    exercises: table("exercises"),
+    locations: table("locations"),
     catalog: {
       async all() {
         return clone(catalog);
@@ -45,52 +103,101 @@ export function createMemoryRepository(): Repository {
       },
     },
     kv: {
-      async get<K extends KvKey>(key: K) {
-        return kv.has(key) ? clone(kv.get(key) as KvValues[K]) : undefined;
+      async get<K extends KvKey>(k: K) {
+        return kv.has(k) ? clone(kv.get(k) as KvValues[K]) : undefined;
       },
-      async set(key, value) {
-        kv.set(key, clone(value));
+      async set(k, value) {
+        setKv(k, value, true);
       },
-      async remove(key) {
-        kv.delete(key);
+      async remove(k) {
+        if (TRACKED_KV.includes(k)) for (const c of kvChanges(k, kv.get(k), undefined)) mark(c.kind, c.id, c.deleted);
+        kv.delete(k);
+      },
+    },
+    sync: {
+      async pending() {
+        const out: SyncRecord[] = [];
+        for (const s of status.values()) {
+          if (s.status !== "pending_sync") continue;
+          const rec = s.deleted ? null : record(s.kind, s.id, s);
+          out.push(rec ?? { kind: s.kind, id: s.id, payload: null, updatedAt: s.localUpdatedAt, deleted: true });
+        }
+        return out;
+      },
+      async get(kind, id) {
+        const s = status.get(key(kind, id)) ?? null;
+        return { record: s?.deleted ? null : record(kind, id, s), status: s ? clone(s) : null };
+      },
+      async applyRemote(rec, at) {
+        const name = KIND_TABLES[rec.kind];
+        if (name) {
+          const map = tables[name] as Map<string, unknown>;
+          if (rec.deleted) map.delete(rec.id);
+          else map.set(rec.id, clone(rec.payload));
+        } else if (!(rec.kind === "settings" && rec.deleted)) {
+          const { key: k, value } = kvApply(rec, { bodyweightLog: kv.get("bodyweightLog"), exerciseMedia: kv.get("exerciseMedia") });
+          setKv(k, value, false);
+        }
+        status.set(key(rec.kind, rec.id), {
+          kind: rec.kind,
+          id: rec.id,
+          status: "synced",
+          localUpdatedAt: rec.updatedAt,
+          lastSyncedAt: at,
+          deleted: rec.deleted,
+        });
+      },
+      async markSynced(kind, id, version, at) {
+        const s = status.get(key(kind, id));
+        if (s && s.localUpdatedAt === version) status.set(key(kind, id), { ...s, status: "synced", lastSyncedAt: at });
+      },
+      async purgeTombstones(olderThan) {
+        let n = 0;
+        for (const [k, s] of status) {
+          if (s.deleted && s.status === "synced" && (s.lastSyncedAt ?? 0) < olderThan) {
+            status.delete(k);
+            n++;
+          }
+        }
+        return n;
+      },
+      async markAllPending() {
+        for (const name of Object.keys(tables) as TableName[]) {
+          for (const id of tables[name].keys()) mark(TABLE_KINDS[name], id, false);
+        }
+        for (const k of TRACKED_KV) for (const item of kvItems(k, kv.get(k))) mark(item.kind, item.id, false);
       },
     },
     async replaceAll(data) {
-      for (const [table, rows] of [
-        [sessions, data.sessions],
-        [routines, data.routines],
-        [exercises, data.exercises],
-        [locations, data.locations],
-      ] as const) {
-        table.map.clear();
-        for (const row of rows) table.map.set(row.id, clone(row) as never);
+      for (const name of Object.keys(tables) as TableName[]) {
+        const incoming = new Set(data[name].map((r) => r.id));
+        for (const id of tables[name].keys()) if (!incoming.has(id)) mark(TABLE_KINDS[name], id, true);
+        tables[name].clear();
+        putRows(name, data[name]);
       }
-      if (data.settings) kv.set("settings", clone(data.settings));
+      if (data.settings) setKv("settings", data.settings, true);
       else kv.delete("settings");
       kv.set("activeWorkout", clone(data.activeWorkout));
       kv.set("restTimer", null);
-      kv.set("exerciseMedia", clone(data.exerciseMedia));
-      kv.set("bodyweightLog", clone(data.bodyweightLog));
+      setKv("exerciseMedia", data.exerciseMedia, true);
+      setKv("bodyweightLog", data.bodyweightLog, true);
     },
     async commitFinishedWorkout(session) {
-      sessions.map.set(session.id, clone(session));
+      putRows("sessions", [session]);
       kv.set("activeWorkout", null);
       kv.set("restTimer", null);
     },
     async mergeAll(data) {
-      for (const s of data.sessions) sessions.map.set(s.id, clone(s));
-      for (const r of data.routines) routines.map.set(r.id, clone(r));
-      for (const e of data.exercises) exercises.map.set(e.id, clone(e));
-      for (const l of data.locations) locations.map.set(l.id, clone(l));
-      kv.set("exerciseMedia", { ...((kv.get("exerciseMedia") as object) ?? {}), ...clone(data.exerciseMedia) });
-      kv.set("bodyweightLog", mergeLog((kv.get("bodyweightLog") as KvValues["bodyweightLog"]) ?? [], clone(data.bodyweightLog)));
+      for (const name of Object.keys(tables) as TableName[]) putRows(name, data[name]);
+      setKv("exerciseMedia", { ...((kv.get("exerciseMedia") as object) ?? {}), ...data.exerciseMedia }, true);
+      setKv("bodyweightLog", mergeLog((kv.get("bodyweightLog") as KvValues["bodyweightLog"]) ?? [], data.bodyweightLog), true);
     },
     async snapshot() {
       return {
-        sessions: await sessions.all(),
-        routines: await routines.all(),
-        exercises: await exercises.all(),
-        locations: await locations.all(),
+        sessions: await repo.sessions.all(),
+        routines: await repo.routines.all(),
+        exercises: await repo.exercises.all(),
+        locations: await repo.locations.all(),
         settings: (await repo.kv.get("settings")) ?? null,
         activeWorkout: (await repo.kv.get("activeWorkout")) ?? null,
         exerciseMedia: (await repo.kv.get("exerciseMedia")) ?? {},
