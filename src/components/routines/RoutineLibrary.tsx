@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -12,13 +12,14 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Routine } from "@/types/workout";
-import { SUPERSET_COLORS, supersetLabels } from "@/lib/superset";
+import { supersetLabels } from "@/lib/superset";
 
-/** Exercises listed on a routine card before "+N more". */
-const CARD_PREVIEW = 5;
+/** Exercise photos on a routine card before "+N". */
+const THUMBS = 6;
 import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
 import { TemplateVault } from "@/components/routines/TemplateVault";
 import { EquipmentNeeded } from "@/components/routines/EquipmentNeeded";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 
 /**
  * The Workout tab when no workout is running: an empty start, then My Routines and the Template
@@ -39,7 +40,6 @@ export function RoutineLibrary() {
   const [newFolder, setNewFolder] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<Routine | null>(null);
-  const [menuFor, setMenuFor] = useState<Routine | null>(null);
   const [startBlocked, setStartBlocked] = useState<Routine | null>(null);
   // Someone with no routines yet lands on the templates.
   const [tab, setTab] = useState<"mine" | "vault">(() => (routines.length > 0 ? "mine" : "vault"));
@@ -125,8 +125,6 @@ export function RoutineLibrary() {
                   const setCount = r.exercises.reduce((n, e) => n + e.sets.length, 0);
                   const ss = supersetLabels(r.exercises);
                   const ssCount = new Set(Object.values(ss).map((x) => x.letter)).size;
-                  const shown = r.exercises.slice(0, CARD_PREVIEW);
-                  const more = r.exercises.length - shown.length;
                   return (
                     <li key={r.id} className="panel p-4">
                       <div className="flex items-start justify-between gap-2">
@@ -140,43 +138,43 @@ export function RoutineLibrary() {
                                 }`}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setMenuFor(r)}
-                          aria-label={`Options for ${r.name}`}
-                          aria-haspopup="dialog"
-                          className="-mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
-                        >
-                          <MoreHorizontal aria-hidden="true" size={20} />
-                        </button>
+                        <div className="-mr-2 -mt-2 flex shrink-0">
+                          <Link href={`/routines/${r.id}/edit`} aria-label={`Edit ${r.name}`} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
+                            <Pencil aria-hidden="true" size={18} />
+                          </Link>
+                          <button type="button" onClick={() => duplicate(r.id)} aria-label={`Duplicate ${r.name}`} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
+                            <Copy aria-hidden="true" size={18} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setToDelete(r)}
+                            aria-label={`Delete ${r.name}`}
+                            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
+                          >
+                            <Trash2 aria-hidden="true" size={18} />
+                          </button>
+                        </div>
                       </div>
-                      {shown.length > 0 && (
-                        <ol aria-label={`Exercises in ${r.name}`} className="mt-2 flex flex-col gap-0.5">
-                          {shown.map((e) => {
-                            const label = ss[e.id];
-                            const color = label ? SUPERSET_COLORS[label.color] : undefined;
-                            return (
-                              <li
-                                key={e.id}
-                                // Superset members carry the same coloured edge and letter as in the workout.
-                                style={color ? { borderLeftColor: color } : undefined}
-                                className={`flex items-center gap-2 text-sm text-text-muted ${label ? "border-l-2 pl-2" : ""}`}
-                              >
-                                <span className="min-w-0 truncate">{byId[e.exerciseId]?.name ?? "Removed exercise"}</span>
-                                {label && (
-                                  <span className="num shrink-0 text-[10px] font-semibold" style={{ color }}>
-                                    Superset {label.letter}
-                                  </span>
-                                )}
+                      {r.exercises.length > 0 && (
+                        <p className="mt-2 line-clamp-2 text-sm text-text-muted">
+                          {r.exercises.map((e) => byId[e.exerciseId]?.name ?? "Removed exercise").join(", ")}
+                        </p>
+                      )}
+                      {r.exercises.length > 0 && (
+                        <ul aria-hidden="true" className="mt-3 flex gap-1.5 overflow-hidden">
+                          {r.exercises.slice(0, THUMBS).map((e) =>
+                            byId[e.exerciseId] ? (
+                              <li key={e.id}>
+                                <ExerciseThumb exercise={byId[e.exerciseId]} size={40} />
                               </li>
-                            );
-                          })}
-                          {more > 0 && (
-                            <li className="num text-xs text-text-muted">
-                              +{more} more {more === 1 ? "exercise" : "exercises"}
+                            ) : null,
+                          )}
+                          {r.exercises.length > THUMBS && (
+                            <li className="num flex size-10 items-center justify-center rounded-xl bg-surface-2 text-xs text-text-muted">
+                              +{r.exercises.length - THUMBS}
                             </li>
                           )}
-                        </ol>
+                        </ul>
                       )}
                       <EquipmentNeeded
                         equipment={r.exercises.flatMap((e) => (byId[e.exerciseId] ? [byId[e.exerciseId].equipment] : []))}
@@ -273,35 +271,7 @@ export function RoutineLibrary() {
         </form>
       </Sheet>
 
-      <Sheet open={menuFor !== null} onClose={() => setMenuFor(null)} title={menuFor?.name ?? "Routine"}>
-        {menuFor && (
-          <div className="flex flex-col gap-1">
-            <Link href={`/routines/${menuFor.id}/edit`} className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold hover:bg-surface-2">
-              <Pencil aria-hidden="true" size={18} className="text-text-muted" /> Edit routine
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                duplicate(menuFor.id);
-                setMenuFor(null);
-              }}
-              className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold hover:bg-surface-2"
-            >
-              <Copy aria-hidden="true" size={18} className="text-text-muted" /> Duplicate routine
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setToDelete(menuFor);
-                setMenuFor(null);
-              }}
-              className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold text-failure hover:bg-failure/10"
-            >
-              <Trash2 aria-hidden="true" size={18} /> Delete routine
-            </button>
-          </div>
-        )}
-      </Sheet>
+
 
       <Sheet
         open={toDelete !== null}

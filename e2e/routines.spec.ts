@@ -52,12 +52,10 @@ test("creates a routine with targets and starts it", async ({ page }) => {
 test("duplicates and deletes a routine", async ({ page }) => {
   await createRoutine(page, "Legs");
   await page.goto("/routines");
-  await page.getByRole("button", { name: "Options for Legs" }).click();
-  await expect(page.getByRole("link", { name: "Edit routine" })).toHaveAttribute("href", /\/routines\/.+\/edit$/);
-  await page.getByRole("button", { name: "Duplicate routine" }).click();
+  await expect(page.getByRole("link", { name: "Edit Legs", exact: true })).toHaveAttribute("href", /\/routines\/.+\/edit$/);
+  await page.getByRole("button", { name: "Duplicate Legs", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toBeVisible();
-  await page.getByRole("button", { name: "Options for Legs (copy)" }).click();
-  await page.getByRole("button", { name: "Delete routine" }).click();
+  await page.getByRole("button", { name: "Delete Legs (copy)" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toHaveCount(0);
   await expect(page.getByRole("heading", { level: 3, name: "Legs", exact: true })).toBeVisible();
@@ -98,12 +96,12 @@ test("the routine editor builds a superset that carries into the workout", async
 
   await page.goto("/routines");
   await page.getByRole("tab", { name: "My Routines" }).click();
-  // The card names the superset and marks its two exercises.
+  // The card counts the superset, lists the lifts and shows their photos and gear.
   const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Arms" }) });
   await expect(card).toContainText("3 exercises · 9 sets · 1 superset");
-  const list = card.getByRole("list", { name: "Exercises in Arms" });
-  await expect(list.getByRole("listitem")).toHaveCount(3);
-  await expect(list.getByRole("listitem").filter({ hasText: "Superset A" })).toHaveCount(2);
+  await expect(card).toContainText("Bicep Curl (Barbell), Triceps Pushdown (Cable), Lateral Raise (Dumbbell)");
+  await expect(card.locator("[data-thumb]")).toHaveCount(3);
+  await expect(card.getByRole("list", { name: "Equipment" })).toBeVisible();
   await page.getByRole("button", { name: "Start Arms" }).click();
   await page.waitForURL("**/workout");
   await expect(page.getByText("Superset A")).toHaveCount(2);
