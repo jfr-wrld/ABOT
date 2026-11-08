@@ -24,7 +24,9 @@ against a throwaway local Postgres.
    secret. The secret stays in Supabase; it is never part of ABOT.
 3. In Supabase, **Authentication > URL Configuration**: set **Site URL** to where ABOT runs, and add
    `https://<your ABOT domain>/settings` (and `http://localhost:3000/settings` for local
-   development) to **Redirect URLs**. Google sends people back to Settings after signing in.
+   development) to **Redirect URLs**. Google sends people back to Settings after signing in;
+   ABOT then takes them on to the page they started from (Profile, say), so `/settings` is the only
+   redirect URL needed.
 
 ## 3. The app
 

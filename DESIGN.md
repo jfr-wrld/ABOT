@@ -89,8 +89,11 @@ Added at the owner's request (2026-11-08), each with its job:
 - **Intro** (`app/onboarding`): three slides, each showing a real piece of the UI rather than an
   illustration. Swipe or Next, spring 300/30, the visual, title and text arriving in a short
   stagger so the eye reads them in order. Shown once per device, never to anyone with data.
-- **Sign-in** (`app/login`): content rises from the bottom with the same spring. The Google
-  button is disabled with a plain note until cloud sync exists.
+- **Sign-in** (`app/login`): content rises from the bottom with the same spring. One Volt action
+  per state: Sign in with Google when this build has cloud sync, Continue without an account when
+  it does not (the Google button then disabled with a plain note), Done once signed in. A back
+  link returns to the page that opened it (`?from=`), since the dock is hidden here. After Google,
+  the lifter lands back on that page with a short notice above the dock.
 - **Press springs**: every button gives to 96% under the thumb; primary actions (Start, Finish,
   the set check) also lift to 102% on hover.
 

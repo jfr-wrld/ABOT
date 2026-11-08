@@ -2,16 +2,16 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, ChevronRight, Cloud, CloudOff, Settings, Trophy } from "lucide-react";
+import { Camera, ChevronRight, Settings, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
-import { useSyncStore } from "@/store/useSyncStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { NumberField } from "@/components/ui/NumberField";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { BodyweightSection } from "@/components/profile/BodyweightSection";
+import { AccountSection } from "@/components/profile/AccountSection";
 import { profileStats } from "@/lib/profile";
 import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
@@ -28,7 +28,6 @@ export default function ProfilePage() {
 
 function ProfileScreen() {
   const s = useSettingsStore();
-  const sync = useSyncStore();
   const sessions = useWorkoutStore((st) => st.sessions);
   const { byId } = useAllExercises();
   const now = useNow(60_000);
@@ -138,46 +137,7 @@ function ProfileScreen() {
           <HeightField imperial={unit === "lbs"} heightCm={s.heightCm} onChange={(heightCm) => s.update({ heightCm })} />
         </section>
 
-        <section aria-labelledby="account-heading" className="panel p-3">
-          <h2 id="account-heading" className="label-caps">
-            Account
-          </h2>
-          {sync.userId && sync.phase !== "signed_out" ? (
-            <>
-              <div className="mt-2 flex items-start gap-3">
-                <Cloud aria-hidden="true" size={20} className="mt-0.5 shrink-0 text-accent" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{sync.email ?? "Google account"}</p>
-                  <p className="text-sm text-text-muted">Backed up and synced across your devices.</p>
-                </div>
-              </div>
-              <Link
-                href="/settings#sync"
-                className="mt-3 flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-sm font-semibold transition-colors hover:border-white/25"
-              >
-                Backup &amp; Sync settings
-              </Link>
-            </>
-          ) : (
-            <>
-              <div className="mt-2 flex items-start gap-3">
-                <CloudOff aria-hidden="true" size={20} className="mt-0.5 shrink-0 text-text-muted" />
-                <div>
-                  <p className="text-sm font-semibold">Guest on this device</p>
-                  <p className="text-sm text-text-muted">
-                    Your workouts live on this phone only. Export a backup in Settings to keep a copy.
-                  </p>
-                </div>
-              </div>
-              <Link
-                href="/login"
-                className="mt-3 flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-sm font-semibold transition-colors hover:border-white/25"
-              >
-                Back up with an account
-              </Link>
-            </>
-          )}
-        </section>
+        <AccountSection />
 
         <Link
           href="/settings"

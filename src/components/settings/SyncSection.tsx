@@ -5,18 +5,8 @@ import { Cloud, CloudOff, RefreshCw } from "lucide-react";
 import { useSyncStore } from "@/store/useSyncStore";
 import { useNow } from "@/lib/useNow";
 import { Button } from "@/components/ui/Button";
-
-const rtf = typeof Intl !== "undefined" ? new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }) : null;
-
-function ago(t: number, now: number): string {
-  const s = Math.round((t - now) / 1000);
-  if (Math.abs(s) < 45) return "just now";
-  const m = Math.round(s / 60);
-  if (Math.abs(m) < 60) return rtf?.format(m, "minute") ?? `${-m} min ago`;
-  const h = Math.round(m / 60);
-  if (Math.abs(h) < 24) return rtf?.format(h, "hour") ?? `${-h} h ago`;
-  return rtf?.format(Math.round(h / 24), "day") ?? `${-Math.round(h / 24)} days ago`;
-}
+import { SyncError } from "@/components/sync/SyncError";
+import { syncStatus } from "@/lib/syncStatus";
 
 /** Settings > Backup & Sync: the optional Google sign-in and the sync status in plain words. */
 export function SyncSection() {
@@ -28,12 +18,7 @@ export function SyncSection() {
     void useSyncStore.getState().refreshCounts();
   }, []);
 
-  let status: string;
-  if (s.phase === "syncing") status = "Syncing";
-  else if (s.phase === "offline") status = "Offline, will sync when back online";
-  else if (s.pendingCount > 0) status = `${s.pendingCount} ${s.pendingCount === 1 ? "change" : "changes"} waiting to sync`;
-  else if (s.lastSyncedAt) status = `Synced ${ago(s.lastSyncedAt, now)}`;
-  else status = "Not synced yet";
+  const status = syncStatus(s, now);
 
   return (
     <section aria-labelledby="sync-heading" className="panel p-3">
@@ -77,7 +62,7 @@ export function SyncSection() {
             ) : (
               <RefreshCw aria-hidden="true" size={14} className={s.phase === "syncing" ? "animate-spin motion-reduce:animate-none" : ""} />
             )}
-            {status}
+            {status.text}
           </p>
           {s.conflictCount > 0 && (
             <p className="mt-1 text-xs text-text-muted">
@@ -87,7 +72,7 @@ export function SyncSection() {
           )}
           <div className="mt-3 grid grid-cols-2 gap-2">
             <Button variant="primary" onClick={() => void s.syncNow()} disabled={s.phase === "syncing"}>
-              Sync now
+              {s.phase === "error" ? "Try again" : "Sync now"}
             </Button>
             <Button onClick={() => void s.signOut()}>Sign out</Button>
           </div>
@@ -96,9 +81,7 @@ export function SyncSection() {
       )}
 
       {s.phase === "error" && s.lastError && (
-        <p role="alert" className="mt-2 text-sm text-failure">
-          {s.userId ? `Sync failed: ${s.lastError}` : s.lastError}
-        </p>
+        <SyncError stage={s.errorStage ?? "sync"} raw={s.lastError} className="mt-2" />
       )}
     </section>
   );

@@ -6,8 +6,25 @@ import { cleanAuthParams, getSupabase, maySignedIn } from "@/data/sync/client";
 import { getActivePersistence, getActiveRepository, hydrateStores } from "./persistence";
 import { useHydration } from "./hydration";
 import { useSettingsStore } from "./useSettingsStore";
+import type { ErrorStage } from "@/lib/syncStatus";
 
 export type SyncPhase = "unconfigured" | "signed_out" | "signing_in" | "idle" | "syncing" | "offline" | "error";
+
+/** Shown once after Google sends the lifter back, on the page they started from. */
+export type SignInNotice = { kind: "signed_in" } | { kind: "failed" };
+
+/** Where to go after Google: the sign-in itself always lands on /settings (the allowed redirect URL). */
+const RETURN_KEY = "abot.signInReturn";
+
+export function takeSignInReturn(): string | null {
+  try {
+    const to = sessionStorage.getItem(RETURN_KEY);
+    sessionStorage.removeItem(RETURN_KEY);
+    return to && to.startsWith("/") && !to.startsWith("//") ? to : null;
+  } catch {
+    return null;
+  }
+}
 
 interface SyncStoreState {
   phase: SyncPhase;
@@ -17,8 +34,13 @@ interface SyncStoreState {
   lastSyncedAt: number | null;
   pendingCount: number;
   conflictCount: number;
+  /** The raw message; screens show friendlyError(errorStage, lastError). */
   lastError: string | null;
-  signIn: () => Promise<void>;
+  errorStage: ErrorStage | null;
+  notice: SignInNotice | null;
+  /** returnTo: the in-app path to come back to after Google, e.g. "/profile". */
+  signIn: (returnTo?: string) => Promise<void>;
+  clearNotice: () => void;
   signOut: () => Promise<void>;
   syncNow: () => Promise<void>;
   refreshCounts: () => Promise<void>;
@@ -36,10 +58,17 @@ export const useSyncStore = create<SyncStoreState>()((set, get) => ({
   pendingCount: 0,
   conflictCount: 0,
   lastError: null,
+  errorStage: null,
+  notice: null,
 
-  async signIn() {
-    set({ phase: "signing_in", lastError: null });
+  async signIn(returnTo) {
+    set({ phase: "signing_in", lastError: null, errorStage: null, notice: null });
     try {
+      try {
+        sessionStorage.setItem(RETURN_KEY, returnTo ?? "/settings");
+      } catch {
+        // Without storage the return lands on Settings, which still shows the result.
+      }
       const supabase = await getSupabase();
       // Leaves the app for Google; the return lands on Settings, where initSync finishes it.
       const { error } = await supabase.auth.signInWithOAuth({
@@ -48,7 +77,7 @@ export const useSyncStore = create<SyncStoreState>()((set, get) => ({
       });
       if (error) throw error;
     } catch (e) {
-      set({ phase: "error", lastError: `Sign-in could not start: ${message(e)}` });
+      set({ phase: "error", lastError: message(e), errorStage: "sign_in" });
     }
   },
 
@@ -63,7 +92,7 @@ export const useSyncStore = create<SyncStoreState>()((set, get) => ({
     const state = (await repo?.kv.get("syncState")) ?? SIGNED_OUT;
     // userId and the cursor stay, so signing back in as the same person continues where it was.
     await repo?.kv.set("syncState", { ...state, phase: "signed_out" });
-    set({ phase: "signed_out", email: null, name: null, lastError: null });
+    set({ phase: "signed_out", email: null, name: null, lastError: null, errorStage: null });
   },
 
   async syncNow() {
@@ -85,6 +114,10 @@ export const useSyncStore = create<SyncStoreState>()((set, get) => ({
     return running;
   },
 
+  clearNotice() {
+    set({ notice: null });
+  },
+
   async refreshCounts() {
     const repo = getActiveRepository();
     if (!repo) return;
@@ -101,7 +134,7 @@ async function runSync(set: (s: Partial<SyncStoreState>) => void): Promise<void>
     set({ phase: "offline" });
     return;
   }
-  set({ phase: "syncing", lastError: null });
+  set({ phase: "syncing", lastError: null, errorStage: null });
   try {
     // Everything logged so far reaches storage first, so it is part of this sync.
     await persistence.flush();
@@ -115,7 +148,7 @@ async function runSync(set: (s: Partial<SyncStoreState>) => void): Promise<void>
     set({ phase: "idle", lastSyncedAt: state?.lastSyncedAt ?? Date.now() });
   } catch (e) {
     const offline = typeof navigator !== "undefined" && navigator.onLine === false;
-    set(offline ? { phase: "offline" } : { phase: "error", lastError: message(e) });
+    set(offline ? { phase: "offline" } : { phase: "error", lastError: message(e), errorStage: "sync" });
   }
   await useSyncStore.getState().refreshCounts();
 }
@@ -131,6 +164,7 @@ export async function initSync(): Promise<void> {
     useSyncStore.setState({ phase: "signed_out" });
     return;
   }
+  const returning = returningFromGoogle();
   try {
     const supabase = await getSupabase();
     // With detectSessionInUrl this also finishes a return from Google (?code=...).
@@ -139,16 +173,31 @@ export async function initSync(): Promise<void> {
     if (oauthError) throw new Error(oauthError);
     if (error) throw error;
     if (!data.session) {
-      useSyncStore.setState({ phase: "signed_out" });
+      useSyncStore.setState({ phase: "signed_out", ...(returning ? { notice: { kind: "failed" } } : {}) });
       return;
     }
-    await onSignedIn(data.session.user);
+    // The notice goes up before the first sync, so the lifter is not left waiting on it.
+    await onSignedIn(data.session.user, returning);
   } catch (e) {
-    useSyncStore.setState({ phase: "error", lastError: `Sign-in failed: ${message(e)}` });
+    useSyncStore.setState({
+      phase: "error",
+      lastError: message(e),
+      errorStage: "sign_in",
+      ...(returning ? { notice: { kind: "failed" } } : {}),
+    });
   }
 }
 
-async function onSignedIn(user: User): Promise<void> {
+function returningFromGoogle(): boolean {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    return p.has("code") || p.has("error_description");
+  } catch {
+    return false;
+  }
+}
+
+async function onSignedIn(user: User, returning = false): Promise<void> {
   const repo = getActiveRepository();
   if (!repo) return;
   const state = (await repo.kv.get("syncState")) ?? SIGNED_OUT;
@@ -163,7 +212,14 @@ async function onSignedIn(user: User): Promise<void> {
   });
   const meta = user.user_metadata as { full_name?: string; name?: string } | undefined;
   const name = meta?.full_name ?? meta?.name ?? null;
-  useSyncStore.setState({ phase: "idle", userId: user.id, email: user.email ?? null, name, lastSyncedAt: state.lastSyncedAt });
+  useSyncStore.setState({
+    phase: "idle",
+    userId: user.id,
+    email: user.email ?? null,
+    name,
+    lastSyncedAt: state.lastSyncedAt,
+    ...(returning ? { notice: { kind: "signed_in" } } : {}),
+  });
   // The profile picks up the Google name only if the lifter has not typed one.
   const settings = useSettingsStore.getState();
   if (name && !settings.profileName.trim()) settings.update({ profileName: name });
