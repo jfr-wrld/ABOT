@@ -40,7 +40,7 @@ function Island() {
   const pathname = usePathname();
   useLiveWorkoutNotification();
   // The intro and sign-in have no dock, so there is nothing to sit above.
-  const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login";
+  const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login" && !pathname.startsWith("/workout/summary");
 
   // Pages pad their bottom by this much more, so the bar never covers the last row.
   useEffect(() => {
@@ -52,7 +52,7 @@ function Island() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[640px] justify-center px-3">
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(max(16px,var(--dock-h,96px)-12px)+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[640px] justify-center px-3">
         <LayoutGroup>
           {timer ? (
             <RestCapsule key="rest" />

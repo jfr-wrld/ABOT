@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TabNotice />
           <SplashScreen />
           <DynamicIsland />
-          <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pb-[calc(96px+var(--live-bar,0px)+env(safe-area-inset-bottom))]">
+          <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pb-[calc(var(--dock-h,96px)+var(--live-bar,0px)+env(safe-area-inset-bottom))]">
             <Suspense
               fallback={
                 <p role="status" className="px-4 py-10 text-center text-sm text-text-muted">

@@ -43,10 +43,12 @@ export function ShareStoryButton({
   session,
   variant,
   className,
+  label,
 }: {
   session: WorkoutSession;
   variant?: "primary" | "secondary";
   className?: string;
+  label?: string;
 }) {
   const sessions = useWorkoutStore((s) => s.sessions);
   const { weightUnit } = useSettingsStore();
@@ -56,6 +58,7 @@ export function ShareStoryButton({
     <StoryShareButton
       variant={variant}
       className={className}
+      label={label}
       makeData={() => buildStoryData(session, sessions, byId, weightUnit, locations)}
     />
   );

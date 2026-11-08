@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dumbbell, House, Search } from "lucide-react";
@@ -32,8 +32,22 @@ export function BottomNav() {
   );
 }
 
+/**
+ * The dock belongs to the four top-level screens only. Detail screens (a workout in history, a
+ * summary, an exercise, the routine editor, settings, sign-in, the intro) have their own way
+ * back and get the whole screen.
+ */
+const DOCK_PATHS = ["/", "/workout", "/routines", "/exercises", "/profile", "/progress"];
+export const showsDock = (pathname: string | null) => pathname === null || DOCK_PATHS.includes(pathname);
+
 function CurrentNav() {
-  return <NavBar pathname={usePathname()} />;
+  const pathname = usePathname();
+  const shown = showsDock(pathname);
+  // Pages pad for the dock, and the workout bar sits above it, through this one value.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--dock-h", shown ? "96px" : "16px");
+  }, [shown]);
+  return <NavBar pathname={pathname} />;
 }
 
 /**
@@ -44,8 +58,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
   const hydrated = useHydration((s) => s.hydrated);
   const hasActive = useWorkoutStore((s) => s.active !== null);
   const { profileName, profilePhoto } = useSettingsStore();
-  // The intro and sign-in are full-screen steps with their own way out.
-  if (pathname === "/onboarding" || pathname === "/login") return null;
+  if (!showsDock(pathname)) return null;
 
   return (
     <nav

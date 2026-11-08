@@ -37,7 +37,7 @@ const LABELS: Record<string, string> = { "/profile": "Profile", "/profile?tab=ab
 export default function LoginPage() {
   const from = useFrom();
   return (
-    <main className="flex min-h-[calc(100dvh-96px)] flex-1 flex-col px-5 pb-[calc(16px+env(safe-area-inset-bottom))]">
+    <main className="flex min-h-[calc(100dvh-var(--dock-h,96px))] flex-1 flex-col px-5 pb-[calc(16px+env(safe-area-inset-bottom))]">
       <div className="pt-4">
         <Link
           href={from ?? "/"}

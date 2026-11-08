@@ -108,6 +108,22 @@ Owner brief 2026-11-08:
   workout: "<workout> · rest until 14:32" with the next set below, cleared on return. Times are
   absolute because background pages cannot tick. Opt-in under Settings, Status outside the app.
 
+## Dock scope and the workout detail
+
+Owner brief 2026-11-08:
+- **The dock is for the four top-level screens only** (Home, Workout, Exercises, Profile, and their
+  old addresses /routines and /progress). Detail screens (a past workout, the summary, an exercise,
+  the routine editor, settings, sign-in, the intro) get the whole screen and their own way back.
+  Its height is one CSS value (`--dock-h`) that page padding, the workout bar and notices read.
+- **Workout detail** (`/history/[id]`): the workout's own exercise photos blurred into a drifting
+  backdrop behind the crisp photos, the date and the name; a floating back pill and an options
+  menu (delete lives there, off the thumb's path). Four icon tiles count up (duration, volume,
+  sets, records), a body map lights the muscles worked, and each exercise card shows its photo,
+  gear, share of the workout's volume as a bar, and its sets with a bar for load against the
+  heaviest set: records in Cyan, the best set by e1RM marked; tap to fold. A bottom action bar
+  holds Repeat (starts the same lifts with the same numbers) and Share story. Records count once
+  per lift and only when they beat an earlier one, the same rule as the PR pill on Home.
+
 ## Identity motif
 
 The set row as a hardware switch: a dark panel that, when you tap the square check, lights Volt,

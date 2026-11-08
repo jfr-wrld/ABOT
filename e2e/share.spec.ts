@@ -46,7 +46,7 @@ test("finishing shows the summary with a way to share and a way home", async ({ 
   await expectNoHorizontalOverflow(page);
   await page.getByRole("link", { name: "See every set" }).click();
   await page.waitForURL(/\/history\//);
-  await expect(page.getByRole("button", { name: "Share to IG Story" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Share story" })).toBeVisible();
 });
 
 test("the studio switches between eight layouts and downloads a 1080 x 1920 PNG", async ({ page }) => {

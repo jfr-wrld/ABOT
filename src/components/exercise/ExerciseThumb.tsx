@@ -15,6 +15,13 @@ function remotePhotoOf(exercise: ThumbExercise): string | undefined {
   return url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? url : undefined;
 }
 
+/** The best photo of an exercise for a larger picture: bundled first (works offline), else online. */
+export function exercisePhoto(exercise: ThumbExercise): string | undefined {
+  if (BUNDLED_THUMBS.has(exercise.id)) return `/thumbs/${exercise.id}.webp`;
+  const online = typeof navigator === "undefined" || navigator.onLine !== false;
+  return online ? remotePhotoOf(exercise) : undefined;
+}
+
 /**
  * A picture of the movement, in order of preference:
  * 1. a 128 px photo bundled with the app (seed exercises; scripts/make-exercise-thumbs.py), so the

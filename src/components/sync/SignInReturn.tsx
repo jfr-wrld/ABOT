@@ -55,7 +55,7 @@ export function SignInReturn() {
 
   const ok = notice?.kind === "signed_in";
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(96px+var(--live-bar,0px)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[640px] px-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--dock-h,96px)+var(--live-bar,0px)+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[640px] px-4">
       <AnimatePresence>
         {notice && (
           <motion.div
