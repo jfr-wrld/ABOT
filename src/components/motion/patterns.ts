@@ -39,7 +39,7 @@ export interface Pattern {
   a: Pose;
   b: Pose;
   /** Which way is the lifting half: A to B, B to A, a static hold, or a walking loop. */
-  concentric: "AtoB" | "BtoA" | "hold" | "loop";
+  concentric: "AtoB" | "BtoA" | "hold" | "loop" | "alternate";
   props?: Prop[];
   /** Cable stack pulley, drawn only for cable exercises. */
   anchor?: Vec;
@@ -135,15 +135,16 @@ const PAUSE_START = 0.35;
 export const CYCLE_SECONDS = CON + ECC + PAUSE_END + PAUSE_START;
 const ease = (x: number) => 0.5 - 0.5 * Math.cos(Math.PI * x);
 
-export type PhaseLabel = "Concentric" | "Eccentric" | "Hold" | "Carry";
+export type PhaseLabel = "Concentric" | "Eccentric" | "Hold" | "Carry" | "Alternate";
 
 /** Where in the rep the animation is at cycle position `u` (0..1), and how far from A to B. */
 export function phaseAt(p: Pattern, u: number): { label: PhaseLabel; progress: number } {
   const x = (((u % 1) + 1) % 1) * CYCLE_SECONDS;
   if (p.concentric === "hold") return { label: "Hold", progress: 0 };
-  if (p.concentric === "loop") {
+  if (p.concentric === "loop" || p.concentric === "alternate") {
+    // Walking or switching legs: no lifting half, just one side then the other.
     const half = CYCLE_SECONDS / 2;
-    return { label: "Carry", progress: x < half ? ease(x / half) : ease(1 - (x - half) / half) };
+    return { label: p.concentric === "loop" ? "Carry" : "Alternate", progress: x < half ? ease(x / half) : ease(1 - (x - half) / half) };
   }
   const out = p.concentric === "AtoB" ? CON : ECC;
   const back = p.concentric === "AtoB" ? ECC : CON;
@@ -497,6 +498,39 @@ export const PATTERNS = {
     a: { pelvis: [110, 98], torso: 2, handRel: HANG, foot: [92, 176], farFoot: [130, 176], heel: 0, farHeel: 20 },
     b: { pelvis: [110, 96], torso: 2, handRel: HANG, foot: [130, 176], farFoot: [92, 176], heel: 20, farHeel: 0 },
   },
+  /* Hips high in an upside-down V; the head lowers in front of the hands. */
+  pike_push_up: {
+    id: "pike_push_up",
+    concentric: "BtoA",
+    a: { pelvis: [146, 100], torso: -132, hand: [96, 176], foot: [180, 176], elbow: 1, knee: 1 },
+    b: { pelvis: [138, 110], torso: -150, hand: [96, 176], foot: [180, 176], elbow: 1, knee: 1 },
+  },
+  /* High plank; one knee drives to the chest while the other leg stays long, then they switch. */
+  mountain_climber: {
+    id: "mountain_climber",
+    concentric: "alternate",
+    a: { pelvis: [140, 150], torso: -64, hand: [96, 176], foot: [122, 166], knee: 1, farFoot: [216, 176], farKnee: 1, elbow: 1, heel: 30 },
+    b: { pelvis: [140, 150], torso: -64, hand: [96, 176], foot: [216, 176], knee: 1, farFoot: [122, 166], farKnee: 1, elbow: 1, farHeel: 30 },
+  },
+  /* High pulley behind and above; long arms sweep down and across to the front hip. */
+  woodchop_cable: {
+    id: "woodchop_cable",
+    concentric: "AtoB",
+    anchor: [44, -10],
+    a: { pelvis: [110, 100], torso: -10, hand: [84, 22], foot: [116, 176], farFoot: [100, 176], elbow: -1 },
+    b: { pelvis: [108, 106], torso: 22, hand: [150, 118], foot: [116, 176], farFoot: [100, 176], elbow: -1 },
+  },
+  /* Chest on an incline bench, feet on the floor; arms hang, then row to the hips. */
+  row_chest_supported: {
+    id: "row_chest_supported",
+    concentric: "AtoB",
+    props: [
+      { kind: "poly", points: [[103, 126], [140, 95], [145, 101], [108, 132]] },
+      { kind: "line", from: [124, 114], to: [124, GROUND] },
+    ],
+    a: { pelvis: [100, 120], torso: 50, hand: [140, 140], foot: [46, 176], heel: 30 },
+    b: { pelvis: [100, 120], torso: 50, hand: [118, 110], foot: [46, 176], heel: 30 },
+  },
 } satisfies Record<string, Pattern>;
 
 export type PatternId = keyof typeof PATTERNS;
@@ -511,12 +545,10 @@ const SEED: Record<string, PatternId | null> = {
   "cable-fly": "fly_cable",
   "push-up": "push_up",
   "diamond-push-up": "push_up",
-  // Pike push-ups, woodchoppers, mountain climbers and the chest-supported row have no
-  // accurate side-view pattern yet; photos (where the dataset has them) carry the Motion tab.
-  "pike-push-up": null,
-  "cable-woodchopper": null,
-  "mountain-climber": null,
-  "chest-supported-row-dumbbell": null,
+  "pike-push-up": "pike_push_up",
+  "cable-woodchopper": "woodchop_cable",
+  "mountain-climber": "mountain_climber",
+  "chest-supported-row-dumbbell": "row_chest_supported",
   "bodyweight-squat": "squat_goblet",
   "single-leg-calf-raise": "calf_raise",
   "chest-dip": "dip",
@@ -597,6 +629,11 @@ const SEED: Record<string, PatternId | null> = {
 
 /** Ordered keyword rules for catalog and custom exercises; the first match wins. */
 const KEYWORDS: [RegExp, PatternId][] = [
+  // Specific names first: "pike push-up" must not fall through to the plain push-up.
+  [/pike/, "pike_push_up"],
+  [/mountain climber/, "mountain_climber"],
+  [/wood ?chop/, "woodchop_cable"],
+  [/incline .*row|chest.supported row/, "row_chest_supported"],
   [/hip thrust/, "hip_thrust"],
   [/glute bridge|butt lift|bridge/, "glute_bridge"],
   [/leg press/, "leg_press"],
