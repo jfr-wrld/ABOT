@@ -242,7 +242,7 @@ function Hero({ session, byId, onMenu }: { session: WorkoutSession; byId: Record
       <div aria-hidden="true" className="absolute inset-0 bg-bg/70 backdrop-blur-xl" />
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-bg to-transparent" />
 
-      <div className="relative flex flex-col gap-4 px-4 pb-4 pt-[max(12px,env(safe-area-inset-top))]">
+      <div className="relative flex flex-col gap-4 px-4 pb-4 pt-3">
         <div className="flex items-center justify-between">
           <Link
             href="/"

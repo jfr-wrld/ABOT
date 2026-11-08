@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { LayoutGroup, MotionConfig, motion } from "framer-motion";
 import { Minus, Pause, Plus, X } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
@@ -12,6 +11,7 @@ import { useNow } from "@/lib/useNow";
 import { formatClock, formatDuration, sessionDurationSec } from "@/lib/calc";
 import { useLiveWorkoutNotification } from "@/lib/notifications/useLiveWorkoutNotification";
 import type { WorkoutSession } from "@/types/workout";
+import { usePagePath } from "@/components/layout/usePagePath";
 
 /** Fast to settle, a little overshoot: the capsule should feel like hardware snapping open. */
 const ISLAND_SPRING = { type: "spring", stiffness: 520, damping: 38, mass: 0.9 } as const;
@@ -37,7 +37,7 @@ function Island() {
   const hydrated = useHydration((s) => s.hydrated);
   const active = useWorkoutStore((s) => s.active);
   const timer = useWorkoutStore((s) => s.restTimer);
-  const pathname = usePathname();
+  const pathname = usePagePath();
   useLiveWorkoutNotification();
   // The intro and sign-in have no dock, so there is nothing to sit above.
   const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login" && !pathname.startsWith("/workout/summary");

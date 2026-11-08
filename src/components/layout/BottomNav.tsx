@@ -2,12 +2,12 @@
 
 import { Suspense, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Dumbbell, House, Search } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useHydration } from "@/store/hydration";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { normalizePath, usePagePath } from "@/components/layout/usePagePath";
 
 /*
  * Four primary destinations, each a real page. Labels stay visible: no bare icons. Workout holds
@@ -38,10 +38,10 @@ export function BottomNav() {
  * back and get the whole screen.
  */
 const DOCK_PATHS = ["/", "/workout", "/routines", "/exercises", "/profile", "/progress"];
-export const showsDock = (pathname: string | null) => pathname === null || DOCK_PATHS.includes(pathname);
+export const showsDock = (pathname: string | null) => pathname === null || DOCK_PATHS.includes(normalizePath(pathname));
 
 function CurrentNav() {
-  const pathname = usePathname();
+  const pathname = usePagePath();
   const shown = showsDock(pathname);
   // Pages pad for the dock, and the workout bar sits above it, through this one value.
   useEffect(() => {

@@ -82,7 +82,7 @@ function Summary() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex flex-col items-center px-4 pt-[max(20px,env(safe-area-inset-top))] text-center">
+      <header className="flex flex-col items-center px-4 pt-5 text-center">
         <Celebration record={recordLifts > 0} />
         <Rise order={6}>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">Workout saved</h1>

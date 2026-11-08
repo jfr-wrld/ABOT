@@ -6,7 +6,14 @@ const config: CapacitorConfig = {
   appName: "ABOT",
   // `npm run build:android` exports the Next app here.
   webDir: "out",
-  backgroundColor: "#0a0a0a",
+  backgroundColor: "#09090b",
+  plugins: {
+    SystemBars: {
+      // Light status bar icons on ABOT's dark UI, whatever the phone's theme.
+      style: "DARK",
+      initialViewportFitValueHint: "cover",
+    },
+  },
   android: {
     // Bundled assets only: the app runs with no network, like the web build.
     allowMixedContent: false,

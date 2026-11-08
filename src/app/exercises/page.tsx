@@ -135,7 +135,7 @@ function LibraryScreen() {
               {/* Sticky so the muscle stays named while its list scrolls. */}
               <h2
                 id={`group-${m}`}
-                className="sticky top-0 z-10 flex items-baseline justify-between bg-bg/95 px-4 py-2 backdrop-blur-sm"
+                className="sticky top-[env(safe-area-inset-top)] z-10 flex items-baseline justify-between bg-bg/95 px-4 py-2 backdrop-blur-sm"
               >
                 <span className="text-sm font-bold">{MUSCLE_GROUP_LABELS[m]}</span>
                 <span className="num text-xs text-text-muted">{items.length}</span>
