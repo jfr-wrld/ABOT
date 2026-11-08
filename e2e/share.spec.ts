@@ -107,7 +107,20 @@ test("a background photo brings the overlay and grayscale controls", async ({ pa
 
   await dialog.getByRole("button", { name: "Remove background photo" }).click();
   await expect(slider).toHaveCount(0);
-  await expect(dialog.getByRole("button", { name: "Upload Background Photo" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "From gallery" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Take photo" })).toBeVisible();
+});
+
+test("the background can come from the camera or the gallery", async ({ page }) => {
+  await finishOneSet(page);
+  const dialog = await openStudio(page);
+  const [camera] = await Promise.all([page.waitForEvent("filechooser"), dialog.getByRole("button", { name: "Take photo" }).click()]);
+  // The app's WebView opens the camera only for an input that asks to capture.
+  expect(await camera.element().getAttribute("capture")).toBe("environment");
+  const [gallery] = await Promise.all([page.waitForEvent("filechooser"), dialog.getByRole("button", { name: "From gallery" }).click()]);
+  expect(await gallery.element().getAttribute("capture")).toBeNull();
+  await gallery.setFiles(path.join(__dirname, "fixtures", "frame0.jpg"));
+  await expect(dialog.getByLabel("Overlay opacity")).toBeVisible();
 });
 
 test("a file that is not an image is refused with a message", async ({ page }) => {

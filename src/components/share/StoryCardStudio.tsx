@@ -391,12 +391,13 @@ function Studio({
           onChange={(e) => pickPhoto(e.target.files?.[0])}
         />
         <div className="flex gap-2">
+          <Button onClick={() => openPhotoInput(fileInput.current, "camera")} disabled={photoBusy} className="flex-1">
+            <Camera aria-hidden="true" size={18} />
+            Take photo
+          </Button>
           <Button onClick={() => openPhotoInput(fileInput.current, "gallery")} disabled={photoBusy} className="flex-1">
             <ImagePlus aria-hidden="true" size={18} />
-            {photoBusy ? "Reading photo" : photo ? "Change photo" : "Upload Background Photo"}
-          </Button>
-          <Button onClick={() => openPhotoInput(fileInput.current, "camera")} disabled={photoBusy} aria-label="Take a background photo" className="px-3">
-            <Camera aria-hidden="true" size={18} />
+            {photoBusy ? "Reading…" : "From gallery"}
           </Button>
           {photo && (
             <Button variant="ghost" onClick={() => setPhoto(null)} aria-label="Remove background photo" className="px-3">
