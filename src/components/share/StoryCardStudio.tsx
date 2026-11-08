@@ -106,6 +106,7 @@ function Actions({ png, shareable }: { png: PngState; shareable: boolean }) {
 
   async function download() {
     if (!blob) return;
+    setResult({ forBlob: blob, kind: "info", text: "Saving PNG…" });
     try {
       const saved = await downloadStoryPng(blob, fileName);
       setResult(

@@ -91,11 +91,13 @@ public class LiveWorkoutPlugin extends Plugin {
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setContentIntent(openApp(ctx));
         if (Build.VERSION.SDK_INT >= 24) b.setChronometerCountDown(countDown);
-        if (Build.VERSION.SDK_INT >= 36) {
-            // Android 16 Live Update: the clock (or the short label) shows in a status bar chip.
-            b.setRequestPromotedOngoing(true);
-            if (chip != null) b.setShortCriticalText(chip);
-        }
+        // Android 16 Live Update: the clock (or the short label) shows in a status bar chip. The
+        // request is the extra Builder#setRequestPromotedOngoing sets; that setter is newer than
+        // compileSdk 36, and older versions ignore the extra.
+        Bundle promoted = new Bundle();
+        promoted.putBoolean("android.requestPromotedOngoing", true);
+        b.addExtras(promoted);
+        if (Build.VERSION.SDK_INT >= 36 && chip != null) b.setShortCriticalText(chip);
         nm.notify(NOTIFICATION_ID, b.build());
     }
 

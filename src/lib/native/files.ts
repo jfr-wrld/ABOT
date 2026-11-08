@@ -17,11 +17,31 @@ export const isNativeApp = () => Capacitor.isNativePlatform();
 
 export type SaveResult = { kind: "downloaded" } | { kind: "saved"; folder: string; uri: string; mimeType: string };
 
-/** Saves the file: a browser download, or Pictures/ABOT (images) and Download/ABOT in the app. */
+const NATIVE_SAVE_MS = 15_000;
+
+/**
+ * Saves the file: a browser download, or Pictures/ABOT (images) and Download/ABOT in the app.
+ * In the app it gives up after 15 seconds and says which step did not finish, so a stuck save
+ * never looks like nothing happened.
+ */
 export async function saveFile(blob: Blob, fileName: string): Promise<SaveResult> {
   if (isNativeApp()) {
-    const { folder, uri } = await FileSaver.save({ data: await toBase64(blob), fileName, mimeType: blob.type });
-    return { kind: "saved", folder, uri, mimeType: blob.type };
+    let step = "reading the PNG";
+    const work = (async () => {
+      const data = await toBase64(blob);
+      step = "writing it to the gallery";
+      const { folder, uri } = await FileSaver.save({ data, fileName, mimeType: blob.type || "image/png" });
+      return { kind: "saved" as const, folder, uri, mimeType: blob.type || "image/png" };
+    })();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`Android did not answer while ${step}`)), NATIVE_SAVE_MS);
+    });
+    try {
+      return await Promise.race([work, timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
   }
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
