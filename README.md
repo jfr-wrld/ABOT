@@ -2,8 +2,9 @@
 
 ABOT (Javanese for "heavy") is a mobile-first strength-training logger. It runs fully in the
 browser: no account, no server, no paid API. Workouts are saved on the device in IndexedDB,
-and Settings can export and import everything as a JSON file. Cloud backup with Supabase is
-planned as an option; the app never needs it.
+and Settings can export and import everything as a JSON file. Optional cloud sync with Google
+sign-in (Supabase) keeps several phones in step; the app never needs it. Setup:
+`docs/cloud-sync-setup.md`.
 
 Built with Next.js (App Router), TypeScript, Tailwind CSS, Zustand, Dexie, Lucide icons and
 Recharts.
@@ -23,7 +24,7 @@ npm run check:schema  # Supabase schema checks on a throwaway local Postgres
 
 1. Type check, lint and unit tests.
 2. A production build with every env file moved aside, so the app is proven to need none.
-3. A scan of the browser bundle for any Supabase code, URL or key.
+3. A scan of the browser bundle for any Supabase project URL or key.
 4. A production server, with every route checked for an answer.
 5. The whole browser suite against that server. It includes a check that a full training day
    makes no request outside the app, and that logging and finishing a workout keep working with
@@ -38,7 +39,7 @@ Env files are restored when the audit ends, even when it fails. Port 3100 must b
 - Data model: `src/types/workout.ts`. Weights are stored in kg; units convert at the UI edge.
 - Calculations (Epley 1RM, volume, PR detection): `src/lib/calc.ts`.
 - Storage: `src/data/repo/` (Dexie behind a repository interface) and `src/store/persistence.ts`.
-- Cloud schema for the optional sync: `supabase/schema.sql`.
+- Cloud sync: `src/data/sync/` (merge engine, Supabase adapter); schema in `supabase/migrations/`.
 - Roadmap and plans: `docs/plans/`.
 - Exercise data and images come from free-exercise-db (public domain); anatomy paths from
   react-muscle-highlighter (MIT). See `THIRD_PARTY_NOTICES.md`.

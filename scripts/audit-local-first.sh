@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # End-to-end local-first audit. Proves the app builds and runs with no environment variables,
-# ships no Supabase code or keys to the browser, and passes the full browser suite against a
+# ships no Supabase project URL or key to the browser, and passes the full browser suite against a
 # production server (including the no-external-request and offline-logging checks).
 # Usage: npm run audit   (add --skip-schema when no local Postgres is installed)
 set -euo pipefail
@@ -28,9 +28,11 @@ step "Zero-env production build"
 for f in .env .env.local .env.production .env.production.local; do [ -e "$f" ] && mv "$f" "$STASH/"; done
 env -u NEXT_PUBLIC_SUPABASE_URL -u NEXT_PUBLIC_SUPABASE_ANON_KEY bash -c 'rm -rf .next && npm run build --silent'
 
-step "Client bundle carries no Supabase code, URL or key"
-if grep -rliE "supabase|eyJhbGciOi" .next/static; then
-  echo "FAIL: the files above mention Supabase or contain a JWT" >&2; exit 1
+step "Client bundle carries no Supabase project URL or key"
+# The supabase-js library is in the bundle (loaded only when someone signs in). What must not be
+# there in a zero-env build is a project address or a key.
+if grep -rlE "[a-z0-9]{20}\.supabase\.co|eyJhbGciOi" .next/static; then
+  echo "FAIL: the files above contain a Supabase project URL or a JWT" >&2; exit 1
 fi
 echo "ok"
 

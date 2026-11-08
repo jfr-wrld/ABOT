@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StoreHydrator } from "@/components/layout/StoreHydrator";
+import { TabNotice } from "@/components/layout/TabNotice";
 import { DynamicIsland } from "@/components/layout/DynamicIsland";
 import { SplashScreen } from "@/components/animations/SplashScreen";
 import { PageTransition } from "@/components/animations/PageTransition";
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-full flex-col">
         <MotionProvider>
           <StoreHydrator />
+          <TabNotice />
           <SplashScreen />
           <DynamicIsland />
           <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pb-[calc(96px+env(safe-area-inset-bottom))]">

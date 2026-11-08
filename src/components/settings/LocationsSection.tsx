@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Select } from "@/components/ui/Select";
 import { useLocationStore } from "@/store/useLocationStore";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
@@ -112,18 +113,12 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
         <label htmlFor={`${base}-bar`} className="text-xs text-text-muted">
           Bar
         </label>
-        <select
+        <Select
           id={`${base}-bar`}
           value={gym.barWeightKg}
-          onChange={(e) => update(gym.id, { barWeightKg: Number(e.target.value) })}
-          className="h-11 rounded-ctl border border-line-strong bg-surface-2 px-2 text-base"
-        >
-          {BARS.map((b) => (
-            <option key={b} value={b}>
-              {b} kg
-            </option>
-          ))}
-        </select>
+          onChange={(barWeightKg) => update(gym.id, { barWeightKg })}
+          options={BARS.map((b) => ({ value: b, label: `${b} kg` }))}
+        />
         <label htmlFor={`${base}-plates`} className="text-xs text-text-muted">
           Plates (kg)
         </label>

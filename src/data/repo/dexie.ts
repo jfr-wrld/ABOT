@@ -1,6 +1,24 @@
 import Dexie, { type EntityTable } from "dexie";
 import type { Exercise, GymLocation, Routine, WorkoutSession } from "@/types/workout";
-import { mergeLog, type KvKey, type KvValues, type Repository, type Table } from "./types";
+import {
+  KIND_TABLES,
+  TABLE_KINDS,
+  TRACKED_KV,
+  kvApply,
+  kvChanges,
+  kvItems,
+  kvPayload,
+  mergeLog,
+  nextStamp,
+  type KvKey,
+  type KvValues,
+  type Repository,
+  type SyncKind,
+  type SyncRecord,
+  type SyncStatusRow,
+  type Table,
+  type TableName,
+} from "./types";
 
 interface KvRow {
   key: KvKey;
@@ -14,6 +32,7 @@ export class AbotDB extends Dexie {
   locations!: EntityTable<GymLocation, "id">;
   catalog!: EntityTable<Exercise, "id">;
   kv!: EntityTable<KvRow, "key">;
+  syncStatus!: Dexie.Table<SyncStatusRow, [SyncKind, string]>;
 
   constructor(name: string) {
     super(name);
@@ -26,25 +45,100 @@ export class AbotDB extends Dexie {
     });
     // v2: on-demand exercise catalog. Existing tables are untouched by the upgrade.
     this.version(2).stores({ catalog: "id" });
+    // v3: sync bookkeeping. Everything already on the device is queued, so a guest's history
+    // uploads on their first sign-in.
+    this.version(3)
+      .stores({ syncStatus: "[kind+id], status" })
+      .upgrade(async (tx) => {
+        const now = Date.now();
+        const rows: SyncStatusRow[] = [];
+        const pending = (kind: SyncKind, id: string) =>
+          rows.push({ kind, id, status: "pending_sync", localUpdatedAt: now, lastSyncedAt: null, deleted: false });
+        for (const name of Object.keys(TABLE_KINDS) as TableName[]) {
+          for (const id of (await tx.table(name).toCollection().primaryKeys()) as string[]) pending(TABLE_KINDS[name], id);
+        }
+        for (const k of TRACKED_KV) {
+          const row = (await tx.table("kv").get(k)) as KvRow | undefined;
+          for (const item of kvItems(k, row?.value)) pending(item.kind, item.id);
+        }
+        await tx.table("syncStatus").bulkPut(rows);
+      });
   }
 }
 
-function dexieTable<T extends { id: string }>(table: EntityTable<T, "id">): Table<T> {
-  return {
-    all: () => table.toArray(),
-    put: async (item) => {
-      await table.put(item);
-    },
-    remove: (id) => table.delete(id as never),
-  };
-}
+const SYNCED_TABLES = ["sessions", "routines", "exercises", "locations", "kv", "syncStatus"] as const;
 
 export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(name)): Repository {
+  /** Marks one item pending inside the caller's transaction. */
+  async function mark(kind: SyncKind, id: string, deleted: boolean) {
+    const prev = await db.syncStatus.get([kind, id]);
+    await db.syncStatus.put({
+      kind,
+      id,
+      status: "pending_sync",
+      localUpdatedAt: nextStamp(prev),
+      lastSyncedAt: prev?.lastSyncedAt ?? null,
+      deleted,
+    });
+  }
+
+  async function kvValue(k: KvKey): Promise<unknown> {
+    return (await db.kv.get(k))?.value;
+  }
+
+  async function setKv(k: KvKey, value: unknown, track: boolean) {
+    if (track && TRACKED_KV.includes(k)) {
+      // Settings is one item: no need to read the old value to know what changed.
+      const prev = k === "settings" ? undefined : await kvValue(k);
+      for (const c of kvChanges(k, prev, value)) await mark(c.kind, c.id, c.deleted);
+    }
+    await db.kv.put({ key: k, value });
+  }
+
+  /** Every write and its sync mark land together, or not at all. */
+  const rw = <T>(fn: () => Promise<T>) => db.transaction("rw", [...SYNCED_TABLES.map((t) => db[t])], fn);
+
+  function table<T extends { id: string }>(n: TableName): Table<T> {
+    const t = db[n] as unknown as Dexie.Table<{ id: string }, string>;
+    return {
+      all: async () => (await t.toArray()) as T[],
+      put: (item) =>
+        rw(async () => {
+          await t.put(item);
+          await mark(TABLE_KINDS[n], item.id, false);
+        }),
+      remove: (id) =>
+        rw(async () => {
+          if (!(await t.get(id))) return;
+          await t.delete(id);
+          await mark(TABLE_KINDS[n], id, true);
+        }),
+    };
+  }
+
+  async function putRows(n: TableName, rows: { id: string }[]) {
+    await (db[n] as unknown as Dexie.Table<{ id: string }, string>).bulkPut(rows);
+    for (const row of rows) await mark(TABLE_KINDS[n], row.id, false);
+  }
+
+  async function record(kind: SyncKind, id: string, s: SyncStatusRow | null | undefined): Promise<SyncRecord | null> {
+    const n = KIND_TABLES[kind];
+    const payload = n
+      ? await (db[n] as unknown as Dexie.Table<unknown, string>).get(id)
+      : kvPayload(kind, id, {
+          settings: await kvValue("settings"),
+          bodyweightLog: await kvValue("bodyweightLog"),
+          exerciseMedia: await kvValue("exerciseMedia"),
+        });
+    if (payload === undefined) return null;
+    return { kind, id, payload, updatedAt: s?.localUpdatedAt ?? 0, deleted: false };
+  }
+
   const repo: Repository = {
-    sessions: dexieTable(db.sessions),
-    routines: dexieTable(db.routines),
-    exercises: dexieTable(db.exercises),
-    locations: dexieTable(db.locations),
+    sessions: table<WorkoutSession>("sessions"),
+    routines: table<Routine>("routines"),
+    exercises: table<Exercise>("exercises"),
+    locations: table<GymLocation>("locations"),
     catalog: {
       all: () => db.catalog.toArray(),
       replaceAll: async (rows) => {
@@ -61,44 +155,114 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         return row ? (row.value as KvValues[K]) : undefined;
       },
       async set(key, value) {
-        await db.kv.put({ key, value });
+        if (!TRACKED_KV.includes(key)) {
+          await db.kv.put({ key, value });
+          return;
+        }
+        await rw(() => setKv(key, value, true));
       },
       async remove(key) {
-        await db.kv.delete(key);
+        await rw(async () => {
+          if (TRACKED_KV.includes(key)) for (const c of kvChanges(key, await kvValue(key), undefined)) await mark(c.kind, c.id, c.deleted);
+          await db.kv.delete(key);
+        });
       },
     },
+    sync: {
+      pending: () =>
+        db.transaction("r", [...SYNCED_TABLES.map((t) => db[t])], async () => {
+          const out: SyncRecord[] = [];
+          for (const s of await db.syncStatus.where("status").equals("pending_sync").toArray()) {
+            const rec = s.deleted ? null : await record(s.kind, s.id, s);
+            out.push(rec ?? { kind: s.kind, id: s.id, payload: null, updatedAt: s.localUpdatedAt, deleted: true });
+          }
+          return out;
+        }),
+      get: (kind, id) =>
+        db.transaction("r", [...SYNCED_TABLES.map((t) => db[t])], async () => {
+          const s = (await db.syncStatus.get([kind, id])) ?? null;
+          return { record: s?.deleted ? null : await record(kind, id, s), status: s };
+        }),
+      applyRemote: (rec, at, expected) =>
+        rw(async () => {
+          if (expected !== undefined && ((await db.syncStatus.get([rec.kind, rec.id]))?.localUpdatedAt ?? null) !== expected) return false;
+          const n = KIND_TABLES[rec.kind];
+          if (n) {
+            const t = db[n] as unknown as Dexie.Table<unknown, string>;
+            if (rec.deleted) await t.delete(rec.id);
+            else await t.put(rec.payload);
+          } else if (!(rec.kind === "settings" && rec.deleted)) {
+            const { key, value } = kvApply(rec, {
+              bodyweightLog: await kvValue("bodyweightLog"),
+              exerciseMedia: await kvValue("exerciseMedia"),
+            });
+            await setKv(key, value, false);
+          }
+          await db.syncStatus.put({
+            kind: rec.kind,
+            id: rec.id,
+            status: "synced",
+            localUpdatedAt: rec.updatedAt,
+            lastSyncedAt: at,
+            deleted: rec.deleted,
+          });
+          return true;
+        }),
+      markSynced: (kind, id, version, at) =>
+        rw(async () => {
+          const s = await db.syncStatus.get([kind, id]);
+          if (s && s.localUpdatedAt === version) await db.syncStatus.put({ ...s, status: "synced", lastSyncedAt: at });
+        }),
+      purgeTombstones: (olderThan) =>
+        rw(async () => {
+          const old = await db.syncStatus
+            .where("status")
+            .equals("synced")
+            .filter((s) => s.deleted && (s.lastSyncedAt ?? 0) < olderThan)
+            .primaryKeys();
+          await db.syncStatus.bulkDelete(old);
+          return old.length;
+        }),
+      markAllPending: () =>
+        rw(async () => {
+          for (const n of Object.keys(TABLE_KINDS) as TableName[]) {
+            for (const id of (await db[n].toCollection().primaryKeys()) as string[]) await mark(TABLE_KINDS[n], id, false);
+          }
+          for (const k of TRACKED_KV) for (const item of kvItems(k, await kvValue(k))) await mark(item.kind, item.id, false);
+        }),
+    },
     async replaceAll(data) {
-      await db.transaction("rw", [db.sessions, db.routines, db.exercises, db.locations, db.kv], async () => {
-        await Promise.all([db.sessions.clear(), db.routines.clear(), db.exercises.clear(), db.locations.clear()]);
-        await db.sessions.bulkPut(data.sessions);
-        await db.routines.bulkPut(data.routines);
-        await db.exercises.bulkPut(data.exercises);
-        await db.locations.bulkPut(data.locations);
-        if (data.settings) await db.kv.put({ key: "settings", value: data.settings });
+      await rw(async () => {
+        for (const n of Object.keys(TABLE_KINDS) as TableName[]) {
+          const incoming = new Set(data[n].map((r) => r.id));
+          for (const id of (await db[n].toCollection().primaryKeys()) as string[]) {
+            if (!incoming.has(id)) await mark(TABLE_KINDS[n], id, true);
+          }
+          await db[n].clear();
+          await putRows(n, data[n]);
+        }
+        if (data.settings) await setKv("settings", data.settings, true);
         else await db.kv.delete("settings");
         await db.kv.put({ key: "activeWorkout", value: data.activeWorkout });
         await db.kv.put({ key: "restTimer", value: null });
-        await db.kv.put({ key: "exerciseMedia", value: data.exerciseMedia });
-        await db.kv.put({ key: "bodyweightLog", value: data.bodyweightLog });
+        await setKv("exerciseMedia", data.exerciseMedia, true);
+        await setKv("bodyweightLog", data.bodyweightLog, true);
       });
     },
     async commitFinishedWorkout(session) {
-      await db.transaction("rw", [db.sessions, db.kv], async () => {
-        await db.sessions.put(session);
+      await rw(async () => {
+        await putRows("sessions", [session]);
         await db.kv.put({ key: "activeWorkout", value: null });
         await db.kv.put({ key: "restTimer", value: null });
       });
     },
     async mergeAll(data) {
-      await db.transaction("rw", [db.sessions, db.routines, db.exercises, db.locations, db.kv], async () => {
-        await db.sessions.bulkPut(data.sessions);
-        await db.routines.bulkPut(data.routines);
-        await db.exercises.bulkPut(data.exercises);
-        await db.locations.bulkPut(data.locations);
-        const current = ((await db.kv.get("exerciseMedia"))?.value as KvValues["exerciseMedia"] | undefined) ?? {};
-        await db.kv.put({ key: "exerciseMedia", value: { ...current, ...data.exerciseMedia } });
-        const log = ((await db.kv.get("bodyweightLog"))?.value as KvValues["bodyweightLog"] | undefined) ?? [];
-        await db.kv.put({ key: "bodyweightLog", value: mergeLog(log, data.bodyweightLog) });
+      await rw(async () => {
+        for (const n of Object.keys(TABLE_KINDS) as TableName[]) await putRows(n, data[n]);
+        const media = ((await kvValue("exerciseMedia")) as KvValues["exerciseMedia"] | undefined) ?? {};
+        await setKv("exerciseMedia", { ...media, ...data.exerciseMedia }, true);
+        const log = ((await kvValue("bodyweightLog")) as KvValues["bodyweightLog"] | undefined) ?? [];
+        await setKv("bodyweightLog", mergeLog(log, data.bodyweightLog), true);
       });
     },
     async snapshot() {
@@ -116,3 +280,4 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
   };
   return repo;
 }
+

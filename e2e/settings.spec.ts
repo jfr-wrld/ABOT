@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, waitForSavedSetting } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
@@ -10,6 +10,7 @@ test("switching to lbs changes the logger label and header unit", async ({ page 
   await page.goto("/settings");
   await expectNoHorizontalOverflow(page);
   await page.getByText("lbs", { exact: true }).click();
+  await waitForSavedSetting(page, "weightUnit", "lbs");
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");
   await logSet(page, 1, "135", "5");

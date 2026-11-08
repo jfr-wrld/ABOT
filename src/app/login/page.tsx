@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { AbotMark } from "@/components/brand/AbotMark";
+import { useSyncStore } from "@/store/useSyncStore";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
 const stack: Variants = { hidden: {}, shown: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } };
 const rise: Variants = { hidden: { y: 28, opacity: 0 }, shown: { y: 0, opacity: 1, transition: SPRING } };
 
 /**
- * Sign-in for the optional cloud backup. Google sign-in is planned with cloud sync (plan Tasks
- * 15-17) and is not connected yet, so the button says so instead of pretending to work.
+ * Sign-in for the optional cloud backup and sync (Supabase, Google). Without the Supabase
+ * settings in this build, the page says so instead of offering a button that cannot work.
  */
 export default function LoginPage() {
   return (
@@ -28,21 +29,7 @@ export default function LoginPage() {
         </motion.p>
 
         <motion.div variants={rise} className="mt-8 rounded-card border border-white/[0.08] bg-surface p-4">
-          <button
-            type="button"
-            disabled
-            aria-describedby="google-status"
-            className="flex min-h-12 w-full items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-base font-semibold text-text disabled:opacity-60"
-          >
-            Sign in with Google
-          </button>
-          <p id="google-status" className="mt-3 text-sm text-text-muted">
-            Not connected yet. Google sign-in arrives with cloud sync. Until then, keep a copy with{" "}
-            <Link href="/settings" className="font-semibold text-text underline underline-offset-4 hover:text-accent">
-              Export backup in Settings
-            </Link>
-            .
-          </p>
+          <GoogleSignIn />
         </motion.div>
 
         <motion.div variants={rise}>
@@ -55,5 +42,66 @@ export default function LoginPage() {
         </motion.div>
       </motion.div>
     </main>
+  );
+}
+
+const exportLink = (
+  <Link href="/settings" className="font-semibold text-text underline underline-offset-4 hover:text-accent">
+    Export backup in Settings
+  </Link>
+);
+
+function GoogleSignIn() {
+  const { phase, email, lastError, userId, signIn } = useSyncStore();
+  if (phase === "unconfigured") {
+    return (
+      <>
+        <button
+          type="button"
+          disabled
+          aria-describedby="google-status"
+          className="flex min-h-12 w-full items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-base font-semibold text-text disabled:opacity-60"
+        >
+          Sign in with Google
+        </button>
+        <p id="google-status" className="mt-3 text-sm text-text-muted">
+          Cloud sync is not set up for this build. Keep a copy with {exportLink}.
+        </p>
+      </>
+    );
+  }
+  if (userId && phase !== "signed_out" && phase !== "signing_in") {
+    return (
+      <>
+        <p className="text-sm">
+          Signed in as <span className="font-semibold">{email ?? "your Google account"}</span>
+        </p>
+        <Link
+          href="/settings#sync"
+          className="mt-3 flex min-h-12 w-full items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-base font-semibold"
+        >
+          Backup &amp; Sync settings
+        </Link>
+      </>
+    );
+  }
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => void signIn()}
+        disabled={phase === "signing_in"}
+        className="flex min-h-12 w-full items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-base font-semibold text-text transition-colors hover:border-white/25 disabled:opacity-60"
+      >
+        {phase === "signing_in" ? "Opening Google" : "Sign in with Google"}
+      </button>
+      {lastError ? (
+        <p role="alert" className="mt-3 text-sm text-failure">
+          {lastError}
+        </p>
+      ) : (
+        <p className="mt-3 text-sm text-text-muted">Google opens to confirm it is you, then brings you back to ABOT.</p>
+      )}
+    </>
   );
 }

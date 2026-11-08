@@ -29,6 +29,13 @@ interface WorkoutState {
   addExercise: (exerciseId: string, restSeconds: number) => void;
   removeExercise: (sessionExerciseId: string) => void;
   moveExercise: (sessionExerciseId: string, dir: -1 | 1) => void;
+  /** Puts the exercises in this order (ids from the current workout; unknown or missing ids are ignored). */
+  reorderExercises: (sessionExerciseIds: string[]) => void;
+  /** Swaps the movement of one exercise, keeping its sets as typed (for picking the wrong variant). */
+  replaceExercise: (sessionExerciseId: string, exerciseId: string) => void;
+  /** Stops the workout clock and the rest timer; ticking a set or resume starts it again. */
+  pauseActive: () => void;
+  resumeActive: () => void;
   setExerciseRest: (sessionExerciseId: string, restSeconds: number) => void;
   setExerciseNotes: (sessionExerciseId: string, notes: string) => void;
   addSet: (sessionExerciseId: string) => void;
@@ -152,6 +159,33 @@ export const useWorkoutStore = create<WorkoutState>()(
           }),
         ),
 
+      reorderExercises: (ids) =>
+        set((s) =>
+          patchActive(s, (a) => {
+            const byId = new Map(a.exercises.map((e) => [e.id, e]));
+            const ordered = ids.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+            // Only a full permutation of the current exercises is applied.
+            if (ordered.length !== a.exercises.length || new Set(ids).size !== ids.length) return a;
+            return { ...a, exercises: ordered };
+          }),
+        ),
+
+      replaceExercise: (id, exerciseId) =>
+        set((s) => ({
+          ...patchActive(s, (a) => ({
+            ...a,
+            exercises: a.exercises.map((e) => (e.id === id ? { ...e, exerciseId } : e)),
+          })),
+        })),
+
+      pauseActive: () =>
+        set((s) => {
+          if (!s.active || s.active.pausedAt !== undefined) return {};
+          return { active: { ...s.active, pausedAt: Date.now() }, restTimer: null };
+        }),
+
+      resumeActive: () => set((s) => (s.active ? { active: resumed(s.active, Date.now()) } : {})),
+
       setExerciseRest: (id, restSeconds) =>
         set((s) => patchActive(s, (a) => patchExercise(a, id, (ex) => ({ ...ex, restSeconds })))),
 
@@ -203,7 +237,8 @@ export const useWorkoutStore = create<WorkoutState>()(
           if (!s.active) return {};
           const ex = s.active.exercises.find((e) => e.id === id);
           if (!ex) return {};
-          const active = patchExercise(s.active, id, (e) => ({
+          // Ticking a set means training again: a paused workout resumes.
+          const active = patchExercise(completed ? resumed(s.active, Date.now()) : s.active, id, (e) => ({
             ...e,
             sets: e.sets.map((st) =>
               st.id === setId
@@ -265,10 +300,11 @@ export const useWorkoutStore = create<WorkoutState>()(
       finishActive: () => {
         const a = get().active;
         if (!a) return null;
+        const now = Date.now();
         const done: WorkoutSession = {
-          ...a,
+          ...resumed(a, now),
           status: "completed",
-          finishedAt: Date.now(),
+          finishedAt: now,
           // Drop sets the lifter never ticked; they were plans, not work.
           exercises: a.exercises
             .map((ex) => ({ ...ex, sets: ex.sets.filter((st) => st.completed) }))
@@ -283,6 +319,13 @@ export const useWorkoutStore = create<WorkoutState>()(
       deleteSession: (id) => set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) })),
     }),
 );
+
+/** Closes a running pause, adding its length to pausedMs. */
+function resumed(a: WorkoutSession, now: number): WorkoutSession {
+  if (a.pausedAt === undefined) return a;
+  const { pausedAt, ...rest } = a;
+  return { ...rest, pausedMs: (a.pausedMs ?? 0) + Math.max(0, now - pausedAt) };
+}
 
 function defaultLocationId(): string | undefined {
   return useLocationStore.getState().locations.find((l) => l.isDefault)?.id;

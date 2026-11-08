@@ -1,4 +1,4 @@
--- Checks supabase/schema.sql on a plain local Postgres (no Supabase needed).
+-- Checks supabase/migrations/*.sql on a plain local Postgres (no Supabase needed).
 -- Run: scripts/check-supabase-schema.sh. Any failed check raises and stops psql.
 \set ON_ERROR_STOP on
 set client_min_messages = warning;
@@ -13,9 +13,11 @@ do $$ begin
 end $$;
 grant usage on schema auth, public to authenticated;
 
-\i supabase/schema.sql
+\i supabase/migrations/0001_abot_records.sql
+\i supabase/migrations/0002_bodyweight_and_media.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
-\i supabase/schema.sql
+\i supabase/migrations/0001_abot_records.sql
+\i supabase/migrations/0002_bodyweight_and_media.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
 insert into auth.users values ('00000000-0000-0000-0000-00000000000a'), ('00000000-0000-0000-0000-00000000000b');
@@ -70,6 +72,21 @@ end $$;
 set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
 do $$ begin
   if (select payload->>'v' from public.abot_records where id = 's1') <> '2' then raise exception 'A''s row changed by B'; end if;
+end $$;
+
+-- 0002: weigh-ins and custom videos are accepted, and the pull query the app runs
+-- (server_updated_at > cursor, oldest first) returns rows in write order.
+do $$
+declare res record; first_cursor timestamptz; ids text[];
+begin
+  select * into res from public.upsert_if_newer(
+    '[{"kind":"bodyweight","id":"2026-11-01","payload":{"weightKg":80},"updated_at":10},
+      {"kind":"media","id":"squat-barbell","payload":{"customVideoUrl":"https://youtu.be/aaaaaaaaaaa"},"updated_at":11}]');
+  if res.accepted <> array['bodyweight:2026-11-01', 'media:squat-barbell'] then raise exception 'new kinds not accepted: %', res; end if;
+  select server_updated_at into first_cursor from public.abot_records where kind = 'bodyweight';
+  select array_agg(kind || ':' || id order by server_updated_at) into ids
+    from public.abot_records where server_updated_at > first_cursor;
+  if ids <> array['media:squat-barbell'] then raise exception 'pull after cursor returned %', ids; end if;
 end $$;
 
 reset role;

@@ -95,17 +95,30 @@ export function MotionScene({
   progress,
   exercise,
   title,
+  fit = false,
 }: {
   pattern: Pattern;
   progress: number;
   exercise: Pick<Exercise, "equipment" | "primaryMuscles">;
   title?: string;
+  /** Crop to a square around the figure (thumbnails); otherwise the whole scene. */
+  fit?: boolean;
 }) {
   const j = rig(poseAt(pattern, progress));
   const lit = new Set(exercise.primaryMuscles.flatMap((m) => SEGMENTS[m]));
   const loadAt = pattern.loadAtFeet ? j.ankle : j.hand;
+  let viewBox = "0 -20 240 220";
+  if (fit) {
+    const pts = Object.values(j) as Vec[];
+    const xs = pts.map((p) => p[0]);
+    const ys = pts.map((p) => p[1]);
+    const pad = 16; // head radius, limb width and the load
+    const [x0, x1, y0, y1] = [Math.min(...xs) - pad, Math.max(...xs) + pad, Math.min(...ys) - pad, Math.max(...ys) + pad];
+    const side = Math.max(x1 - x0, y1 - y0);
+    viewBox = `${(x0 + x1 - side) / 2} ${(y0 + y1 - side) / 2} ${side} ${side}`;
+  }
   return (
-    <svg viewBox="0 -20 240 220" role="img" aria-label={title} className="block h-auto w-full">
+    <svg viewBox={viewBox} role={title ? "img" : undefined} aria-label={title} aria-hidden={title ? undefined : true} className="block h-auto w-full">
       {title && <title>{title}</title>}
       <line x1={0} y1={GROUND} x2={240} y2={GROUND} stroke="#3f3f46" strokeWidth={2} />
       {pattern.props?.map((p, i) =>

@@ -1,9 +1,10 @@
 "use client";
 
 import { setNumbers } from "@/lib/sets";
+import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import { setGridColumns } from "./setGrid";
-import { ArrowDown, ArrowUp, Info, MoreHorizontal, Plus, Timer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Info, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
 import type {
   Exercise,
   PRKind,
@@ -16,6 +17,8 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { SetRow } from "./SetRow";
 import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseHowToSheet } from "./ExerciseHowToSheet";
+import { ExercisePicker } from "./ExercisePicker";
+import { ReorderSheet } from "./ReorderSheet";
 import { Button } from "@/components/ui/Button";
 import { formatClock } from "@/lib/calc";
 
@@ -44,6 +47,8 @@ export function ExerciseCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [howToOpen, setHowToOpen] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [reorderOpen, setReorderOpen] = useState(false);
   const locationId = useWorkoutStore((s) => s.active?.locationId);
 
   const numbers = setNumbers(item.sets);
@@ -147,24 +152,32 @@ export function ExerciseCard({
         <ExerciseHowToSheet exercise={exercise} locationId={locationId} open={howToOpen} onClose={() => setHowToOpen(false)} />
       )}
 
+      {replaceOpen && (
+        <ExercisePicker
+          open
+          title={`Replace ${name}`}
+          onClose={() => setReplaceOpen(false)}
+          onPick={(ex) => {
+            store.replaceExercise(item.id, ex.id);
+            setReplaceOpen(false);
+          }}
+        />
+      )}
+      {reorderOpen && <ReorderSheet onClose={() => setReorderOpen(false)} />}
+
       <Sheet open={menuOpen} onClose={() => setMenuOpen(false)} title={name}>
         <div className="flex flex-col gap-4">
           <div>
             <label htmlFor={`rest-${item.id}`} className="mb-1 block text-sm font-semibold">
               Rest timer after each set
             </label>
-            <select
+            <Select
               id={`rest-${item.id}`}
               value={item.restSeconds}
-              onChange={(e) => store.setExerciseRest(item.id, Number(e.target.value))}
-              className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
-            >
-              {REST_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s === 0 ? "Off" : formatClock(s)}
-                </option>
-              ))}
-            </select>
+              onChange={(s) => store.setExerciseRest(item.id, s)}
+              options={REST_OPTIONS.map((s) => ({ value: s, label: s === 0 ? "Off" : formatClock(s) }))}
+              className="w-full !text-base"
+            />
           </div>
 
           <div>
@@ -179,6 +192,26 @@ export function ExerciseCard({
               placeholder="Seat height, grip, cues"
               className="w-full rounded-ctl border border-line-strong bg-surface-2 px-3 py-2 text-base placeholder:text-text-muted/70"
             />
+          </div>
+
+          {/* The two moves lifters reach for mid-workout, ahead of the finer controls. */}
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={() => {
+                setMenuOpen(false);
+                setReplaceOpen(true);
+              }}
+            >
+              <Repeat aria-hidden="true" size={18} /> Replace exercise
+            </Button>
+            <Button
+              onClick={() => {
+                setMenuOpen(false);
+                setReorderOpen(true);
+              }}
+            >
+              <ArrowUpDown aria-hidden="true" size={18} /> Reorder exercises
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-2">

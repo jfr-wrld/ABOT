@@ -88,9 +88,11 @@ function matchesVariant(exerciseId: string, session: WorkoutSession, opts?: Vari
   return keyFor(exerciseId, session, opts.byId) === target;
 }
 
+/** Time trained: start to finish (or now), minus every pause, including one still running. */
 export function sessionDurationSec(session: WorkoutSession, now = Date.now()): number {
   const end = session.finishedAt ?? now;
-  return Math.max(0, Math.floor((end - session.startedAt) / 1000));
+  const paused = (session.pausedMs ?? 0) + (session.pausedAt !== undefined ? Math.max(0, end - session.pausedAt) : 0);
+  return Math.max(0, Math.floor((end - session.startedAt - paused) / 1000));
 }
 
 export function countSets(session: WorkoutSession) {

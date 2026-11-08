@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
  * Every test starts on a clean device: no saved workouts, routines, or settings. The intro is
@@ -65,4 +65,33 @@ export async function finishWorkout(page: Page): Promise<void> {
 
 function escape(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Waits until a settings change has reached IndexedDB, before a test reloads the page. */
+export async function waitForSavedSetting(page: Page, field: string, value: unknown): Promise<void> {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (f) =>
+          new Promise<unknown>((resolve) => {
+            const open = indexedDB.open("abot");
+            open.onsuccess = () => {
+              const req = open.result.transaction("kv").objectStore("kv").get("settings");
+              req.onsuccess = () => {
+                resolve((req.result?.value as Record<string, unknown> | undefined)?.[f]);
+                open.result.close();
+              };
+            };
+          }),
+        field,
+      ),
+    )
+    .toEqual(value);
+}
+
+/** Opens one of ABOT's dropdowns and picks an option by its visible text. */
+export async function choose(page: Page, dropdown: Locator, option: string): Promise<void> {
+  await dropdown.click();
+  await page.getByRole("option", { name: option, exact: true }).click();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
 }

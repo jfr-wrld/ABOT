@@ -18,6 +18,9 @@ interface HydrationState {
   /** Whether the browser promised not to clear IndexedDB on its own; null until asked. */
   persistStatus: PersistStatus | null;
   setPersistStatus: (s: PersistStatus) => void;
+  /** Whether this tab is the one that reads and writes ABOT data (see lib/tabLock). */
+  tab: "checking" | "owner" | "elsewhere";
+  setTab: (tab: "checking" | "owner" | "elsewhere") => void;
 }
 
 export const useHydration = create<HydrationState>((set) => ({
@@ -30,4 +33,6 @@ export const useHydration = create<HydrationState>((set) => ({
   setWriteError: (writeError) => set({ writeError }),
   persistStatus: null,
   setPersistStatus: (persistStatus) => set({ persistStatus }),
+  tab: "checking",
+  setTab: (tab) => set({ tab }),
 }));

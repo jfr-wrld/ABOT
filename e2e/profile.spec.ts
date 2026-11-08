@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, waitForSavedSetting } from "./helpers";
 
 async function logWeighIn(page: Page, value: string) {
   await page.getByLabel(/^Weight to log in /).fill(value);
@@ -34,14 +34,18 @@ test("height switches to feet and inches with lbs, and back", async ({ page }) =
   await freshStart(page);
   await page.goto("/profile");
   await page.getByLabel("Height in cm").fill("170");
+  await waitForSavedSetting(page, "heightCm", 170);
   await page.goto("/settings");
   await page.getByText("lbs", { exact: true }).click();
+  await waitForSavedSetting(page, "weightUnit", "lbs");
   await page.goto("/profile");
   await expect(page.getByLabel("Height, feet")).toHaveValue("5");
   await expect(page.getByLabel("Height, inches")).toHaveValue("7");
   await page.getByLabel("Height, inches").fill("11");
+  await waitForSavedSetting(page, "heightCm", 180.3);
   await page.goto("/settings");
   await page.getByText("kg", { exact: true }).click();
+  await waitForSavedSetting(page, "weightUnit", "kg");
   await page.goto("/profile");
   await expect(page.getByLabel("Height in cm")).toHaveValue("180.3");
 });
