@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { NumberField } from "@/components/ui/NumberField";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { BodyweightSection } from "@/components/profile/BodyweightSection";
-import { AccountSection } from "@/components/profile/AccountSection";
+import { AccountChip, AccountSection } from "@/components/profile/AccountSection";
 import { profileStats } from "@/lib/profile";
 import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
@@ -33,64 +33,92 @@ function ProfileScreen() {
   const now = useNow(60_000);
   const stats = useMemo(() => profileStats(sessions, byId, now, s.firstDayOfWeek), [sessions, byId, now, s.firstDayOfWeek]);
   const unit = s.weightUnit;
+  const photo = usePhotoPicker((profilePhoto) => s.update({ profilePhoto }));
 
-  const since = stats.firstWorkoutAt
-    ? `Training since ${new Date(stats.firstWorkoutAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })}`
-    : "No workouts logged yet";
+  const name = s.profileName.trim();
   const hours = stats.trainingSec / 3600;
+  const time = hours >= 1 ? `${hours.toFixed(1)} h` : `${Math.round(stats.trainingSec / 60)} min`;
 
   return (
     <main className="flex flex-1 flex-col">
       <PageHeader title="Profile" back={{ href: "/", label: "Home" }} />
 
       <div className="flex flex-col gap-4 px-4 pb-8 pt-4">
-        {/* Identity: who this device belongs to. Everything below is about them. */}
+        {/* Identity: the plate is the photo control, the chip is the backup state. */}
         <section className="flex items-center gap-4">
-          <ProfileAvatar name={s.profileName} photo={s.profilePhoto} size={80} />
-          <div className="min-w-0">
-            <h2 className="truncate text-2xl font-bold tracking-tight">{s.profileName.trim() || "Your profile"}</h2>
-            <p className="text-sm text-text-muted">{since}</p>
-            <PhotoControls photo={s.profilePhoto} onChange={(profilePhoto) => s.update({ profilePhoto })} />
+          {photo.input}
+          <button
+            type="button"
+            onClick={photo.open}
+            disabled={photo.busy}
+            aria-label={s.profilePhoto ? "Change photo" : "Add photo"}
+            className="relative shrink-0 rounded-full transition-transform active:scale-95 disabled:opacity-50"
+          >
+            <ProfileAvatar name={s.profileName} photo={s.profilePhoto} size={88} />
+            <span
+              aria-hidden="true"
+              className="absolute right-0 bottom-1 flex size-8 items-center justify-center rounded-full border border-line-strong bg-surface-2 text-text"
+            >
+              <Camera size={15} />
+            </span>
+          </button>
+          <div className="flex min-w-0 flex-col items-start gap-1.5">
+            {name ? (
+              <h2 className="max-w-full truncate text-2xl font-bold tracking-tight">{name}</h2>
+            ) : (
+              <h2>
+                <label htmlFor="profile-name" className="text-2xl font-bold tracking-tight text-text-muted hover:text-text">
+                  Add your name
+                </label>
+              </h2>
+            )}
+            {stats.firstWorkoutAt && (
+              <p className="text-sm text-text-muted">
+                Since {new Date(stats.firstWorkoutAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
+              </p>
+            )}
+            <AccountChip />
           </div>
         </section>
+        {photo.error && (
+          <p role="alert" className="-mt-2 text-xs text-failure">
+            {photo.error}
+          </p>
+        )}
 
         <section aria-labelledby="lifetime-heading" className="panel p-3">
           <h2 id="lifetime-heading" className="label-caps">
             Lifetime
           </h2>
-          {stats.workouts === 0 ? (
-            <p className="mt-2 text-sm text-text-muted">
-              No finished workouts yet. Totals and top lifts fill in as you finish workouts.
-            </p>
-          ) : (
-            <dl className="mt-2 grid grid-cols-2 gap-2">
-              <Stat label="Workouts" value={String(stats.workouts)} />
-              <Stat label="Working sets" value={String(stats.sets)} />
-              <Stat label="Volume" value={formatVolume(stats.volumeKg, unit)} />
-              <Stat label="Time trained" value={hours >= 1 ? `${hours.toFixed(1)} h` : `${Math.round(stats.trainingSec / 60)} min`} />
-              <div className="col-span-2 flex items-baseline justify-between rounded-xl bg-bg px-3 py-2.5">
-                <dt className="label-caps">Week streak</dt>
-                <dd className="num text-lg font-bold text-accent">
-                  {stats.weekStreak} {stats.weekStreak === 1 ? "week" : "weeks"}
-                </dd>
-              </div>
-            </dl>
-          )}
+          <dl className="mt-2 grid grid-cols-2 gap-2">
+            <Stat label="Workouts" value={String(stats.workouts)} />
+            <Stat label="Volume" value={formatVolume(stats.volumeKg, unit)} />
+            <Stat label="Time trained" value={time} />
+            <Stat
+              label="Week streak"
+              value={`${stats.weekStreak} ${stats.weekStreak === 1 ? "week" : "weeks"}`}
+              accent={stats.weekStreak > 0}
+            />
+          </dl>
         </section>
 
         {stats.topLifts.length > 0 && (
           <section aria-labelledby="lifts-heading" className="panel p-3">
-            <h2 id="lifts-heading" className="label-caps flex items-center gap-1.5">
-              <Trophy aria-hidden="true" size={12} className="text-pr" />
-              Top lifts
-            </h2>
-            <p className="mt-1 text-xs text-text-muted">Ranked by estimated 1RM from your best set.</p>
-            <ol className="mt-2 flex flex-col gap-1">
+            <div className="flex items-baseline justify-between">
+              <h2 id="lifts-heading" className="label-caps flex items-center gap-1.5">
+                <Trophy aria-hidden="true" size={12} className="text-pr" />
+                Top lifts
+              </h2>
+              <span className="label-caps" title="Estimated one-rep max from your best set">
+                e1RM
+              </span>
+            </div>
+            <ol className="mt-1 flex flex-col">
               {stats.topLifts.map(({ exercise, record }, i) => (
                 <li key={exercise.id}>
                   <Link
                     href={`/exercises/${exercise.id}`}
-                    className="flex min-h-14 items-center gap-3 rounded-xl px-2 transition-colors hover:bg-white/[0.04]"
+                    className="-mx-1 flex min-h-14 items-center gap-3 rounded-xl px-1 transition-colors hover:bg-white/[0.04]"
                   >
                     <span className="num w-4 text-sm text-text-muted">{i + 1}</span>
                     <span className="min-w-0 flex-1">
@@ -99,10 +127,7 @@ function ProfileScreen() {
                         {formatWeight(record.weightKg, unit)} × {record.reps}
                       </span>
                     </span>
-                    <span className="num text-right">
-                      <span className="block text-base font-bold text-pr">{formatWeight(record.value, unit)}</span>
-                      <span className="label-caps block">e1RM</span>
-                    </span>
+                    <span className="num text-base font-bold text-pr">{formatWeight(record.value, unit)}</span>
                     <ChevronRight aria-hidden="true" size={16} className="text-text-muted" />
                   </Link>
                 </li>
@@ -114,12 +139,9 @@ function ProfileScreen() {
         <BodyweightSection now={now} />
 
         <section aria-labelledby="body-heading" className="panel flex flex-col gap-3 p-3">
-          <div>
-            <h2 id="body-heading" className="label-caps">
-              About you
-            </h2>
-            <p className="mt-1 text-xs text-text-muted">Optional. Saved on this device and in your backups.</p>
-          </div>
+          <h2 id="body-heading" className="label-caps">
+            About you
+          </h2>
           <div>
             <label htmlFor="profile-name" className="mb-1 block text-sm font-semibold">
               Name
@@ -135,6 +157,18 @@ function ProfileScreen() {
             />
           </div>
           <HeightField imperial={unit === "lbs"} heightCm={s.heightCm} onChange={(heightCm) => s.update({ heightCm })} />
+          {s.profilePhoto && (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold">Photo</span>
+              <button
+                type="button"
+                onClick={() => s.update({ profilePhoto: null })}
+                className="min-h-11 rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-white/[0.05] hover:text-text"
+              >
+                Remove photo
+              </button>
+            </div>
+          )}
         </section>
 
         <AccountSection />
@@ -152,11 +186,11 @@ function ProfileScreen() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="min-w-0 rounded-xl bg-bg px-3 py-2.5">
       <dt className="label-caps">{label}</dt>
-      <dd className="num truncate text-xl font-bold tracking-tight">{value}</dd>
+      <dd className={`num truncate text-xl font-bold tracking-tight ${accent ? "text-accent" : ""}`}>{value}</dd>
     </div>
   );
 }
@@ -251,9 +285,9 @@ function HeightError({ range }: { range: string }) {
   );
 }
 
-/** Pick, replace or remove the profile photo. The file never leaves the phone. */
-function PhotoControls({ photo, onChange }: { photo: string | null; onChange: (url: string | null) => void }) {
-  const input = useRef<HTMLInputElement>(null);
+/** The hidden file input behind the avatar. The photo is resized on the phone and never uploaded. */
+function usePhotoPicker(onChange: (url: string | null) => void) {
+  const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -267,46 +301,20 @@ function PhotoControls({ photo, onChange }: { photo: string | null; onChange: (u
       setError(e instanceof Error ? e.message : "This photo could not be used.");
     } finally {
       setBusy(false);
-      if (input.current) input.current.value = "";
+      if (ref.current) ref.current.value = "";
     }
   }
 
-  return (
-    <div className="mt-2">
-      <input
-        ref={input}
-        type="file"
-        accept="image/*"
-        aria-label="Profile photo file"
-        className="sr-only"
-        tabIndex={-1}
-        onChange={(e) => pick(e.target.files?.[0])}
-      />
-      <div className="flex flex-wrap gap-1">
-        <button
-          type="button"
-          onClick={() => input.current?.click()}
-          disabled={busy}
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/[0.12] px-3 text-sm font-semibold transition-colors hover:border-white/25 disabled:opacity-50"
-        >
-          <Camera aria-hidden="true" size={16} />
-          {busy ? "Preparing photo" : photo ? "Change photo" : "Add photo"}
-        </button>
-        {photo && (
-          <button
-            type="button"
-            onClick={() => onChange(null)}
-            className="min-h-11 rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-white/[0.05] hover:text-text"
-          >
-            Remove photo
-          </button>
-        )}
-      </div>
-      {error && (
-        <p role="alert" className="mt-1 text-xs text-failure">
-          {error}
-        </p>
-      )}
-    </div>
+  const input = (
+    <input
+      ref={ref}
+      type="file"
+      accept="image/*"
+      aria-label="Profile photo file"
+      className="sr-only"
+      tabIndex={-1}
+      onChange={(e) => pick(e.target.files?.[0])}
+    />
   );
+  return { input, open: () => ref.current?.click(), busy, error };
 }

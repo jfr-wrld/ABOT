@@ -35,14 +35,46 @@ export function AccountSection() {
   );
 }
 
-function StatusIcon({ tone }: { tone: SyncTone }) {
-  const cls = "mt-0.5 shrink-0";
-  if (tone === "ok") return <CloudCheck aria-hidden="true" size={20} className={`${cls} text-accent`} />;
-  if (tone === "error") return <CloudAlert aria-hidden="true" size={20} className={`${cls} text-failure`} />;
-  if (tone === "offline") return <CloudOff aria-hidden="true" size={20} className={`${cls} text-text-muted`} />;
+const CHIP_TEXT: Record<SyncTone, string> = {
+  ok: "Backed up",
+  busy: "Backing up",
+  pending: "Waiting to back up",
+  offline: "Offline",
+  error: "Backup failed",
+  never: "Not backed up yet",
+};
+
+/** The backup state in two or three words under the name; it jumps to the Account section. */
+export function AccountChip() {
+  const s = useSyncStore();
+  const now = useNow(30_000);
+  const signedIn = s.userId !== null && s.phase !== "signed_out" && s.phase !== "signing_in" && s.phase !== "unconfigured";
+  const tone: SyncTone | "guest" = signedIn ? syncStatus(s, now).tone : "guest";
+  return (
+    <a
+      href="#account"
+      className={`-ml-1 inline-flex min-h-11 items-center gap-1.5 rounded-ctl px-1 text-sm font-semibold hover:bg-white/[0.05] ${
+        tone === "error" ? "text-failure" : tone === "ok" ? "text-text" : "text-text-muted"
+      }`}
+    >
+      {tone === "guest" ? (
+        <CloudOff aria-hidden="true" size={16} />
+      ) : (
+        <StatusIcon tone={tone} size={16} />
+      )}
+      {tone === "guest" ? "Guest, not backed up" : CHIP_TEXT[tone]}
+    </a>
+  );
+}
+
+function StatusIcon({ tone, size = 20 }: { tone: SyncTone; size?: number }) {
+  const cls = size === 20 ? "mt-0.5 shrink-0" : "shrink-0";
+  if (tone === "ok") return <CloudCheck aria-hidden="true" size={size} className={`${cls} text-accent`} />;
+  if (tone === "error") return <CloudAlert aria-hidden="true" size={size} className={`${cls} text-failure`} />;
+  if (tone === "offline") return <CloudOff aria-hidden="true" size={size} className={`${cls} text-text-muted`} />;
   if (tone === "busy")
-    return <RefreshCw aria-hidden="true" size={20} className={`${cls} animate-spin text-text-muted motion-reduce:animate-none`} />;
-  return <CloudUpload aria-hidden="true" size={20} className={`${cls} text-text-muted`} />;
+    return <RefreshCw aria-hidden="true" size={size} className={`${cls} animate-spin text-text-muted motion-reduce:animate-none`} />;
+  return <CloudUpload aria-hidden="true" size={size} className={`${cls} text-text-muted`} />;
 }
 
 function SignedIn({ now }: { now: number }) {
@@ -84,9 +116,7 @@ function Guest() {
         <CloudOff aria-hidden="true" size={20} className="mt-0.5 shrink-0 text-text-muted" />
         <div>
           <p className="text-sm font-semibold">Guest on this device</p>
-          <p className="text-sm text-text-muted">
-            Your workouts live on this phone only. Export a backup in Settings to keep a copy.
-          </p>
+          <p className="text-sm text-text-muted">Saved on this phone only.</p>
         </div>
       </div>
       {s.phase === "error" && s.lastError && (

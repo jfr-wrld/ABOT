@@ -11,9 +11,10 @@ test("profile opens from Home and starts honestly empty", async ({ page }) => {
   await freshStart(page);
   await page.getByRole("link", { name: "Profile" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Profile" })).toBeVisible();
-  await expect(page.getByText("No finished workouts yet.")).toBeVisible();
-  await expect(page.getByText("Log your weight to start a history.")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Lifetime" }).locator("dd").first()).toHaveText("0");
+  await expect(page.getByText("One weigh-in a day builds your trend.")).toBeVisible();
   await expect(page.getByText("Guest on this device")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Guest, not backed up" })).toHaveAttribute("href", "#account");
   await expectNoHorizontalOverflow(page);
 });
 
@@ -69,7 +70,7 @@ test("weigh-ins build a history; the same day updates, a mistake can be deleted"
   await page.goto("/profile");
   const recent = page.getByRole("list", { name: "Recent weigh-ins" });
   await expect(recent.getByRole("listitem")).toHaveCount(1);
-  await expect(page.getByText("One weigh-in so far.")).toBeVisible();
+  await expect(page.getByText("Log another day to see the trend.")).toBeVisible();
 
   await logWeighIn(page, "80");
   await expect(recent.getByRole("listitem")).toHaveCount(2);
@@ -93,7 +94,7 @@ test("an impossible weigh-in is refused with the range", async ({ page }) => {
   await logWeighIn(page, "7");
   await expect(page.locator("#bw-log-error")).toHaveText("Enter 20 kg to 400 kg");
   await expect(page.getByLabel("Weight to log in kg")).toHaveAttribute("aria-invalid", "true");
-  await expect(page.getByText("Log your weight to start a history.")).toBeVisible();
+  await expect(page.getByText("One weigh-in a day builds your trend.")).toBeVisible();
 });
 
 test("a profile photo is resized on the device, shown, and removable", async ({ page }) => {

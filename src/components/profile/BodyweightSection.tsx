@@ -113,9 +113,7 @@ export function BodyweightSection({ now }: { now: number }) {
         </figure>
       ) : (
         <p className="mt-3 text-sm text-text-muted">
-          {entries.length === 0
-            ? "Log your weight to start a history. One weigh-in per day; logging again updates that day."
-            : "One weigh-in so far. The trend line appears after the second day."}
+          {entries.length === 0 ? "One weigh-in a day builds your trend." : "Log another day to see the trend."}
         </p>
       )}
 
