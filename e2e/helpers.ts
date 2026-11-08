@@ -11,6 +11,8 @@ export async function freshStart(page: Page): Promise<void> {
     });
   });
   await page.reload();
+  await expect(page.getByRole("heading", { level: 1, name: "ABOT" })).toBeVisible();
+  await expect(page).toHaveTitle("ABOT");
   await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
 }
 

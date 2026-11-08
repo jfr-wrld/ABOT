@@ -1,4 +1,4 @@
-# Heavy: design direction
+# ABOT: design direction
 
 Reading this as: a mobile-first workout logger for lifters who use it mid-set, one hand, between
 reps, in a dark, high-contrast, utilitarian style set by the owner's brief (dark slate, electric
@@ -55,6 +55,13 @@ Radius: 6px on controls and chips, 12px on cards and sheets. No pills. No shadow
 separated by surface steps, and the only elevated layer is the bottom sheet. Motion: the rest-timer
 bar shrinks with time (it is the information), transitions under 200ms on state changes, and all of
 it is off under `prefers-reduced-motion`.
+
+## Logo
+
+The ABOT mark is a flat-top hexagon weight plate with a round centre hole and a thin inner
+ring (`src/components/brand/AbotMark.tsx`, favicon `src/app/icon.svg`), in the accent blue on
+Obsidian. Owner direction (2026-11-08): bold industrial wordmark, tight tracking, geometric
+plate icon. The wordmark is set in Geist Black with `tracking-tight`.
 
 ## Icons
 

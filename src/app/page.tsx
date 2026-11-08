@@ -8,6 +8,7 @@ import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
+import { AbotWordmark } from "@/components/brand/AbotMark";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
@@ -35,7 +36,9 @@ function HomeScreen() {
   return (
     <main className="flex flex-1 flex-col px-4 pt-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Heavy</h1>
+        <h1>
+          <AbotWordmark />
+        </h1>
         <Link
           href="/settings"
           aria-label="Settings"

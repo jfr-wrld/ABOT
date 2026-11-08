@@ -11,7 +11,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Heavy",
+  title: "ABOT",
   description: "Log sets, rest, and progress for strength training.",
 };
 
