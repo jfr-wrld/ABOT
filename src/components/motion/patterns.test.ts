@@ -23,7 +23,15 @@ describe("patterns", () => {
 
   it("covers every seed exercise except movements a side view cannot show", () => {
     const missing = SEED_EXERCISES.filter((e) => !patternFor(e)).map((e) => e.id).sort();
-    expect(missing).toEqual(["hip-abduction-machine", "hip-adduction-machine", "russian-twist"]);
+    expect(missing).toEqual([
+      "cable-woodchopper",
+      "chest-supported-row-dumbbell",
+      "hip-abduction-machine",
+      "hip-adduction-machine",
+      "mountain-climber",
+      "pike-push-up",
+      "russian-twist",
+    ]);
   });
 
   it("maps catalog exercises by name and skips mobility and cardio", () => {

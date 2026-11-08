@@ -216,3 +216,23 @@ describe("supersets", () => {
     expect(useWorkoutStore.getState().restTimer).toMatchObject({ sessionExerciseId: b, totalSec: 90 });
   });
 });
+
+describe("starting from a routine", () => {
+  it("keeps the routine's supersets", () => {
+    useWorkoutStore.setState({ ...initial, sessions: [], active: null, restTimer: null }, true);
+    const set = { id: "s", type: "normal" as const, targetWeightKg: null, targetReps: 10 };
+    useWorkoutStore.getState().startFromRoutine({
+      id: "r",
+      name: "Arms",
+      createdAt: 1,
+      updatedAt: 1,
+      exercises: [
+        { id: "a", exerciseId: "bicep-curl-barbell", restSeconds: 60, sets: [set], supersetId: "x" },
+        { id: "b", exerciseId: "triceps-pushdown-cable", restSeconds: 60, sets: [set], supersetId: "x" },
+      ],
+    });
+    const ex = useWorkoutStore.getState().active!.exercises;
+    expect(ex[0]!.supersetId).toBeTruthy();
+    expect(ex[1]!.supersetId).toBe(ex[0]!.supersetId);
+  });
+});

@@ -12,6 +12,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Routine } from "@/types/workout";
+import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
+import { TemplateVault } from "@/components/routines/TemplateVault";
 
 export default function RoutinesPage() {
   return (
@@ -35,6 +37,8 @@ function RoutinesScreen() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<Routine | null>(null);
   const [startBlocked, setStartBlocked] = useState<Routine | null>(null);
+  // Someone with no routines yet lands on the templates.
+  const [tab, setTab] = useState<"mine" | "vault">(() => (routines.length > 0 ? "mine" : "vault"));
 
   const folders = new Map<string, Routine[]>();
   for (const r of [...routines].sort((a, b) => a.name.localeCompare(b.name))) {
@@ -77,80 +81,98 @@ function RoutinesScreen() {
         }
       />
 
-      <div className="flex flex-col gap-6 px-4 pt-4">
-        {routines.length === 0 && (
-          <p className="panel px-4 py-8 text-center text-sm text-text-muted">
-            No routines saved. Create one, add its exercises and target sets, and you can start the same
-            workout in one tap next time.
-          </p>
-        )}
+      <div className="flex flex-col gap-4 px-4 pt-3">
+        <Tabs
+          id="routines"
+          label="Routines"
+          tabs={[
+            { value: "mine", label: "My Routines" },
+            { value: "vault", label: "Template Vault" },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
+        {tab === "mine" ? (
+        <div {...tabPanelProps("routines", "mine")} className="flex flex-col gap-6 outline-none">
+          {routines.length === 0 && (
+            <p className="panel px-4 py-8 text-center text-sm text-text-muted">
+              No routines saved. Create one, add its exercises and target sets, and you can start the same
+              workout in one tap next time.
+            </p>
+          )}
 
-        {folderNames.map((folder) => (
-          <section key={folder || "__none"} aria-labelledby={`folder-${folder || "none"}`}>
-            <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold uppercase text-text-muted">
-              {folder || (folderNames.length > 1 ? "No folder" : "All routines")}
-            </h2>
-            <ul className="mt-2 flex flex-col gap-2">
-              {folders.get(folder)!.map((r) => {
-                const names = r.exercises.map((e) => byId[e.exerciseId]?.name ?? "Removed exercise");
-                const setCount = r.exercises.reduce((n, e) => n + e.sets.length, 0);
-                return (
-                  <li key={r.id} className="panel p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-base font-semibold">{r.name}</h3>
-                        <p className="mt-0.5 text-xs text-text-muted">
-                          {r.exercises.length === 0
-                            ? "No exercises yet"
-                            : `${r.exercises.length} ${r.exercises.length === 1 ? "exercise" : "exercises"} · ${setCount} sets`}
-                        </p>
+          {folderNames.map((folder) => (
+            <section key={folder || "__none"} aria-labelledby={`folder-${folder || "none"}`}>
+              <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold uppercase text-text-muted">
+                {folder || (folderNames.length > 1 ? "No folder" : "All routines")}
+              </h2>
+              <ul className="mt-2 flex flex-col gap-2">
+                {folders.get(folder)!.map((r) => {
+                  const names = r.exercises.map((e) => byId[e.exerciseId]?.name ?? "Removed exercise");
+                  const setCount = r.exercises.reduce((n, e) => n + e.sets.length, 0);
+                  return (
+                    <li key={r.id} className="panel p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="truncate text-base font-semibold">{r.name}</h3>
+                          <p className="mt-0.5 text-xs text-text-muted">
+                            {r.exercises.length === 0
+                              ? "No exercises yet"
+                              : `${r.exercises.length} ${r.exercises.length === 1 ? "exercise" : "exercises"} · ${setCount} sets`}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0">
+                          <Link
+                            href={`/routines/${r.id}/edit`}
+                            aria-label={`Edit ${r.name}`}
+                            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
+                          >
+                            <Pencil aria-hidden="true" size={18} />
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => duplicate(r.id)}
+                            aria-label={`Duplicate ${r.name}`}
+                            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
+                          >
+                            <Copy aria-hidden="true" size={18} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setToDelete(r)}
+                            aria-label={`Delete ${r.name}`}
+                            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
+                          >
+                            <Trash2 aria-hidden="true" size={18} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex shrink-0">
-                        <Link
-                          href={`/routines/${r.id}/edit`}
-                          aria-label={`Edit ${r.name}`}
-                          className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
-                        >
-                          <Pencil aria-hidden="true" size={18} />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => duplicate(r.id)}
-                          aria-label={`Duplicate ${r.name}`}
-                          className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
-                        >
-                          <Copy aria-hidden="true" size={18} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setToDelete(r)}
-                          aria-label={`Delete ${r.name}`}
-                          className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
-                        >
-                          <Trash2 aria-hidden="true" size={18} />
-                        </button>
-                      </div>
-                    </div>
-                    {names.length > 0 && (
-                      <p className="mt-2 line-clamp-2 text-sm text-text-muted">{names.join(", ")}</p>
-                    )}
-                    <Button
-                      variant="primary"
-                      onClick={() => start(r)}
-                      disabled={r.exercises.length === 0}
-                      className="mt-3 w-full"
-                    >
-                      Start {r.name}
-                    </Button>
-                    {r.exercises.length === 0 && (
-                      <p className="mt-1 text-center text-xs text-text-muted">Add an exercise before starting.</p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))}
+                      {names.length > 0 && (
+                        <p className="mt-2 line-clamp-2 text-sm text-text-muted">{names.join(", ")}</p>
+                      )}
+                      <Button
+                        variant="primary"
+                        onClick={() => start(r)}
+                        disabled={r.exercises.length === 0}
+                        className="mt-3 w-full"
+                      >
+                        Start {r.name}
+                      </Button>
+                      {r.exercises.length === 0 && (
+                        <p className="mt-1 text-center text-xs text-text-muted">Add an exercise before starting.</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+        ) : (
+          <div {...tabPanelProps("routines", "vault")} className="outline-none">
+            <TemplateVault onStart={start} />
+          </div>
+        )}
       </div>
 
       <Sheet

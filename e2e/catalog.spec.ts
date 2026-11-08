@@ -18,17 +18,17 @@ test.beforeEach(async ({ page }) => {
 test("loads the catalog on demand, logs a catalog exercise, keeps it after removing the catalog", async ({ page }) => {
   await serveCatalog(page);
   await page.goto("/exercises");
-  await expect(page.getByText("81 in your library")).toBeVisible();
+  await expect(page.getByText("88 in your library")).toBeVisible();
   await page.getByRole("button", { name: "Load full exercise catalog" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Added 4 exercises from the catalog" })).toBeVisible();
-  await expect(page.getByText("81 in your library, 4 from the catalog")).toBeVisible();
+  await expect(page.getByText("88 in your library, 4 from the catalog")).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.getByLabel("Search exercises").fill("zercher");
   await expect(page.getByRole("link", { name: /Zercher Squats/ })).toContainText("catalog");
 
   // Catalog survives a reload (stored in IndexedDB).
   await page.reload();
-  await expect(page.getByText("81 in your library, 4 from the catalog")).toBeVisible();
+  await expect(page.getByText("88 in your library, 4 from the catalog")).toBeVisible();
 
   await startEmptyWorkout(page);
   await addExercise(page, "Zercher Squats");
@@ -38,7 +38,7 @@ test("loads the catalog on demand, logs a catalog exercise, keeps it after remov
   await page.goto("/exercises");
   await page.getByRole("button", { name: "Remove catalog" }).click();
   await page.getByRole("button", { name: "Remove", exact: true }).click();
-  await expect(page.getByText("81 in your library, 1 from the catalog")).toBeVisible();
+  await expect(page.getByText("88 in your library, 1 from the catalog")).toBeVisible();
   // The exercise that was logged is kept, so history still has its name.
   await page.getByLabel("Search exercises").fill("zercher");
   await expect(page.getByRole("link", { name: /Zercher Squats/ })).toBeVisible();
@@ -54,6 +54,6 @@ test("a failed download explains what to do and changes nothing", async ({ page 
   await expect(
     page.getByRole("alert").filter({ hasText: "Could not download the catalog. Check your connection and try again." }),
   ).toBeVisible();
-  await expect(page.getByText("81 in your library", { exact: true })).toBeVisible();
+  await expect(page.getByText("88 in your library", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Load full exercise catalog" })).toBeEnabled();
 });

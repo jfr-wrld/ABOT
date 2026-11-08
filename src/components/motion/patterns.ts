@@ -510,6 +510,15 @@ const SEED: Record<string, PatternId | null> = {
   "chest-press-machine": "bench_flat",
   "cable-fly": "fly_cable",
   "push-up": "push_up",
+  "diamond-push-up": "push_up",
+  // Pike push-ups, woodchoppers, mountain climbers and the chest-supported row have no
+  // accurate side-view pattern yet; photos (where the dataset has them) carry the Motion tab.
+  "pike-push-up": null,
+  "cable-woodchopper": null,
+  "mountain-climber": null,
+  "chest-supported-row-dumbbell": null,
+  "bodyweight-squat": "squat_goblet",
+  "single-leg-calf-raise": "calf_raise",
   "chest-dip": "dip",
   "deadlift-barbell": "deadlift",
   "pull-up": "pull_up",

@@ -2419,5 +2419,210 @@ export const SEED_INPUTS: ExerciseInput[] = [
         "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Ab_Roller/1.jpg"
       ]
     }
+  },
+  {
+    "id": "diamond-push-up",
+    "name": "Diamond Push Up",
+    "sourceId": "Push-Ups_-_Close_Triceps_Position",
+    "equipment": "bodyweight",
+    "primaryMuscles": [
+      "triceps"
+    ],
+    "secondaryMuscles": [
+      "chest",
+      "shoulders"
+    ],
+    "isBodyweight": true,
+    "category": "compound",
+    "instructions": [
+      "Lie on the floor face down and place your hands closer than shoulder width for a close hand position. Make sure that you are holding your torso up at arms' length.",
+      "Lower yourself until your chest almost touches the floor as you inhale.",
+      "Using your triceps and some of your pectoral muscles, press your upper body back up to the starting position and squeeze your chest. Breathe out as you perform this step.",
+      "After a second pause at the contracted position, repeat the movement for the prescribed amount of repetitions."
+    ],
+    "formCues": [
+      "Hands close together under the chest",
+      "Elbows stay tucked along the ribs",
+      "Body stays in one straight line"
+    ],
+    "media": {
+      "motionUrls": [
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push-Ups_-_Close_Triceps_Position/0.jpg",
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Push-Ups_-_Close_Triceps_Position/1.jpg"
+      ]
+    }
+  },
+  {
+    "id": "pike-push-up",
+    "name": "Pike Push Up",
+    "equipment": "bodyweight",
+    "primaryMuscles": [
+      "shoulders"
+    ],
+    "secondaryMuscles": [
+      "triceps"
+    ],
+    "isBodyweight": true,
+    "category": "compound",
+    "instructions": [
+      "Start in a push-up position, then walk the feet in and lift the hips so the body forms an upside-down V.",
+      "Place the hands slightly wider than the shoulders with the head between the arms.",
+      "Bend the elbows and lower the top of the head toward the floor just in front of the hands.",
+      "Press back up until the arms are straight, keeping the hips high throughout."
+    ],
+    "formCues": [
+      "Hips stay high so the shoulders carry the load",
+      "Lower the head in front of the hands, not between them",
+      "Elbows angle back, not straight out to the sides"
+    ],
+    "media": {}
+  },
+  {
+    "id": "bodyweight-squat",
+    "name": "Bodyweight Squat",
+    "sourceId": "Bodyweight_Squat",
+    "equipment": "bodyweight",
+    "primaryMuscles": [
+      "quads"
+    ],
+    "secondaryMuscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "isBodyweight": true,
+    "category": "compound",
+    "instructions": [
+      "Stand with your feet shoulder width apart. You can place your hands behind your head. This will be your starting position.",
+      "Begin the movement by flexing your knees and hips, sitting back with your hips.",
+      "Continue down to full depth if you are able,and quickly reverse the motion until you return to the starting position. As you squat, keep your head and chest up and push your knees out."
+    ],
+    "formCues": [
+      "Sit the hips back and down between the heels",
+      "Knees track over the toes",
+      "Chest up, heels stay on the floor"
+    ],
+    "media": {
+      "motionUrls": [
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bodyweight_Squat/0.jpg",
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bodyweight_Squat/1.jpg"
+      ]
+    }
+  },
+  {
+    "id": "single-leg-calf-raise",
+    "name": "Single Leg Calf Raise",
+    "equipment": "bodyweight",
+    "primaryMuscles": [
+      "calves"
+    ],
+    "secondaryMuscles": [],
+    "isBodyweight": true,
+    "category": "isolation",
+    "instructions": [
+      "Stand on one foot on the edge of a step, holding a rail or wall for balance.",
+      "Let the heel drop below the step until the calf is stretched.",
+      "Rise onto the ball of the foot as high as possible and pause at the top.",
+      "Lower slowly back to the stretch, finish the reps, then switch legs."
+    ],
+    "formCues": [
+      "Full stretch at the bottom of every rep",
+      "Pause at the top instead of bouncing",
+      "Hold on only for balance, not to pull yourself up"
+    ],
+    "media": {}
+  },
+  {
+    "id": "mountain-climber",
+    "name": "Mountain Climber",
+    "sourceId": "Mountain_Climbers",
+    "equipment": "bodyweight",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "quads",
+      "shoulders"
+    ],
+    "isBodyweight": true,
+    "category": "compound",
+    "instructions": [
+      "Start in a high plank with the hands under the shoulders and the body in a straight line.",
+      "Drive one knee toward the chest, then return it while driving the other knee in.",
+      "Keep alternating at a steady pace without letting the hips rise or sag."
+    ],
+    "formCues": [
+      "Shoulders stay stacked over the hands",
+      "Drive the knees toward the chest without lifting the hips",
+      "Keep a steady rhythm"
+    ],
+    "media": {
+      "motionUrls": [
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/0.jpg",
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Mountain_Climbers/1.jpg"
+      ]
+    }
+  },
+  {
+    "id": "cable-woodchopper",
+    "name": "Cable Woodchopper",
+    "sourceId": "Standing_Cable_Wood_Chop",
+    "equipment": "cable",
+    "primaryMuscles": [
+      "abs"
+    ],
+    "secondaryMuscles": [
+      "shoulders"
+    ],
+    "category": "compound",
+    "instructions": [
+      "Connect a standard handle to a tower, and move the cable to the highest pulley position.",
+      "With your side to the cable, grab the handle with one hand and step away from the tower. You should be approximately arm's length away from the pulley, with the tension of the weight on the cable. Your outstretched arm should be aligned with the cable.",
+      "With your feet positioned shoulder width apart, reach upward with your other hand and grab the handle with both hands. Your arms should still be fully extended.",
+      "In one motion, pull the handle down and across your body to your front knee while rotating your torso.",
+      "Keep your back and arms straight and core tight while you pivot your back foot and bend your knees to get a full range of motion."
+    ],
+    "formCues": [
+      "Rotate through the torso, arms stay long",
+      "Pivot the back foot as you turn",
+      "Control the return; do not let the stack pull you back"
+    ],
+    "media": {
+      "motionUrls": [
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Cable_Wood_Chop/0.jpg",
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Cable_Wood_Chop/1.jpg"
+      ]
+    }
+  },
+  {
+    "id": "chest-supported-row-dumbbell",
+    "name": "Chest Supported Row (Dumbbell)",
+    "sourceId": "Dumbbell_Incline_Row",
+    "equipment": "dumbbell",
+    "primaryMuscles": [
+      "back"
+    ],
+    "secondaryMuscles": [
+      "lats",
+      "biceps",
+      "shoulders"
+    ],
+    "category": "compound",
+    "instructions": [
+      "Using a neutral grip, lean into an incline bench.",
+      "Take a dumbbell in each hand with a neutral grip, beginning with the arms straight. This will be your starting position.",
+      "Retract the shoulder blades and flex the elbows to row the dumbbells to your side.",
+      "Pause at the top of the motion, and then return to the starting position."
+    ],
+    "formCues": [
+      "Chest stays on the bench for the whole set",
+      "Pull the elbows back toward the hips",
+      "Squeeze the shoulder blades at the top"
+    ],
+    "media": {
+      "motionUrls": [
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Incline_Row/0.jpg",
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Dumbbell_Incline_Row/1.jpg"
+      ]
+    }
   }
 ];

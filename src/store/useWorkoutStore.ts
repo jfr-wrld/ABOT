@@ -121,6 +121,7 @@ export const useWorkoutStore = create<WorkoutState>()(
               exerciseId: re.exerciseId,
               restSeconds: re.restSeconds,
               notes: re.notes,
+              ...(re.supersetId ? { supersetId: re.supersetId } : {}),
               sets: re.sets.map((rs) =>
                 newSet({ type: rs.type, weightKg: rs.targetWeightKg, reps: rs.targetReps }),
               ),

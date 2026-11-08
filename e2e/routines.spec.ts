@@ -17,6 +17,9 @@ async function createRoutine(page: import("@playwright/test").Page, name: string
 
 test("empty name shows an inline error", async ({ page }) => {
   await page.goto("/routines");
+  // A device with no routines opens on the templates; the empty state is one tab away.
+  await expect(page.getByRole("tab", { name: "Template Vault" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: "My Routines" }).click();
   await expect(page.getByText("No routines saved.")).toBeVisible();
   await page.getByRole("button", { name: "New routine" }).click();
   await page.getByRole("button", { name: "Create and add exercises" }).click();
