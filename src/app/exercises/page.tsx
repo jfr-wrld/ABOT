@@ -5,6 +5,8 @@ import { Select } from "@/components/ui/Select";
 import Link from "next/link";
 import { ChevronRight, Plus } from "lucide-react";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { MuscleIcon } from "@/components/icons/MuscleIcon";
+import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { worksArea } from "@/components/anatomy/regions";
 import type { Equipment, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
@@ -97,7 +99,10 @@ function LibraryScreen() {
             id="lib-muscle"
             value={muscle}
             onChange={setMuscle}
-            options={[{ value: "", label: "All muscles" }, ...MUSCLES.map((m) => ({ value: m, label: MUSCLE_GROUP_LABELS[m] }))]}
+            options={[
+              { value: "", label: "All muscles", icon: <MuscleIcon /> },
+              ...MUSCLES.map((m) => ({ value: m, label: MUSCLE_GROUP_LABELS[m], icon: <MuscleIcon muscle={m} /> })),
+            ]}
             className="flex-1"
           />
           <label htmlFor="lib-equipment" className="sr-only">
@@ -107,7 +112,10 @@ function LibraryScreen() {
             id="lib-equipment"
             value={equipment}
             onChange={setEquipment}
-            options={[{ value: "", label: "All equipment" }, ...EQUIPMENT.map((eq) => ({ value: eq, label: EQUIPMENT_LABELS[eq] }))]}
+            options={[
+              { value: "", label: "All equipment", icon: <EquipmentIcon /> },
+              ...EQUIPMENT.map((eq) => ({ value: eq, label: EQUIPMENT_LABELS[eq], icon: <EquipmentIcon equipment={eq} /> })),
+            ]}
             className="flex-1"
           />
         </div>
