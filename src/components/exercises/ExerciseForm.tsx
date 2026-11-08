@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Equipment, Exercise, MuscleGroup } from "@/types/workout";
+import type { Equipment, Exercise, ExerciseDraft, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
@@ -18,7 +18,7 @@ export function ExerciseForm({
   open: boolean;
   initial?: Exercise;
   onClose: () => void;
-  onSave: (data: Omit<Exercise, "id" | "isCustom">) => void;
+  onSave: (data: ExerciseDraft) => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [primary, setPrimary] = useState<MuscleGroup>(initial?.primaryMuscle ?? "chest");

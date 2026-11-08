@@ -32,6 +32,9 @@ describe("buildExerciseIndex", () => {
       secondaryMuscles: [],
       equipment: "barbell",
       isCustom: true,
+      loadMode: "total",
+      logType: "weight_reps",
+      isMachineDependent: false,
     };
     const { list, byId } = buildExerciseIndex([custom]);
     expect(list).toHaveLength(45);

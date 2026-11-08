@@ -40,6 +40,17 @@ export type Equipment =
   | "band"
   | "other";
 
+/**
+ * How the typed weight maps to volume:
+ * total      the number is the whole load (barbell, machine, cable)
+ * per_hand   the number is one dumbbell; volume counts both hands (x2)
+ * unilateral one side at a time; the number and reps are per side, volume counts once
+ */
+export type LoadMode = "total" | "per_hand" | "unilateral";
+
+/** Which inputs a set row shows. */
+export type LogType = "weight_reps" | "reps_only" | "duration" | "distance_duration";
+
 /** W = warm-up (yellow), N = normal (default), D = drop set (purple), F = failure (red). */
 export type SetType = "warmup" | "normal" | "dropset" | "failure";
 
@@ -49,12 +60,20 @@ export interface Exercise {
   primaryMuscle: MuscleGroup;
   secondaryMuscles: MuscleGroup[];
   equipment: Equipment;
-  /** Bodyweight movements have no external load; UI hides the weight column. */
+  /** Bodyweight movements: the weight input is optional added load (weighted pull-up). */
   isBodyweight?: boolean;
+  loadMode: LoadMode;
+  logType: LogType;
+  /** Machine and cable loads differ between gyms, so records are kept per location. */
+  isMachineDependent: boolean;
   /** Set when the user created it, so we can let them edit/delete it. */
   isCustom?: boolean;
   notes?: string;
 }
+
+/** What a create/edit form supplies; derived fields are filled by normalizeExercise. */
+export type ExerciseDraft = Pick<Exercise, "name" | "primaryMuscle" | "secondaryMuscles" | "equipment" | "isBodyweight"> &
+  Partial<Pick<Exercise, "loadMode" | "logType" | "isMachineDependent">>;
 
 /** A single performed set inside an active or finished workout. */
 export interface WorkoutSet {
@@ -67,6 +86,8 @@ export interface WorkoutSet {
   rpe: number | null;
   completed: boolean;
   completedAt?: number;
+  durationSec?: number | null;
+  distanceM?: number | null;
 }
 
 export interface SessionExercise {
@@ -76,6 +97,7 @@ export interface SessionExercise {
   /** Rest timer length (seconds) applied after each completed set. */
   restSeconds: number;
   notes?: string;
+  supersetId?: string;
 }
 
 export type SessionStatus = "active" | "completed" | "discarded";
@@ -85,6 +107,8 @@ export interface WorkoutSession {
   name: string;
   /** Routine this session was started from, if any. */
   routineId?: string;
+  /** Gym the workout was done at; drives per-location records for machine exercises. */
+  locationId?: string;
   startedAt: number;
   finishedAt?: number;
   status: SessionStatus;
@@ -106,6 +130,7 @@ export interface RoutineExercise {
   sets: RoutineSet[];
   restSeconds: number;
   notes?: string;
+  supersetId?: string;
 }
 
 export interface Routine {
@@ -116,6 +141,15 @@ export interface Routine {
   exercises: RoutineExercise[];
   createdAt: number;
   updatedAt: number;
+}
+
+export interface GymLocation {
+  id: string;
+  name: string;
+  barWeightKg: number;
+  /** Plate sizes available, heaviest first. */
+  plateInventoryKg: number[];
+  isDefault: boolean;
 }
 
 export interface RoutineFolder {
@@ -165,6 +199,7 @@ export interface UserSettings {
   /** Play a sound / vibrate when the rest timer hits zero. */
   restTimerAlert: boolean;
   firstDayOfWeek: 0 | 1; // Sunday | Monday
+  activeLocationId: string | null;
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -172,6 +207,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   defaultRestSeconds: 90,
   restTimerAlert: true,
   firstDayOfWeek: 1,
+  activeLocationId: null,
 };
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {

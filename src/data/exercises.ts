@@ -1,10 +1,13 @@
 import type { Exercise } from "@/types/workout";
+import { normalizeExercise } from "./normalize";
+
+type SeedRow = Pick<Exercise, "id" | "name" | "primaryMuscle" | "secondaryMuscles" | "equipment" | "isBodyweight">;
 
 /**
  * Built-in exercise library. Ids are stable slugs — never rename them,
  * because workout history references them.
  */
-export const SEED_EXERCISES: Exercise[] = [
+const SEED_ROWS: SeedRow[] = [
   // ---- Chest ----
   { id: "bench-press-barbell", name: "Bench Press (Barbell)", primaryMuscle: "chest", secondaryMuscles: ["triceps", "shoulders"], equipment: "barbell" },
   { id: "bench-press-dumbbell", name: "Bench Press (Dumbbell)", primaryMuscle: "chest", secondaryMuscles: ["triceps", "shoulders"], equipment: "dumbbell" },
@@ -61,6 +64,8 @@ export const SEED_EXERCISES: Exercise[] = [
   { id: "shrug-barbell", name: "Shrug (Barbell)", primaryMuscle: "traps", secondaryMuscles: [], equipment: "barbell" },
   { id: "kettlebell-swing", name: "Kettlebell Swing", primaryMuscle: "glutes", secondaryMuscles: ["hamstrings", "lower_back", "shoulders"], equipment: "kettlebell" },
 ];
+
+export const SEED_EXERCISES: Exercise[] = SEED_ROWS.map(normalizeExercise);
 
 export const SEED_EXERCISES_BY_ID: Record<string, Exercise> = Object.fromEntries(
   SEED_EXERCISES.map((e) => [e.id, e]),
