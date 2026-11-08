@@ -18,7 +18,7 @@ test("a new device sees the intro once, with Next and swipe", async ({ page }) =
   await expectNoHorizontalOverflow(page);
 
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByRole("heading", { name: "Rest runs up top" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Rest sits by your thumb" })).toBeVisible();
 
   // Swipe left with a finger-like drag.
   const slide = page.getByRole("group", { name: "2 of 3" });

@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { AbotMark } from "@/components/brand/AbotMark";
+import { AnimatedAbotMark, AnimatedWordmark } from "@/components/brand/AnimatedAbotMark";
 import { useHydration } from "@/store/hydration";
 
-/** Long enough for the plate to pulse once; short enough that it never feels like a wait. */
-const MIN_MS = 650;
+/** Long enough for the plate to assemble; short enough that it never feels like a wait. */
+const MIN_MS = 1150;
 export const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as const;
 
 /**
@@ -39,28 +39,25 @@ export function SplashScreen() {
           exit={{ opacity: 0, scale: 1.04 }}
           transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
         >
+          {/* Once assembled, the plate glows once as if switched on, then holds while data loads. */}
           <motion.span
             aria-hidden="true"
-            className="text-accent"
             animate={
               reduce
                 ? undefined
                 : {
-                    scale: [1, 1.06, 1],
                     filter: [
                       "drop-shadow(0 0 0px rgb(204 255 0 / 0))",
-                      "drop-shadow(0 0 18px rgb(204 255 0 / 0.55))",
-                      "drop-shadow(0 0 0px rgb(204 255 0 / 0))",
+                      "drop-shadow(0 0 22px rgb(204 255 0 / 0.5))",
+                      "drop-shadow(0 0 6px rgb(204 255 0 / 0.2))",
                     ],
                   }
             }
-            transition={{ duration: 1.1, ease: "easeInOut", repeat: Infinity }}
+            transition={{ delay: 0.9, duration: 0.6, ease: "easeOut" }}
           >
-            <AbotMark size={64} />
+            <AnimatedAbotMark size={84} />
           </motion.span>
-          <span aria-hidden="true" className="mt-4 text-3xl font-black tracking-tight text-text">
-            ABOT
-          </span>
+          <AnimatedWordmark delay={0.55} className="mt-5 text-3xl font-black tracking-tight text-text" />
           {/* A hairline that creeps across while the device storage is read. */}
           <span aria-hidden="true" className="mt-8 block h-px w-40 overflow-hidden bg-white/10">
             <motion.span

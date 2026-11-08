@@ -130,18 +130,26 @@ scale drop out, fades stay.
 
 Added at the owner's request (2026-11-08), each with its job:
 
-- **Splash** (`components/animations/SplashScreen.tsx`): pure black with the plate pulsing Volt
-  and a hairline filling, for 0.65s at most while saved data is read. It is in the server HTML, so
-  the first paint is never a half-built page. It leaves by scaling up 4% as it fades (0.4s,
-  ease `[0.22, 1, 0.36, 1]`), so the app seems to come forward from behind it. Cost: every full
-  load waits at least 0.65s; tab switches inside the app do not show it.
+- **Splash** (`components/animations/SplashScreen.tsx`, `components/brand/AnimatedAbotMark.tsx`):
+  the plate assembles the way a plate goes onto a bar. Its outline is traced in Volt (0.45s), it
+  fills while turning one flat (60 degrees, spring 140/16), the centre hole is punched (a mask
+  circle growing to 22), the inner ring is scored, and one band of light passes across it, the
+  same sweep as a ticked set. "ABOT" rises letter by letter from a slot, the plate glows once as
+  if switched on, and the loading hairline fills. About 1.15s minimum while saved data is read;
+  it leaves by scaling up 4% as it fades. With reduced motion the mark is simply drawn. Cost:
+  every full load waits at least 1.15s; tab switches inside the app do not show it.
 - **Page transitions** (`components/animations/PageTransition.tsx`): the old page settles to 98%
   and fades in 0.12s, then the new one comes forward in 0.2s. Opacity and transform only, so the
   compositor does the work. It keeps the outgoing page on screen through Next's internal router
   context; if a Next upgrade moves that module, drop the exit and keep the enter.
-- **Intro** (`app/onboarding`): three slides, each showing a real piece of the UI rather than an
-  illustration. Swipe or Next, spring 300/30, the visual, title and text arriving in a short
-  stagger so the eye reads them in order. Shown once per device, never to anyone with data.
+- **Intro** (`app/onboarding`, `components/onboarding/Illustrations.tsx`): three slides, each with
+  an original illustration built from ABOT's own parts and acting out its sentence on a 3.6s loop:
+  a fingertip taps a set's check, the row lights, the band of light passes and a Cyan PR pops; a
+  phone with the rest capsule counting down above the dock, the thumb's reach traced as a dashed
+  Volt arc; a barbell sleeve inside a phone loaded plate by plate (side view) and clamped, with the
+  signal gone. The illustration travels further than the text between slides (90 vs 64 px), so
+  the slide has depth, and a large faint plate behind everything turns one flat per step. Swipe or
+  Next. Reduced motion shows each scene's end state. Shown once per device, never to anyone with data.
 - **Sign-in** (`app/login`): content rises from the bottom with the same spring. One Volt action
   per state: Sign in with Google when this build has cloud sync, Continue without an account when
   it does not (the Google button then disabled with a plain note), Done once signed in. A back

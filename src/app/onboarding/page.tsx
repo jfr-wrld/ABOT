@@ -4,10 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, type PanInfo, type Variants } from "framer-motion";
-import { Check } from "lucide-react";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { Button } from "@/components/ui/Button";
 import { markOnboardingSeen } from "@/lib/onboarding";
+import { DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
 /** A swipe counts once the finger travels this far, or flicks faster than this. */
@@ -24,23 +24,29 @@ const itemVariants: Variants = {
   center: { y: 0, opacity: 1, transition: SPRING },
   exit: { opacity: 0 },
 };
+/** The illustration travels further than the text, so the slide has depth as it moves. */
+const artVariants: Variants = {
+  enter: (dir: number) => ({ x: dir * 90, opacity: 0, scale: 0.94 }),
+  center: { x: 0, opacity: 1, scale: 1, transition: { type: "spring", stiffness: 220, damping: 26 } },
+  exit: (dir: number) => ({ x: dir * -90, opacity: 0, transition: { duration: 0.15 } }),
+};
 
 /** Three things a new lifter needs before their first set; each one shows the real UI piece. */
 const SLIDES = [
   {
     title: "Log a set in one tap",
-    body: "Type the weight and reps, then tap the check. Your numbers from last time sit beside each set, one tap to reuse them.",
-    Visual: SetRowVisual,
+    body: "Type the weight and reps, tap the check. Last time's numbers sit beside each set, and records light up as you beat them.",
+    Visual: LogSetScene,
   },
   {
-    title: "Rest runs up top",
-    body: "Finish a set and the rest countdown opens in the capsule under the camera, on every screen, with 15-second nudges and skip.",
-    Visual: IslandVisual,
+    title: "Rest sits by your thumb",
+    body: "Tick a set and the rest countdown opens just above the dock, on every screen, with 15-second nudges and skip.",
+    Visual: RestScene,
   },
   {
     title: "Your training stays on this phone",
-    body: "Workouts save to this device and keep working offline. Export a backup file from Settings whenever you want a copy.",
-    Visual: PlateVisual,
+    body: "Every workout saves to this device and works offline. Back it up to a file or your account whenever you like.",
+    Visual: DeviceScene,
   },
 ] as const;
 
@@ -64,7 +70,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="flex min-h-[calc(100dvh-96px)] flex-1 flex-col px-5 pt-4">
+    <main className="relative isolate flex min-h-[calc(100dvh-96px)] flex-1 flex-col overflow-hidden px-5 pt-4">
       <div className="flex items-center justify-between">
         <span className="text-accent">
           <AbotMark size={28} title="ABOT" />
@@ -79,6 +85,19 @@ export default function OnboardingPage() {
           </button>
         )}
       </div>
+
+      {/* A large plate behind the slides turns one flat per step, like a plate being loaded. */}
+      <motion.svg
+        aria-hidden="true"
+        viewBox="0 0 100 100"
+        className="pointer-events-none absolute left-1/2 top-[18%] -z-0 size-[440px] -translate-x-1/2 text-white/[0.035]"
+        animate={{ rotate: index * 60 }}
+        transition={{ type: "spring", stiffness: 60, damping: 16 }}
+      >
+        <path d="M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z" fill="none" stroke="currentColor" strokeWidth={0.6} />
+        <circle cx="50" cy="50" r="31" fill="none" stroke="currentColor" strokeWidth={0.6} />
+        <circle cx="50" cy="50" r="22" fill="none" stroke="currentColor" strokeWidth={0.6} />
+      </motion.svg>
 
       <section
         aria-roledescription="carousel"
@@ -106,7 +125,7 @@ export default function OnboardingPage() {
             aria-label={`${index + 1} of ${SLIDES.length}`}
             className="flex flex-1 cursor-grab touch-pan-y flex-col active:cursor-grabbing"
           >
-            <motion.div variants={itemVariants} className="flex min-h-56 items-center justify-center">
+            <motion.div custom={dir} variants={artVariants} className="flex min-h-64 items-center justify-center">
               <slide.Visual />
             </motion.div>
             <motion.h1 variants={itemVariants} className="mt-8 text-3xl font-bold leading-tight tracking-tight">
@@ -151,41 +170,5 @@ export default function OnboardingPage() {
         )}
       </div>
     </main>
-  );
-}
-
-function SetRowVisual() {
-  return (
-    <div className="w-full max-w-[300px] rounded-xl border border-accent/20 bg-accent-tint p-1.5" aria-hidden="true">
-      <div className="grid grid-cols-[36px_1fr_64px_44px_44px] items-center gap-1.5">
-        <span className="num flex size-9 items-center justify-center rounded-lg border border-accent/25 bg-black/40 text-sm font-bold">1</span>
-        <span className="num truncate text-[11px] text-text-muted">100 × 8</span>
-        <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">102.5</span>
-        <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">8</span>
-        <span className="flex size-11 items-center justify-center rounded-xl bg-accent text-on-accent">
-          <Check size={22} strokeWidth={3} />
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function IslandVisual() {
-  return (
-    <div
-      className="flex h-14 w-full max-w-[300px] items-center gap-2 rounded-[28px] border border-accent/25 bg-black px-5 shadow-[0_0_14px_rgb(204_255_0/0.14)]"
-      aria-hidden="true"
-    >
-      <span className="label-caps">Rest</span>
-      <span className="num text-xl font-extrabold text-accent">1:30</span>
-    </div>
-  );
-}
-
-function PlateVisual() {
-  return (
-    <span className="text-accent" aria-hidden="true">
-      <AbotMark size={120} />
-    </span>
   );
 }
