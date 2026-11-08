@@ -26,15 +26,23 @@ function pickSettings(s: SettingsState): StoredSettings {
   };
 }
 
+/** True while stores are being filled from the repository, so subscribers do not echo it back. */
+let loadingFromRepo = false;
+
 /** Replaces in-memory state with what the repository holds. */
 export async function hydrateStores(repo: Repository): Promise<void> {
   const snap = await repo.snapshot();
   const restTimer = (await repo.kv.get("restTimer")) ?? null;
-  useWorkoutStore.setState({ sessions: snap.sessions, active: snap.activeWorkout, restTimer });
-  useRoutineStore.setState({ routines: snap.routines });
-  useExerciseStore.setState({ custom: snap.exercises.map((e: Exercise) => normalizeExercise(e)) });
-  useLocationStore.setState({ locations: snap.locations });
-  if (snap.settings) useSettingsStore.setState(snap.settings);
+  loadingFromRepo = true;
+  try {
+    useWorkoutStore.setState({ sessions: snap.sessions, active: snap.activeWorkout, restTimer });
+    useRoutineStore.setState({ routines: snap.routines });
+    useExerciseStore.setState({ custom: snap.exercises.map((e: Exercise) => normalizeExercise(e)) });
+    useLocationStore.setState({ locations: snap.locations });
+    if (snap.settings) useSettingsStore.setState(snap.settings);
+  } finally {
+    loadingFromRepo = false;
+  }
 }
 
 /** Puts new or changed rows and removes deleted ones, comparing by reference (stores are immutable). */
@@ -68,6 +76,7 @@ export function attachPersistence(repo: Repository): { flush(): Promise<void>; d
 
   const unsubs = [
     useWorkoutStore.subscribe((next, prev) => {
+      if (loadingFromRepo) return;
       diffTable(prev.sessions, next.sessions, repo.sessions, enqueue);
       if (next.active !== prev.active) {
         const active = next.active;
@@ -78,10 +87,17 @@ export function attachPersistence(repo: Repository): { flush(): Promise<void>; d
         enqueue(() => repo.kv.set("restTimer", timer));
       }
     }),
-    useRoutineStore.subscribe((next, prev) => diffTable(prev.routines, next.routines, repo.routines, enqueue)),
-    useExerciseStore.subscribe((next, prev) => diffTable(prev.custom, next.custom, repo.exercises, enqueue)),
-    useLocationStore.subscribe((next, prev) => diffTable(prev.locations, next.locations, repo.locations, enqueue)),
+    useRoutineStore.subscribe((next, prev) => {
+      if (!loadingFromRepo) diffTable(prev.routines, next.routines, repo.routines, enqueue);
+    }),
+    useExerciseStore.subscribe((next, prev) => {
+      if (!loadingFromRepo) diffTable(prev.custom, next.custom, repo.exercises, enqueue);
+    }),
+    useLocationStore.subscribe((next, prev) => {
+      if (!loadingFromRepo) diffTable(prev.locations, next.locations, repo.locations, enqueue);
+    }),
     useSettingsStore.subscribe((next, prev) => {
+      if (loadingFromRepo) return;
       const a = pickSettings(next);
       const b = pickSettings(prev);
       if ((Object.keys(a) as (keyof StoredSettings)[]).some((k) => a[k] !== b[k])) {

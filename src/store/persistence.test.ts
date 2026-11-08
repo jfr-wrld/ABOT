@@ -171,3 +171,29 @@ describe("useLocationStore", () => {
     expect(useLocationStore.getState().locations[0]!.isDefault).toBe(true);
   });
 });
+
+describe("hydrateStores while persistence is attached", () => {
+  it("does not write the loaded data back to the repository", async () => {
+    const repo = createMemoryRepository();
+    await repo.sessions.put(finished("s1"));
+    await repo.routines.put({ id: "r1", name: "Push", exercises: [], createdAt: 1, updatedAt: 1 });
+    const p = await attach(repo);
+    let writes = 0;
+    for (const t of [repo.sessions, repo.routines, repo.exercises, repo.locations]) {
+      const put = t.put.bind(t);
+      t.put = async (x: never) => {
+        writes++;
+        return put(x);
+      };
+    }
+    const kvSet = repo.kv.set.bind(repo.kv);
+    repo.kv.set = async (k, v) => {
+      writes++;
+      return kvSet(k, v);
+    };
+    await hydrateStores(repo);
+    await p.flush();
+    expect(useWorkoutStore.getState().sessions).toHaveLength(1);
+    expect(writes).toBe(0);
+  });
+});

@@ -3,6 +3,7 @@
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { BackupSection } from "@/components/settings/BackupSection";
 import { formatClock } from "@/lib/calc";
 
 const REST_OPTIONS = [30, 45, 60, 90, 120, 150, 180, 240, 300];
@@ -22,7 +23,7 @@ function SettingsScreen() {
   return (
     <main className="flex flex-1 flex-col">
       <PageHeader title="Settings" back={{ href: "/", label: "Home" }} />
-      <div className="flex flex-col gap-5 px-4 pt-4">
+      <div className="flex flex-col gap-5 px-4 pb-8 pt-4">
         <fieldset>
           <legend className="mb-2 text-sm font-semibold">Weight unit</legend>
           <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Weight unit">
@@ -89,9 +90,9 @@ function SettingsScreen() {
           </select>
         </div>
 
-        <p className="text-xs text-text-muted">
-          All data is stored in this browser only. Clearing site data removes it.
-        </p>
+        <div className="border-t border-line pt-5">
+          <BackupSection />
+        </div>
       </div>
     </main>
   );
