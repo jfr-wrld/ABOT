@@ -1,6 +1,7 @@
 "use client";
 
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { Select } from "@/components/ui/Select";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { BackupSection } from "@/components/settings/BackupSection";
@@ -21,7 +22,6 @@ export default function SettingsPage() {
 
 function SettingsScreen() {
   const s = useSettingsStore();
-  const field = "h-11 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base text-text";
 
   return (
     <main className="flex flex-1 flex-col">
@@ -56,18 +56,13 @@ function SettingsScreen() {
           <label htmlFor="default-rest" className="text-sm font-semibold">
             Default rest timer for new exercises
           </label>
-          <select
+          <Select
             id="default-rest"
             value={s.defaultRestSeconds}
-            onChange={(e) => s.update({ defaultRestSeconds: Number(e.target.value) })}
-            className={field}
-          >
-            {REST_OPTIONS.map((r) => (
-              <option key={r} value={r}>
-                {formatClock(r)}
-              </option>
-            ))}
-          </select>
+            onChange={(defaultRestSeconds) => s.update({ defaultRestSeconds })}
+            options={REST_OPTIONS.map((r) => ({ value: r, label: formatClock(r) }))}
+            className="!text-base"
+          />
         </div>
 
         <Toggle
@@ -82,15 +77,16 @@ function SettingsScreen() {
           <label htmlFor="first-day" className="text-sm font-semibold">
             Week starts on
           </label>
-          <select
+          <Select
             id="first-day"
             value={s.firstDayOfWeek}
-            onChange={(e) => s.update({ firstDayOfWeek: Number(e.target.value) as 0 | 1 })}
-            className={field}
-          >
-            <option value={1}>Monday</option>
-            <option value={0}>Sunday</option>
-          </select>
+            onChange={(firstDayOfWeek: 0 | 1) => s.update({ firstDayOfWeek })}
+            options={[
+              { value: 1, label: "Monday" },
+              { value: 0, label: "Sunday" },
+            ]}
+            className="!text-base"
+          />
         </div>
 
         <div className="border-t border-line pt-5">

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, choose } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
@@ -9,8 +9,8 @@ test.beforeEach(async ({ page }) => {
 test("filters by muscle and equipment", async ({ page }) => {
   await page.goto("/exercises");
   await expect(page.getByText("81 in your library")).toBeVisible();
-  await page.getByLabel("Muscle group").selectOption("chest");
-  await page.getByLabel("Equipment").selectOption("cable");
+  await choose(page, page.getByLabel("Muscle group"), "Chest");
+  await choose(page, page.getByLabel("Equipment"), "Cable");
   await expect(page.getByRole("link", { name: /Cable Fly/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Bench Press/ })).toHaveCount(0);
   await page.getByLabel("Search exercises").fill("nothing like this");
@@ -24,8 +24,8 @@ test("creates a custom exercise and opens its detail", async ({ page }) => {
   await page.getByRole("button", { name: "Add to library" }).click();
   await expect(page.getByText("Enter a name of at least two characters")).toBeVisible();
   await page.getByLabel("Name").fill("Pendlay Row");
-  await page.getByLabel("Primary muscle").selectOption("back");
-  await page.getByLabel("Equipment", { exact: true }).last().selectOption("barbell");
+  await choose(page, page.getByLabel("Primary muscle"), "Back");
+  await choose(page, page.getByLabel("Equipment", { exact: true }).last(), "Barbell");
   await page.getByRole("button", { name: "Add to library" }).click();
   await expect(page.getByText("82 in your library")).toBeVisible();
   await page.getByRole("link", { name: /Pendlay Row/ }).click();
@@ -45,4 +45,26 @@ test("detail shows records after a finished workout", async ({ page }) => {
   await expect(page.getByText("One point so far.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "History" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
+});
+
+test("the filter dropdowns work from the keyboard and match the theme", async ({ page }) => {
+  await freshStart(page);
+  await page.goto("/exercises");
+  const muscle = page.getByLabel("Muscle group");
+  await muscle.focus();
+  await page.keyboard.press("ArrowDown");
+  const list = page.getByRole("listbox");
+  await expect(list).toBeVisible();
+  await expect(list.getByRole("option", { name: "All muscles" })).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("c"); // jumps to the next option starting with C
+  await page.keyboard.press("Enter");
+  await expect(list).toHaveCount(0);
+  await expect(muscle).toHaveText("Chest");
+  await expect(muscle).toBeFocused();
+
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("listbox")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await expect(muscle).toHaveText("Chest");
 });

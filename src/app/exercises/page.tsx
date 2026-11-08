@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Select } from "@/components/ui/Select";
 import Link from "next/link";
 import { ChevronRight, Plus } from "lucide-react";
 import type { Equipment, MuscleGroup } from "@/types/workout";
@@ -47,7 +48,6 @@ function LibraryScreen() {
     );
   }, [list, query, muscle, equipment]);
 
-  const select = "h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-2 text-sm text-text";
 
   return (
     <main className="flex flex-1 flex-col">
@@ -82,30 +82,23 @@ function LibraryScreen() {
           <label htmlFor="lib-muscle" className="sr-only">
             Muscle group
           </label>
-          <select id="lib-muscle" value={muscle} onChange={(e) => setMuscle(e.target.value as MuscleGroup | "")} className={select}>
-            <option value="">All muscles</option>
-            {MUSCLES.map((m) => (
-              <option key={m} value={m}>
-                {MUSCLE_GROUP_LABELS[m]}
-              </option>
-            ))}
-          </select>
+          <Select
+            id="lib-muscle"
+            value={muscle}
+            onChange={setMuscle}
+            options={[{ value: "", label: "All muscles" }, ...MUSCLES.map((m) => ({ value: m, label: MUSCLE_GROUP_LABELS[m] }))]}
+            className="flex-1"
+          />
           <label htmlFor="lib-equipment" className="sr-only">
             Equipment
           </label>
-          <select
+          <Select
             id="lib-equipment"
             value={equipment}
-            onChange={(e) => setEquipment(e.target.value as Equipment | "")}
-            className={select}
-          >
-            <option value="">All equipment</option>
-            {EQUIPMENT.map((eq) => (
-              <option key={eq} value={eq}>
-                {EQUIPMENT_LABELS[eq]}
-              </option>
-            ))}
-          </select>
+            onChange={setEquipment}
+            options={[{ value: "", label: "All equipment" }, ...EQUIPMENT.map((eq) => ({ value: eq, label: EQUIPMENT_LABELS[eq] }))]}
+            className="flex-1"
+          />
         </div>
       </div>
 

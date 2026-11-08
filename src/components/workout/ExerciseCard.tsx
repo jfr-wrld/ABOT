@@ -1,6 +1,7 @@
 "use client";
 
 import { setNumbers } from "@/lib/sets";
+import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import { setGridColumns } from "./setGrid";
 import { ArrowDown, ArrowUp, Info, MoreHorizontal, Plus, Timer, Trash2 } from "lucide-react";
@@ -153,18 +154,13 @@ export function ExerciseCard({
             <label htmlFor={`rest-${item.id}`} className="mb-1 block text-sm font-semibold">
               Rest timer after each set
             </label>
-            <select
+            <Select
               id={`rest-${item.id}`}
               value={item.restSeconds}
-              onChange={(e) => store.setExerciseRest(item.id, Number(e.target.value))}
-              className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
-            >
-              {REST_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s === 0 ? "Off" : formatClock(s)}
-                </option>
-              ))}
-            </select>
+              onChange={(s) => store.setExerciseRest(item.id, s)}
+              options={REST_OPTIONS.map((s) => ({ value: s, label: s === 0 ? "Off" : formatClock(s) }))}
+              className="w-full !text-base"
+            />
           </div>
 
           <div>

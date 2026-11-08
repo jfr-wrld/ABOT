@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Select } from "@/components/ui/Select";
 import type { Equipment, Exercise, ExerciseDraft, LoadMode, MuscleGroup } from "@/types/workout";
 import { defaultLoadMode } from "@/data/normalize";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
@@ -98,41 +99,42 @@ export function ExerciseForm({
           <label htmlFor="ex-muscle" className="mb-1 block text-sm font-semibold">
             Primary muscle
           </label>
-          <select id="ex-muscle" value={primary} onChange={(e) => setPrimary(e.target.value as MuscleGroup)} className={field}>
-            {MUSCLES.map((m) => (
-              <option key={m} value={m}>
-                {MUSCLE_GROUP_LABELS[m]}
-              </option>
-            ))}
-          </select>
+          <Select
+            id="ex-muscle"
+            value={primary}
+            onChange={setPrimary}
+            options={MUSCLES.map((m) => ({ value: m, label: MUSCLE_GROUP_LABELS[m] }))}
+            className="w-full !text-base"
+          />
         </div>
         <div>
           <label htmlFor="ex-equipment" className="mb-1 block text-sm font-semibold">
             Equipment
           </label>
-          <select
+          <Select
             id="ex-equipment"
             value={equipment}
-            onChange={(e) => setEquipment(e.target.value as Equipment)}
-            className={field}
-          >
-            {EQUIPMENT.map((eq) => (
-              <option key={eq} value={eq}>
-                {EQUIPMENT_LABELS[eq]}
-              </option>
-            ))}
-          </select>
+            onChange={setEquipment}
+            options={EQUIPMENT.map((eq) => ({ value: eq, label: EQUIPMENT_LABELS[eq] }))}
+            className="w-full !text-base"
+          />
           <p className="mt-1 text-xs text-text-muted">For bodyweight exercises the weight column is optional added load.</p>
         </div>
         <div>
           <label htmlFor="ex-load" className="mb-1 block text-sm font-semibold">
             Load
           </label>
-          <select id="ex-load" value={loadMode} onChange={(e) => setLoadChoice(e.target.value as LoadMode)} className={field}>
-            <option value="total">Total (one bar or stack)</option>
-            <option value="per_hand">Per hand (volume counts both)</option>
-            <option value="unilateral">One side at a time (volume counts both sides)</option>
-          </select>
+          <Select
+            id="ex-load"
+            value={loadMode}
+            onChange={(v: LoadMode) => setLoadChoice(v)}
+            options={[
+              { value: "total", label: "Total (one bar or stack)" },
+              { value: "per_hand", label: "Per hand (volume counts both)" },
+              { value: "unilateral", label: "One side at a time (volume counts both sides)" },
+            ]}
+            className="w-full !text-base"
+          />
         </div>
         <label htmlFor="ex-machine" className="flex min-h-11 items-center gap-3 text-sm">
           <input

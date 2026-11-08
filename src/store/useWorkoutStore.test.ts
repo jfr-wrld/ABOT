@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useWorkoutStore } from "./useWorkoutStore";
+import { sessionDurationSec } from "@/lib/calc";
 
 const initial = useWorkoutStore.getState();
 
@@ -91,5 +92,84 @@ describe("gym location", () => {
     useLocationStore.setState({ locations: [] });
     useWorkoutStore.getState().startEmpty(90);
     expect(useWorkoutStore.getState().active!.locationId).toBeUndefined();
+  });
+});
+
+describe("pause and resume", () => {
+  it("paused time is left out of the duration, and resuming carries on", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(2026, 10, 8, 9, 0, 0));
+      setup();
+      vi.setSystemTime(new Date(2026, 10, 8, 9, 10, 0)); // 10 min in
+      useWorkoutStore.getState().pauseActive();
+      const paused = useWorkoutStore.getState().active!;
+      expect(paused.pausedAt).toBe(Date.now());
+      vi.setSystemTime(new Date(2026, 10, 8, 9, 40, 0)); // 30 min break
+      expect(sessionDurationSec(useWorkoutStore.getState().active!, Date.now())).toBe(600);
+      useWorkoutStore.getState().resumeActive();
+      vi.setSystemTime(new Date(2026, 10, 8, 9, 45, 0));
+      expect(sessionDurationSec(useWorkoutStore.getState().active!, Date.now())).toBe(900);
+      expect(useWorkoutStore.getState().active!.pausedAt).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("pausing clears the rest timer, ticking a set resumes, and finishing while paused counts the pause out", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(2026, 10, 8, 9, 0, 0));
+      const { exId, setIds } = setup();
+      const s = useWorkoutStore.getState();
+      s.updateSet(exId, setIds[0]!, { weightKg: 60, reps: 8 });
+      s.completeSet(exId, setIds[0]!, true);
+      expect(useWorkoutStore.getState().restTimer).not.toBeNull();
+      vi.setSystemTime(new Date(2026, 10, 8, 9, 5, 0));
+      useWorkoutStore.getState().pauseActive();
+      expect(useWorkoutStore.getState().restTimer).toBeNull();
+
+      vi.setSystemTime(new Date(2026, 10, 8, 9, 20, 0));
+      s.updateSet(exId, setIds[1]!, { weightKg: 60, reps: 8 });
+      useWorkoutStore.getState().completeSet(exId, setIds[1]!, true);
+      expect(useWorkoutStore.getState().active!.pausedAt).toBeUndefined();
+      expect(useWorkoutStore.getState().active!.pausedMs).toBe(15 * 60_000);
+
+      useWorkoutStore.getState().pauseActive();
+      vi.setSystemTime(new Date(2026, 10, 8, 9, 50, 0));
+      const done = useWorkoutStore.getState().finishActive()!;
+      expect(done.pausedAt).toBeUndefined();
+      expect(sessionDurationSec(done)).toBe(5 * 60);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("reorder and replace", () => {
+  it("reorderExercises puts the exercises in the given order and ignores unknown ids", () => {
+    setup();
+    const s = useWorkoutStore.getState();
+    s.addExercise("squat-barbell", 90);
+    s.addExercise("deadlift-barbell", 90);
+    const ids = useWorkoutStore.getState().active!.exercises.map((e) => e.id);
+    useWorkoutStore.getState().reorderExercises([ids[2]!, ids[0]!, ids[1]!]);
+    expect(useWorkoutStore.getState().active!.exercises.map((e) => e.exerciseId)).toEqual([
+      "deadlift-barbell",
+      "bench-press-barbell",
+      "squat-barbell",
+    ]);
+    useWorkoutStore.getState().reorderExercises([ids[0]!, "nope"]);
+    expect(useWorkoutStore.getState().active!.exercises).toHaveLength(3);
+  });
+
+  it("replaceExercise swaps the movement and keeps the sets as typed", () => {
+    const { exId, setIds } = setup();
+    useWorkoutStore.getState().updateSet(exId, setIds[0]!, { weightKg: 60, reps: 8 });
+    useWorkoutStore.getState().replaceExercise(exId, "bench-press-dumbbell");
+    const ex = useWorkoutStore.getState().active!.exercises[0]!;
+    expect(ex.id).toBe(exId);
+    expect(ex.exerciseId).toBe("bench-press-dumbbell");
+    expect(ex.sets[0]).toMatchObject({ weightKg: 60, reps: 8 });
   });
 });

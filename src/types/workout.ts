@@ -137,6 +137,10 @@ export interface WorkoutSession {
   locationId?: string;
   startedAt: number;
   finishedAt?: number;
+  /** Set while the workout is paused; the clock stops until it is resumed. */
+  pausedAt?: number;
+  /** Total time spent paused so far, left out of the duration. */
+  pausedMs?: number;
   status: SessionStatus;
   exercises: SessionExercise[];
   notes?: string;

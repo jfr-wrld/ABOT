@@ -1,6 +1,7 @@
 "use client";
 
 import { setNumbers } from "@/lib/sets";
+import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -147,18 +148,12 @@ function Editor() {
 
               <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
                 <label htmlFor={`rest-${ex.id}`}>Rest</label>
-                <select
+                <Select
                   id={`rest-${ex.id}`}
                   value={ex.restSeconds}
-                  onChange={(e) => patchExercise(ex.id, (x) => ({ ...x, restSeconds: Number(e.target.value) }))}
-                  className="h-9 rounded-ctl border border-line-strong bg-surface-2 px-2 text-sm text-text"
-                >
-                  {REST_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s === 0 ? "Off" : formatClock(s)}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(restSeconds) => patchExercise(ex.id, (x) => ({ ...x, restSeconds }))}
+                  options={REST_OPTIONS.map((s) => ({ value: s, label: s === 0 ? "Off" : formatClock(s) }))}
+                />
               </div>
 
               <div

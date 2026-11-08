@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Select } from "@/components/ui/Select";
 import type { WeightUnit, WorkoutSession } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -61,19 +62,13 @@ export function ActiveWorkoutHeader({
           <label htmlFor="workout-gym" className="text-sm text-text-muted">
             Gym
           </label>
-          <select
+          <Select
             id="workout-gym"
             value={session.locationId ?? ""}
-            onChange={(e) => setLocation(e.target.value || undefined)}
-            className="h-11 min-w-0 flex-1 rounded-ctl border border-zinc-800 bg-well px-2 text-sm text-text focus:border-accent"
-          >
-            <option value="">No gym</option>
-            {locations.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setLocation(v || undefined)}
+            options={[{ value: "", label: "No gym" }, ...locations.map((l) => ({ value: l.id, label: l.name }))]}
+            className="flex-1"
+          />
         </div>
       )}
 

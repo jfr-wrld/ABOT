@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
  * Every test starts on a clean device: no saved workouts, routines, or settings. The intro is
@@ -85,4 +85,11 @@ export async function waitForSavedSetting(page: Page, field: string, value: unkn
       ),
     )
     .toEqual(value);
+}
+
+/** Opens one of ABOT's dropdowns and picks an option by its visible text. */
+export async function choose(page: Page, dropdown: Locator, option: string): Promise<void> {
+  await dropdown.click();
+  await page.getByRole("option", { name: option, exact: true }).click();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
 }

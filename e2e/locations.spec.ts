@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, choose } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
@@ -21,17 +21,17 @@ test("machine records and previous sets are kept per gym", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 
   await startEmptyWorkout(page);
-  await expect(page.getByLabel("Gym")).toHaveValue(/.+/);
-  await page.getByLabel("Gym").selectOption({ label: "Gym A" });
+  await expect(page.getByLabel("Gym", { exact: true })).not.toHaveText("No gym");
+  await choose(page, page.getByLabel("Gym", { exact: true }), "Gym A");
   await addExercise(page, "Lat Pulldown (Cable)");
   await logSet(page, 1, "60", "10");
   await finishWorkout(page);
 
   await startEmptyWorkout(page);
-  await page.getByLabel("Gym").selectOption({ label: "Gym B" });
+  await choose(page, page.getByLabel("Gym", { exact: true }), "Gym B");
   await addExercise(page, "Lat Pulldown (Cable)");
   await expect(page.getByLabel("No previous set").first()).toBeVisible();
-  await page.getByLabel("Gym").selectOption({ label: "Gym A" });
+  await choose(page, page.getByLabel("Gym", { exact: true }), "Gym A");
   await expect(page.getByRole("button", { name: /^Previous 60 × 10/ })).toBeVisible();
 });
 
@@ -57,9 +57,9 @@ test("custom exercise form sets the load mode", async ({ page }) => {
   await page.goto("/exercises");
   await page.getByRole("button", { name: "New", exact: true }).click();
   await page.getByLabel("Name").fill("Spider Curl");
-  await page.getByLabel("Equipment", { exact: true }).last().selectOption("dumbbell");
-  await expect(page.getByLabel("Load")).toHaveValue("per_hand");
-  await page.getByLabel("Load").selectOption("unilateral");
+  await choose(page, page.getByLabel("Equipment", { exact: true }).last(), "Dumbbell");
+  await expect(page.getByLabel("Load")).toHaveText("Per hand (volume counts both)");
+  await choose(page, page.getByLabel("Load"), "One side at a time (volume counts both sides)");
   await page.getByRole("button", { name: "Add to library" }).click();
   await startEmptyWorkout(page);
   await addExercise(page, "Spider Curl");
