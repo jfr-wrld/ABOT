@@ -13,6 +13,8 @@ import type {
   WorkoutSet,
 } from "@/types/workout";
 import { EQUIPMENT_LABELS, primaryMusclesLabel } from "@/types/workout";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { SetRow } from "./SetRow";
 import { Sheet } from "@/components/ui/Sheet";
@@ -61,7 +63,8 @@ export function ExerciseCard({
   return (
     <section aria-labelledby={`ex-${item.id}`} className="rounded-card border border-white/[0.08] bg-surface px-2 py-3">
       <header className="flex items-start justify-between gap-2 px-1">
-        <div className="min-w-0">
+        {exercise && <ExerciseThumb exercise={exercise} size={44} />}
+        <div className="min-w-0 flex-1">
           <h2 id={`ex-${item.id}`} className="text-base font-semibold tracking-tight text-zinc-100">
             {exercise ? (
               <button
@@ -76,7 +79,10 @@ export function ExerciseCard({
               <span className="block truncate">{name}</span>
             )}
           </h2>
-          <p className="text-xs text-zinc-400">{subtitle}</p>
+          <p className="flex items-center gap-1.5 text-xs text-zinc-400">
+            {exercise && <EquipmentIcon equipment={exercise.equipment} size={14} />}
+            <span className="truncate">{subtitle}</span>
+          </p>
         </div>
         {exercise && (
           <button

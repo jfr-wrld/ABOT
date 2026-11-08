@@ -87,3 +87,12 @@ test("the muscle filter counts groups drawn as one shape together", async ({ pag
   await expect(page.getByRole("link", { name: /^Squat \(Barbell\)/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toHaveCount(0);
 });
+
+test("each exercise in the logger shows its photo and equipment icon", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  const card = page.locator("section").filter({ has: page.getByRole("heading", { name: "Bench Press (Barbell)", exact: true }) });
+  await expect(card.locator("[data-thumb] img")).toHaveAttribute("src", "/thumbs/bench-press-barbell.webp");
+  await expect(card.locator("[data-equipment]")).toHaveAttribute("data-equipment", "barbell");
+  await expect(card.getByText("Chest · Barbell")).toBeVisible();
+});
