@@ -71,7 +71,7 @@ export function StoryCardStudio({
         setStatus({ kind: "idle" });
         onClose();
       }}
-      className="m-0 h-dvh max-h-dvh w-full max-w-none bg-bg p-0 text-text backdrop:bg-black/80"
+      className="force-dark m-0 h-dvh max-h-dvh w-full max-w-none bg-bg p-0 text-text backdrop:bg-black/80"
     >
       {open && data && <Studio data={data} status={status} setStatus={setStatus} shareable={shareable} onClose={() => ref.current?.close()} />}
     </dialog>

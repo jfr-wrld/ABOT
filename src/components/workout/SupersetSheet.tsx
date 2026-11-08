@@ -31,7 +31,7 @@ export function SupersetSheet({ item, name, onClose }: { item: SessionExercise; 
                     link(item.id, e.id);
                     onClose();
                   }}
-                  className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-left hover:bg-surface-2 active:bg-white/[0.08]"
+                  className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-left hover:bg-surface-2 active:bg-ink/[0.08]"
                 >
                   {ex && <ExerciseThumb exercise={ex} size={40} />}
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold">{ex?.name ?? "Removed exercise"}</span>

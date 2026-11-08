@@ -31,7 +31,7 @@ export function InfoTip({
           aria-expanded={open}
           aria-controls={id}
           onClick={() => setOpen((o) => !o)}
-          className={`-my-2 ml-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/[0.05] ${
+          className={`-my-2 ml-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-ink/[0.05] ${
             open ? "text-accent" : "text-text-muted hover:text-text"
           }`}
         >

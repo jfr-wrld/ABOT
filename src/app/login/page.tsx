@@ -18,9 +18,9 @@ const rise: Variants = { hidden: { y: 28, opacity: 0 }, shown: { y: 0, opacity: 
 const PRIMARY_LINK =
   "flex min-h-12 w-full items-center justify-center rounded-xl bg-accent text-base font-bold text-on-accent transition-[filter] hover:brightness-110";
 const SECONDARY_LINK =
-  "flex min-h-12 w-full items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-base font-semibold transition-colors hover:border-white/25";
+  "flex min-h-12 w-full items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 text-base font-semibold transition-colors hover:border-ink/25";
 const QUIET_LINK =
-  "flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-text-muted transition-colors hover:bg-white/[0.05] hover:text-text";
+  "flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text";
 
 /** Only in-app paths, so ?from= cannot send anyone off the site. */
 function useFrom(): string | null {
@@ -85,12 +85,12 @@ function GoogleSignIn({ from }: { from: string | null }) {
   if (s.phase === "unconfigured") {
     return (
       <>
-        <div className="rounded-card border border-white/[0.08] bg-surface p-4">
+        <div className="rounded-card border border-ink/[0.08] bg-surface p-4">
           <button
             type="button"
             disabled
             aria-describedby="google-status"
-            className="flex min-h-12 w-full items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-base font-semibold text-text disabled:opacity-60"
+            className="flex min-h-12 w-full items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 text-base font-semibold text-text disabled:opacity-60"
           >
             Sign in with Google
           </button>
@@ -109,7 +109,7 @@ function GoogleSignIn({ from }: { from: string | null }) {
     const status = syncStatus(s, now);
     return (
       <>
-        <div className="rounded-card border border-white/[0.08] bg-surface p-4">
+        <div className="rounded-card border border-ink/[0.08] bg-surface p-4">
           <p className="text-sm">
             Signed in as <span className="break-all font-semibold">{s.email ?? "your Google account"}</span>
           </p>

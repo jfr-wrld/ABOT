@@ -86,7 +86,7 @@ export function WorkoutReminderSettings() {
         >
           <span
             aria-hidden="true"
-            className={`absolute top-0.5 size-6 rounded-full transition-[left] ${schedule.enabled ? "left-7 bg-black" : "left-0.5 bg-white"}`}
+            className={`absolute top-0.5 size-6 rounded-full transition-[left] ${schedule.enabled ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`}
           />
         </button>
       </div>
@@ -104,7 +104,7 @@ export function WorkoutReminderSettings() {
                   aria-label={d.long}
                   onClick={() => setDay(d.wd, { on: !on })}
                   className={`num flex h-11 items-center justify-center rounded-full border text-xs font-semibold transition-colors ${
-                    on ? "border-accent bg-accent text-on-accent" : "border-white/[0.12] text-text-muted hover:border-white/25 hover:text-text"
+                    on ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
                   }`}
                 >
                   {d.short}
@@ -163,7 +163,7 @@ export function WorkoutReminderSettings() {
               <span id="lead-label" className="label-caps mb-1 block">
                 Pack-your-bag call
               </span>
-              <div role="radiogroup" aria-labelledby="lead-label" className="grid h-12 grid-cols-3 gap-1 rounded-ctl border border-white/[0.08] p-1">
+              <div role="radiogroup" aria-labelledby="lead-label" className="grid h-12 grid-cols-3 gap-1 rounded-ctl border border-ink/[0.08] p-1">
                 {([0, 15, 30] as const).map((m) => (
                   <button
                     key={m}
@@ -172,7 +172,7 @@ export function WorkoutReminderSettings() {
                     aria-checked={schedule.leadMinutes === m}
                     onClick={() => update({ leadMinutes: m })}
                     className={`num rounded-lg text-xs font-semibold transition-colors ${
-                      schedule.leadMinutes === m ? "bg-white/[0.1] text-text" : "text-text-muted hover:text-text"
+                      schedule.leadMinutes === m ? "bg-ink/[0.1] text-text" : "text-text-muted hover:text-text"
                     }`}
                   >
                     {m === 0 ? "Off" : `${m}m`}

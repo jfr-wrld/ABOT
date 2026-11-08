@@ -72,7 +72,7 @@ export function ExerciseCard({
       aria-labelledby={`ex-${item.id}`}
       // The coloured left edge is information: it marks which cards are done back to back.
       style={ssColor ? { borderLeftColor: ssColor } : undefined}
-      className={`rounded-card border border-white/[0.08] bg-surface px-2 py-3 ${ssColor ? "border-l-[3px]" : ""}`}
+      className={`rounded-card border border-ink/[0.08] bg-surface px-2 py-3 ${ssColor ? "border-l-[3px]" : ""}`}
     >
       <header className="flex items-start justify-between gap-2 px-1">
         {exercise && <ExerciseThumb exercise={exercise} size={44} />}
@@ -165,7 +165,7 @@ export function ExerciseCard({
       <button
         type="button"
         onClick={() => store.addSet(item.id)}
-        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.14] text-sm font-semibold text-text-muted transition-colors duration-200 hover:border-white/30 hover:bg-white/[0.03] hover:text-text active:bg-white/[0.06]"
+        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-ink/[0.14] text-sm font-semibold text-text-muted transition-colors duration-200 hover:border-ink/30 hover:bg-ink/[0.03] hover:text-text active:bg-ink/[0.06]"
       >
         <Plus aria-hidden="true" size={16} />
         Add set

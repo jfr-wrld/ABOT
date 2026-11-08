@@ -88,7 +88,7 @@ export function SignInReturn() {
               type="button"
               onClick={clearNotice}
               aria-label="Dismiss"
-              className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-white/[0.06] hover:text-text"
+              className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.06] hover:text-text"
             >
               <X aria-hidden="true" size={18} />
             </button>

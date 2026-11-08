@@ -75,7 +75,7 @@ export function ActiveWorkoutHeader({
       )}
 
       <dl className="mt-3 grid grid-cols-3 gap-2">
-        <div className="rounded-xl border border-white/10 bg-surface px-3 py-2.5">
+        <div className="rounded-xl border border-ink/10 bg-surface px-3 py-2.5">
           <dt className="label-caps flex items-center gap-1.5">
             Duration
             {paused && <span className="rounded bg-accent px-1 text-[9px] font-bold text-on-accent">Paused</span>}
@@ -102,7 +102,7 @@ export function ActiveWorkoutHeader({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 rounded-xl border border-white/10 bg-surface px-3 py-2.5">
+    <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-3 py-2.5">
       <dt className="label-caps">{label}</dt>
       <dd className="num flex min-h-11 items-center truncate text-xl font-bold tracking-tight text-text">{value}</dd>
     </div>

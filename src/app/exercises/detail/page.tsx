@@ -281,7 +281,7 @@ function MusclesWorked({ exercise }: { exercise: Exercise }) {
  */
 function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.ReactNode }) {
   return (
-    <header className="relative">
+    <header className="force-dark relative">
       <PhotoLoop exercise={exercise} className="aspect-[4/3] max-h-[52vh] w-full" />
       <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-6 pt-3">
         <Link
@@ -467,7 +467,7 @@ function TrainBar({ exercise }: { exercise: Exercise }) {
           <Link
             href="/workout"
             aria-label="Open the workout in progress"
-            className="flex size-12 items-center justify-center rounded-xl border border-white/[0.12] hover:border-white/25"
+            className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] hover:border-ink/25"
           >
             <Play aria-hidden="true" size={18} />
           </Link>

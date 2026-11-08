@@ -32,7 +32,7 @@ export const MuscleIcon = memo(function MuscleIcon({ muscle, size = 30 }: { musc
     <svg aria-hidden="true" viewBox={box} height={size} width={size * aspect} className="shrink-0">
       {(back ? BODY_BACK : BODY_FRONT).map((p, i) => {
         const lit = !NON_MUSCLE.has(p.slug) && levels[p.slug as Region];
-        const fill = lit ? "#ccff00" : NON_MUSCLE.has(p.slug) ? "#3a3a42" : "#52525b";
+        const fill = lit ? "var(--color-accent)" : NON_MUSCLE.has(p.slug) ? "var(--color-muscle-off)" : "var(--color-muscle-icon)";
         return (
           <g key={`${p.slug}-${i}`} fill={fill}>
             {p.d.map((d, j) => (

@@ -47,7 +47,7 @@ export const ExerciseThumb = memo(function ExerciseThumb({ exercise, size = 48 }
       data-thumb={src ? "photo" : pattern ? "figure" : "icon"}
       aria-hidden="true"
       style={{ width: size, height: size }}
-      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/[0.06] bg-surface-2"
+      className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-ink/[0.06] bg-surface-2"
     >
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element -- static export without the image optimizer; files are already small
@@ -73,7 +73,7 @@ export const ExerciseThumb = memo(function ExerciseThumb({ exercise, size = 48 }
       {src && (
         <span
           data-equipment={exercise.equipment}
-          className="absolute right-0 bottom-0 flex items-center justify-center rounded-tl-lg bg-black/80 text-accent"
+          className="force-dark absolute right-0 bottom-0 flex items-center justify-center rounded-tl-lg bg-black/80 text-accent"
           style={{ width: Math.round(size * 0.42), height: Math.round(size * 0.42) }}
         >
           <EquipmentIcon equipment={exercise.equipment} size={Math.round(size * 0.3)} />

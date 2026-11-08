@@ -12,6 +12,7 @@ import { MotionProvider } from "@/components/animations/MotionProvider";
 import { SignInReturn } from "@/components/sync/SignInReturn";
 import { NativeShell } from "@/components/layout/NativeShell";
 import { AutoGym } from "@/components/layout/AutoGym";
+import { THEME_SCRIPT, ThemeController } from "@/components/layout/ThemeController";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -32,8 +33,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable} h-full antialiased`}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${inter.variable} ${mono.variable} h-full antialiased`}>
+      <head>
+        {/* Theme before the first paint, so a light page never flashes dark. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
+        <ThemeController />
         <MotionProvider>
           <StoreHydrator />
           <TabNotice />

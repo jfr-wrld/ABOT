@@ -128,7 +128,7 @@ function SessionDetail() {
                     </li>
                   ))}
                   {muscles.secondary.slice(0, 3).map((m) => (
-                    <li key={m} className="rounded-full border border-white/10 px-2 py-0.5 text-xs text-text-muted">
+                    <li key={m} className="rounded-full border border-ink/10 px-2 py-0.5 text-xs text-text-muted">
                       {MUSCLE_GROUP_LABELS[m]}
                     </li>
                   ))}
@@ -246,7 +246,7 @@ function Hero({ session, byId, onMenu }: { session: WorkoutSession; byId: Record
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-black/40 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-black/60"
+            className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-surface/60 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-surface/70"
           >
             <ChevronLeft aria-hidden="true" size={18} />
             Home
@@ -256,7 +256,7 @@ function Hero({ session, byId, onMenu }: { session: WorkoutSession; byId: Record
             onClick={onMenu}
             aria-label="Workout options"
             aria-haspopup="dialog"
-            className="-mr-2 flex size-11 items-center justify-center rounded-full bg-black/40 backdrop-blur hover:bg-black/60"
+            className="-mr-2 flex size-11 items-center justify-center rounded-full bg-surface/60 backdrop-blur hover:bg-surface/70"
           >
             <MoreHorizontal aria-hidden="true" size={20} />
           </button>
@@ -384,7 +384,7 @@ function ExerciseCard({
           aria-label={`${open ? "Hide" : "Show"} sets of ${def?.name ?? "exercise"}`}
           whileTap={{ scale: 0.9 }}
           transition={PRESS_SPRING}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-white/[0.06] hover:text-text"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-ink/[0.06] hover:text-text"
         >
           <motion.span animate={{ rotate: open ? 0 : -90 }} transition={SPRING}>
             <ChevronDown aria-hidden="true" size={20} />

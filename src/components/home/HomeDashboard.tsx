@@ -105,7 +105,7 @@ function WeekStrip({ days }: { days: ReturnType<typeof weekStrip> }) {
             <span aria-hidden="true" className="relative flex h-9 w-full max-w-11 items-center justify-center">
               {d.isToday && !d.trained && (
                 <motion.span
-                  className="absolute inset-0 rounded-lg border border-white/70"
+                  className="absolute inset-0 rounded-lg border border-ink/70"
                   animate={reduce ? undefined : { opacity: [1, 0.45, 1] }}
                   transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
                 />
@@ -192,7 +192,7 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
           <Link
             href="/workout"
             aria-label="Create a routine"
-            className="flex size-12 items-center justify-center rounded-xl border border-white/[0.12] transition-colors hover:border-white/25"
+            className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
           >
             <Plus aria-hidden="true" size={20} />
           </Link>
@@ -390,13 +390,13 @@ function SessionsRing({ done, target, perWeek }: { done: number; target: number;
     <div className={`${TILE} flex flex-col items-center justify-center gap-1`}>
       <div className="relative size-[76px]">
         <svg viewBox="0 0 76 76" className="size-full -rotate-90" aria-hidden="true">
-          <circle cx="38" cy="38" r={r} fill="none" stroke="#27272a" strokeWidth="7" />
+          <circle cx="38" cy="38" r={r} fill="none" stroke="var(--color-track)" strokeWidth="7" />
           <motion.circle
             cx="38"
             cy="38"
             r={r}
             fill="none"
-            stroke="#ccff00"
+            stroke="var(--color-accent)"
             strokeWidth="7"
             strokeLinecap="round"
             style={{ pathLength: 0, opacity: fraction > 0 ? 1 : 0 }}

@@ -27,7 +27,7 @@ export function TabNotice() {
       ref={ref}
       aria-labelledby="tab-notice-title"
       onCancel={(e) => e.preventDefault()}
-      className="m-auto w-[calc(100%-32px)] max-w-sm rounded-card border border-white/[0.08] bg-surface p-5 text-text backdrop:bg-black/80"
+      className="m-auto w-[calc(100%-32px)] max-w-sm rounded-card border border-ink/[0.08] bg-surface p-5 text-text backdrop:bg-black/80"
     >
       <span className="text-accent" aria-hidden="true">
         <AbotMark size={36} />

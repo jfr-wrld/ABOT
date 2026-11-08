@@ -44,7 +44,7 @@ export function SetTypeMenu({
                 onSelect(t);
                 onClose();
               }}
-              className={`flex min-h-12 w-full items-center gap-3 rounded-ctl px-3 text-left hover:bg-surface-2 active:bg-[#303035] ${
+              className={`flex min-h-12 w-full items-center gap-3 rounded-ctl px-3 text-left hover:bg-surface-2 active:bg-press-strong ${
                 t === current ? "bg-surface-2" : ""
               }`}
             >

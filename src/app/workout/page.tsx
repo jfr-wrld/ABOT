@@ -108,7 +108,7 @@ function WorkoutScreen() {
         <button
           type="button"
           onClick={() => setPickerOpen(true)}
-          className="flex min-h-14 w-full items-center justify-center gap-2 rounded-card border border-white/[0.12] bg-surface text-sm font-semibold text-text transition-colors duration-200 hover:border-white/25 hover:bg-surface-2 active:bg-white/[0.08]"
+          className="flex min-h-14 w-full items-center justify-center gap-2 rounded-card border border-ink/[0.12] bg-surface text-sm font-semibold text-text transition-colors duration-200 hover:border-ink/25 hover:bg-surface-2 active:bg-ink/[0.08]"
         >
           <Plus aria-hidden="true" size={18} className="text-accent" />
           Add exercise

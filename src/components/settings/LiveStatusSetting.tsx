@@ -73,7 +73,7 @@ export function LiveStatusSetting() {
         >
           <span
             aria-hidden="true"
-            className={`absolute top-0.5 size-6 rounded-full transition-[left] ${on ? "left-7 bg-black" : "left-0.5 bg-white"}`}
+            className={`absolute top-0.5 size-6 rounded-full transition-[left] ${on ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`}
           />
           <span className="sr-only">{on ? "On" : "Off"}</span>
         </button>

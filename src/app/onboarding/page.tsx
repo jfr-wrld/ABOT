@@ -71,7 +71,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="relative isolate flex min-h-[calc(100dvh-var(--dock-h,96px))] flex-1 flex-col overflow-hidden px-5 pt-4">
+    <main className="force-dark relative isolate flex min-h-[calc(100dvh-var(--dock-h,96px))] flex-1 flex-col overflow-hidden px-5 pt-4">
       <div className="flex items-center justify-between">
         <span className="text-accent">
           <AbotMark size={28} title="ABOT" />
@@ -80,7 +80,7 @@ export default function OnboardingPage() {
           <button
             type="button"
             onClick={() => finish("/")}
-            className="min-h-11 rounded-ctl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-white/[0.05] hover:text-text"
+            className="min-h-11 rounded-ctl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
           >
             Skip intro
           </button>
@@ -91,7 +91,7 @@ export default function OnboardingPage() {
       <motion.svg
         aria-hidden="true"
         viewBox="0 0 100 100"
-        className="pointer-events-none absolute left-1/2 top-[18%] -z-0 size-[440px] -translate-x-1/2 text-white/[0.035]"
+        className="pointer-events-none absolute left-1/2 top-[18%] -z-0 size-[440px] -translate-x-1/2 text-ink/[0.035]"
         animate={{ rotate: index * 60 }}
         transition={{ type: "spring", stiffness: 60, damping: 16 }}
       >
@@ -159,7 +159,7 @@ export default function OnboardingPage() {
             <Link
               href="/login"
               onClick={() => markOnboardingSeen()}
-              className="flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-text-muted transition-colors hover:bg-white/[0.05] hover:text-text"
+              className="flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
             >
               Back up with an account
             </Link>

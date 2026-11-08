@@ -13,7 +13,7 @@ import { SyncError } from "@/components/sync/SyncError";
 export const PROFILE_ABOUT = "/profile?tab=about";
 
 const LINK =
-  "flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 px-3 text-center text-sm font-semibold transition-colors hover:border-white/25";
+  "flex min-h-11 items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 px-3 text-center text-sm font-semibold transition-colors hover:border-ink/25";
 
 /**
  * Profile > Account. The same status Settings shows, so "backed up" is only said when it is
@@ -61,7 +61,7 @@ export function AccountChip({ onOpen }: { onOpen?: () => void }) {
         e.preventDefault();
         onOpen();
       }}
-      className={`-ml-1 inline-flex min-h-11 items-center gap-1.5 rounded-ctl px-1 text-sm font-semibold hover:bg-white/[0.05] ${
+      className={`-ml-1 inline-flex min-h-11 items-center gap-1.5 rounded-ctl px-1 text-sm font-semibold hover:bg-ink/[0.05] ${
         tone === "error" ? "text-failure" : tone === "ok" ? "text-text" : "text-text-muted"
       }`}
     >

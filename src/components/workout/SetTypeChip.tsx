@@ -23,7 +23,7 @@ export function SetTypeChip({
   return (
     <span
       className={`num flex size-9 items-center justify-center rounded-lg border text-sm font-bold ${
-        completed ? "border-accent/25 bg-black/40" : "border-white/[0.06] bg-surface-2"
+        completed ? "border-accent/25 bg-row" : "border-ink/[0.06] bg-surface-2"
       } ${bg[type]}`}
       aria-hidden="true"
     >

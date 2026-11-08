@@ -44,7 +44,7 @@ export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
               className={`h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors ${
                 split === s.value
                   ? "border-accent bg-accent text-on-accent"
-                  : "border-white/[0.12] text-text-muted hover:border-white/25 hover:text-text"
+                  : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
               }`}
             >
               {s.label}
@@ -96,12 +96,12 @@ function TemplateCard({
   return (
     <article
       aria-labelledby={`${t.id}-title`}
-      className="rounded-card border border-white/[0.07] bg-surface p-4 transition-colors hover:border-white/[0.15]"
+      className="rounded-card border border-ink/[0.07] bg-surface p-4 transition-colors hover:border-ink/[0.15]"
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <span className="rounded-full border border-white/10 px-2 py-px text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+            <span className="rounded-full border border-ink/10 px-2 py-px text-[10px] font-semibold uppercase tracking-wider text-text-muted">
               {splitLabel}
             </span>
             <span className="num inline-flex items-center gap-1 text-xs text-text-muted" title="Estimated time">

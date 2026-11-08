@@ -65,7 +65,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(10px+env(safe-area-inset-bottom))]"
     >
-      <ul className="mx-auto flex max-w-[616px] rounded-2xl border border-white/[0.08] bg-bg/80 p-1 shadow-[0_8px_32px_rgb(0_0_0/0.5)] backdrop-blur-xl">
+      <ul className="mx-auto flex max-w-[616px] rounded-2xl border border-ink/[0.08] bg-bg/80 p-1 shadow-[0_8px_32px_rgb(0_0_0/0.5)] backdrop-blur-xl">
         {TABS.map(({ href, label, Icon, also }) => {
           const current =
             pathname !== null &&
@@ -76,8 +76,8 @@ function NavBar({ pathname }: { pathname: string | null }) {
               <Link
                 href={href}
                 aria-current={current ? "page" : undefined}
-                className={`relative flex h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium transition-colors duration-150 hover:bg-white/[0.05] active:bg-white/[0.08] ${
-                  current ? "bg-white/[0.06] text-text" : "text-text-muted"
+                className={`relative flex h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium transition-colors duration-150 hover:bg-ink/[0.05] active:bg-ink/[0.08] ${
+                  current ? "bg-ink/[0.06] text-text" : "text-text-muted"
                 }`}
               >
                 <span className="relative">

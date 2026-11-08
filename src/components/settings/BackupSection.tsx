@@ -107,7 +107,7 @@ export function BackupSection() {
           type="file"
           accept=".json,application/json"
           onChange={(e) => onFile(e.target.files?.[0])}
-          className="block w-full text-sm text-text-muted file:mr-3 file:min-h-11 file:rounded-ctl file:border file:border-line-strong file:bg-surface-2 file:px-4 file:text-sm file:font-semibold file:text-text hover:file:bg-[#303035]"
+          className="block w-full text-sm text-text-muted file:mr-3 file:min-h-11 file:rounded-ctl file:border file:border-line-strong file:bg-surface-2 file:px-4 file:text-sm file:font-semibold file:text-text hover:file:bg-[var(--color-press-strong)]"
         />
       </div>
 

@@ -22,7 +22,7 @@ function Parts({ parts, levels, glowId }: { parts: BodyPart[]; levels: Partial<R
               <path
                 key={i}
                 d={d}
-                fill={level ? "var(--color-accent)" : NON_MUSCLE.has(p.slug) ? "var(--color-surface-2)" : "#3a3a40"}
+                fill={level ? "var(--color-accent)" : NON_MUSCLE.has(p.slug) ? "var(--color-surface-2)" : "var(--color-muscle-off)"}
                 fillOpacity={level === "secondary" ? 0.4 : 1}
               />
             ))}

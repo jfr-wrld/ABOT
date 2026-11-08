@@ -9,7 +9,7 @@ export function MuscleTags({ exercise }: { exercise: Pick<Exercise, "primaryMusc
   return (
     <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-zinc-400">
       {exercise.primaryMuscles.map((m) => (
-        <span key={m} className="shrink-0 rounded-full border border-white/10 px-2 py-px leading-4">
+        <span key={m} className="shrink-0 rounded-full border border-ink/10 px-2 py-px leading-4">
           {MUSCLE_GROUP_LABELS[m]}
         </span>
       ))}

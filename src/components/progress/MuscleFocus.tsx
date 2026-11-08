@@ -42,7 +42,7 @@ export function MuscleFocus({ title, split }: { title: string; split: Partial<Re
                     animate={{ scaleX: v / max }}
                     transition={{ type: "spring", stiffness: 220, damping: 30, delay: i * 0.04 }}
                     style={{ originX: 0 }}
-                    className={`h-full rounded-full ${v >= max / 2 ? "bg-accent" : "bg-[#4d5c12]"}`}
+                    className={`h-full rounded-full ${v >= max / 2 ? "bg-accent" : "bg-accent-dim"}`}
                   />
                 </div>
               </li>

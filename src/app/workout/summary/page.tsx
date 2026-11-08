@@ -182,14 +182,14 @@ function Summary() {
         <div className="grid grid-cols-2 gap-2">
           <Link
             href={historyPath(session.id)}
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-white/[0.12] bg-surface-2 px-3 text-sm font-semibold text-text hover:border-white/25"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-ink/[0.12] bg-surface-2 px-3 text-sm font-semibold text-text hover:border-ink/25"
           >
             <ListOrdered aria-hidden="true" size={16} />
             See every set
           </Link>
           <Link
             href="/"
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-text-muted hover:bg-white/[0.05] hover:text-text"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-text-muted hover:bg-ink/[0.05] hover:text-text"
           >
             <House aria-hidden="true" size={16} />
             Back to Home
@@ -209,7 +209,7 @@ const HEX = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
 function Celebration({ record }: { record: boolean }) {
   const controls = useEntrance();
   const reduce = useReducedMotion();
-  const color = record ? "#00f0ff" : "#ccff00";
+  const color = record ? "var(--color-pr)" : "var(--color-accent)";
   const shards = Array.from({ length: 12 }, (_, i) => {
     const a = (i / 12) * Math.PI * 2 + 0.2;
     const d = 70 + (i % 3) * 14;
@@ -239,7 +239,7 @@ function Celebration({ record }: { record: boolean }) {
               },
             }}
           >
-            <path d={HEX} fill={i % 3 === 0 ? "#f4f4f5" : color} />
+            <path d={HEX} fill={i % 3 === 0 ? "var(--color-text)" : color} />
           </motion.svg>
         ))}
       <svg viewBox="0 0 100 100" className="size-28 overflow-visible">
@@ -388,7 +388,7 @@ function RecordCard({
         <p className="truncate text-sm font-semibold">{exercise?.name ?? "Removed exercise"}</p>
         <ul className="mt-1 flex flex-wrap gap-1">
           {bySet(records).map(({ pr, kinds }) => (
-            <li key={pr.setId} className="num flex items-baseline gap-1.5 rounded-md bg-black/40 px-1.5 py-0.5 text-[11px] text-pr">
+            <li key={pr.setId} className="num flex items-baseline gap-1.5 rounded-md bg-row px-1.5 py-0.5 text-[11px] text-pr">
               <span className="font-bold">
                 {formatWeight(pr.weightKg, unit)} × {pr.reps}
               </span>

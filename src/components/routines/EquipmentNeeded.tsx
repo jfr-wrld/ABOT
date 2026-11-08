@@ -13,7 +13,7 @@ export function EquipmentNeeded({ equipment }: { equipment: Equipment[] }) {
   return (
     <ul aria-label="Equipment" className="mt-3 flex flex-wrap gap-1.5">
       {rows.map(([eq, n]) => (
-        <li key={eq} className="flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-surface-2 px-2 py-1 text-xs">
+        <li key={eq} className="flex items-center gap-1.5 rounded-lg border border-ink/[0.08] bg-surface-2 px-2 py-1 text-xs">
           <span className="text-accent">
             <EquipmentIcon equipment={eq} size={16} />
           </span>

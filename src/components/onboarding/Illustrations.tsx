@@ -16,8 +16,8 @@ const SPRING = { type: "spring", stiffness: 300, damping: 24 } as const;
 /** A phone outline at a fixed size, so the three scenes share one frame. */
 function Phone({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative h-[232px] w-[176px] overflow-hidden rounded-[30px] border border-white/[0.14] bg-black p-2.5 shadow-[0_0_0_6px_#121215]">
-      <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-white/10" />
+    <div className="relative h-[232px] w-[176px] overflow-hidden rounded-[30px] border border-ink/[0.14] bg-black p-2.5 shadow-[0_0_0_6px_#121215]">
+      <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-ink/10" />
       {children}
     </div>
   );
@@ -48,7 +48,7 @@ export function LogSetScene() {
     <div aria-hidden="true" className="relative flex w-full max-w-[320px] flex-col gap-2">
       <Row n={2} weight="100" reps="8" dim />
       <motion.div
-        className="relative grid grid-cols-[36px_1fr_64px_44px_44px] items-center gap-1.5 overflow-hidden rounded-xl border border-white/[0.07] bg-surface p-1.5"
+        className="relative grid grid-cols-[36px_1fr_64px_44px_44px] items-center gap-1.5 overflow-hidden rounded-xl border border-ink/[0.07] bg-surface p-1.5"
         animate={controls}
         variants={{
           still: { backgroundColor: "rgba(204, 255, 0, 0.08)", borderColor: "rgba(204, 255, 0, 0.3)" },
@@ -65,12 +65,12 @@ export function LogSetScene() {
           },
         }}
       >
-        <span className="num flex size-9 items-center justify-center rounded-lg border border-white/10 bg-black/40 text-sm font-bold">3</span>
+        <span className="num flex size-9 items-center justify-center rounded-lg border border-ink/10 bg-black/40 text-sm font-bold">3</span>
         <span className="num truncate text-[11px] text-text-muted">100 × 8</span>
         <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">102.5</span>
         <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">8</span>
         <motion.span
-          className="flex size-11 items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 text-text-muted"
+          className="flex size-11 items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 text-text-muted"
           animate={controls}
           variants={{
             still: { backgroundColor: "rgba(204, 255, 0, 1)", color: "rgba(0, 0, 0, 1)", borderColor: "rgba(204, 255, 0, 1)" },
@@ -116,7 +116,7 @@ export function LogSetScene() {
 
       {/* A fingertip: travels to the check, presses, lifts away. */}
       <motion.span
-        className="absolute size-10 rounded-full border-2 border-white/70 bg-white/15"
+        className="absolute size-10 rounded-full border-2 border-ink/70 bg-ink/15"
         style={{ right: 2, top: 58, opacity: 0 }}
         animate={controls}
         variants={{
@@ -136,12 +136,12 @@ export function LogSetScene() {
 
 function Row({ n, weight, reps, dim }: { n: number; weight: string; reps: string; dim?: boolean }) {
   return (
-    <div className={`grid grid-cols-[36px_1fr_64px_44px_44px] items-center gap-1.5 rounded-xl border border-white/[0.07] bg-surface p-1.5 ${dim ? "opacity-45" : ""}`}>
-      <span className="num flex size-9 items-center justify-center rounded-lg border border-white/10 text-sm font-bold">{n}</span>
+    <div className={`grid grid-cols-[36px_1fr_64px_44px_44px] items-center gap-1.5 rounded-xl border border-ink/[0.07] bg-surface p-1.5 ${dim ? "opacity-45" : ""}`}>
+      <span className="num flex size-9 items-center justify-center rounded-lg border border-ink/10 text-sm font-bold">{n}</span>
       <span className="num text-[11px] text-text-muted">100 × 8</span>
       <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">{weight || "0"}</span>
       <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">{reps || "0"}</span>
-      <span className="flex size-11 items-center justify-center rounded-xl border border-white/[0.12] text-text-muted">
+      <span className="flex size-11 items-center justify-center rounded-xl border border-ink/[0.12] text-text-muted">
         <Check size={22} strokeWidth={3} />
       </span>
     </div>
@@ -177,7 +177,7 @@ export function RestScene() {
       <Phone>
         <div className="flex flex-col gap-1.5">
           {[1, 2, 3].map((i) => (
-            <div key={i} className={`h-7 rounded-lg border border-white/[0.07] ${i === 1 ? "bg-accent/10" : "bg-surface"}`} />
+            <div key={i} className={`h-7 rounded-lg border border-ink/[0.07] ${i === 1 ? "bg-accent/10" : "bg-surface"}`} />
           ))}
         </div>
         <div className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-1.5">
@@ -193,7 +193,7 @@ export function RestScene() {
               <span className="text-xs">−</span>
               <span className="text-xs">+</span>
             </span>
-            <span className="absolute inset-x-3 bottom-0 h-px bg-white/10">
+            <span className="absolute inset-x-3 bottom-0 h-px bg-ink/10">
               <motion.span
                 className="block h-full origin-left bg-accent"
                 animate={{ scaleX: (left - 75) / 15 }}
@@ -201,11 +201,11 @@ export function RestScene() {
               />
             </span>
           </motion.div>
-          <div className="flex h-10 items-center justify-around rounded-2xl border border-white/[0.08] bg-surface text-text-muted">
+          <div className="flex h-10 items-center justify-around rounded-2xl border border-ink/[0.08] bg-surface text-text-muted">
             <House size={14} />
             <Dumbbell size={14} className="text-accent" />
             <Search size={14} />
-            <span className="size-3.5 rounded-sm border border-white/30" />
+            <span className="size-3.5 rounded-sm border border-ink/30" />
           </div>
         </div>
       </Phone>
@@ -289,7 +289,7 @@ export function DeviceScene() {
       </Phone>
       <motion.span
         key={`signal-${cycle}`}
-        className="absolute -right-3 -top-3 flex size-10 items-center justify-center rounded-full border border-white/15 bg-surface text-text-muted"
+        className="absolute -right-3 -top-3 flex size-10 items-center justify-center rounded-full border border-ink/15 bg-surface text-text-muted"
         initial={reduce ? false : { scale: 0, rotate: -30 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ ...SPRING, delay: 1.7 }}

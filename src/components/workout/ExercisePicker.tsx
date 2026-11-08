@@ -83,7 +83,7 @@ export function ExercisePicker({
                   useExerciseStore.getState().adopt(e);
                   onPick(e);
                 }}
-                className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 py-1 text-left hover:bg-surface-2 active:bg-white/[0.08]"
+                className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 py-1 text-left hover:bg-surface-2 active:bg-ink/[0.08]"
               >
                 <ExerciseThumb exercise={e} size={44} />
                 <span className="min-w-0 flex-1">

@@ -25,6 +25,29 @@ and the camera capsule. They are applied as direction, not as defaults; reasons 
 
 Core palette: neutrals plus Volt. Cyan and the set-type colours are status labels with one job each.
 
+## Light theme
+
+Settings > General > Theme: System (default, follows the phone), Dark, Light. The same token names
+take light values on `[data-theme="light"]` (`globals.css`), checked against white: text 16:1,
+muted 7.7:1, accent text `#3f6212` 7:1, accent fill `#65a30d` 3.1:1 with black text on it at 6.8:1,
+PR `#0e7490` 5.4:1. Volt `#ccff00` cannot carry text on white, so `text-accent` switches to the
+darker lime there; fills and borders use the mid lime.
+
+- **`ink`** is white on dark and black on light: hairlines and hovers are `border-ink/[…]` and
+  `bg-ink/[…]`, never `white/[…]`.
+- **`force-dark`** keeps the dark tokens inside it on a light page: photo and video boxes, the
+  exercise hero, the live workout capsule, the splash, onboarding and Story Studio (a darkroom).
+- The theme is set before the first paint by `THEME_SCRIPT` (`ThemeController.tsx`) from a
+  `localStorage` mirror, so a light page never flashes dark. Android's status bar icons follow it.
+
+## Settings
+
+A short list of groups (Account, Preferences, Support, Follow ABOT); each row opens its section
+at `/settings?section=…`: General (language, theme, units, week start), Workout, Notifications,
+Data & backup, FAQ, About. Contact is a mail link with the app version in the subject. Social
+rows read "Soon" until `src/lib/social.ts` has their links. Sign out sits at the bottom, behind a
+confirm, and keeps every workout on the phone.
+
 ## Where the accent lands
 
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the

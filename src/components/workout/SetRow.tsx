@@ -94,7 +94,7 @@ export function SetRow({
   return (
     <li
       className={`relative grid items-center gap-1 overflow-hidden rounded-xl border px-1 py-1 transition-colors duration-200 ${
-        set.completed ? "border-accent/20 bg-accent-tint" : "border-white/[0.04] bg-black/30"
+        set.completed ? "border-accent/20 bg-accent-tint" : "border-ink/[0.04] bg-row"
       }`}
       style={{ gridTemplateColumns: setGridColumns(showRpe) }}
     >
@@ -120,7 +120,7 @@ export function SetRow({
             onClick={fillFromPrevious}
             disabled={set.completed}
             aria-label={`Previous ${prevLabel}. Use these values`}
-            className="block h-11 w-full truncate rounded-ctl px-0.5 text-left hover:bg-white/[0.05] hover:text-text disabled:hover:bg-transparent"
+            className="block h-11 w-full truncate rounded-ctl px-0.5 text-left hover:bg-ink/[0.05] hover:text-text disabled:hover:bg-transparent"
           >
             {prevLabel}
           </button>
@@ -187,7 +187,7 @@ export function SetRow({
         className={`relative z-[1] flex size-11 items-center justify-center rounded-xl border transition-colors duration-150 ${
           set.completed
             ? "border-accent bg-accent text-on-accent hover:brightness-110"
-            : "border-white/15 bg-transparent text-text-muted hover:border-white/30 hover:text-text"
+            : "border-ink/15 bg-transparent text-text-muted hover:border-ink/30 hover:text-text"
         }`}
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">

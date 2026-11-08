@@ -19,6 +19,17 @@
   --color-warmup: #facc15;
   --color-dropset: #c084fc;
   --color-failure: #f87171;
+  /* Theme-aware tints: "ink" is white on the dark theme and black on the light one, so
+     border-ink/[0.07] and bg-ink/[0.05] read as hairlines and hovers on either. */
+  --color-ink: #ffffff;
+  --color-accent-text: #ccff00; /* text-accent; a darker lime on light pages */
+  --color-accent-dim: #4d5c12; /* earlier weeks in bar charts */
+  --color-press: #24242a;
+  --color-press-strong: #2c2c33;
+  --color-track: #27272a; /* empty part of rings and bars */
+  --color-muscle-off: #3a3a40;
+  --color-muscle-icon: #52525b;
+  --color-row: rgb(0 0 0 / 0.3); /* set rows and chips set into a card */
 
   --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
@@ -29,8 +40,84 @@
   --shadow-volt: 0 0 0 1px rgb(204 255 0 / 0.5), 0 0 22px rgb(204 255 0 / 0.28);
 }
 
+/* Light theme (Settings > General > Theme). Same token names; contrast checked against white:
+   text 16:1, muted 7.7:1, accent text 7:1, accent fill 3.1:1 with black text on it at 6.8:1. */
+[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f4f4f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #ebebe8;
+  --color-well: rgb(0 0 0 / 0.04);
+  --color-line: rgb(0 0 0 / 0.09);
+  --color-line-hover: rgb(0 0 0 / 0.18);
+  --color-line-strong: #8e8e96;
+  --color-text: #18181b;
+  --color-text-muted: #52525b;
+  --color-accent: #65a30d;
+  --color-accent-text: #3f6212;
+  --color-accent-tint: rgb(101 163 13 / 0.12);
+  --color-accent-dim: #c9e59a;
+  --color-pr: #0e7490;
+  --color-warmup: #a16207;
+  --color-dropset: #7e22ce;
+  --color-failure: #b91c1c;
+  --color-ink: #000000;
+  --color-press: #e2e2df;
+  --color-press-strong: #d8d8d4;
+  --color-track: #e4e4e7;
+  --color-muscle-off: #d4d4d8;
+  --color-muscle-icon: #a1a1aa;
+  --color-row: rgb(0 0 0 / 0.035);
+  --color-zinc-100: #18181b;
+  --color-zinc-400: #52525b;
+  --color-zinc-600: #a1a1aa;
+  --color-zinc-700: #8e8e96;
+  --color-zinc-800: #e4e4e7;
+  --shadow-volt: 0 0 0 1px rgb(101 163 13 / 0.5), 0 0 18px rgb(101 163 13 / 0.2);
+}
+[data-theme="light"] .text-accent {
+  color: var(--color-accent-text);
+}
+
+/* Dark in every theme: over photos and video, the live capsule, the intro, Story Studio. */
+[data-theme="light"] .force-dark {
+  color-scheme: dark;
+  --color-bg: #09090b;
+  --color-surface: #121215;
+  --color-surface-2: #1c1c21;
+  --color-well: rgb(0 0 0 / 0.8);
+  --color-line: rgb(255 255 255 / 0.07);
+  --color-line-hover: rgb(255 255 255 / 0.15);
+  --color-line-strong: #71717a;
+  --color-text: #f4f4f5;
+  --color-text-muted: #a1a1aa;
+  --color-accent: #ccff00;
+  --color-accent-text: #ccff00;
+  --color-accent-tint: rgb(204 255 0 / 0.08);
+  --color-accent-dim: #4d5c12;
+  --color-pr: #00f0ff;
+  --color-warmup: #facc15;
+  --color-dropset: #c084fc;
+  --color-failure: #f87171;
+  --color-ink: #ffffff;
+  --color-press: #24242a;
+  --color-press-strong: #2c2c33;
+  --color-track: #27272a;
+  --color-muscle-off: #3a3a40;
+  --color-muscle-icon: #52525b;
+  --color-row: rgb(0 0 0 / 0.3);
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --shadow-volt: 0 0 0 1px rgb(204 255 0 / 0.5), 0 0 22px rgb(204 255 0 / 0.28);
+  color: var(--color-text);
+}
+
 @layer base {
   html {
+    color-scheme: dark;
     background: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);

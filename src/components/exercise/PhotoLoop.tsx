@@ -47,7 +47,7 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
   const pattern = patternFor(exercise);
 
   return (
-    <div className={`relative overflow-hidden bg-black ${className}`}>
+    <div className={`force-dark relative overflow-hidden bg-black ${className}`}>
       {pair ? (
         frames.map((src, i) => (
           // eslint-disable-next-line @next/next/no-img-element -- dataset photos, static app without the image optimizer
@@ -79,7 +79,7 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
           <span className="flex items-center gap-2" aria-live="off">
             <span aria-hidden="true" className="flex gap-1">
               {[0, 1].map((i) => (
-                <span key={i} className={`h-1.5 rounded-full transition-[width,background-color] ${frame === i ? "w-4 bg-accent" : "w-1.5 bg-white/40"}`} />
+                <span key={i} className={`h-1.5 rounded-full transition-[width,background-color] ${frame === i ? "w-4 bg-accent" : "w-1.5 bg-ink/40"}`} />
               ))}
             </span>
             <span data-testid="hero-phase" className="label-caps !text-text">

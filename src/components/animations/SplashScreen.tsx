@@ -34,7 +34,7 @@ export function SplashScreen() {
           key="splash"
           role="status"
           aria-label="Loading ABOT"
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black"
+          className="force-dark fixed inset-0 z-50 flex flex-col items-center justify-center bg-black"
           initial={false}
           exit={{ opacity: 0, scale: 1.04 }}
           transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
@@ -59,7 +59,7 @@ export function SplashScreen() {
           </motion.span>
           <AnimatedWordmark delay={0.55} className="mt-5 text-3xl font-black tracking-tight text-text" />
           {/* A hairline that creeps across while the device storage is read. */}
-          <span aria-hidden="true" className="mt-8 block h-px w-40 overflow-hidden bg-white/10">
+          <span aria-hidden="true" className="mt-8 block h-px w-40 overflow-hidden bg-ink/10">
             <motion.span
               className="block h-full origin-left bg-accent"
               initial={{ scaleX: 0 }}

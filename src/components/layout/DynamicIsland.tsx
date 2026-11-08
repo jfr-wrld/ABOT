@@ -69,7 +69,7 @@ function Island() {
 }
 
 const capsule =
-  "pointer-events-auto flex items-center overflow-hidden rounded-full border border-accent/25 bg-black text-text shadow-[0_0_14px_rgb(204_255_0/0.14)]";
+  "force-dark pointer-events-auto flex items-center overflow-hidden rounded-full border border-accent/25 bg-black text-text shadow-[0_0_14px_rgb(204_255_0/0.14)]";
 
 function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; onWorkoutPage: boolean }) {
   const now = useNow(1000);
@@ -102,7 +102,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
         <Link
           href="/workout"
           aria-label="Open the workout in progress"
-          className="flex h-full items-center hover:bg-white/[0.06]"
+          className="flex h-full items-center hover:bg-ink/[0.06]"
         >
           {body}
         </Link>
@@ -169,7 +169,7 @@ function RestCapsule() {
         </IslandButton>
       </motion.div>
       {/* Time left as a hairline along the bottom edge: the one moving part while you rest. */}
-      <div className="absolute inset-x-6 bottom-0 h-px bg-white/10" aria-hidden="true">
+      <div className="absolute inset-x-6 bottom-0 h-px bg-ink/10" aria-hidden="true">
         <div
           className="h-full bg-accent transition-[width] duration-250 ease-linear motion-reduce:transition-none"
           style={{ width: `${fraction * 100}%` }}
@@ -196,7 +196,7 @@ function IslandButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-white/10 hover:text-text active:bg-white/15 disabled:opacity-40"
+      className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-ink/10 hover:text-text active:bg-ink/15 disabled:opacity-40"
     >
       {children}
     </button>

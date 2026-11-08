@@ -102,7 +102,7 @@ function MotionPanel({ exercise }: { exercise: Exercise }) {
   return (
     <div>
       <ViewToggle view={view} setView={setView} hasPhotos={hasPhotos} />
-      <div className="aspect-[12/11] w-full overflow-hidden rounded-ctl bg-black">
+      <div className="force-dark aspect-[12/11] w-full overflow-hidden rounded-ctl bg-black">
         <MotionFigure pattern={pattern} exercise={exercise} playing={playing} onPhase={setPhase} />
       </div>
       <div className="mt-2 flex items-center justify-between gap-2 px-1">
@@ -198,7 +198,7 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
   const shown = isFramePair ? urls.slice(0, 2) : [urls[0]!];
   return (
     <div>
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-ctl bg-black">
+      <div className="force-dark relative aspect-[4/3] w-full overflow-hidden rounded-ctl bg-black">
         {shown.map((src, i) => (
           // eslint-disable-next-line @next/next/no-img-element -- external dataset images, unknown size, static PWA without the image optimizer
           <img
@@ -306,7 +306,7 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
           <img src={video.url} alt={`Video tutorial: ${exercise.name}`} width={400} height={300} className="w-full rounded-ctl bg-black object-contain" />
         )
       ) : (
-        <div className={`mx-auto w-full overflow-hidden rounded-ctl bg-black ${video.vertical ? "aspect-[9/16] max-w-[280px]" : "aspect-video"}`}>
+        <div className={`force-dark mx-auto w-full overflow-hidden rounded-ctl bg-black ${video.vertical ? "aspect-[9/16] max-w-[280px]" : "aspect-video"}`}>
           <iframe
             src={embedUrl(video)}
             title={`Video tutorial: ${exercise.name}`}

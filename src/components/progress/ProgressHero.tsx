@@ -55,7 +55,7 @@ export function ProgressHero({
               animate={{ scaleY: b.volumeKg > 0 ? Math.max(0.06, b.volumeKg / max) : 0.04 }}
               transition={{ type: "spring", stiffness: 260, damping: 28, delay: i * 0.025 }}
               style={{ originY: 1 }}
-              className={`h-full flex-1 rounded-t-[3px] ${current ? "bg-accent" : b.volumeKg > 0 ? "bg-[#4d5c12]" : "bg-surface-2"}`}
+              className={`h-full flex-1 rounded-t-[3px] ${current ? "bg-accent" : b.volumeKg > 0 ? "bg-accent-dim" : "bg-surface-2"}`}
             />
           );
         })}

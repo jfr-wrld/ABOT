@@ -74,7 +74,7 @@ export function ReorderSheet({ onClose }: { onClose: () => void }) {
                     onClick={() => move(i, -1)}
                     disabled={i === 0}
                     aria-label={`Move ${name} up`}
-                    className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-white/[0.06] hover:text-text disabled:opacity-30"
+                    className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.06] hover:text-text disabled:opacity-30"
                   >
                     <ChevronUp aria-hidden="true" size={18} />
                   </button>
@@ -83,7 +83,7 @@ export function ReorderSheet({ onClose }: { onClose: () => void }) {
                     onClick={() => move(i, 1)}
                     disabled={i === order.length - 1}
                     aria-label={`Move ${name} down`}
-                    className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-white/[0.06] hover:text-text disabled:opacity-30"
+                    className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.06] hover:text-text disabled:opacity-30"
                   >
                     <ChevronDown aria-hidden="true" size={18} />
                   </button>
@@ -104,7 +104,7 @@ function Row({ id, children }: { id: string; children: (controls: ReturnType<typ
       value={id}
       dragListener={false}
       dragControls={controls}
-      className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-surface-2 pr-1"
+      className="flex items-center gap-2 rounded-xl border border-ink/[0.06] bg-surface-2 pr-1"
       whileDrag={{ scale: 1.02, boxShadow: "0 12px 30px rgb(0 0 0 / 0.5)" }}
     >
       {children(controls)}

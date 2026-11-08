@@ -246,7 +246,7 @@ function ProfileScreen() {
                   <button
                     type="button"
                     onClick={() => s.update({ profilePhoto: null })}
-                    className="min-h-11 rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-white/[0.05] hover:text-text"
+                    className="min-h-11 rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
                   >
                     Remove photo
                   </button>
@@ -323,7 +323,7 @@ function TopLifts({ lifts, unit }: { lifts: ProfileStats["topLifts"]; unit: "kg"
           <li key={exercise.id}>
             <Link
               href={exercisePath(exercise.id)}
-              className="-mx-1 flex min-h-14 items-center gap-3 rounded-xl px-1 transition-colors hover:bg-white/[0.04]"
+              className="-mx-1 flex min-h-14 items-center gap-3 rounded-xl px-1 transition-colors hover:bg-ink/[0.04]"
             >
               <span className="num w-4 text-sm text-text-muted">{i + 1}</span>
               <span className="min-w-0 flex-1">

@@ -152,8 +152,8 @@ export function Select<V extends string | number>({
             show();
           }
         }}
-        className={`flex h-11 min-w-0 items-center justify-between gap-2 rounded-ctl border bg-surface-2 px-3 text-left text-sm text-text transition-colors hover:border-white/25 ${
-          open ? "border-accent" : "border-white/[0.12]"
+        className={`flex h-11 min-w-0 items-center justify-between gap-2 rounded-ctl border bg-surface-2 px-3 text-left text-sm text-text transition-colors hover:border-ink/25 ${
+          open ? "border-accent" : "border-ink/[0.12]"
         } ${className}`}
       >
         <span className="flex min-w-0 items-center gap-2">
@@ -172,7 +172,7 @@ export function Select<V extends string | number>({
           aria-activedescendant={`${listId}-${active}`}
           onKeyDown={onListKey}
           style={{ top: pos.top, left: pos.left, width: pos.width, maxHeight: pos.maxHeight }}
-          className="fixed z-[70] overflow-y-auto rounded-xl border border-white/[0.1] bg-surface-2 p-1 shadow-[0_12px_40px_rgb(0_0_0/0.6)] outline-none"
+          className="fixed z-[70] overflow-y-auto rounded-xl border border-ink/[0.1] bg-surface-2 p-1 shadow-[0_12px_40px_rgb(0_0_0/0.6)] outline-none"
         >
           {options.map((o, i) => {
             const selected = i === selectedIndex;
@@ -185,7 +185,7 @@ export function Select<V extends string | number>({
                 onPointerMove={() => setActive(i)}
                 onClick={() => choose(i)}
                 className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-sm ${
-                  i === active ? "bg-white/[0.08] text-text" : "text-text-muted"
+                  i === active ? "bg-ink/[0.08] text-text" : "text-text-muted"
                 } ${selected ? "font-semibold text-text" : ""}`}
               >
                 <Check aria-hidden="true" size={15} className={selected ? "shrink-0 text-accent" : "invisible shrink-0"} />
