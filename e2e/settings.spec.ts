@@ -27,3 +27,9 @@ test("RPE toggle hides the RPE column", async ({ page }) => {
   await addExercise(page, "Bench Press (Barbell)");
   await expect(page.getByLabel(/RPE, 6 to 10/)).toHaveCount(0);
 });
+
+test("storage protection status is shown", async ({ page }) => {
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { name: "Storage on this device" })).toBeVisible();
+  await expect(page.getByText(/^(Protected|Not protected|This browser cannot)/)).toBeVisible();
+});

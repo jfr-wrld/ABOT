@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { PersistStatus } from "@/lib/storagePersistence";
 
 /**
  * Stores start empty so server and first client render agree. `StoreHydrator` loads
@@ -11,6 +12,9 @@ interface HydrationState {
   error: string | null;
   setHydrated: (r: { durable: boolean; error: string | null }) => void;
   reportError: (message: string) => void;
+  /** Whether the browser promised not to clear IndexedDB on its own; null until asked. */
+  persistStatus: PersistStatus | null;
+  setPersistStatus: (s: PersistStatus) => void;
 }
 
 export const useHydration = create<HydrationState>((set) => ({
@@ -19,4 +23,6 @@ export const useHydration = create<HydrationState>((set) => ({
   error: null,
   setHydrated: ({ durable, error }) => set({ hydrated: true, durable, error }),
   reportError: (message) => set({ error: message }),
+  persistStatus: null,
+  setPersistStatus: (persistStatus) => set({ persistStatus }),
 }));

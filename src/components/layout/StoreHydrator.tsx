@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useHydration } from "@/store/hydration";
 import { getRepository } from "@/data/repo";
 import { migrateFromLocalStorage } from "@/data/migrateLegacy";
+import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { attachPersistence, hydrateStores, setActiveRepository } from "@/store/persistence";
 
 export function StoreHydrator() {
@@ -26,6 +27,8 @@ export function StoreHydrator() {
       setActiveRepository(repo);
       detach = attachPersistence(repo).detach;
       if (!useHydration.getState().hydrated) setHydrated({ durable, error });
+      // Not awaited by anything: logging never waits on the browser's answer.
+      if (durable) void requestPersistentStorage().then((s) => useHydration.getState().setPersistStatus(s));
     })();
     return () => {
       cancelled = true;

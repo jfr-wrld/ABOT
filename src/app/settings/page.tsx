@@ -4,6 +4,7 @@ import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { BackupSection } from "@/components/settings/BackupSection";
+import { StorageSection } from "@/components/settings/StorageSection";
 import { LocationsSection } from "@/components/settings/LocationsSection";
 import { formatClock } from "@/lib/calc";
 
@@ -93,6 +94,10 @@ function SettingsScreen() {
 
         <div className="border-t border-line pt-5">
           <LocationsSection />
+        </div>
+
+        <div className="border-t border-line pt-5">
+          <StorageSection />
         </div>
 
         <div className="border-t border-line pt-5">
