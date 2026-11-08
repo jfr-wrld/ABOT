@@ -17,10 +17,10 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
-        <!-- Android 12+ draws its own splash: ABOT's mark on Matte Obsidian, then the web splash. -->
-        <item name="windowSplashScreenBackground">#09090B</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <!-- Black like the web splash (bg-black), with no icon: the web splash plays the mark. -->
+        <item name="android:background">@android:color/black</item>
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>

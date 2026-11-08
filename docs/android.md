@@ -31,15 +31,32 @@ After changing web code, `npm run build:android` refreshes the copy.
 - Detail pages read their id from the query string (`/history?id=…`), because a static export
   has one HTML file per page. Build links with `src/lib/routes.ts`.
 - Partial prerendering is off for the export (it needs a server); the web build keeps it.
-- Launcher icons and splash images live in `android/app/src/main/res`; they are ABOT's mark on
-  Matte Obsidian `#09090B`.
+- Launcher icons live in `android/app/src/main/res`: ABOT's mark on Matte Obsidian `#09090B`.
 - App id is `app.abot.gym` (`capacitor.config.ts`). It cannot change once the app is on
   Google Play.
+
+## Updates keep your data
+
+Every APK is signed with the same debug key (`android/app/abot-debug.keystore`, Android's public
+debug passwords) and CI numbers each build (`versionCode` = run number). A new APK therefore
+installs over the old one and keeps the workouts. That key is for side-loaded test builds only.
+
+## Native pieces
+
+- `src/lib/native/files.ts`: share sheet (`@capacitor/share`) and saving files through the
+  app's own `FileSaver` plugin (`android/app/src/main/java/app/abot/gym/FileSaverPlugin.java`):
+  PNGs to Pictures/ABOT, backups and the calendar file to Download/ABOT.
+- `src/lib/native/notify.ts`: live workout status, the rest-over alarm and the weekly
+  reminders, scheduled with Android (`@capacitor/local-notifications`) so they arrive while
+  ABOT is frozen or closed. Android 12+ may deliver alarms late unless exact alarms are
+  allowed; Settings offers the switch.
+- `src/lib/native/haptics.ts`: vibration (`@capacitor/haptics`).
+- `src/components/layout/NativeShell.tsx`: back button and swipe, notification taps.
+- The system splash is plain black with no icon, so the app's animated splash is the only one.
 
 ## Not yet native
 
 - **Google sign-in** for cloud sync: Google refuses sign-in inside an embedded WebView. It needs
   the system browser plus a deep link back into the app. Local use is unaffected.
-- **Reminders and the live workout notification** still use the web notification path. Native
-  delivery while the app is closed needs `@capacitor/local-notifications`.
-- **Release build** for Google Play needs a signing key (kept outside the repo) and an `.aab`.
+- **Release build** for Google Play needs its own signing key (kept outside the repo) and an
+  `.aab`.

@@ -6,7 +6,8 @@ const config: CapacitorConfig = {
   appName: "ABOT",
   // `npm run build:android` exports the Next app here.
   webDir: "out",
-  backgroundColor: "#09090b",
+  // Same black as the web splash, so the launch has no colour jump.
+  backgroundColor: "#000000",
   plugins: {
     SystemBars: {
       // Light status bar icons on ABOT's dark UI, whatever the phone's theme.
