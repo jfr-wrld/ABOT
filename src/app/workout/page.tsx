@@ -29,7 +29,7 @@ function WorkoutScreen() {
   const router = useRouter();
   const active = useWorkoutStore((s) => s.active);
   const sessions = useWorkoutStore((s) => s.sessions);
-  const { startEmpty, addExercise, finishActive, discardActive } = useWorkoutStore();
+  const { startEmpty, addExercise, finishActive, discardActive, completeAllRemaining } = useWorkoutStore();
   const { weightUnit, showRpe, defaultRestSeconds } = useSettingsStore();
   const { byId } = useAllExercises();
 
@@ -118,6 +118,7 @@ function WorkoutScreen() {
         exercisesById={byId}
         unit={weightUnit}
         onClose={() => setFinishOpen(false)}
+        onMarkRemaining={() => completeAllRemaining()}
         onConfirm={() => {
           finishActive();
           setFinishOpen(false);

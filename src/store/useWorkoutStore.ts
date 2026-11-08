@@ -36,6 +36,11 @@ interface WorkoutState {
   /** Marks complete and starts the rest timer; or un-completes and clears the timer for that set. */
   completeSet: (sessionExerciseId: string, setId: string, completed: boolean) => void;
 
+  /** Ticks every unticked set that has reps; returns how many. Does not start the rest timer. */
+  completeAllRemaining: () => number;
+  /** Moves the workout start earlier, e.g. when the timer was started late or left running. */
+  setStartedAt: (ts: number) => { ok: true } | { ok: false; reason: string };
+
   adjustRest: (deltaSec: number) => void;
   skipRest: () => void;
 
@@ -210,6 +215,37 @@ export const useWorkoutStore = create<WorkoutState>()(
               : s.restTimer;
           return { active, restTimer };
         }),
+
+      completeAllRemaining: () => {
+        const a = get().active;
+        if (!a) return 0;
+        const now = Date.now();
+        let n = 0;
+        const exercises = a.exercises.map((ex) => ({
+          ...ex,
+          sets: ex.sets.map((st) => {
+            if (st.completed || st.reps === null || st.reps <= 0) return st;
+            n++;
+            return { ...st, completed: true, completedAt: now };
+          }),
+        }));
+        if (n > 0) set({ active: { ...a, exercises } });
+        return n;
+      },
+
+      setStartedAt: (ts) => {
+        const a = get().active;
+        if (!a) return { ok: false, reason: "No workout in progress" };
+        if (ts > Date.now()) return { ok: false, reason: "The start time cannot be in the future" };
+        const firstDone = Math.min(
+          ...a.exercises.flatMap((ex) => ex.sets.map((st) => st.completedAt ?? Infinity)),
+        );
+        if (ts > firstDone) {
+          return { ok: false, reason: "The start time must be before your first completed set" };
+        }
+        set({ active: { ...a, startedAt: ts } });
+        return { ok: true };
+      },
 
       adjustRest: (deltaSec) =>
         set((s) => {

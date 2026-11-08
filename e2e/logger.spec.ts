@@ -101,3 +101,33 @@ test("discard removes the active workout", async ({ page }) => {
   await expect(page.getByText("Workout in progress", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
 });
+
+test("mark remaining sets done from the finish dialog", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await page.getByLabel("Set 2 weight in kg").fill("60");
+  await page.getByLabel("Set 2 reps").fill("8");
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: "Mark 1 remaining set done" }).click();
+  await expect(page.getByText("1 set was not marked done and will not be saved.")).toBeVisible();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.waitForURL((u) => u.pathname === "/");
+  await expect(page.getByText(/960 kg · 2 sets/)).toBeVisible();
+});
+
+test("adjust start time", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await page.getByRole("button", { name: /^Duration/ }).click();
+  const input = page.getByLabel("Started at");
+  const d = new Date(Date.now() + 60 * 60_000);
+  await input.fill(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+  await page.getByRole("button", { name: "Save start time" }).click();
+  await expect(page.getByText("The start time cannot be in the future")).toBeVisible();
+  const e = new Date(Date.now() - 45 * 60_000);
+  if (e.getDate() !== new Date().getDate()) test.skip(true, "45 minutes ago is yesterday");
+  await input.fill(`${String(e.getHours()).padStart(2, "0")}:${String(e.getMinutes()).padStart(2, "0")}`);
+  await page.getByRole("button", { name: "Save start time" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Duration/ })).toContainText(/4[45]m/);
+});

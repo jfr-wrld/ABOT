@@ -20,6 +20,7 @@ export function FinishDialog({
   unit,
   onConfirm,
   onClose,
+  onMarkRemaining,
 }: {
   open: boolean;
   session: WorkoutSession;
@@ -28,8 +29,13 @@ export function FinishDialog({
   unit: WeightUnit;
   onConfirm: () => void;
   onClose: () => void;
+  onMarkRemaining: () => void;
 }) {
   const { total, completed } = countSets(session);
+  const markable = session.exercises.reduce(
+    (n, ex) => n + ex.sets.filter((s) => !s.completed && s.reps !== null && s.reps > 0).length,
+    0,
+  );
   const skipped = total - completed;
   const duration = sessionDurationSec(session);
 
@@ -63,6 +69,12 @@ export function FinishDialog({
           {skipped} {skipped === 1 ? "set was" : "sets were"} not marked done and will not be saved.
         </p>
       ) : null}
+
+      {markable > 0 && (
+        <Button onClick={onMarkRemaining} className="mt-3 w-full">
+          Mark {markable} remaining {markable === 1 ? "set" : "sets"} done
+        </Button>
+      )}
 
       {prs.length > 0 && (
         <section className="mt-4">
