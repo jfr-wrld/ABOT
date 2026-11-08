@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, choose, freshStart, logSet, startEmptyWorkout } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await freshStart(page);
@@ -51,34 +51,30 @@ test("replace swaps the movement and keeps what was typed", async ({ page }) => 
   await logSet(page, 1, "60", "8");
 });
 
-test("the exercise list shows a picture of each movement", async ({ page }) => {
+test("each exercise row shows a muscle map of what it trains", async ({ page }) => {
   await page.goto("/exercises");
-  const squat = page.getByRole("link", { name: /^Squat \(Barbell\)/ });
-  await expect(squat.locator("[data-thumb]")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Body map" })).toHaveCount(0);
+  const thumb = page.getByRole("link", { name: /^Squat \(Barbell\)/ }).locator("[data-thumb]");
+  await expect(thumb).toBeVisible();
+  await expect(thumb).toHaveAttribute("data-primary", /quads/);
+  // The quads light in Volt through the shared body drawing; untrained muscles stay unset.
+  const vars = await thumb.evaluate((el) => ({
+    quads: getComputedStyle(el).getPropertyValue("--m-quadriceps").trim(),
+    chest: getComputedStyle(el).getPropertyValue("--m-chest").trim(),
+  }));
+  expect(vars.quads).toBe("#ccff00");
+  expect(vars.chest).toBe("");
+  await expect(page.locator("#abot-muscle-body")).toHaveCount(1);
+
   await page.goto("/workout");
   await page.getByRole("button", { name: "Start an empty workout" }).click();
   await page.getByRole("button", { name: "Add exercise" }).click();
   await expect(page.getByRole("dialog").locator("[data-thumb]").first()).toBeVisible();
 });
 
-test("the body map filters exercises by the muscle tapped", async ({ page }) => {
+test("the muscle filter counts groups drawn as one shape together", async ({ page }) => {
   await page.goto("/exercises");
-  await page.getByRole("button", { name: "Body map" }).click();
-  await page.getByRole("button", { name: "Filter by Quads" }).first().locator("path").first().click();
-  await expect(page.getByLabel("Muscle group")).toHaveText("Quads");
+  await choose(page, page.getByLabel("Muscle group"), "Quads");
   await expect(page.getByRole("link", { name: /^Squat \(Barbell\)/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toHaveCount(0);
-  // Tapping the same muscle again clears the filter.
-  await page.getByRole("button", { name: "Filter by Quads" }).first().locator("path").first().click();
-  await expect(page.getByLabel("Muscle group")).toHaveText("All muscles");
-  await expect(page.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toBeVisible();
-});
-
-test("the body map works from the keyboard", async ({ page }) => {
-  await page.goto("/exercises");
-  await page.getByRole("button", { name: "Body map" }).click();
-  await page.getByRole("button", { name: "Filter by Chest" }).first().focus();
-  await page.keyboard.press("Enter");
-  await expect(page.getByLabel("Muscle group")).toHaveText("Chest");
-  await expect(page.getByRole("button", { name: "Filter by Chest" }).first()).toHaveAttribute("aria-pressed", "true");
 });

@@ -3,10 +3,9 @@
 import { useMemo, useState } from "react";
 import { Select } from "@/components/ui/Select";
 import Link from "next/link";
-import { ChevronRight, PersonStanding, Plus } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
-import { MuscleMap } from "@/components/anatomy/MuscleMap";
-import { muscleForRegion, worksArea } from "@/components/anatomy/regions";
+import { worksArea } from "@/components/anatomy/regions";
 import type { Equipment, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
@@ -38,7 +37,6 @@ function LibraryScreen() {
   const [muscle, setMuscle] = useState<MuscleGroup | "">("");
   const [equipment, setEquipment] = useState<Equipment | "">("");
   const [formOpen, setFormOpen] = useState(false);
-  const [mapOpen, setMapOpen] = useState(false);
 
   const prTable = useMemo(() => buildPRTable(sessions, byId, { allGyms: true }), [sessions, byId]);
 
@@ -104,31 +102,6 @@ function LibraryScreen() {
             className="flex-1"
           />
         </div>
-        <button
-          type="button"
-          aria-expanded={mapOpen}
-          aria-controls="lib-bodymap"
-          onClick={() => setMapOpen((o) => !o)}
-          className={`mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-ctl border text-sm font-semibold transition-colors ${
-            mapOpen ? "border-accent/50 bg-accent-tint text-text" : "border-white/[0.12] text-text-muted hover:border-white/25 hover:text-text"
-          }`}
-        >
-          <PersonStanding aria-hidden="true" size={16} />
-          Body map
-        </button>
-        {mapOpen && (
-          <div id="lib-bodymap" className="panel mt-2 p-3">
-            <p className="mb-2 text-center text-xs text-text-muted">Tap a muscle to see the exercises that train it. Tap it again to clear.</p>
-            <MuscleMap
-              primary={muscle ? [muscle] : []}
-              width={300}
-              onSelectRegion={(r) => {
-                const m = muscleForRegion(r);
-                setMuscle((cur) => (cur === m ? "" : m));
-              }}
-            />
-          </div>
-        )}
       </div>
 
       <CatalogSection />

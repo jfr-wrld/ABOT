@@ -1,36 +1,36 @@
-import { memo } from "react";
-import { Dumbbell } from "lucide-react";
+import { memo, type CSSProperties } from "react";
 import type { Exercise } from "@/types/workout";
-import { patternFor } from "@/components/motion/patterns";
-import { MotionScene } from "@/components/motion/MotionFigure";
+import { regionLevels } from "@/components/anatomy/regions";
+import { MUSCLE_SPRITE_ID } from "@/components/anatomy/MuscleSprite";
 
 /**
- * A still of the movement, mid-rep, drawn from the same figure as the Motion tab: works offline,
- * costs no download, and the worked segments light up in Volt. Movements the side view cannot
- * show (a few rotations and hip ab/adduction) get an equipment glyph instead.
+ * A small front and back body with the muscles the exercise trains lit: primary in Volt,
+ * secondary at 40%. Drawn from the shared body symbol (components/anatomy/MuscleSprite), so it
+ * works offline and a long list stays light. The row's text already names the muscles, so the
+ * thumbnail is decorative for screen readers.
  */
 export const ExerciseThumb = memo(function ExerciseThumb({
   exercise,
   size = 48,
 }: {
-  exercise: Pick<Exercise, "id" | "name" | "category" | "equipment" | "primaryMuscles">;
+  exercise: Pick<Exercise, "primaryMuscles" | "secondaryMuscles">;
   size?: number;
 }) {
-  const pattern = patternFor(exercise);
+  const levels = regionLevels(exercise.primaryMuscles, exercise.secondaryMuscles ?? []);
+  const style: Record<string, string | number> = { width: size, height: size };
+  for (const [region, level] of Object.entries(levels))
+    style[`--m-${region}`] = level === "primary" ? "#ccff00" : "rgb(204 255 0 / 0.4)";
   return (
     <span
       data-thumb
+      data-primary={exercise.primaryMuscles.join(" ")}
       aria-hidden="true"
-      style={{ width: size, height: size }}
+      style={style as CSSProperties}
       className="flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/[0.06] bg-black"
     >
-      {pattern ? (
-        <span className="block w-full p-0.5">
-          <MotionScene pattern={pattern} progress={0.55} exercise={exercise} fit />
-        </span>
-      ) : (
-        <Dumbbell size={size * 0.42} className="text-text-muted" />
-      )}
+      <svg viewBox="0 30 1448 1360" className="block h-auto w-full px-0.5">
+        <use href={`#${MUSCLE_SPRITE_ID}`} />
+      </svg>
     </span>
   );
 });
