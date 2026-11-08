@@ -1,5 +1,5 @@
 import type { GymLocation } from "@/types/workout";
-import { DEFAULT_SETTINGS } from "@/types/workout";
+import { DEFAULT_SETTINGS, PROFILE_LIMITS } from "@/types/workout";
 import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./normalize";
 import type { Repository, RepoSnapshot, StoredSettings } from "./repo";
 import { parseVideoUrl } from "@/lib/videoUrl";
@@ -59,7 +59,14 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     firstDayOfWeek: raw.firstDayOfWeek === 0 ? 0 : 1,
     activeLocationId: typeof raw.activeLocationId === "string" ? raw.activeLocationId : null,
     showRpe: typeof raw.showRpe === "boolean" ? raw.showRpe : true,
+    profileName: typeof raw.profileName === "string" ? raw.profileName.trim().slice(0, PROFILE_LIMITS.nameMax) : "",
+    bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
+    heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
   };
+}
+
+function inRange(v: unknown, [min, max]: readonly [number, number]): number | null {
+  return typeof v === "number" && Number.isFinite(v) && v >= min && v <= max ? v : null;
 }
 
 /** Only links ABOT can actually play survive; anything else (or a script URL) is dropped. */

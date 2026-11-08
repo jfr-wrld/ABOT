@@ -37,6 +37,9 @@ function pickSettings(s: SettingsState): StoredSettings {
     firstDayOfWeek: s.firstDayOfWeek,
     activeLocationId: s.activeLocationId,
     showRpe: s.showRpe,
+    profileName: s.profileName,
+    bodyweightKg: s.bodyweightKg,
+    heightCm: s.heightCm,
   };
 }
 
@@ -61,7 +64,8 @@ export async function hydrateStores(repo: Repository): Promise<void> {
     });
     useLocationStore.setState({ locations: snap.locations });
     // A repository without settings means defaults, not "keep whatever was in memory".
-    useSettingsStore.setState(snap.settings ?? DEFAULT_STORED_SETTINGS);
+    // Defaults first: rows saved before a field existed must not keep a stale in-memory value.
+    useSettingsStore.setState({ ...DEFAULT_STORED_SETTINGS, ...snap.settings });
   } finally {
     loadingFromRepo = false;
   }

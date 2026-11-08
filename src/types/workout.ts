@@ -226,7 +226,13 @@ export interface UserSettings {
   restTimerAlert: boolean;
   firstDayOfWeek: 0 | 1; // Sunday | Monday
   activeLocationId: string | null;
+  /** Profile, all optional: "" / null mean not filled in. Bodyweight in kg like every weight. */
+  profileName: string;
+  bodyweightKg: number | null;
+  heightCm: number | null;
 }
+
+export const PROFILE_LIMITS = { nameMax: 40, bodyweightKg: [20, 400], heightCm: [100, 250] } as const;
 
 export const DEFAULT_SETTINGS: UserSettings = {
   weightUnit: "kg",
@@ -234,6 +240,9 @@ export const DEFAULT_SETTINGS: UserSettings = {
   restTimerAlert: true,
   firstDayOfWeek: 1,
   activeLocationId: null,
+  profileName: "",
+  bodyweightKg: null,
+  heightCm: null,
 };
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {

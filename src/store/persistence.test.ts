@@ -8,6 +8,7 @@ import { useSettingsStore } from "./useSettingsStore";
 import { useLocationStore } from "./useLocationStore";
 import { useHydration } from "./hydration";
 import type { WorkoutSession } from "@/types/workout";
+import type { StoredSettings } from "@/data/repo/types";
 
 const initial = {
   workout: useWorkoutStore.getState(),
@@ -61,6 +62,7 @@ describe("hydrateStores", () => {
     await repo.sessions.put(finished("s1"));
     await repo.routines.put({ id: "r1", name: "Push", exercises: [], createdAt: 1, updatedAt: 1 });
     await repo.locations.put({ id: "g", name: "Gym", barWeightKg: 20, plateInventoryKg: [20], isDefault: true });
+    // A settings row saved before the profile fields existed.
     await repo.kv.set("settings", {
       weightUnit: "lbs",
       defaultRestSeconds: 120,
@@ -68,9 +70,12 @@ describe("hydrateStores", () => {
       firstDayOfWeek: 0,
       activeLocationId: "g",
       showRpe: false,
-    });
+    } as unknown as StoredSettings);
     await repo.kv.set("activeWorkout", { ...finished("live"), status: "active", finishedAt: undefined });
+    useSettingsStore.setState({ profileName: "Left over", bodyweightKg: 90 });
     await hydrateStores(repo);
+    expect(useSettingsStore.getState().profileName).toBe("");
+    expect(useSettingsStore.getState().bodyweightKg).toBeNull();
     expect(useWorkoutStore.getState().sessions.map((s) => s.id)).toEqual(["s1"]);
     expect(useWorkoutStore.getState().active?.id).toBe("live");
     expect(useRoutineStore.getState().routines[0]!.name).toBe("Push");

@@ -165,3 +165,25 @@ describe("custom videos in backups", () => {
     expect(parsed.backup.data.exerciseMedia).toEqual({});
   });
 });
+
+describe("profile fields in backups", () => {
+  const withSettings = (settings: Record<string, unknown>) =>
+    JSON.stringify({
+      app: "ABOT",
+      schemaVersion: 1,
+      exportedAt: "2026-11-08T00:00:00.000Z",
+      data: { sessions: [], routines: [], exercises: [], locations: [], settings, activeWorkout: null },
+    });
+
+  it("keeps a valid name, bodyweight and height", () => {
+    const parsed = parseBackup(withSettings({ profileName: "  Jafar  ", bodyweightKg: 72.5, heightCm: 170 }));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.data.settings).toMatchObject({ profileName: "Jafar", bodyweightKg: 72.5, heightCm: 170 });
+  });
+
+  it("drops impossible values and defaults missing ones (older backups)", () => {
+    const parsed = parseBackup(withSettings({ profileName: 5, bodyweightKg: -3, heightCm: 900 }));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.data.settings).toMatchObject({ profileName: "", bodyweightKg: null, heightCm: null });
+  });
+});

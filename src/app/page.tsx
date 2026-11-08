@@ -12,6 +12,7 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
 import { AbotWordmark } from "@/components/brand/AbotMark";
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
@@ -30,7 +31,7 @@ function HomeScreen() {
   const sessions = useWorkoutStore((s) => s.sessions);
   const { startEmpty, startFromRoutine } = useWorkoutStore();
   const routines = useRoutineStore((s) => s.routines);
-  const { weightUnit, defaultRestSeconds } = useSettingsStore();
+  const { weightUnit, defaultRestSeconds, profileName } = useSettingsStore();
   const now = useNow(1000, active !== null);
   const { byId } = useAllExercises();
   // First open on a device with nothing logged: show the intro once. Anyone with data skips it.
@@ -50,13 +51,24 @@ function HomeScreen() {
         <h1>
           <AbotWordmark />
         </h1>
-        <Link
-          href="/settings"
-          aria-label="Settings"
-          className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
-        >
-          <Settings aria-hidden="true" size={22} />
-        </Link>
+        <div className="-mr-2 flex items-center">
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
+          >
+            <Settings aria-hidden="true" size={22} />
+          </Link>
+          <Link
+            href="/profile"
+            aria-label="Profile"
+            className="flex size-11 items-center justify-center rounded-ctl transition-opacity hover:opacity-80"
+          >
+            <span aria-hidden="true">
+              <ProfileAvatar name={profileName} size={32} />
+            </span>
+          </Link>
+        </div>
       </div>
 
       {active ? (

@@ -64,6 +64,9 @@ export async function migrateFromLocalStorage(
       restTimerAlert: typeof s.restTimerAlert === "boolean" ? s.restTimerAlert : DEFAULT_SETTINGS.restTimerAlert,
       firstDayOfWeek: s.firstDayOfWeek === 0 ? 0 : 1,
       activeLocationId: null,
+      profileName: DEFAULT_SETTINGS.profileName,
+      bodyweightKg: DEFAULT_SETTINGS.bodyweightKg,
+      heightCm: DEFAULT_SETTINGS.heightCm,
       showRpe: typeof s.showRpe === "boolean" ? s.showRpe : true,
     });
   }
