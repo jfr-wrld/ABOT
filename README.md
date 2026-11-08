@@ -7,7 +7,8 @@ your routines, watch your records and progress, and share a finished workout to 
 Story. It works offline, needs no account, and keeps your training on your phone. Google sign-in
 is optional, for a cloud backup and the same data on two phones.
 
-ABOT runs as an **Android app** (built with Capacitor) and in the **browser**.
+ABOT runs as an **Android app** (built with Capacitor) and in the **browser**, in **English and
+Bahasa Indonesia**, with a dark and a light theme.
 
 <p>
   <img src="docs/images/home-dark.webp" width="200" alt="Home screen, dark theme: week strip, workout in progress, volume and recovery">
@@ -100,8 +101,10 @@ in with Google, then import or sign in again after installing.
   with location allowed).
 
 ### Settings
-- General: language (English; Bahasa Indonesia in progress), theme (System, Dark, Light),
-  kg or lbs, first day of the week.
+- General: language (Phone, English, Bahasa Indonesia; Phone follows the phone's language),
+  theme (System, Dark, Light), kg or lbs, first day of the week.
+- The whole interface is translated. Exercise names, instructions and the story card layouts
+  stay in English.
 - Workout, Notifications (with a test alert), Data & backup, app permissions.
 - FAQ, About, Contact us, social links (coming soon), Sign out.
 
@@ -202,6 +205,10 @@ ABOT's own code yet, so all rights are reserved by its author.
 ABOT adalah aplikasi pencatat latihan beban untuk HP: catat set di gym, simpan routine, pantau
 rekor dan progres, lalu bagikan hasil latihan ke Instagram Story. Bisa dipakai offline, tanpa
 akun; login Google opsional untuk backup cloud.
+
+Tampilan ABOT tersedia dalam **Bahasa Indonesia** dan English: Pengaturan, Umum, Bahasa. Pilihan
+"Phone" (Ikuti HP) otomatis memakai Bahasa Indonesia kalau bahasa HP-mu Indonesia. Nama gerakan,
+instruksi gerakan, dan desain kartu story tetap dalam bahasa Inggris.
 
 **Cara install di Android:**
 1. Buka [workflow Android APK](https://github.com/jfr-wrld/ABOT/actions/workflows/android.yml)
