@@ -51,6 +51,26 @@ Phone first at 360px, one column. The set table is a fixed grid
 in 18px mono; Prev takes what is left. Every tap target is 44px. At 640px and up the column caps at
 640px and centres.
 
+## Home (command centre)
+
+Owner brief 2026-11-08: Home is a dense "Tactile Industrial Command Center", not an empty list.
+Top to bottom, in order of what a lifter needs before training:
+
+- **Week strip**: seven days in the lifter's week order. A trained day is a Volt tile with a
+  check (done, the same meaning as a ticked set), today has a thin white ring, other days a dim
+  zinc-800 dot.
+- **Next protocol**: the scheduled routine, else the one after the last routine trained, else a
+  free session. Its Start button is the screen's one Volt action; `+ Empty` sits beside it with a
+  hairline edge. Other routines follow as a scrolling row of quiet buttons.
+- **This week**: Volume (with change against last week up to the same moment, so Monday is not
+  "-90%"), Frequency (days trained against the schedule, Volt segments for the done ones), and
+  Recovery (six groups on the common 48-hour rule, labelled as such). Modules are 12px-radius
+  Carbon tiles with a hairline edge, smaller than the 16px cards to read as instruments.
+- **Recent workouts**: name, date, a Cyan record pill only when a lift beat an earlier record
+  (a first attempt beats nothing), the three muscles worked most, and duration, volume and sets
+  in mono. Cards give to 98% under the thumb. The trophy is the Lucide icon used elsewhere for
+  records, not the emoji, so it renders the same on every phone.
+
 ## Identity motif
 
 The set row as a hardware switch: a dark panel that, when you tap the square check, lights Volt,

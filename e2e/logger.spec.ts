@@ -74,7 +74,7 @@ test("finish saves the workout and the previous column autofills next time", asy
   await expect(page.getByText("2 sets were not marked done and will not be saved.")).toBeVisible();
   await page.getByRole("button", { name: "Finish workout" }).click();
   await page.waitForURL((u) => u.pathname === "/");
-  await expect(page.getByText(/480 kg · 1 set · 1 exercise/)).toBeVisible();
+  await expect(page.getByText(/480 kg · 1 set$/)).toBeVisible();
 
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");

@@ -23,7 +23,7 @@ test("opens a finished workout from home and deletes it", async ({ page }) => {
   await page.getByRole("button", { name: "Delete this workout" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await page.waitForURL((u) => u.pathname === "/");
-  await expect(page.getByText("Nothing logged yet.")).toBeVisible();
+  await expect(page.getByText("No workouts yet.")).toBeVisible();
 });
 
 test("unknown workout id shows a not-found message", async ({ page }) => {
