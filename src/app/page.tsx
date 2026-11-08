@@ -1,69 +1,96 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { HydrationGate } from "@/components/ui/Loading";
+import { Button } from "@/components/ui/Button";
+import { useNow } from "@/lib/useNow";
+import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
+import { formatVolume } from "@/lib/units";
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <HydrationGate>
+      <HomeScreen />
+    </HydrationGate>
+  );
+}
+
+function HomeScreen() {
+  const router = useRouter();
+  const active = useWorkoutStore((s) => s.active);
+  const sessions = useWorkoutStore((s) => s.sessions);
+  const startEmpty = useWorkoutStore((s) => s.startEmpty);
+  const { weightUnit, defaultRestSeconds } = useSettingsStore();
+  const now = useNow(1000, active !== null);
+
+  const recent = [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 10);
+
+  return (
+    <main className="flex flex-1 flex-col px-4 pt-4">
+      <h1 className="text-xl font-bold">Heavy</h1>
+
+      {active ? (
+        <Link
+          href="/workout"
+          className="mt-4 block rounded-card border border-accent bg-accent-tint p-4 hover:bg-accent/25"
+        >
+          <span className="text-[11px] font-semibold uppercase text-accent">Workout in progress</span>
+          <span className="mt-1 block text-lg font-bold">{active.name}</span>
+          <span className="block text-sm text-text-muted">
+            {formatDuration(sessionDurationSec(active, now))} · {countSets(active).completed} sets done. Tap to
+            continue.
+          </span>
+        </Link>
+      ) : (
+        <Button
+          variant="primary"
+          onClick={() => {
+            startEmpty(defaultRestSeconds);
+            router.push("/workout");
+          }}
+          className="mt-4 w-full"
+        >
+          Start an empty workout
+        </Button>
+      )}
+
+      <section className="mt-8" aria-labelledby="recent-heading">
+        <h2 id="recent-heading" className="text-sm font-semibold uppercase text-text-muted">
+          Recent workouts
+        </h2>
+        {recent.length === 0 ? (
+          <p className="mt-3 rounded-card bg-surface px-4 py-6 text-center text-sm text-text-muted">
+            Nothing logged yet. Finish a workout and it will show up here with its volume and duration.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        ) : (
+          <ul className="mt-3 flex flex-col gap-2">
+            {recent.map((s) => {
+              const { completed } = countSets(s);
+              return (
+                <li key={s.id} className="rounded-card bg-surface p-4">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="truncate text-base font-semibold">{s.name}</span>
+                    <time dateTime={new Date(s.startedAt).toISOString()} className="shrink-0 text-xs text-text-muted">
+                      {new Date(s.startedAt).toLocaleDateString(undefined, {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </time>
+                  </div>
+                  <p className="mt-1 text-sm text-text-muted">
+                    {formatDuration(sessionDurationSec(s))} · {formatVolume(sessionVolume(s), weightUnit)} ·{" "}
+                    {completed} {completed === 1 ? "set" : "sets"} · {s.exercises.length} {s.exercises.length === 1 ? "exercise" : "exercises"}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </main>
   );
 }
