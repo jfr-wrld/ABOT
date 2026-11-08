@@ -12,7 +12,7 @@ import type {
   WeightUnit,
   WorkoutSet,
 } from "@/types/workout";
-import { EQUIPMENT_LABELS, primaryMusclesLabel } from "@/types/workout";
+import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
@@ -25,6 +25,8 @@ import { SupersetSheet } from "./SupersetSheet";
 import { SUPERSET_COLORS } from "@/lib/superset";
 import { Button } from "@/components/ui/Button";
 import { formatClock } from "@/lib/calc";
+import { useT, type T } from "@/i18n";
+import { muscleText } from "@/lib/home";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -50,6 +52,7 @@ export function ExerciseCard({
   canMoveUp: boolean;
   canMoveDown: boolean;
 }) {
+  const t = useT();
   const store = useWorkoutStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -62,10 +65,10 @@ export function ExerciseCard({
 
   const numbers = setNumbers(item.sets);
 
-  const name = exercise?.name ?? "Unknown exercise";
+  const name = exercise?.name ?? t("Unknown exercise");
   const subtitle = exercise
-    ? `${primaryMusclesLabel(exercise)} · ${EQUIPMENT_LABELS[exercise.equipment]}`
-    : "This exercise was removed from the library";
+    ? `${exercise.primaryMuscles.map((m) => muscleText(MUSCLE_GROUP_LABELS[m], t)).join(" / ")} · ${t(EQUIPMENT_LABELS[exercise.equipment])}`
+    : t("This exercise was removed from the library");
 
   return (
     <section
@@ -79,7 +82,7 @@ export function ExerciseCard({
         <div className="min-w-0 flex-1">
           {superset && (
             <p className="label-caps !text-[10px]" style={{ color: ssColor }}>
-              Superset {superset.letter}
+              {t("Superset {letter}", { letter: superset.letter })}
             </p>
           )}
           <h2 id={`ex-${item.id}`} className="text-base font-semibold tracking-tight text-zinc-100">
@@ -105,7 +108,7 @@ export function ExerciseCard({
           <button
             type="button"
             onClick={() => setHowToOpen(true)}
-            aria-label={`How to do ${name}`}
+            aria-label={t("How to do {name}", { name })}
             aria-haspopup="dialog"
             className="-mt-1 ml-auto flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
           >
@@ -115,7 +118,7 @@ export function ExerciseCard({
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
-          aria-label={`Options for ${name}`}
+          aria-label={t("Options for {name}", { name })}
           aria-haspopup="dialog"
           className="-ml-2 -mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
         >
@@ -126,7 +129,7 @@ export function ExerciseCard({
       <div className="mt-2 flex items-center gap-1 px-1 text-xs text-text-muted">
         <Timer aria-hidden="true" size={14} />
         <span>
-          Rest <span className="num">{item.restSeconds === 0 ? "off" : formatClock(item.restSeconds)}</span>
+          {t("Rest")} <span className="num">{item.restSeconds === 0 ? t("off") : formatClock(item.restSeconds)}</span>
         </span>
       </div>
 
@@ -135,15 +138,15 @@ export function ExerciseCard({
         style={{ gridTemplateColumns: setGridColumns(showRpe) }}
         aria-hidden="true"
       >
-        <span className="text-center">Set</span>
-        <span className="truncate">Prev</span>
-        <span className="text-center normal-case">{weightColumnLabel(exercise, unit)}</span>
-        <span className="text-center">Reps</span>
+        <span className="text-center">{t("Set")}</span>
+        <span className="truncate">{t("Prev")}</span>
+        <span className="text-center normal-case">{weightColumnLabel(exercise, unit, t)}</span>
+        <span className="text-center">{t("Reps")}</span>
         {showRpe && <span className="text-center">RPE</span>}
-        <span className="text-center">Done</span>
+        <span className="text-center">{t("Done")}</span>
       </div>
 
-      <ol className="mt-1 flex flex-col gap-1" aria-label={`Sets for ${name}`}>
+      <ol className="mt-1 flex flex-col gap-1" aria-label={t("Sets for {name}", { name })}>
         {item.sets.map((set, i) => (
           <SetRow
             key={set.id}
@@ -155,7 +158,7 @@ export function ExerciseCard({
             isBodyweight={exercise?.isBodyweight ?? false}
             prKinds={prBySet[set.id] ?? []}
             onUpdate={(patch) => store.updateSet(item.id, set.id, patch)}
-            onSetType={(t) => store.setSetType(item.id, set.id, t)}
+            onSetType={(type) => store.setSetType(item.id, set.id, type)}
             onRemove={() => store.removeSet(item.id, set.id)}
             onComplete={(c) => store.completeSet(item.id, set.id, c)}
           />
@@ -168,7 +171,7 @@ export function ExerciseCard({
         className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-ink/[0.14] text-sm font-semibold text-text-muted transition-colors duration-200 hover:border-ink/30 hover:bg-ink/[0.03] hover:text-text active:bg-ink/[0.06]"
       >
         <Plus aria-hidden="true" size={16} />
-        Add set
+        {t("Add set")}
       </button>
 
       {exercise && (
@@ -178,7 +181,7 @@ export function ExerciseCard({
       {replaceOpen && (
         <ExercisePicker
           open
-          title={`Replace ${name}`}
+          title={t("Replace {name}", { name })}
           onClose={() => setReplaceOpen(false)}
           onPick={(ex) => {
             store.replaceExercise(item.id, ex.id);
@@ -193,27 +196,27 @@ export function ExerciseCard({
         <div className="flex flex-col gap-4">
           <div>
             <label htmlFor={`rest-${item.id}`} className="mb-1 block text-sm font-semibold">
-              Rest timer after each set
+              {t("Rest timer after each set")}
             </label>
             <Select
               id={`rest-${item.id}`}
               value={item.restSeconds}
               onChange={(s) => store.setExerciseRest(item.id, s)}
-              options={REST_OPTIONS.map((s) => ({ value: s, label: s === 0 ? "Off" : formatClock(s) }))}
+              options={REST_OPTIONS.map((s) => ({ value: s, label: s === 0 ? t("Off") : formatClock(s) }))}
               className="w-full !text-base"
             />
           </div>
 
           <div>
             <label htmlFor={`notes-${item.id}`} className="mb-1 block text-sm font-semibold">
-              Notes for this exercise
+              {t("Notes for this exercise")}
             </label>
             <textarea
               id={`notes-${item.id}`}
               value={item.notes ?? ""}
               onChange={(e) => store.setExerciseNotes(item.id, e.target.value)}
               rows={2}
-              placeholder="Seat height, grip, cues"
+              placeholder={t("Seat height, grip, cues")}
               className="w-full rounded-ctl border border-line-strong bg-surface-2 px-3 py-2 text-base placeholder:text-text-muted/70"
             />
           </div>
@@ -226,7 +229,7 @@ export function ExerciseCard({
                 setReplaceOpen(true);
               }}
             >
-              <Repeat aria-hidden="true" size={18} /> Replace exercise
+              <Repeat aria-hidden="true" size={18} /> {t("Replace exercise")}
             </Button>
             <Button
               onClick={() => {
@@ -234,7 +237,7 @@ export function ExerciseCard({
                 setReorderOpen(true);
               }}
             >
-              <ArrowUpDown aria-hidden="true" size={18} /> Reorder exercises
+              <ArrowUpDown aria-hidden="true" size={18} /> {t("Reorder exercises")}
             </Button>
           </div>
           {item.supersetId ? (
@@ -244,7 +247,7 @@ export function ExerciseCard({
                 setMenuOpen(false);
               }}
             >
-              <Link2Off aria-hidden="true" size={18} /> Remove from superset
+              <Link2Off aria-hidden="true" size={18} /> {t("Remove from superset")}
             </Button>
           ) : (
             <Button
@@ -253,7 +256,7 @@ export function ExerciseCard({
                 setSupersetOpen(true);
               }}
             >
-              <Link2 aria-hidden="true" size={18} /> Add to superset
+              <Link2 aria-hidden="true" size={18} /> {t("Add to superset")}
             </Button>
           )}
 
@@ -265,7 +268,7 @@ export function ExerciseCard({
                 setMenuOpen(false);
               }}
             >
-              <ArrowUp aria-hidden="true" size={18} /> Move up
+              <ArrowUp aria-hidden="true" size={18} /> {t("Move up")}
             </Button>
             <Button
               disabled={!canMoveDown}
@@ -274,15 +277,15 @@ export function ExerciseCard({
                 setMenuOpen(false);
               }}
             >
-              <ArrowDown aria-hidden="true" size={18} /> Move down
+              <ArrowDown aria-hidden="true" size={18} /> {t("Move down")}
             </Button>
           </div>
 
           {confirmRemove ? (
             <div className="rounded-ctl border border-failure/60 p-3">
-              <p className="text-sm">Remove {name} and its {item.sets.length} sets from this workout?</p>
+              <p className="text-sm">{t("Remove {name} and its {n} sets from this workout?", { name, n: item.sets.length })}</p>
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <Button onClick={() => setConfirmRemove(false)}>Keep it</Button>
+                <Button onClick={() => setConfirmRemove(false)}>{t("Keep it")}</Button>
                 <Button
                   variant="danger"
                   onClick={() => {
@@ -290,13 +293,13 @@ export function ExerciseCard({
                     setMenuOpen(false);
                   }}
                 >
-                  Remove
+                  {t("Remove")}
                 </Button>
               </div>
             </div>
           ) : (
             <Button variant="danger" onClick={() => setConfirmRemove(true)}>
-              <Trash2 aria-hidden="true" size={18} /> Remove exercise
+              <Trash2 aria-hidden="true" size={18} /> {t("Remove exercise")}
             </Button>
           )}
         </div>
@@ -306,9 +309,9 @@ export function ExerciseCard({
 }
 
 /** Says what the number means: per dumbbell, per side, or load added to bodyweight. */
-function weightColumnLabel(exercise: Exercise | undefined, unit: WeightUnit): string {
+function weightColumnLabel(exercise: Exercise | undefined, unit: WeightUnit, t: T): string {
   if (exercise?.isBodyweight) return `+${unit}`;
-  if (exercise?.loadMode === "per_hand") return `${unit}/hand`;
-  if (exercise?.loadMode === "unilateral") return `${unit}/side`;
+  if (exercise?.loadMode === "per_hand") return t("{unit}/hand", { unit });
+  if (exercise?.loadMode === "unilateral") return t("{unit}/side", { unit });
   return unit;
 }

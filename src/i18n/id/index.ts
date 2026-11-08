@@ -1,4 +1,6 @@
 import { common } from "./common";
+import { workout } from "./workout";
+import { settings } from "./settings";
 
 /**
  * Indonesian, keyed by the English text. Split by area so several people (or passes) can work
@@ -6,4 +8,6 @@ import { common } from "./common";
  */
 export const ID: Record<string, string> = {
   ...common,
+  ...workout,
+  ...settings,
 };

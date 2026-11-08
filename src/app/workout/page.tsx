@@ -19,6 +19,7 @@ import { detectSessionPRs, previousSets } from "@/lib/calc";
 import { supersetLabels } from "@/lib/superset";
 import type { PRKind } from "@/types/workout";
 import { summaryPath } from "@/lib/routes";
+import { useT } from "@/i18n";
 
 export default function WorkoutPage() {
   return (
@@ -50,6 +51,7 @@ function useStartFromLink() {
 function WorkoutScreen() {
   useStartFromLink();
   const router = useRouter();
+  const t = useT();
   const active = useWorkoutStore((s) => s.active);
   const sessions = useWorkoutStore((s) => s.sessions);
   const { addExercise, finishActive, discardActive, completeAllRemaining } = useWorkoutStore();
@@ -82,12 +84,12 @@ function WorkoutScreen() {
     <main className="flex flex-1 flex-col">
       <ActiveWorkoutHeader session={active} unit={weightUnit} onFinish={() => setFinishOpen(true)} />
 
-      <h1 className="sr-only">Active workout: {active.name}</h1>
+      <h1 className="sr-only">{t("Active workout: {name}", { name: active.name })}</h1>
 
       <div className="flex flex-col gap-3 px-3 pt-4">
         {active.exercises.length === 0 && (
           <p className="panel px-4 py-6 text-center text-sm text-text-muted">
-            This workout has no exercises yet. Add one below to start logging sets.
+            {t("This workout has no exercises yet. Add one below to start logging sets.")}
           </p>
         )}
         {active.exercises.map((item, i) => (
@@ -111,7 +113,7 @@ function WorkoutScreen() {
           className="flex min-h-14 w-full items-center justify-center gap-2 rounded-card border border-ink/[0.12] bg-surface text-sm font-semibold text-text transition-colors duration-200 hover:border-ink/25 hover:bg-surface-2 active:bg-ink/[0.08]"
         >
           <Plus aria-hidden="true" size={18} className="text-accent" />
-          Add exercise
+          {t("Add exercise")}
         </button>
 
         {/* Kept quiet on purpose: Finish is the one action this screen should pull the eye to. */}
@@ -120,7 +122,7 @@ function WorkoutScreen() {
           onClick={() => setDiscardOpen(true)}
           className="mx-auto mt-6 min-h-11 rounded-ctl px-4 text-xs font-medium text-failure/80 transition-colors hover:bg-failure/10 hover:text-failure"
         >
-          Discard workout
+          {t("Discard workout")}
         </button>
       </div>
 
@@ -152,10 +154,10 @@ function WorkoutScreen() {
       <Sheet
         open={discardOpen}
         onClose={() => setDiscardOpen(false)}
-        title="Discard this workout?"
+        title={t("Discard this workout?")}
         footer={
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setDiscardOpen(false)}>Keep it</Button>
+            <Button onClick={() => setDiscardOpen(false)}>{t("Keep it")}</Button>
             <Button
               variant="danger"
               onClick={() => {
@@ -164,13 +166,13 @@ function WorkoutScreen() {
                 router.push("/");
               }}
             >
-              Discard
+              {t("Discard")}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-text-muted">
-          Everything logged in this workout will be deleted. This cannot be undone.
+          {t("Everything logged in this workout will be deleted. This cannot be undone.")}
         </p>
       </Sheet>
     </main>

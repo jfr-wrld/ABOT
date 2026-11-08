@@ -1,4 +1,5 @@
 import type { Exercise, WorkoutSession } from "@/types/workout";
+import { currentT, type T } from "@/i18n";
 
 /**
  * The status notification shown while a workout runs and ABOT is not on screen: the closest a
@@ -18,13 +19,17 @@ export interface LiveContent {
   body: string;
 }
 
-const clock = (t: number) => new Date(t).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+const clock = (ts: number, t: T) => new Date(ts).toLocaleTimeString(t.locale, { hour: "2-digit", minute: "2-digit" });
 
 /** The first exercise with an unticked set, and which set that is. */
-export function nextUp(session: WorkoutSession, byId: Record<string, Exercise>): { name: string; set: number; of: number } | null {
+export function nextUp(
+  session: WorkoutSession,
+  byId: Record<string, Exercise>,
+  t: T = currentT(),
+): { name: string; set: number; of: number } | null {
   for (const ex of session.exercises) {
     const i = ex.sets.findIndex((s) => !s.completed);
-    if (i >= 0) return { name: byId[ex.exerciseId]?.name ?? "Exercise", set: i + 1, of: ex.sets.length };
+    if (i >= 0) return { name: byId[ex.exerciseId]?.name ?? t("Exercise"), set: i + 1, of: ex.sets.length };
   }
   return null;
 }
@@ -35,14 +40,17 @@ export function liveContent(
   byId: Record<string, Exercise>,
   rest: LiveRest | null,
   now: number,
+  t: T = currentT(),
 ): LiveContent {
-  const next = nextUp(session, byId);
-  const nextText = next ? `Next: ${next.name}, set ${next.set} of ${next.of}` : "All sets done. Tap to finish.";
+  const next = nextUp(session, byId, t);
+  const nextText = next
+    ? t("Next: {name}, set {set} of {of}", { name: next.name, set: next.set, of: next.of })
+    : t("All sets done. Tap to finish.");
   if (rest && rest.endsAt > now) {
-    return { title: `${session.name} · rest until ${clock(rest.endsAt)}`, body: nextText };
+    return { title: `${session.name} · ${t("rest until {time}", { time: clock(rest.endsAt, t) })}`, body: nextText };
   }
-  if (rest) return { title: `${session.name} · rest over`, body: nextText };
-  return { title: `${session.name} · since ${clock(session.startedAt)}`, body: nextText };
+  if (rest) return { title: `${session.name} · ${t("rest over")}`, body: nextText };
+  return { title: `${session.name} · ${t("since {time}", { time: clock(session.startedAt, t) })}`, body: nextText };
 }
 
 /** What the Android app's live notification shows; Android draws and ticks the clock itself. */
@@ -61,23 +69,29 @@ export interface NativeLive {
   overText?: string;
 }
 
-export function nativeLiveContent(session: WorkoutSession, byId: Record<string, Exercise>, rest: LiveRest | null, now: number): NativeLive {
-  const next = nextUp(session, byId);
-  const lift = next ? `${next.name}, set ${next.set}/${next.of}` : null;
+export function nativeLiveContent(
+  session: WorkoutSession,
+  byId: Record<string, Exercise>,
+  rest: LiveRest | null,
+  now: number,
+  t: T = currentT(),
+): NativeLive {
+  const next = nextUp(session, byId, t);
+  const lift = next ? t("{name}, set {set}/{of}", { name: next.name, set: next.set, of: next.of }) : null;
   const clockStart = session.startedAt + (session.pausedMs ?? 0);
   const base: NativeLive = {
-    title: lift ?? "All sets done",
-    text: lift ? session.name : `${session.name} · tap to finish`,
+    title: lift ?? t("All sets done"),
+    text: lift ? session.name : `${session.name} · ${t("tap to finish")}`,
     clockStart,
-    pausedTitle: lift ? `Paused · ${lift}` : "Paused",
+    pausedTitle: lift ? `${t("Paused")} · ${lift}` : t("Paused"),
   };
   if (session.pausedAt !== undefined) return { ...base, pausedElapsed: Math.max(0, session.pausedAt - clockStart) };
   if (!rest || rest.endsAt <= now || !lift) return base;
   return {
     ...base,
     restEndsAt: rest.endsAt,
-    restTitle: `Rest · next ${lift}`,
-    overTitle: `Rest over · ${lift}`,
+    restTitle: `${t("Rest")} · ${t("next {lift}", { lift })}`,
+    overTitle: `${t("Rest over")} · ${lift}`,
     overText: session.name,
   };
 }

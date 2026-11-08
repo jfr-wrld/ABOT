@@ -33,6 +33,7 @@ import {
 } from "@/lib/home";
 import type { Exercise, WorkoutSession } from "@/types/workout";
 import { historyPath } from "@/lib/routes";
+import { useT } from "@/i18n";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-xl border border-line bg-surface p-3";
@@ -44,6 +45,7 @@ const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
  * with photos and icons. Every figure comes from finished workouts on this device.
  */
 export function HomeDashboard() {
+  const t = useT();
   const sessions = useWorkoutStore((s) => s.sessions);
   const active = useWorkoutStore((s) => s.active);
   const routines = useRoutineStore((s) => s.routines);
@@ -63,7 +65,7 @@ export function HomeDashboard() {
           </h1>
           <Link
             href="/settings"
-            aria-label="Settings"
+            aria-label={t("Settings")}
             className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
           >
             <Settings aria-hidden="true" size={22} />
@@ -89,14 +91,15 @@ export function HomeDashboard() {
 
 /** Trained days light up one after another; today keeps a slow breathing ring. */
 function WeekStrip({ days }: { days: ReturnType<typeof weekStrip> }) {
+  const t = useT();
   const controls = useEntrance();
   const reduce = useReducedMotion();
   return (
-    <ol aria-label="This week" className="grid grid-cols-7 gap-1.5">
+    <ol aria-label={t("This week")} className="grid grid-cols-7 gap-1.5">
       {days.map((d, i) => {
         const date = new Date(d.start);
-        const weekday = date.toLocaleDateString(undefined, { weekday: "short" });
-        const status = d.trained ? "trained" : d.isToday ? "today" : d.isFuture ? "" : "rest";
+        const weekday = date.toLocaleDateString(t.locale, { weekday: "short" });
+        const status = d.trained ? t("trained") : d.isToday ? t("today") : d.isFuture ? "" : t("rest");
         return (
           <li key={d.start} className="flex flex-col items-center gap-1">
             <span aria-hidden="true" className={`label-caps ${d.isToday ? "!text-text" : ""}`}>
@@ -127,7 +130,7 @@ function WeekStrip({ days }: { days: ReturnType<typeof weekStrip> }) {
               )}
             </span>
             <span className="sr-only">
-              {date.toLocaleDateString(undefined, { weekday: "long", day: "numeric" })}
+              {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric" })}
               {status && `, ${status}`}
             </span>
           </li>
@@ -165,6 +168,7 @@ function ThumbRow({ exerciseIds, byId, size = 44 }: { exerciseIds: string[]; byI
 }
 
 function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<string, Exercise> }) {
+  const t = useT();
   const router = useRouter();
   const { startEmpty, startFromRoutine } = useWorkoutStore();
   const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
@@ -179,19 +183,19 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
       <section aria-labelledby="hero-heading" className={`${TILE} relative flex flex-col gap-3 overflow-hidden p-4`}>
         <HeroPlate />
         <div className="relative">
-          <p className="label-caps">Next up</p>
+          <p className="label-caps">{t("Next up")}</p>
           <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
-            Free session
+            {t("Free session")}
           </h2>
         </div>
         <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
           <Button variant="primary" onClick={empty} className="min-h-12 text-base">
             <Play aria-hidden="true" size={18} />
-            Start an empty workout
+            {t("Start an empty workout")}
           </Button>
           <Link
             href="/workout"
-            aria-label="Create a routine"
+            aria-label={t("Create a routine")}
             className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
           >
             <Plus aria-hidden="true" size={20} />
@@ -206,7 +210,7 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
     <section aria-labelledby="hero-heading" className={`${TILE} relative flex flex-col gap-3 overflow-hidden p-4`}>
       <HeroPlate />
       <div className="relative min-w-0">
-        <p className="label-caps">Next up</p>
+        <p className="label-caps">{t("Next up")}</p>
         <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
           {routine.name}
         </h2>
@@ -221,13 +225,13 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
             startFromRoutine(routine);
             router.push("/workout");
           }}
-          aria-label={`Start ${routine.name}`}
+          aria-label={t("Start {name}", { name: routine.name })}
           className="min-h-12 text-base"
         >
           <Play aria-hidden="true" size={18} />
-          Start
+          {t("Start")}
         </Button>
-        <Button onClick={empty} aria-label="Start an empty workout" className="size-12 !bg-transparent !px-0">
+        <Button onClick={empty} aria-label={t("Start an empty workout")} className="size-12 !bg-transparent !px-0">
           <Plus aria-hidden="true" size={20} />
         </Button>
       </div>
@@ -257,6 +261,7 @@ function HeroPlate() {
 }
 
 function ActiveCard({ now }: { now: number }) {
+  const t = useT();
   const active = useWorkoutStore((s) => s.active)!;
   const { byId } = useAllExercises();
   const done = countSets(active).completed;
@@ -272,7 +277,7 @@ function ActiveCard({ now }: { now: number }) {
           animate={{ opacity: [1, 0.3, 1] }}
           transition={{ duration: 1.2, repeat: Infinity }}
         />
-        Workout in progress
+        {t("Workout in progress")}
       </span>
       <span className="mt-1 block truncate text-2xl font-bold tracking-tight">{active.name}</span>
       <span className="mt-2 block">
@@ -285,12 +290,12 @@ function ActiveCard({ now }: { now: number }) {
         </span>
         <span className="inline-flex items-center gap-1">
           <Layers aria-hidden="true" size={14} />
-          {done} {done === 1 ? "set" : "sets"} done
+          {t.n(done, "{n} set done", "{n} sets done")}
         </span>
       </span>
       <span className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-accent text-base font-bold text-on-accent">
         <Play aria-hidden="true" size={18} />
-        Continue workout
+        {t("Continue workout")}
       </span>
     </Link>
   );
@@ -299,6 +304,7 @@ function ActiveCard({ now }: { now: number }) {
 /* ---------------------------------------------------------------- this week */
 
 function ThisWeek({ now }: { now: number }) {
+  const t = useT();
   const sessions = useWorkoutStore((s) => s.sessions);
   const schedule = useReminderStore((s) => s.schedule);
   const { weightUnit, firstDayOfWeek } = useSettingsStore();
@@ -312,12 +318,12 @@ function ThisWeek({ now }: { now: number }) {
   const resting = useMemo(() => restingMuscles(sessions, byId, now), [sessions, byId, now]);
 
   return (
-    <section aria-label="This week" className="grid grid-cols-2 gap-2">
+    <section aria-label={t("This week")} className="grid grid-cols-2 gap-2">
       <VolumeCard
         kg={volume.kg}
         change={volume.changePct}
         days={days}
-        letters={strip.map((d) => new Date(d.start).toLocaleDateString(undefined, { weekday: "narrow" }))}
+        letters={strip.map((d) => new Date(d.start).toLocaleDateString(t.locale, { weekday: "narrow" }))}
         todayIndex={strip.findIndex((d) => d.isToday)}
         unit={weightUnit}
       />
@@ -343,21 +349,22 @@ function VolumeCard({
   todayIndex: number;
   unit: "kg" | "lbs";
 }) {
+  const t = useT();
   const controls = useEntrance();
   const max = Math.max(...days, 1);
   return (
     <div className={`${TILE} col-span-2 flex items-end justify-between gap-3`}>
       <div className="min-w-0">
-        <p className="label-caps">Volume</p>
+        <p className="label-caps">{t("Volume")}</p>
         <p className="num mt-1 flex items-baseline gap-1 text-3xl font-bold tracking-tight tabular-nums">
-          <CountFromZero delay={0.2} value={Math.round(toDisplay(kg, unit))} format={(n) => Math.round(n).toLocaleString()} />
+          <CountFromZero delay={0.2} value={Math.round(toDisplay(kg, unit))} format={(n) => Math.round(n).toLocaleString(t.locale)} />
           <span className="text-sm font-semibold text-text-muted">{unit}</span>
         </p>
         {change !== null && (
           <p className={`num mt-1 inline-flex items-center gap-1 text-xs ${change >= 0 ? "text-text" : "text-text-muted"}`}>
             {change >= 0 ? <TrendingUp aria-hidden="true" size={14} className="text-accent" /> : <TrendingDown aria-hidden="true" size={14} />}
             {change > 0 ? "+" : ""}
-            {change}%<span className="sr-only"> against last week</span>
+            {change}%<span className="sr-only"> {t("against last week")}</span>
           </p>
         )}
       </div>
@@ -383,6 +390,7 @@ function VolumeCard({
 
 /** Sessions as a ring that draws itself: against the schedule when there is one, else the 7 days. */
 function SessionsRing({ done, target, perWeek }: { done: number; target: number; perWeek: boolean }) {
+  const t = useT();
   const controls = useEntrance();
   const r = 30;
   const fraction = Math.min(1, done / Math.max(1, target));
@@ -412,9 +420,11 @@ function SessionsRing({ done, target, perWeek }: { done: number; target: number;
           <span className="text-xs font-semibold text-text-muted">/{target}</span>
         </span>
       </div>
-      <p className="label-caps">{perWeek ? "Planned" : "Days"}</p>
+      <p className="label-caps">{perWeek ? t("Planned") : t("Days")}</p>
       <span className="sr-only">
-        {done} of {target} {perWeek ? "planned sessions" : "days"} this week
+        {perWeek
+          ? t("{done} of {target} planned sessions this week", { done, target })
+          : t("{done} of {target} days this week", { done, target })}
       </span>
     </div>
   );
@@ -422,6 +432,7 @@ function SessionsRing({ done, target, perWeek }: { done: number; target: number;
 
 /** The body, front and back, with muscles worked in the last 48 hours lit: they are resting. */
 function RecoveryCard({ ready, resting }: { ready: number; resting: Parameters<typeof MuscleMap>[0]["primary"] }) {
+  const t = useT();
   return (
     <div className={`${TILE} flex flex-col items-center justify-center gap-0.5 !pb-2`}>
       <div className="w-full [&_figcaption]:hidden">
@@ -429,12 +440,12 @@ function RecoveryCard({ ready, resting }: { ready: number; resting: Parameters<t
       </div>
       <p className="num text-sm font-bold tabular-nums">
         {ready}/{RECOVERY_GROUPS.length}
-        <span className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">ready</span>
+        <span className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">{t("ready")}</span>
       </p>
       {resting.length > 0 && (
         <p className="flex items-center gap-1 text-[10px] text-text-muted">
           <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
-          resting
+          {t("resting")}
         </p>
       )}
     </div>
@@ -444,6 +455,7 @@ function RecoveryCard({ ready, resting }: { ready: number; resting: Parameters<t
 /* ---------------------------------------------------------------- recent */
 
 function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<string, Exercise>; now: number }) {
+  const t = useT();
   const sessions = useWorkoutStore((s) => s.sessions);
   const recent = useMemo(() => [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 10), [sessions]);
   const prs = useMemo(() => prCounts(recent, sessions, byId), [recent, sessions, byId]);
@@ -451,12 +463,12 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
   return (
     <section aria-labelledby="recent-heading" className="flex flex-col gap-2">
       <h2 id="recent-heading" className="label-caps">
-        Recent workouts
+        {t("Recent workouts")}
       </h2>
       {recent.length === 0 ? (
         <div className={`${TILE} flex flex-col items-center gap-2 py-6 text-center`}>
           <Dumbbell aria-hidden="true" size={22} className="text-text-muted" />
-          <p className="text-sm text-text-muted">No workouts yet.</p>
+          <p className="text-sm text-text-muted">{t("No workouts yet.")}</p>
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -484,6 +496,7 @@ function RecentCard({
   now: number;
   order: number;
 }) {
+  const t = useT();
   const controls = useEntrance();
   const { completed } = countSets(s);
   return (
@@ -507,7 +520,7 @@ function RecentCard({
                 </span>
               )}
               <time dateTime={new Date(s.startedAt).toISOString()} className="num ml-auto shrink-0 text-xs text-text-muted">
-                {relativeDay(s.startedAt, now)}
+                {relativeDay(s.startedAt, now, t)}
               </time>
             </div>
             <div className="flex items-center justify-between gap-2">
@@ -524,7 +537,7 @@ function RecentCard({
                 <span className="inline-flex items-center gap-1">
                   <Layers aria-hidden="true" size={12} />
                   {completed}
-                  <span className="sr-only"> {completed === 1 ? "set" : "sets"}</span>
+                  <span className="sr-only"> {completed === 1 ? t("set") : t("sets")}</span>
                 </span>
               </p>
             </div>

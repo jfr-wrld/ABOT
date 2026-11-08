@@ -7,6 +7,7 @@ import type { Exercise, MuscleGroup, Routine, WorkoutSession } from "@/types/wor
 import type { WorkoutSchedule, Weekday } from "@/lib/notifications/schedule";
 import { detectSessionPRs, isWorkingSet, sessionVolume } from "./calc";
 import { startOfDay, startOfWeek } from "./analytics";
+import type { T } from "@/i18n";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -247,11 +248,23 @@ export function restingMuscles(sessions: WorkoutSession[], byId: Record<string, 
   return [...out];
 }
 
-/** "Today", "Yesterday", a weekday within the week, else a short date. */
-export function relativeDay(t: number, now: number): string {
-  const days = Math.round((startOfDay(now) - startOfDay(t)) / DAY);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return new Date(t).toLocaleDateString(undefined, { weekday: "short" });
-  return new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+/**
+ * "Today", "Yesterday", a weekday within the week, else a short date. Pass `t` for the chosen
+ * language; without it the words are English and dates follow the system locale.
+ */
+export function relativeDay(ts: number, now: number, t?: T): string {
+  const days = Math.round((startOfDay(now) - startOfDay(ts)) / DAY);
+  if (days === 0) return t ? t("Today") : "Today";
+  if (days === 1) return t ? t("Yesterday") : "Yesterday";
+  if (days < 7) return new Date(ts).toLocaleDateString(t?.locale, { weekday: "short" });
+  return new Date(ts).toLocaleDateString(t?.locale, { day: "numeric", month: "short" });
+}
+
+/**
+ * A muscle's display name in the chosen language. "Back" the muscle and "Back" the navigation
+ * link are different words in Indonesian, so the muscle goes through its own key.
+ */
+export function muscleText(label: string, t: T): string {
+  if (t.lang === "en") return label;
+  return label === "Back" ? t("Back (muscle)") : t(label);
 }

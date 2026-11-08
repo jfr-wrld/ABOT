@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { Pause, Play } from "lucide-react";
 import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
+import { useT } from "@/i18n";
 
 export function ActiveWorkoutHeader({
   session,
@@ -23,6 +24,7 @@ export function ActiveWorkoutHeader({
   unit: WeightUnit;
   onFinish: () => void;
 }) {
+  const t = useT();
   const rename = useWorkoutStore((s) => s.renameActive);
   const now = useNow(1000);
   const duration = sessionDurationSec(session, now);
@@ -39,7 +41,7 @@ export function ActiveWorkoutHeader({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <label htmlFor="workout-name" className="sr-only">
-            Workout name
+            {t("Workout name")}
           </label>
           <input
             id="workout-name"
@@ -55,20 +57,20 @@ export function ActiveWorkoutHeader({
           {...press}
           className="min-h-11 shrink-0 rounded-xl bg-accent px-5 text-sm font-extrabold text-on-accent shadow-volt transition-[filter] duration-150 hover:brightness-110"
         >
-          Finish
+          {t("Finish")}
         </motion.button>
       </div>
 
       {locations.length > 0 && (
         <div className="mt-2 flex items-center gap-2">
           <label htmlFor="workout-gym" className="text-sm text-text-muted">
-            Gym
+            {t("Gym")}
           </label>
           <Select
             id="workout-gym"
             value={session.locationId ?? ""}
             onChange={(v) => setLocation(v || undefined)}
-            options={[{ value: "", label: "No gym" }, ...locations.map((l) => ({ value: l.id, label: l.name }))]}
+            options={[{ value: "", label: t("No gym") }, ...locations.map((l) => ({ value: l.id, label: l.name }))]}
             className="flex-1"
           />
         </div>
@@ -77,23 +79,27 @@ export function ActiveWorkoutHeader({
       <dl className="mt-3 grid grid-cols-3 gap-2">
         <div className="rounded-xl border border-ink/10 bg-surface px-3 py-2.5">
           <dt className="label-caps flex items-center gap-1.5">
-            Duration
-            {paused && <span className="rounded bg-accent px-1 text-[9px] font-bold text-on-accent">Paused</span>}
+            {t("Duration")}
+            {paused && <span className="rounded bg-accent px-1 text-[9px] font-bold text-on-accent">{t("Paused")}</span>}
           </dt>
           <dd>
             <button
               type="button"
               onClick={() => setStartOpen(true)}
               aria-haspopup="dialog"
-              aria-label={`Duration ${formatDuration(duration)}${paused ? ", paused" : ""}. Pause or adjust the timer`}
+              aria-label={
+                paused
+                  ? t("Duration {time}, paused. Pause or adjust the timer", { time: formatDuration(duration) })
+                  : t("Duration {time}. Pause or adjust the timer", { time: formatDuration(duration) })
+              }
               className="num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-xl font-bold tracking-tight text-text underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
             >
               {formatDuration(duration)}
             </button>
           </dd>
         </div>
-        <Stat label="Volume" value={formatVolume(volume, unit)} />
-        <Stat label="Sets" value={`${completed} / ${total}`} />
+        <Stat label={t("Volume")} value={formatVolume(volume, unit)} />
+        <Stat label={t("Sets")} value={`${completed} / ${total}`} />
       </dl>
       {startOpen && <StartTimeSheet startedAt={session.startedAt} paused={paused} onClose={() => setStartOpen(false)} />}
     </header>
@@ -111,6 +117,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 /** Tapping the duration: pause or resume the clock, or move the start time. */
 function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; paused: boolean; onClose: () => void }) {
+  const t = useT();
   const setStartedAt = useWorkoutStore((s) => s.setStartedAt);
   const pause = useWorkoutStore((s) => s.pauseActive);
   const resume = useWorkoutStore((s) => s.resumeActive);
@@ -123,7 +130,7 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
   function save() {
     const [h, m] = value.split(":").map(Number);
     if (h === undefined || m === undefined || Number.isNaN(h) || Number.isNaN(m)) {
-      setError("Enter a time like 07:30");
+      setError(t("Enter a time like 07:30"));
       return;
     }
     // Same calendar day as the original start; a workout rarely spans midnight.
@@ -131,19 +138,19 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
     next.setHours(h, m, 0, 0);
     const r = setStartedAt(next.getTime());
     if (r.ok) onClose();
-    else setError(r.reason);
+    else setError(t(r.reason));
   }
 
   return (
     <Sheet
       open
       onClose={onClose}
-      title="Workout timer"
+      title={t("Workout timer")}
       footer={
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t("Cancel")}</Button>
           <Button variant="primary" onClick={save}>
-            Save start time
+            {t("Save start time")}
           </Button>
         </div>
       }
@@ -158,15 +165,15 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
         className="mb-1 w-full"
       >
         {paused ? <Play aria-hidden="true" size={16} /> : <Pause aria-hidden="true" size={16} />}
-        {paused ? "Resume workout timer" : "Pause workout timer"}
+        {paused ? t("Resume workout timer") : t("Pause workout timer")}
       </Button>
       <p className="mb-4 text-xs text-text-muted">
         {paused
-          ? "The clock is stopped. Ticking a set also resumes it."
-          : "Stops the clock for a break. The rest timer is cleared; ticking a set resumes."}
+          ? t("The clock is stopped. Ticking a set also resumes it.")
+          : t("Stops the clock for a break. The rest timer is cleared; ticking a set resumes.")}
       </p>
       <label htmlFor="start-time" className="mb-1 block text-sm font-semibold">
-        Started at
+        {t("Started at")}
       </label>
       <input
         id="start-time"
@@ -186,7 +193,7 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
         </p>
       ) : (
         <p id="start-time-hint" className="mt-1 text-xs text-text-muted">
-          Use this if you started the timer late. Duration is counted from this time.
+          {t("Use this if you started the timer late. Duration is counted from this time.")}
         </p>
       )}
     </Sheet>

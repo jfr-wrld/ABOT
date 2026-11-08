@@ -4,6 +4,9 @@
  * Weekdays follow Date#getDay: 0 = Sunday ... 6 = Saturday.
  */
 
+import { currentT, type T } from "@/i18n";
+import { muscleText } from "@/lib/home";
+
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface WorkoutSchedule {
@@ -96,34 +99,38 @@ export interface ReminderContent {
   actions: { action: "ACTION_START" | "ACTION_SNOOZE"; title: string }[];
 }
 
-/** The notification for one reminder, worded by the owner's spec (terminal style). */
+/**
+ * The notification for one reminder, worded by the owner's spec (terminal style). The
+ * "ABOT // PREP_CALL" titles stay as they are in every language; the rest is translated.
+ */
 export function reminderContent(
   r: DueReminder,
   routine: { id: string; name: string; muscles: string[] } | null,
   time: string,
+  t: T = currentT(),
 ): ReminderContent {
-  const name = routine?.name ?? "Free session";
+  const name = routine?.name ?? t("Free session");
   const url = `/workout?start=${encodeURIComponent(routine?.id ?? "empty")}`;
-  const muscles = routine?.muscles.length ? routine.muscles.join(", ") : "your choice";
+  const muscles = routine?.muscles.length ? routine.muscles.map((m) => muscleText(m, t)).join(", ") : t("your choice");
   return r.kind === "prep"
     ? {
         title: `ABOT // PREP_CALL [${name}]`,
-        body: `Pack your gym bag. ${name} starts at ${time}.`,
+        body: t("Pack your gym bag. {name} starts at {time}.", { name, time }),
         tag: r.key,
         data: { routineId: routine?.id ?? null, url },
         actions: [
-          { action: "ACTION_START", title: "Start now" },
-          { action: "ACTION_SNOOZE", title: "Snooze 30 min" },
+          { action: "ACTION_START", title: t("Start now") },
+          { action: "ACTION_SNOOZE", title: t("Snooze 30 min") },
         ],
       }
     : {
         title: `ABOT // SESSION_CALL [${name}]`,
-        body: `Scheduled: ${name} • Primary: ${muscles}. Tap to initiate workout.`,
+        body: t("Scheduled: {name} • Primary: {muscles}. Tap to initiate workout.", { name, muscles }),
         tag: r.key,
         data: { routineId: routine?.id ?? null, url },
         actions: [
-          { action: "ACTION_START", title: "Start workout" },
-          { action: "ACTION_SNOOZE", title: "Snooze 30 min" },
+          { action: "ACTION_START", title: t("Start workout") },
+          { action: "ACTION_SNOOZE", title: t("Snooze 30 min") },
         ],
       };
 }

@@ -7,6 +7,7 @@ import { SmartExerciseMedia } from "@/components/exercise/SmartExerciseMedia";
 import { ExerciseGuide } from "@/components/exercise/ExerciseGuide";
 import { RecordsSummary } from "@/components/exercise/RecordsSummary";
 import { exercisePath } from "@/lib/routes";
+import { useT } from "@/i18n";
 
 /** Quick how-to during a workout: media, form cues and records, without leaving the session. */
 export function ExerciseHowToSheet({
@@ -20,6 +21,7 @@ export function ExerciseHowToSheet({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <Sheet open={open} onClose={onClose} title={exercise.name}>
       {open && (
@@ -31,7 +33,7 @@ export function ExerciseHowToSheet({
             href={exercisePath(exercise.id)}
             className="inline-flex min-h-11 items-center justify-center rounded-ctl border border-line-strong text-sm font-semibold hover:bg-surface-2"
           >
-            Full exercise details
+            {t("Full exercise details")}
           </Link>
         </div>
       )}

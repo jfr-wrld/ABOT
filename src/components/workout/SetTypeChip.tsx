@@ -1,5 +1,6 @@
 import type { SetType } from "@/types/workout";
 import { SET_TYPE_META } from "@/types/workout";
+import type { T } from "@/i18n";
 
 const bg: Record<SetType, string> = {
   warmup: "text-warmup",
@@ -32,6 +33,8 @@ export function SetTypeChip({
   );
 }
 
-export function setTypeA11yName(type: SetType, number: number | null): string {
+/** "Set 2" or "Warm-up set"; pass `t` for the chosen language (English without it). */
+export function setTypeA11yName(type: SetType, number: number | null, t?: T): string {
+  if (t) return type === "normal" ? t("Set {n}", { n: number ?? "" }) : t("{type} set", { type: t(SET_TYPE_META[type].label) });
   return type === "normal" ? `Set ${number ?? ""}` : `${SET_TYPE_META[type].label} set`;
 }

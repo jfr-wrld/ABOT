@@ -21,6 +21,8 @@ import { previousComparable, sessionRecords, workedMuscles } from "@/lib/session
 import { MUSCLE_GROUP_LABELS, type Exercise, type PersonalRecord, type WeightUnit } from "@/types/workout";
 import { historyPath } from "@/lib/routes";
 import { buzz } from "@/lib/native/haptics";
+import { useT } from "@/i18n";
+import { muscleText } from "@/lib/home";
 
 export default function WorkoutSummaryPage() {
   return (
@@ -36,6 +38,7 @@ export default function WorkoutSummaryPage() {
  * the last time, the records and first lifts, the muscles worked, and the way to share it.
  */
 function Summary() {
+  const t = useT();
   const id = useSearchParams().get("id") ?? "";
   const sessions = useWorkoutStore((s) => s.sessions);
   const { weightUnit, restTimerAlert } = useSettingsStore();
@@ -68,8 +71,8 @@ function Summary() {
   if (!session || !insights) {
     return (
       <main>
-        <PageHeader title="Workout not found" back={{ href: "/", label: "Home" }} />
-        <p className="px-4 pt-4 text-sm text-text-muted">This workout is not on this device. It may have been deleted.</p>
+        <PageHeader title={t("Workout not found")} back={{ href: "/", label: t("Home") }} />
+        <p className="px-4 pt-4 text-sm text-text-muted">{t("This workout is not on this device. It may have been deleted.")}</p>
       </main>
     );
   }
@@ -84,10 +87,10 @@ function Summary() {
       <header className="flex flex-col items-center px-4 pt-5 text-center">
         <Celebration record={recordLifts > 0} />
         <Rise order={6}>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">Workout saved</h1>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight">{t("Workout saved")}</h1>
           <p className="mt-1 text-sm text-text-muted">
             {session.name} ·{" "}
-            {new Date(session.startedAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
+            {new Date(session.startedAt).toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })}
           </p>
         </Rise>
       </header>
@@ -95,12 +98,12 @@ function Summary() {
       <div className="flex flex-col gap-3 px-4 pt-5">
         <Rise order={7}>
           <dl className="grid grid-cols-2 gap-2">
-            <Tile icon={<Timer size={16} />} label="Duration" value={sessionDurationSec(session)} format={(n) => formatDuration(Math.round(n))} />
-            <Tile icon={<Dumbbell size={16} />} label="Volume" value={volume} format={(n) => formatVolume(n, weightUnit)} />
-            <Tile icon={<Layers size={16} />} label="Sets" value={sets} format={(n) => String(Math.round(n))} />
+            <Tile icon={<Timer size={16} />} label={t("Duration")} value={sessionDurationSec(session)} format={(n) => formatDuration(Math.round(n))} />
+            <Tile icon={<Dumbbell size={16} />} label={t("Volume")} value={volume} format={(n) => formatVolume(n, weightUnit)} />
+            <Tile icon={<Layers size={16} />} label={t("Sets")} value={sets} format={(n) => String(Math.round(n))} />
             <Tile
               icon={<ListOrdered size={16} />}
-              label="Exercises"
+              label={t("Exercises")}
               value={session.exercises.length}
               format={(n) => String(Math.round(n))}
             />
@@ -118,7 +121,7 @@ function Summary() {
             <section aria-labelledby="summary-prs" className="flex flex-col gap-2">
               <h2 id="summary-prs" className="flex items-center gap-2 text-sm font-semibold text-pr">
                 <Trophy aria-hidden="true" size={16} />
-                {recordLifts} personal {recordLifts === 1 ? "record" : "records"}
+                {t.n(recordLifts, "{n} personal record", "{n} personal records")}
               </h2>
               <ul className="flex flex-col gap-2">
                 {Object.entries(insights.byLift).map(([exerciseId, records], i) => (
@@ -134,9 +137,9 @@ function Summary() {
             <section aria-labelledby="summary-new" className="panel p-3">
               <h2 id="summary-new" className="flex items-center gap-2 text-sm font-semibold">
                 <Sparkles aria-hidden="true" size={16} className="text-accent" />
-                {insights.newLifts.length} new {insights.newLifts.length === 1 ? "lift" : "lifts"}
+                {t.n(insights.newLifts.length, "{n} new lift", "{n} new lifts")}
               </h2>
-              <p className="mt-0.5 text-xs text-text-muted">Your baseline. Beat it next time for a record.</p>
+              <p className="mt-0.5 text-xs text-text-muted">{t("Your baseline. Beat it next time for a record.")}</p>
               <ul className="mt-2 flex flex-wrap gap-2">
                 {insights.newLifts.map((exId) =>
                   byId[exId] ? (
@@ -159,12 +162,12 @@ function Summary() {
               </div>
               <div className="min-w-0">
                 <h2 id="summary-muscles" className="label-caps">
-                  Muscles worked
+                  {t("Muscles worked")}
                 </h2>
                 <ul className="mt-2 flex flex-wrap gap-1">
                   {insights.muscles.primary.slice(0, 5).map((m) => (
                     <li key={m} className="rounded-full border border-accent/40 bg-accent-tint px-2 py-0.5 text-xs font-semibold">
-                      {MUSCLE_GROUP_LABELS[m]}
+                      {muscleText(MUSCLE_GROUP_LABELS[m], t)}
                     </li>
                   ))}
                 </ul>
@@ -185,14 +188,14 @@ function Summary() {
             className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-ink/[0.12] bg-surface-2 px-3 text-sm font-semibold text-text hover:border-ink/25"
           >
             <ListOrdered aria-hidden="true" size={16} />
-            See every set
+            {t("See every set")}
           </Link>
           <Link
             href="/"
             className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-text-muted hover:bg-ink/[0.05] hover:text-text"
           >
             <House aria-hidden="true" size={16} />
-            Back to Home
+            {t("Back to Home")}
           </Link>
         </div>
       </div>
@@ -300,19 +303,20 @@ function Tile({ icon, label, value, format }: { icon: React.ReactNode; label: st
 
 /** This workout's volume against the last one from the same routine, as two bars and the change. */
 function Compare({ now, before, unit, name }: { now: number; before: number; unit: WeightUnit; name: string }) {
+  const t = useT();
   const controls = useEntrance();
   const max = Math.max(now, before);
   const change = Math.round(((now - before) / before) * 100);
   const up = change >= 0;
   const rows = [
-    { label: "Last time", value: before, cls: "bg-zinc-600" },
-    { label: "Today", value: now, cls: "bg-accent" },
+    { label: t("Last time"), value: before, cls: "bg-zinc-600" },
+    { label: t("Today"), value: now, cls: "bg-accent" },
   ];
   return (
     <section aria-labelledby="summary-compare" className="panel p-3">
       <div className="flex items-center justify-between gap-2">
         <h2 id="summary-compare" className="label-caps truncate">
-          Volume vs last {name}
+          {t("Volume vs last {name}", { name })}
         </h2>
         <span
           className={`num inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold ${
@@ -372,6 +376,7 @@ function RecordCard({
   unit: WeightUnit;
   order: number;
 }) {
+  const t = useT();
   const controls = useEntrance();
   return (
     <motion.li
@@ -385,15 +390,15 @@ function RecordCard({
     >
       {exercise ? <ExerciseThumb exercise={exercise} size={44} /> : <span className="size-11 rounded-xl bg-surface-2" />}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold">{exercise?.name ?? "Removed exercise"}</p>
+        <p className="truncate text-sm font-semibold">{exercise?.name ?? t("Removed exercise")}</p>
         <ul className="mt-1 flex flex-wrap gap-1">
           {bySet(records).map(({ pr, kinds }) => (
             <li key={pr.setId} className="num flex items-baseline gap-1.5 rounded-md bg-row px-1.5 py-0.5 text-[11px] text-pr">
               <span className="font-bold">
                 {formatWeight(pr.weightKg, unit)} × {pr.reps}
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-pr/80">{kinds.map((k) => SHORT[k]).join(" · ")}</span>
-              <span className="sr-only">{kinds.map((k) => PR_KIND_LABEL[k]).join(", ")}</span>
+              <span className="text-[9px] uppercase tracking-wider text-pr/80">{kinds.map((k) => t(SHORT[k])).join(" · ")}</span>
+              <span className="sr-only">{kinds.map((k) => t(PR_KIND_LABEL[k])).join(", ")}</span>
             </li>
           ))}
         </ul>
