@@ -9,6 +9,9 @@ import { syncStatus, type SyncTone } from "@/lib/syncStatus";
 import { Button } from "@/components/ui/Button";
 import { SyncError } from "@/components/sync/SyncError";
 
+/** Where the Account section lives, and where sign-in comes back to. */
+export const PROFILE_ABOUT = "/profile?tab=about";
+
 const LINK =
   "flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 px-3 text-center text-sm font-semibold transition-colors hover:border-white/25";
 
@@ -45,14 +48,19 @@ const CHIP_TEXT: Record<SyncTone, string> = {
 };
 
 /** The backup state in two or three words under the name; it jumps to the Account section. */
-export function AccountChip() {
+export function AccountChip({ onOpen }: { onOpen?: () => void }) {
   const s = useSyncStore();
   const now = useNow(30_000);
   const signedIn = s.userId !== null && s.phase !== "signed_out" && s.phase !== "signing_in" && s.phase !== "unconfigured";
   const tone: SyncTone | "guest" = signedIn ? syncStatus(s, now).tone : "guest";
   return (
     <a
-      href="#account"
+      href="/profile?tab=about#account"
+      onClick={(e) => {
+        if (!onOpen) return;
+        e.preventDefault();
+        onOpen();
+      }}
       className={`-ml-1 inline-flex min-h-11 items-center gap-1.5 rounded-ctl px-1 text-sm font-semibold hover:bg-white/[0.05] ${
         tone === "error" ? "text-failure" : tone === "ok" ? "text-text" : "text-text-muted"
       }`}
@@ -122,7 +130,7 @@ function Guest() {
       {s.phase === "error" && s.lastError && (
         <SyncError stage={s.errorStage ?? "sign_in"} raw={s.lastError} className="mt-2 pl-8" />
       )}
-      <Link href="/login?from=/profile" className={`mt-3 ${LINK}`}>
+      <Link href={`/login?from=${encodeURIComponent(PROFILE_ABOUT)}`} className={`mt-3 ${LINK}`}>
         Back up with an account
       </Link>
     </>

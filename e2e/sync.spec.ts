@@ -99,7 +99,7 @@ test.describe("signed in (Supabase answered by the test)", () => {
     // The cloud's routine is now on this device, and the Google name filled the empty profile.
     await page.goto("/routines");
     await expect(page.getByRole("heading", { name: "Cloud Pull Day" })).toBeVisible();
-    await page.goto("/profile");
+    await page.goto("/profile?tab=about");
     await expect(page.getByRole("heading", { level: 2, name: "Test Lifter" })).toBeVisible();
     await expect(page.getByText("lifter@example.com")).toBeVisible();
 
@@ -139,7 +139,7 @@ test.describe("signed in (Supabase answered by the test)", () => {
     await mockSupabase(page, { failSync: true });
     await freshStart(page);
     await signInAs(page);
-    await page.goto("/profile");
+    await page.goto("/profile?tab=about");
     const account = page.getByRole("region", { name: "Account" });
     await expect(account.getByRole("status")).toHaveText("Last backup failed");
     await expect(account.getByText("Your backup space isn't set up yet")).toBeVisible();
@@ -156,9 +156,9 @@ test.describe("signed in (Supabase answered by the test)", () => {
 
   test("login from Profile puts sign-in first and leads back to Profile", async ({ page }) => {
     await freshStart(page);
-    await page.goto("/profile");
+    await page.goto("/profile?tab=about");
     await page.getByRole("link", { name: "Back up with an account" }).click();
-    await page.waitForURL("**/login?from=/profile");
+    await page.waitForURL("**/login?from=%2Fprofile%3Ftab%3Dabout");
     await expect(page.getByRole("button", { name: "Sign in with Google" })).toHaveClass(/bg-accent/);
     await page.getByRole("link", { name: "Profile" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Profile" })).toBeVisible();
@@ -167,9 +167,9 @@ test.describe("signed in (Supabase answered by the test)", () => {
   test("a cancelled Google sign-in returns to where it started and says so", async ({ page }) => {
     await mockSupabase(page);
     await freshStart(page);
-    await page.evaluate(() => sessionStorage.setItem("abot.signInReturn", "/profile"));
+    await page.evaluate(() => sessionStorage.setItem("abot.signInReturn", "/profile?tab=about"));
     await page.goto("/settings?error=access_denied&error_description=The+user+denied+access");
-    await page.waitForURL("**/profile");
+    await page.waitForURL("**/profile?tab=about");
     await expect(page.getByRole("alert").filter({ hasText: "Google sign-in was cancelled" }).first()).toBeVisible();
     await page.getByRole("button", { name: "Dismiss" }).click();
     await expect(page.getByRole("button", { name: "Dismiss" })).toHaveCount(0);
@@ -201,11 +201,11 @@ test.describe("signed in (Supabase answered by the test)", () => {
     });
     await freshStart(page);
     await page.evaluate((key) => {
-      sessionStorage.setItem("abot.signInReturn", "/profile");
+      sessionStorage.setItem("abot.signInReturn", "/profile?tab=about");
       localStorage.setItem(key, JSON.stringify("test-verifier"));
     }, `sb-${ref}-auth-token-code-verifier`);
     await page.goto("/settings?code=test-code");
-    await page.waitForURL("**/profile");
+    await page.waitForURL("**/profile?tab=about");
     await expect(page.getByRole("status").filter({ hasText: "Signed in as lifter@example.com" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Account" }).getByText("lifter@example.com")).toBeVisible();
   });

@@ -3,17 +3,21 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Dumbbell, House, ListChecks, Search } from "lucide-react";
+import { Dumbbell, House, Search } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useHydration } from "@/store/hydration";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 
-/* Five primary destinations, each a real page. Labels stay visible: no bare icons. */
+/*
+ * Four primary destinations, each a real page. Labels stay visible: no bare icons. Workout holds
+ * the routines and Profile holds progress, so each tab also answers for its old address.
+ */
 const TABS = [
-  { href: "/", label: "Home", Icon: House },
-  { href: "/workout", label: "Workout", Icon: Dumbbell },
-  { href: "/routines", label: "Routines", Icon: ListChecks },
-  { href: "/exercises", label: "Exercises", Icon: Search },
-  { href: "/progress", label: "Progress", Icon: BarChart3 },
+  { href: "/", label: "Home", Icon: House, also: [] },
+  { href: "/workout", label: "Workout", Icon: Dumbbell, also: ["/routines"] },
+  { href: "/exercises", label: "Exercises", Icon: Search, also: [] },
+  { href: "/profile", label: "Profile", Icon: null, also: ["/progress"] },
 ] as const;
 
 /**
@@ -39,6 +43,7 @@ function CurrentNav() {
 function NavBar({ pathname }: { pathname: string | null }) {
   const hydrated = useHydration((s) => s.hydrated);
   const hasActive = useWorkoutStore((s) => s.active !== null);
+  const { profileName, profilePhoto } = useSettingsStore();
   // The intro and sign-in are full-screen steps with their own way out.
   if (pathname === "/onboarding" || pathname === "/login") return null;
 
@@ -48,8 +53,10 @@ function NavBar({ pathname }: { pathname: string | null }) {
       className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(10px+env(safe-area-inset-bottom))]"
     >
       <ul className="mx-auto flex max-w-[616px] rounded-2xl border border-white/[0.08] bg-bg/80 p-1 shadow-[0_8px_32px_rgb(0_0_0/0.5)] backdrop-blur-xl">
-        {TABS.map(({ href, label, Icon }) => {
-          const current = pathname !== null && (href === "/" ? pathname === "/" : pathname.startsWith(href));
+        {TABS.map(({ href, label, Icon, also }) => {
+          const current =
+            pathname !== null &&
+            (href === "/" ? pathname === "/" : [href, ...also].some((p) => pathname.startsWith(p)));
           const live = href === "/workout" && hydrated && hasActive;
           return (
             <li key={href} className="min-w-0 flex-1">
@@ -61,7 +68,14 @@ function NavBar({ pathname }: { pathname: string | null }) {
                 }`}
               >
                 <span className="relative">
-                  <Icon aria-hidden="true" size={21} strokeWidth={current ? 2.25 : 1.75} className={current ? "text-accent" : ""} />
+                  {Icon ? (
+                    <Icon aria-hidden="true" size={21} strokeWidth={current ? 2.25 : 1.75} className={current ? "text-accent" : ""} />
+                  ) : (
+                    // The lifter's own plate; dimmed until it is the current tab, like the other icons.
+                    <span aria-hidden="true" className={`block transition-opacity ${current ? "" : "opacity-60 grayscale"}`}>
+                      <ProfileAvatar name={profileName} photo={profilePhoto} size={22} decorative />
+                    </span>
+                  )}
                   {live && (
                     <span className="absolute -right-1.5 -top-0.5 size-2 rounded-full bg-accent ring-2 ring-bg" aria-hidden="true" />
                   )}

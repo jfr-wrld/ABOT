@@ -14,6 +14,7 @@ import { ExerciseCard } from "@/components/workout/ExerciseCard";
 import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { FinishDialog } from "@/components/workout/FinishDialog";
 import { Sheet } from "@/components/ui/Sheet";
+import { RoutineLibrary } from "@/components/routines/RoutineLibrary";
 import { detectSessionPRs, previousSets } from "@/lib/calc";
 import { supersetLabels } from "@/lib/superset";
 import type { PRKind } from "@/types/workout";
@@ -50,7 +51,7 @@ function WorkoutScreen() {
   const router = useRouter();
   const active = useWorkoutStore((s) => s.active);
   const sessions = useWorkoutStore((s) => s.sessions);
-  const { startEmpty, addExercise, finishActive, discardActive, completeAllRemaining } = useWorkoutStore();
+  const { addExercise, finishActive, discardActive, completeAllRemaining } = useWorkoutStore();
   const { weightUnit, showRpe, defaultRestSeconds } = useSettingsStore();
   const { byId } = useAllExercises();
 
@@ -65,21 +66,7 @@ function WorkoutScreen() {
     return m;
   }, [prs]);
 
-  if (!active) {
-    return (
-      <main className="flex flex-1 flex-col px-4 pt-4">
-        <h1 className="text-xl font-bold">Workout</h1>
-        <div className="mt-10 flex flex-col items-center text-center">
-          <p className="text-sm text-text-muted">
-            No workout in progress. Start one and your sets, rest timer and PRs will be tracked here.
-          </p>
-          <Button variant="primary" onClick={() => startEmpty(defaultRestSeconds)} className="mt-5 w-full max-w-xs">
-            Start an empty workout
-          </Button>
-        </div>
-      </main>
-    );
-  }
+  if (!active) return <RoutineLibrary />;
 
   const inWorkout = new Set(active.exercises.map((e) => e.exerciseId));
   const supersets = supersetLabels(active.exercises);

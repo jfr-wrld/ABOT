@@ -70,6 +70,25 @@ So every block is a figure or a control, with at most one short mark under it:
   attempt beats nothing), date, and duration, volume and sets in mono. Cards give to 98% under
   the thumb. The trophy is the Lucide icon used for records elsewhere, not the emoji.
 
+## Navigation and Profile
+
+Owner brief 2026-11-08: Workout and Routines become one tab; Progress moves into Profile, laid
+out like a social profile.
+
+- **Dock**: four tabs, Home, Workout, Exercises, Profile. Profile's icon is the lifter's own plate
+  (photo or initials), dimmed until it is the current tab like the other icons. `/routines` and
+  `/progress` still work: the first shows the same library, the second forwards to Profile.
+- **Workout tab**: the logger while a workout runs. Otherwise "Start an empty workout" (the one
+  Volt action) above the routine library, where each routine has a quiet Start and its edit,
+  duplicate and delete controls.
+- **Profile**: a cover, the plate overlapping its lower edge with a page-coloured ring, Edit
+  profile beside it, then the name, one mono line (workouts, streak) and the backup chip. The
+  cover is the last twelve weeks of volume drawn as a skyline in dim Volt with the current week
+  brighter: the lifter's own data instead of a stock banner, plain Carbon until there is any.
+  Below, a sticky tab bar (Progress, Lifts, About; the open tab is kept in `?tab=`) with a Volt
+  underline on the current one. Progress holds the lifetime figures and the charts, Lifts the
+  e1RM ranking, About the bodyweight log, name and height, the account and settings.
+
 ## Identity motif
 
 The set row as a hardware switch: a dark panel that, when you tap the square check, lights Volt,

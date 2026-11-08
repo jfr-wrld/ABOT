@@ -65,9 +65,8 @@ test("switching tabs lands on each page", async ({ page }) => {
   await freshStart(page);
   const nav = page.getByRole("navigation", { name: "Primary" });
   for (const [tab, heading] of [
-    ["Routines", "Routines"],
     ["Exercises", "Exercises"],
-    ["Progress", "Progress"],
+    ["Profile", "Profile"],
     ["Workout", "Workout"],
   ] as const) {
     await nav.getByRole("link", { name: tab }).click();

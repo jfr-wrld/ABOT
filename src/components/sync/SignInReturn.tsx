@@ -10,7 +10,7 @@ import { friendlyError } from "@/lib/syncStatus";
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
 
 /** The part of each page that shows the account, scrolled to so the result is in view. */
-const ANCHORS: Record<string, string> = { "/profile": "account", "/settings": "sync" };
+const ANCHORS: Record<string, string> = { "/profile?tab=about": "account", "/settings": "sync" };
 
 /** Waits for the page to render after navigating, then scrolls; returns a cancel. */
 function revealAccount(id: string | undefined): () => void {
@@ -40,8 +40,9 @@ export function SignInReturn() {
 
   useEffect(() => {
     if (!notice) return;
-    const to = takeSignInReturn() ?? window.location.pathname;
-    if (to !== window.location.pathname) router.replace(to);
+    const here = window.location.pathname + window.location.search;
+    const to = takeSignInReturn() ?? here;
+    if (to !== here) router.replace(to);
     return revealAccount(ANCHORS[to]);
   }, [notice, router]);
 

@@ -42,7 +42,7 @@ function Editor() {
   if (!routine) {
     return (
       <main className="px-4 pt-4">
-        <PageHeader title="Routine not found" back={{ href: "/routines", label: "Routines" }} />
+        <PageHeader title="Routine not found" back={{ href: "/workout", label: "Workout" }} />
         <p className="mt-4 text-sm text-text-muted">
           This routine does not exist on this device. It may have been deleted.
         </p>
@@ -72,7 +72,7 @@ function Editor() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <PageHeader title="Edit routine" back={{ href: "/routines", label: "Routines" }} />
+      <PageHeader title="Edit routine" back={{ href: "/workout", label: "Workout" }} />
 
       <div className="flex flex-col gap-4 px-4 pt-4">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -238,7 +238,7 @@ function Editor() {
 
         <p className="text-center text-xs text-text-muted">
           Changes save as you type.{" "}
-          <Link href="/routines" className="text-accent underline-offset-2 hover:underline">
+          <Link href="/workout" className="text-accent underline-offset-2 hover:underline">
             Back to routines
           </Link>
         </p>

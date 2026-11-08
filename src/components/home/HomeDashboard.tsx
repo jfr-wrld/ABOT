@@ -12,7 +12,6 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { useReminderStore } from "@/store/useReminderStore";
 import { Button, PRESS_SPRING } from "@/components/ui/Button";
 import { AbotWordmark } from "@/components/brand/AbotMark";
-import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
@@ -39,7 +38,7 @@ export function HomeDashboard() {
   const active = useWorkoutStore((s) => s.active);
   const routines = useRoutineStore((s) => s.routines);
   const schedule = useReminderStore((s) => s.schedule);
-  const { weightUnit, firstDayOfWeek, profileName, profilePhoto } = useSettingsStore();
+  const { weightUnit, firstDayOfWeek } = useSettingsStore();
   const { byId } = useAllExercises();
   const now = useNow(active ? 1000 : 60_000);
 
@@ -59,15 +58,6 @@ export function HomeDashboard() {
               className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
             >
               <Settings aria-hidden="true" size={22} />
-            </Link>
-            <Link
-              href="/profile"
-              aria-label="Profile"
-              className="flex size-11 items-center justify-center rounded-ctl transition-opacity hover:opacity-80"
-            >
-              <span aria-hidden="true">
-                <ProfileAvatar name={profileName} photo={profilePhoto} size={32} />
-              </span>
             </Link>
           </div>
         </div>

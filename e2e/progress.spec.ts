@@ -8,7 +8,9 @@ test.beforeEach(async ({ page }) => {
 
 test("empty state on first run", async ({ page }) => {
   await page.goto("/progress");
-  await expect(page.getByText("Charts fill in as you finish workouts.")).toBeVisible();
+  // The old address forwards to Profile, where Progress is the first tab.
+  await page.waitForURL("**/profile");
+  await expect(page.getByRole("tab", { name: "Progress", selected: true })).toBeVisible();
   await expect(page.getByText(/Nothing in the last 8 weeks yet/).first()).toBeVisible();
   await expect(page.getByText("No working sets in this range.")).toBeVisible();
   await expectNoHorizontalOverflow(page);
@@ -19,8 +21,8 @@ test("charts render after a workout", async ({ page }) => {
   await addExercise(page, "Bench Press (Barbell)");
   await logSet(page, 1, "60", "8");
   await finishWorkout(page);
-  await page.goto("/progress");
-  await expect(page.getByText(/1 workout logged/)).toBeVisible();
+  await page.goto("/profile");
+  await expect(page.getByRole("region", { name: "Identity" }).getByText(/^1 workout · /)).toBeVisible();
   const volume = page.getByRole("figure").filter({ hasText: "Volume per week" });
   await expect(volume.locator("svg.recharts-surface")).toBeVisible();
   await volume.getByText("Show as table").click();
@@ -37,7 +39,7 @@ test("calendar moves months and links a day to its workout", async ({ page }) =>
   await addExercise(page, "Bench Press (Barbell)");
   await logSet(page, 1, "60", "8");
   await finishWorkout(page);
-  await page.goto("/progress");
+  await page.goto("/profile");
   const cal = page.locator("section").filter({ has: page.getByRole("grid") });
   const monthHeading = cal.getByRole("heading", { level: 2 });
   const before = await monthHeading.textContent();

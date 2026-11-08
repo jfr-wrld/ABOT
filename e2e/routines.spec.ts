@@ -34,7 +34,7 @@ test("creates a routine with targets and starts it", async ({ page }) => {
   await page.getByLabel("Set 1 target reps").fill("8");
   await expectNoHorizontalOverflow(page);
 
-  await page.getByRole("link", { name: "Routines", exact: true }).first().click();
+  await page.getByRole("link", { name: "Workout", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Push / Pull / Legs" })).toBeVisible();
   await expect(page.getByText("1 exercise · 3 sets")).toBeVisible();
   await expectNoHorizontalOverflow(page);
