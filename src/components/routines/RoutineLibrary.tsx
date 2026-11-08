@@ -18,6 +18,7 @@ import { SUPERSET_COLORS, supersetLabels } from "@/lib/superset";
 const CARD_PREVIEW = 5;
 import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
 import { TemplateVault } from "@/components/routines/TemplateVault";
+import { EquipmentNeeded } from "@/components/routines/EquipmentNeeded";
 
 /**
  * The Workout tab when no workout is running: an empty start, then My Routines and the Template
@@ -177,6 +178,9 @@ export function RoutineLibrary() {
                           )}
                         </ol>
                       )}
+                      <EquipmentNeeded
+                        equipment={r.exercises.flatMap((e) => (byId[e.exerciseId] ? [byId[e.exerciseId].equipment] : []))}
+                      />
                       <Button
                         variant="primary"
                         onClick={() => start(r)}

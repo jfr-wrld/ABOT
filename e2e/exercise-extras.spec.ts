@@ -43,7 +43,9 @@ test("exercise detail is split into Summary, History and How to", async ({ page 
 });
 
 test("a photo thumbnail falls back to the movement figure when the photo cannot load", async ({ page }) => {
+  // Both the photo bundled with the app and the online one fail, so the figure must take over.
   await page.route("https://raw.githubusercontent.com/**", (route) => route.abort());
+  await page.route("**/thumbs/**", (route) => route.abort());
   await page.goto("/exercises");
   const squat = page.getByRole("link", { name: /^Squat \(Barbell\)/ });
   // Lazy photos load only on screen; bring the row into view so its photo is requested and fails.

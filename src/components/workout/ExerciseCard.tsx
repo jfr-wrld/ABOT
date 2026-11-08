@@ -12,6 +12,9 @@ import type {
   WeightUnit,
   WorkoutSet,
 } from "@/types/workout";
+import { EQUIPMENT_LABELS, primaryMusclesLabel } from "@/types/workout";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { SetRow } from "./SetRow";
 import { Sheet } from "@/components/ui/Sheet";
@@ -20,8 +23,6 @@ import { ExercisePicker } from "./ExercisePicker";
 import { ReorderSheet } from "./ReorderSheet";
 import { SupersetSheet } from "./SupersetSheet";
 import { SUPERSET_COLORS } from "@/lib/superset";
-import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
-import { MuscleTags } from "@/components/exercise/MuscleTags";
 import { Button } from "@/components/ui/Button";
 import { formatClock } from "@/lib/calc";
 
@@ -62,6 +63,9 @@ export function ExerciseCard({
   const numbers = setNumbers(item.sets);
 
   const name = exercise?.name ?? "Unknown exercise";
+  const subtitle = exercise
+    ? `${primaryMusclesLabel(exercise)} · ${EQUIPMENT_LABELS[exercise.equipment]}`
+    : "This exercise was removed from the library";
 
   return (
     <section
@@ -72,7 +76,7 @@ export function ExerciseCard({
     >
       <header className="flex items-start justify-between gap-2 px-1">
         {exercise && <ExerciseThumb exercise={exercise} size={44} />}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {superset && (
             <p className="label-caps !text-[10px]" style={{ color: ssColor }}>
               Superset {superset.letter}
@@ -92,11 +96,10 @@ export function ExerciseCard({
               <span className="block truncate">{name}</span>
             )}
           </h2>
-          {exercise ? (
-            <MuscleTags exercise={exercise} />
-          ) : (
-            <p className="text-xs text-zinc-400">This exercise was removed from the library</p>
-          )}
+          <p className="flex items-center gap-1.5 text-xs text-zinc-400">
+            {exercise && <EquipmentIcon equipment={exercise.equipment} size={14} />}
+            <span className="truncate">{subtitle}</span>
+          </p>
         </div>
         {exercise && (
           <button

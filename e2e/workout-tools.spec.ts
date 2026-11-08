@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, choose, freshStart, logSet, startEmptyWorkout } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await freshStart(page);
@@ -51,34 +51,48 @@ test("replace swaps the movement and keeps what was typed", async ({ page }) => 
   await logSet(page, 1, "60", "8");
 });
 
-test("the exercise list shows a picture of each movement", async ({ page }) => {
+test("the library is grouped by muscle, each exercise with a bundled photo", async ({ page }) => {
   await page.goto("/exercises");
-  const squat = page.getByRole("link", { name: /^Squat \(Barbell\)/ });
-  await expect(squat.locator("[data-thumb]")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Body map" })).toHaveCount(0);
+  const chest = page.getByRole("region", { name: /^Chest/ });
+  const legs = page.getByRole("region", { name: /^Quads/ });
+  await expect(chest.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toBeVisible();
+  await expect(legs.getByRole("link", { name: /^Squat \(Barbell\)/ })).toBeVisible();
+  await expect(chest.getByRole("link", { name: /^Squat/ })).toHaveCount(0);
+
+  // The photo ships with the app: same origin, and it really decodes.
+  const img = chest.getByRole("link", { name: /^Bench Press \(Barbell\)/ }).locator("[data-thumb] img");
+  await expect(img).toHaveAttribute("src", "/thumbs/bench-press-barbell.webp");
+  await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBe(128);
+  // The corner badge names the equipment with the same icon as the equipment filter.
+  await expect(chest.getByRole("link", { name: /^Bench Press \(Barbell\)/ }).locator("[data-equipment]")).toHaveAttribute(
+    "data-equipment",
+    "barbell",
+  );
+
   await page.goto("/workout");
   await page.getByRole("button", { name: "Start an empty workout" }).click();
   await page.getByRole("button", { name: "Add exercise" }).click();
-  await expect(page.getByRole("dialog").locator("[data-thumb]").first()).toBeVisible();
+  await expect(page.getByRole("dialog").locator("[data-thumb] img").first()).toBeVisible();
 });
 
-test("the body map filters exercises by the muscle tapped", async ({ page }) => {
+test("the muscle filter counts groups drawn as one shape together", async ({ page }) => {
   await page.goto("/exercises");
-  await page.getByRole("button", { name: "Body map" }).click();
-  await page.getByRole("button", { name: "Filter by Quads" }).first().locator("path").first().click();
-  await expect(page.getByLabel("Muscle group")).toHaveText("Quads");
+  await choose(page, page.getByLabel("Muscle group"), "Quads");
+  // Each option carries a picture: the muscle lit on the figure, the equipment drawn.
+  await expect(page.getByLabel("Muscle group").locator("svg g[fill='#ccff00']").first()).toBeVisible();
+  await page.getByLabel("Equipment").click();
+  await expect(page.getByRole("option", { name: "Barbell", exact: true }).locator("svg:not(.lucide)")).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("link", { name: /^Squat \(Barbell\)/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toHaveCount(0);
-  // Tapping the same muscle again clears the filter.
-  await page.getByRole("button", { name: "Filter by Quads" }).first().locator("path").first().click();
-  await expect(page.getByLabel("Muscle group")).toHaveText("All muscles");
-  await expect(page.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toBeVisible();
 });
 
-test("the body map works from the keyboard", async ({ page }) => {
-  await page.goto("/exercises");
-  await page.getByRole("button", { name: "Body map" }).click();
-  await page.getByRole("button", { name: "Filter by Chest" }).first().focus();
-  await page.keyboard.press("Enter");
-  await expect(page.getByLabel("Muscle group")).toHaveText("Chest");
-  await expect(page.getByRole("button", { name: "Filter by Chest" }).first()).toHaveAttribute("aria-pressed", "true");
+test("each exercise in the logger shows its photo and equipment icon", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  const card = page.locator("section").filter({ has: page.getByRole("heading", { name: "Bench Press (Barbell)", exact: true }) });
+  await expect(card.locator("[data-thumb] img")).toHaveAttribute("src", "/thumbs/bench-press-barbell.webp");
+  await expect(card.locator("[data-equipment]")).toHaveAttribute("data-equipment", "barbell");
+  await expect(card.getByText("Chest · Barbell")).toBeVisible();
 });

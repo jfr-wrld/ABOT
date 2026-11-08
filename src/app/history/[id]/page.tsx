@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { SetTypeChip } from "@/components/workout/SetTypeChip";
+import { ShareStoryButton } from "@/components/share/ShareStoryButton";
 import { countSets, detectSessionPRs, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume, formatWeight } from "@/lib/units";
 
@@ -68,6 +69,10 @@ function SessionDetail() {
           {prs.length} personal {prs.length === 1 ? "record" : "records"} in this workout
         </p>
       )}
+
+      <div className="mx-4 mt-4">
+        <ShareStoryButton session={session} className="w-full" />
+      </div>
 
       <div className="flex flex-col gap-3 px-4 pt-4">
         {session.exercises.map((ex) => {

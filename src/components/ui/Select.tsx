@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Check, ChevronDown } from "lucide-react";
 
 export interface SelectOption<V extends string | number> {
   value: V;
   label: string;
+  /** Decorative picture shown before the label, in the list and on the button. */
+  icon?: ReactNode;
 }
 
 /**
@@ -154,7 +156,10 @@ export function Select<V extends string | number>({
           open ? "border-accent" : "border-white/[0.12]"
         } ${className}`}
       >
-        <span className="truncate">{current?.label ?? ""}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          {current?.icon}
+          <span className="truncate">{current?.label ?? ""}</span>
+        </span>
         <ChevronDown aria-hidden="true" size={16} className={`shrink-0 text-text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && pos && (
@@ -183,7 +188,8 @@ export function Select<V extends string | number>({
                   i === active ? "bg-white/[0.08] text-text" : "text-text-muted"
                 } ${selected ? "font-semibold text-text" : ""}`}
               >
-                <Check aria-hidden="true" size={15} className={selected ? "text-accent" : "invisible"} />
+                <Check aria-hidden="true" size={15} className={selected ? "shrink-0 text-accent" : "invisible shrink-0"} />
+                {o.icon && <span className="flex w-7 shrink-0 justify-center">{o.icon}</span>}
                 <span className="truncate">{o.label}</span>
               </li>
             );

@@ -38,7 +38,7 @@ test("creates a routine with targets and starts it", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 
   await page.getByRole("link", { name: "Workout", exact: true }).first().click();
-  await expect(page.getByRole("heading", { name: "Push / Pull / Legs" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Push / Pull / Legs" })).toBeVisible();
   await expect(page.getByText("1 exercise · 3 sets")).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.getByRole("button", { name: "Start Push A" }).click();
@@ -60,7 +60,7 @@ test("duplicates and deletes a routine", async ({ page }) => {
   await page.getByRole("button", { name: "Delete routine" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Legs", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 3, name: "Legs", exact: true })).toBeVisible();
 });
 
 test("a routine without exercises cannot be started", async ({ page }) => {

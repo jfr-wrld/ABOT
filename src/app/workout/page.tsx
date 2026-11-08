@@ -59,6 +59,12 @@ function WorkoutScreen() {
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
 
+  // The summary route is fetched while the workout runs, so Finish still lands there with no signal.
+  const activeId = active?.id;
+  useEffect(() => {
+    if (activeId) router.prefetch(`/workout/summary/${activeId}`);
+  }, [activeId, router]);
+
   const prs = useMemo(() => (active ? detectSessionPRs(active, sessions, byId) : []), [active, sessions, byId]);
   const prBySet = useMemo(() => {
     const m: Record<string, PRKind[]> = {};
@@ -136,9 +142,9 @@ function WorkoutScreen() {
         onClose={() => setFinishOpen(false)}
         onMarkRemaining={() => completeAllRemaining()}
         onConfirm={() => {
-          finishActive();
+          const done = finishActive();
           setFinishOpen(false);
-          router.push("/");
+          router.push(done ? `/workout/summary/${done.id}` : "/");
         }}
       />
 
