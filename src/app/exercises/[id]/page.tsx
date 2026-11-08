@@ -21,7 +21,17 @@ import { SetTypeChip } from "@/components/workout/SetTypeChip";
 import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme";
 import { exerciseHistory } from "@/lib/calc";
 import { formatWeight, toDisplay } from "@/lib/units";
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
+import { MUSCLE_GROUP_LABELS, type Exercise } from "@/types/workout";
+import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
+import { MuscleTags } from "@/components/exercise/MuscleTags";
+import { MuscleMap } from "@/components/anatomy/MuscleMap";
+
+type DetailTab = "summary" | "history" | "howto";
+const DETAIL_TABS: { value: DetailTab; label: string }[] = [
+  { value: "summary", label: "Summary" },
+  { value: "history", label: "History" },
+  { value: "howto", label: "How to" },
+];
 
 export default function ExerciseDetailPage() {
   return (
@@ -40,6 +50,7 @@ function Detail() {
   const { weightUnit } = useSettingsStore();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [tab, setTab] = useState<DetailTab>("summary");
 
   const exercise = byId[id];
   const history = useMemo(() => exerciseHistory(id, sessions, { byId, allGyms: true }), [id, sessions, byId]);
@@ -69,11 +80,7 @@ function Detail() {
       <PageHeader
         title={exercise.name}
         back={{ href: "/exercises", label: "Exercises" }}
-        subtitle={`${primaryMusclesLabel(exercise)} · ${EQUIPMENT_LABELS[exercise.equipment]}${
-          exercise.secondaryMuscles.length
-            ? ` · also ${exercise.secondaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}`
-            : ""
-        }`}
+        subtitle={<MuscleTags exercise={exercise} />}
         action={
           exercise.isCustom ? (
             <div className="flex">
@@ -98,91 +105,100 @@ function Detail() {
         }
       />
 
-      <div className="flex flex-col gap-3 px-4 pt-4">
-        <SmartExerciseMedia exercise={exercise} />
+      <div className="flex flex-col gap-3 px-4 pt-3">
+        <Tabs id="ex-detail" label="Exercise details" tabs={DETAIL_TABS} value={tab} onChange={setTab} />
 
-        <ExerciseGuide exercise={exercise} showInstructions />
-
-        <RecordsSummary exercise={exercise} />
-
-        {!exercise.isBodyweight && (
-          <figure className="panel p-3">
-            <figcaption className="text-sm font-semibold">Estimated 1RM over time ({weightUnit}, Epley)</figcaption>
-            {chartData.length < 2 ? (
-              <p className="py-6 text-center text-sm text-text-muted">
-                {chartData.length === 0
-                  ? "No data yet. The line starts after your first finished workout with this exercise."
-                  : "One point so far. A second workout draws the line."}
-              </p>
-            ) : (
-              <div className="mt-2 h-44">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke={CHART.grid} />
-                    <XAxis dataKey="date" tick={numTick} axisLine={false} tickLine={false} />
-                    <YAxis tick={numTick} axisLine={false} tickLine={false} width={40} domain={["auto", "auto"]} />
-                    <Tooltip
-                      {...tooltipStyle}
-                      cursor={{ stroke: CHART.axis }}
-                      formatter={(v, _n, item) => [`${v} ${weightUnit} (best set ${(item.payload as { best: string }).best})`, "1RM"]}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="e1rm"
-                      stroke={CHART.series}
-                      strokeWidth={2}
-                      dot={{ r: 4, fill: CHART.series, stroke: CHART.surface, strokeWidth: 2 }}
-                      activeDot={{ r: 6 }}
-                      isAnimationActive={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+        {tab === "summary" && (
+          <div {...tabPanelProps("ex-detail", "summary")} className="flex flex-col gap-3 outline-none">
+            <MusclesWorked exercise={exercise} />
+            <RecordsSummary exercise={exercise} />
+            {!exercise.isBodyweight && (
+              <figure className="panel p-3">
+                <figcaption className="text-sm font-semibold">Estimated 1RM over time ({weightUnit}, Epley)</figcaption>
+                {chartData.length < 2 ? (
+                  <p className="py-6 text-center text-sm text-text-muted">
+                    {chartData.length === 0
+                      ? "No data yet. The line starts after your first finished workout with this exercise."
+                      : "One point so far. A second workout draws the line."}
+                  </p>
+                ) : (
+                  <div className="mt-2 h-44">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                        <CartesianGrid vertical={false} stroke={CHART.grid} />
+                        <XAxis dataKey="date" tick={numTick} axisLine={false} tickLine={false} />
+                        <YAxis tick={numTick} axisLine={false} tickLine={false} width={40} domain={["auto", "auto"]} />
+                        <Tooltip
+                          {...tooltipStyle}
+                          cursor={{ stroke: CHART.axis }}
+                          formatter={(v, _n, item) => [`${v} ${weightUnit} (best set ${(item.payload as { best: string }).best})`, "1RM"]}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="e1rm"
+                          stroke={CHART.series}
+                          strokeWidth={2}
+                          dot={{ r: 4, fill: CHART.series, stroke: CHART.surface, strokeWidth: 2 }}
+                          activeDot={{ r: 6 }}
+                          isAnimationActive={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </figure>
             )}
-          </figure>
+
+          </div>
         )}
 
-        <section aria-labelledby="hist-heading">
-          <h2 id="hist-heading" className="text-sm font-semibold uppercase text-text-muted">
-            History
-          </h2>
-          {recent.length === 0 ? (
-            <p className="mt-2 panel px-4 py-6 text-center text-sm text-text-muted">
-              Not logged yet. Add it to a workout and finish the workout to see sets here.
-            </p>
-          ) : (
-            <ul className="mt-2 flex flex-col gap-2">
-              {recent.map((s) => {
-                const ex = s.exercises.find((e) => e.exerciseId === id)!;
-                const nums = setNumbers(ex.sets);
-                return (
-                  <li key={s.id} className="panel p-3">
-                    <Link href={`/history/${s.id}`} className="flex items-baseline justify-between gap-2 hover:underline">
-                      <span className="text-sm font-semibold">{s.name}</span>
-                      <time dateTime={new Date(s.startedAt).toISOString()} className="text-xs text-text-muted">
-                        {new Date(s.startedAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
-                      </time>
-                    </Link>
-                    <ol className="mt-2 flex flex-col gap-1">
-                      {ex.sets.map((st, i) => {
-                        const num = nums[i] ?? null;
-                        return (
-                          <li key={st.id} className="flex items-center gap-3 text-sm num">
-                            <SetTypeChip type={st.type} number={num} />
-                            {exercise.isBodyweight || st.weightKg === null
-                              ? `${st.reps} reps`
-                              : `${formatWeight(st.weightKg, weightUnit)} × ${st.reps}`}
-                            {st.rpe !== null && <span className="text-xs text-text-muted">RPE {st.rpe}</span>}
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+        {tab === "history" && (
+          <section {...tabPanelProps("ex-detail", "history")} aria-label="History" className="outline-none">
+            {recent.length === 0 ? (
+              <p className="mt-2 panel px-4 py-6 text-center text-sm text-text-muted">
+                Not logged yet. Add it to a workout and finish the workout to see sets here.
+              </p>
+            ) : (
+              <ul className="mt-2 flex flex-col gap-2">
+                {recent.map((s) => {
+                  const ex = s.exercises.find((e) => e.exerciseId === id)!;
+                  const nums = setNumbers(ex.sets);
+                  return (
+                    <li key={s.id} className="panel p-3">
+                      <Link href={`/history/${s.id}`} className="flex items-baseline justify-between gap-2 hover:underline">
+                        <span className="text-sm font-semibold">{s.name}</span>
+                        <time dateTime={new Date(s.startedAt).toISOString()} className="text-xs text-text-muted">
+                          {new Date(s.startedAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                        </time>
+                      </Link>
+                      <ol className="mt-2 flex flex-col gap-1">
+                        {ex.sets.map((st, i) => {
+                          const num = nums[i] ?? null;
+                          return (
+                            <li key={st.id} className="flex items-center gap-3 text-sm num">
+                              <SetTypeChip type={st.type} number={num} />
+                              {exercise.isBodyweight || st.weightKg === null
+                                ? `${st.reps} reps`
+                                : `${formatWeight(st.weightKg, weightUnit)} × ${st.reps}`}
+                              {st.rpe !== null && <span className="text-xs text-text-muted">RPE {st.rpe}</span>}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {tab === "howto" && (
+          <div {...tabPanelProps("ex-detail", "howto")} className="flex flex-col gap-3 outline-none">
+            <SmartExerciseMedia exercise={exercise} />
+            <ExerciseGuide exercise={exercise} showInstructions />
+          </div>
+        )}
       </div>
 
       {editOpen && (
@@ -222,5 +238,38 @@ function Detail() {
         </p>
       </Sheet>
     </main>
+  );
+}
+
+/** A small map of the worked muscles with a legend: which part of the body this trains, at a glance. */
+function MusclesWorked({ exercise }: { exercise: Exercise }) {
+  const names = (ms: Exercise["primaryMuscles"]) => ms.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ");
+  return (
+    <section aria-labelledby="muscles-heading" className="panel flex items-center gap-3 p-3">
+      <div className="w-36 shrink-0">
+        <MuscleMap primary={exercise.primaryMuscles} secondary={exercise.secondaryMuscles} width={144} />
+      </div>
+      <div className="min-w-0">
+        <h2 id="muscles-heading" className="label-caps">
+          Muscles worked
+        </h2>
+        <p className="mt-2 flex items-start gap-2 text-sm">
+          <span aria-hidden="true" className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />
+          <span>
+            <span className="text-text-muted">Primary </span>
+            {names(exercise.primaryMuscles) || "Not set"}
+          </span>
+        </p>
+        {exercise.secondaryMuscles.length > 0 && (
+          <p className="mt-1 flex items-start gap-2 text-sm">
+            <span aria-hidden="true" className="mt-1.5 size-2 shrink-0 rounded-full bg-accent/40" />
+            <span>
+              <span className="text-text-muted">Secondary </span>
+              {names(exercise.secondaryMuscles)}
+            </span>
+          </p>
+        )}
+      </div>
+    </section>
   );
 }

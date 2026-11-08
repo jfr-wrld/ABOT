@@ -43,7 +43,8 @@ test("detail shows records after a finished workout", async ({ page }) => {
   await expect(page.getByText("Heaviest weight")).toBeVisible();
   await expect(page.getByText("100 kg", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("One point so far.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "History" })).toBeVisible();
+  await page.getByRole("tab", { name: "History" }).click();
+  await expect(page.getByRole("tabpanel", { name: "History" }).getByText("100 kg × 5")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 

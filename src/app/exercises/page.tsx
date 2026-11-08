@@ -5,10 +5,11 @@ import { Select } from "@/components/ui/Select";
 import Link from "next/link";
 import { ChevronRight, PersonStanding, Plus } from "lucide-react";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { MuscleTags } from "@/components/exercise/MuscleTags";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { muscleForRegion, worksArea } from "@/components/anatomy/regions";
 import type { Equipment, MuscleGroup } from "@/types/workout";
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
+import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { HydrationGate } from "@/components/ui/Loading";
@@ -154,10 +155,12 @@ function LibraryScreen() {
                       {e.isCustom && <span className="ml-2 text-xs font-normal text-text-muted">custom</span>}
                       {e.isCatalog && <span className="ml-2 text-xs font-normal text-text-muted">catalog</span>}
                     </span>
-                    <span className="block text-xs text-text-muted">
-                      {primaryMusclesLabel(e)} · {EQUIPMENT_LABELS[e.equipment]}
-                      {pr && ` · best ${pr.weightKg} kg × ${pr.reps}`}
-                    </span>
+                    <MuscleTags exercise={e} />
+                    {pr && (
+                      <span className="num mt-0.5 block text-[11px] text-text-muted">
+                        Best {pr.weightKg} kg × {pr.reps}
+                      </span>
+                    )}
                   </span>
                   <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
                 </Link>

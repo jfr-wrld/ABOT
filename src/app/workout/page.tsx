@@ -14,6 +14,7 @@ import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { FinishDialog } from "@/components/workout/FinishDialog";
 import { Sheet } from "@/components/ui/Sheet";
 import { detectSessionPRs, previousSets } from "@/lib/calc";
+import { supersetLabels } from "@/lib/superset";
 import type { PRKind } from "@/types/workout";
 
 export default function WorkoutPage() {
@@ -60,6 +61,7 @@ function WorkoutScreen() {
   }
 
   const inWorkout = new Set(active.exercises.map((e) => e.exerciseId));
+  const supersets = supersetLabels(active.exercises);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -84,6 +86,7 @@ function WorkoutScreen() {
             prBySet={prBySet}
             canMoveUp={i > 0}
             canMoveDown={i < active.exercises.length - 1}
+            superset={supersets[item.id]}
           />
         ))}
 

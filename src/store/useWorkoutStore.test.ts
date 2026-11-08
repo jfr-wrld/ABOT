@@ -173,3 +173,46 @@ describe("reorder and replace", () => {
     expect(ex.sets[0]).toMatchObject({ weightKg: 60, reps: 8 });
   });
 });
+
+describe("supersets", () => {
+  function three() {
+    setup();
+    const s = useWorkoutStore.getState();
+    s.addExercise("squat-barbell", 90);
+    s.addExercise("deadlift-barbell", 120);
+    return useWorkoutStore.getState().active!.exercises.map((e) => e.id) as [string, string, string];
+  }
+
+  it("linking two exercises gives them one superset; a third joins the same one", () => {
+    const [a, b, c] = three();
+    useWorkoutStore.getState().linkSuperset(a, b);
+    let ex = useWorkoutStore.getState().active!.exercises;
+    expect(ex[0]!.supersetId).toBeTruthy();
+    expect(ex[1]!.supersetId).toBe(ex[0]!.supersetId);
+    useWorkoutStore.getState().linkSuperset(c, a);
+    ex = useWorkoutStore.getState().active!.exercises;
+    expect(ex[2]!.supersetId).toBe(ex[0]!.supersetId);
+  });
+
+  it("removing one of two leaves no lonely superset behind", () => {
+    const [a, b] = three();
+    useWorkoutStore.getState().linkSuperset(a, b);
+    useWorkoutStore.getState().unlinkSuperset(a);
+    const ex = useWorkoutStore.getState().active!.exercises;
+    expect(ex[0]!.supersetId).toBeUndefined();
+    expect(ex[1]!.supersetId).toBeUndefined();
+  });
+
+  it("rest starts only after the last exercise of the superset", () => {
+    const [a, b] = three();
+    useWorkoutStore.getState().linkSuperset(a, b);
+    const ex = useWorkoutStore.getState().active!.exercises;
+    const s = useWorkoutStore.getState();
+    s.updateSet(a, ex[0]!.sets[0]!.id, { weightKg: 60, reps: 8 });
+    s.completeSet(a, ex[0]!.sets[0]!.id, true);
+    expect(useWorkoutStore.getState().restTimer).toBeNull();
+    s.updateSet(b, ex[1]!.sets[0]!.id, { weightKg: 100, reps: 5 });
+    useWorkoutStore.getState().completeSet(b, ex[1]!.sets[0]!.id, true);
+    expect(useWorkoutStore.getState().restTimer).toMatchObject({ sessionExerciseId: b, totalSec: 90 });
+  });
+});

@@ -4,7 +4,7 @@ import { setNumbers } from "@/lib/sets";
 import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import { setGridColumns } from "./setGrid";
-import { ArrowDown, ArrowUp, ArrowUpDown, Info, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
 import type {
   Exercise,
   PRKind,
@@ -12,13 +12,16 @@ import type {
   WeightUnit,
   WorkoutSet,
 } from "@/types/workout";
-import { EQUIPMENT_LABELS, primaryMusclesLabel } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { SetRow } from "./SetRow";
 import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseHowToSheet } from "./ExerciseHowToSheet";
 import { ExercisePicker } from "./ExercisePicker";
 import { ReorderSheet } from "./ReorderSheet";
+import { SupersetSheet } from "./SupersetSheet";
+import { SUPERSET_COLORS } from "@/lib/superset";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { MuscleTags } from "@/components/exercise/MuscleTags";
 import { Button } from "@/components/ui/Button";
 import { formatClock } from "@/lib/calc";
 
@@ -33,7 +36,10 @@ export function ExerciseCard({
   prBySet,
   canMoveUp,
   canMoveDown,
+  superset,
 }: {
+  /** Letter and colour when this exercise is in a superset (see lib/superset). */
+  superset?: { letter: string; color: number };
   item: SessionExercise;
   exercise: Exercise | undefined;
   previous: WorkoutSet[] | null;
@@ -49,19 +55,29 @@ export function ExerciseCard({
   const [howToOpen, setHowToOpen] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [reorderOpen, setReorderOpen] = useState(false);
+  const [supersetOpen, setSupersetOpen] = useState(false);
+  const ssColor = superset ? SUPERSET_COLORS[superset.color] : undefined;
   const locationId = useWorkoutStore((s) => s.active?.locationId);
 
   const numbers = setNumbers(item.sets);
 
   const name = exercise?.name ?? "Unknown exercise";
-  const subtitle = exercise
-    ? `${primaryMusclesLabel(exercise)} · ${EQUIPMENT_LABELS[exercise.equipment]}`
-    : "This exercise was removed from the library";
 
   return (
-    <section aria-labelledby={`ex-${item.id}`} className="rounded-card border border-white/[0.08] bg-surface px-2 py-3">
+    <section
+      aria-labelledby={`ex-${item.id}`}
+      // The coloured left edge is information: it marks which cards are done back to back.
+      style={ssColor ? { borderLeftColor: ssColor } : undefined}
+      className={`rounded-card border border-white/[0.08] bg-surface px-2 py-3 ${ssColor ? "border-l-[3px]" : ""}`}
+    >
       <header className="flex items-start justify-between gap-2 px-1">
+        {exercise && <ExerciseThumb exercise={exercise} size={44} />}
         <div className="min-w-0">
+          {superset && (
+            <p className="label-caps !text-[10px]" style={{ color: ssColor }}>
+              Superset {superset.letter}
+            </p>
+          )}
           <h2 id={`ex-${item.id}`} className="text-base font-semibold tracking-tight text-zinc-100">
             {exercise ? (
               <button
@@ -76,7 +92,11 @@ export function ExerciseCard({
               <span className="block truncate">{name}</span>
             )}
           </h2>
-          <p className="text-xs text-zinc-400">{subtitle}</p>
+          {exercise ? (
+            <MuscleTags exercise={exercise} />
+          ) : (
+            <p className="text-xs text-zinc-400">This exercise was removed from the library</p>
+          )}
         </div>
         {exercise && (
           <button
@@ -164,6 +184,7 @@ export function ExerciseCard({
         />
       )}
       {reorderOpen && <ReorderSheet onClose={() => setReorderOpen(false)} />}
+      {supersetOpen && <SupersetSheet item={item} name={name} onClose={() => setSupersetOpen(false)} />}
 
       <Sheet open={menuOpen} onClose={() => setMenuOpen(false)} title={name}>
         <div className="flex flex-col gap-4">
@@ -213,6 +234,25 @@ export function ExerciseCard({
               <ArrowUpDown aria-hidden="true" size={18} /> Reorder exercises
             </Button>
           </div>
+          {item.supersetId ? (
+            <Button
+              onClick={() => {
+                store.unlinkSuperset(item.id);
+                setMenuOpen(false);
+              }}
+            >
+              <Link2Off aria-hidden="true" size={18} /> Remove from superset
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                setMenuOpen(false);
+                setSupersetOpen(true);
+              }}
+            >
+              <Link2 aria-hidden="true" size={18} /> Add to superset
+            </Button>
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             <Button

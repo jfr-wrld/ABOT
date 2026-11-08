@@ -2,10 +2,11 @@
 
 import { useId, useMemo, useState } from "react";
 import type { Exercise, MuscleGroup } from "@/types/workout";
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
+import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { MuscleTags } from "@/components/exercise/MuscleTags";
 
 const MUSCLES: MuscleGroup[] = [
   "chest", "back", "lats", "shoulders", "biceps", "triceps", "quads", "hamstrings", "glutes", "calves", "abs", "traps", "forearms", "lower_back",
@@ -87,9 +88,7 @@ export function ExercisePicker({
                 <ExerciseThumb exercise={e} size={44} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{e.name}</span>
-                  <span className="block text-xs text-text-muted">
-                    {primaryMusclesLabel(e)} · {EQUIPMENT_LABELS[e.equipment]}
-                  </span>
+                  <MuscleTags exercise={e} />
                 </span>
                 {inWorkout.has(e.id) && (
                   <span className="shrink-0 text-xs text-text-muted">In workout</span>

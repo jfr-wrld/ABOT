@@ -52,6 +52,7 @@ test("the info icon opens the same sheet", async ({ page }) => {
 
 test("exercise detail shows full instructions and form cues", async ({ page }) => {
   await page.goto("/exercises/squat-barbell");
+  await page.getByRole("tab", { name: "How to" }).click();
   const steps = page.getByRole("list", { name: "Instructions" }).getByRole("listitem");
   await expect(steps.nth(2)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Form cues" })).toBeVisible();
@@ -65,6 +66,7 @@ test("a custom exercise without steps says so honestly", async ({ page }) => {
   await page.getByLabel("Name").fill("Spider Curl");
   await page.getByRole("button", { name: "Add to library" }).click();
   await page.getByRole("link", { name: /Spider Curl/ }).click();
+  await page.getByRole("tab", { name: "How to" }).click();
   await expect(page.getByText("No step-by-step instructions for this exercise.")).toBeVisible();
   await expect(page.getByText("No form cues for this exercise yet.")).toBeVisible();
 });
