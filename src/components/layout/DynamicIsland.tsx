@@ -52,7 +52,7 @@ function Island() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(max(16px,var(--dock-h,96px)-12px)+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[640px] justify-center px-3">
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(max(16px,var(--dock-h,96px)-12px)+var(--action-bar,0px)+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[640px] justify-center px-3">
         <LayoutGroup>
           {timer ? (
             <RestCapsule key="rest" />

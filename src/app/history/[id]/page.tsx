@@ -18,6 +18,7 @@ import { ShareStoryButton } from "@/components/share/ShareStoryButton";
 import { ExerciseThumb, exercisePhoto } from "@/components/exercise/ExerciseThumb";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
+import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { sessionRecords, workedMuscles } from "@/lib/session-insights";
 import { countSets, estimate1RM, formatDuration, isWorkingSet, sessionDurationSec, sessionVolume } from "@/lib/calc";
@@ -71,6 +72,7 @@ function SessionDetail() {
   const { byId } = useAllExercises();
   const [menu, setMenu] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  useActionBarSpace(76);
 
   const session = sessions.find((s) => s.id === id);
   // A record counts once per lift, and only when it beat an earlier one: a first attempt beats

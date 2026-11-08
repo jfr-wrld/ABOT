@@ -138,6 +138,20 @@ Owner brief 2026-11-08: a moment of completion, then the numbers, with motion.
   not as records: there was nothing to beat. Same rule as Home and the workout detail.
 - A body map of the muscles worked; a bottom bar with Share to IG Story, See every set, Home.
 
+## Exercise detail
+
+Owner brief 2026-11-08: revamp it with pictures, icons and motion.
+- **Hero**: the exercise photo blurred into a backdrop; the movement itself looping in a black
+  panel (the app's own figure, worked muscles lit); the name; muscle and gear with their icons;
+  a floating back pill (and edit/delete for custom exercises).
+- Four tiles count up: best e1RM (Cyan) or most reps for bodyweight, heaviest, workouts, last done.
+- Summary keeps the body map and records; the e1RM line draws itself and carries a trend chip
+  (first to latest point, Volt when up). History cards show a relative day and a load bar per set.
+- A bottom bar: Start a workout with this, or, with a workout running, Add to workout (then
+  "In your workout") beside a button back to it.
+- Detail pages with a bottom bar report its height (`--action-bar`), so the workout capsule sits
+  above the bar instead of over its buttons.
+
 ## Identity motif
 
 The set row as a hardware switch: a dark panel that, when you tap the square check, lights Volt,

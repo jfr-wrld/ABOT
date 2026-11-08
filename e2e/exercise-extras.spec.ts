@@ -59,3 +59,31 @@ test("the workout card shows the movement next to its name", async ({ page }) =>
   await addExercise(page, "Squat (Barbell)");
   await expect(page.locator("main section").first().locator("[data-thumb]")).toBeVisible();
 });
+
+test("exercise detail: no dock, quick stats, and a workout started from it", async ({ page }) => {
+  await page.goto("/exercises/squat-barbell");
+  await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
+  await expect(page.getByText("Last done")).toBeVisible();
+  await expect(page.getByText("Never", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Start a workout with this" }).click();
+  await page.waitForURL("**/workout");
+  await expect(page.getByRole("heading", { name: "Squat (Barbell)", exact: true })).toBeVisible();
+
+  // With a workout running, the same page adds to it instead.
+  await page.goto("/exercises/bench-press-barbell");
+  await page.getByRole("button", { name: "Add to workout" }).click();
+  await expect(page.getByRole("button", { name: "In your workout" })).toBeDisabled();
+  await page.getByRole("link", { name: "Open the workout in progress" }).last().click();
+  await page.waitForURL("**/workout");
+  await expect(page.getByRole("heading", { name: "Bench Press (Barbell)", exact: true })).toBeVisible();
+});
+
+test("the workout capsule sits above a detail page's action bar, not over it", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await page.goto("/exercises/bench-press-barbell");
+  const capsule = page.getByRole("link", { name: "Open the workout in progress" }).first();
+  const bar = page.getByRole("button", { name: "Add to workout" });
+  const c = (await capsule.boundingBox())!;
+  const b = (await bar.boundingBox())!;
+  expect(c.y + c.height).toBeLessThanOrEqual(b.y);
+});
