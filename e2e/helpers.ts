@@ -1,0 +1,53 @@
+import { expect, type Page } from "@playwright/test";
+
+/** Every test starts on a clean device: no saved workouts, routines, or settings. */
+export async function freshStart(page: Page): Promise<void> {
+  await page.goto("/");
+  await page.evaluate(async () => {
+    localStorage.clear();
+    await new Promise<void>((resolve) => {
+      const req = indexedDB.deleteDatabase("abot");
+      req.onsuccess = req.onerror = req.onblocked = () => resolve();
+    });
+  });
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
+}
+
+export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
+  const { sw, cw } = await page.evaluate(() => ({
+    sw: document.documentElement.scrollWidth,
+    cw: document.documentElement.clientWidth,
+  }));
+  expect(sw, "page scrolls sideways").toBeLessThanOrEqual(cw);
+}
+
+export async function startEmptyWorkout(page: Page): Promise<void> {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Start an empty workout" }).click();
+  await page.waitForURL("**/workout");
+}
+
+export async function addExercise(page: Page, name: string): Promise<void> {
+  await page.getByRole("button", { name: "Add exercise" }).click();
+  await page.getByLabel("Search exercises").fill(name);
+  await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${escape(name)}`) }).click();
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+}
+
+/** Fills weight and reps for working set `n` and ticks it. Pass kg = null for bodyweight. */
+export async function logSet(page: Page, n: number, kg: string | null, reps: string): Promise<void> {
+  if (kg !== null) await page.getByLabel(new RegExp(`^Set ${n} weight in `)).first().fill(kg);
+  await page.getByLabel(`Set ${n} reps`).first().fill(reps);
+  await page.getByRole("button", { name: `Mark Set ${n} done` }).first().click();
+}
+
+export async function finishWorkout(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.waitForURL((u) => u.pathname === "/");
+}
+
+function escape(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
