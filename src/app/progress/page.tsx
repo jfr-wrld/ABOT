@@ -12,6 +12,7 @@ import { WorkoutCalendar } from "@/components/analytics/WorkoutCalendar";
 import { startOfWeek, weekStreak, weeklyBuckets } from "@/lib/analytics";
 import { formatDuration, muscleSplit } from "@/lib/calc";
 import { formatVolume, toDisplay } from "@/lib/units";
+import { useNow } from "@/lib/useNow";
 
 const WEEKS = 8;
 
@@ -28,16 +29,16 @@ function ProgressScreen() {
   const { weightUnit, firstDayOfWeek } = useSettingsStore();
   const { byId } = useAllExercises();
   const [splitRange, setSplitRange] = useState<"week" | "month">("week");
+  const now = useNow(60_000);
 
-  const buckets = useMemo(() => weeklyBuckets(sessions, WEEKS, Date.now(), firstDayOfWeek), [sessions, firstDayOfWeek]);
-  const streak = weekStreak(sessions, Date.now(), firstDayOfWeek);
-  const completed = sessions.filter((s) => s.status === "completed");
+  const buckets = useMemo(() => weeklyBuckets(sessions, WEEKS, now, firstDayOfWeek), [sessions, now, firstDayOfWeek]);
+  const streak = weekStreak(sessions, now, firstDayOfWeek);
+  const completed = useMemo(() => sessions.filter((s) => s.status === "completed"), [sessions]);
 
   const splitSessions = useMemo(() => {
-    const from =
-      splitRange === "week" ? startOfWeek(Date.now(), firstDayOfWeek) : Date.now() - 28 * 86_400_000;
+    const from = splitRange === "week" ? startOfWeek(now, firstDayOfWeek) : now - 28 * 86_400_000;
     return completed.filter((s) => s.startedAt >= from);
-  }, [completed, splitRange, firstDayOfWeek]);
+  }, [completed, splitRange, firstDayOfWeek, now]);
   const split = useMemo(() => muscleSplit(splitSessions, byId), [splitSessions, byId]);
 
   const weekLabel = (t: number) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
@@ -104,7 +105,7 @@ function ProgressScreen() {
           />
         </div>
 
-        <WorkoutCalendar sessions={sessions} firstDay={firstDayOfWeek} />
+        <WorkoutCalendar sessions={sessions} firstDay={firstDayOfWeek} now={now} />
       </div>
     </main>
   );

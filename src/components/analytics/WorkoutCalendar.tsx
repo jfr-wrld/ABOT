@@ -10,12 +10,19 @@ import { countSets, formatDuration, sessionDurationSec } from "@/lib/calc";
 const DOW_MON = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 const DOW_SUN = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-export function WorkoutCalendar({ sessions, firstDay }: { sessions: WorkoutSession[]; firstDay: 0 | 1 }) {
-  const today = new Date();
-  const [ym, setYm] = useState({ y: today.getFullYear(), m: today.getMonth() });
-  const [selected, setSelected] = useState<number>(startOfDay(Date.now()));
+export function WorkoutCalendar({
+  sessions,
+  firstDay,
+  now,
+}: {
+  sessions: WorkoutSession[];
+  firstDay: 0 | 1;
+  now: number;
+}) {
+  const [ym, setYm] = useState(() => ({ y: new Date(now).getFullYear(), m: new Date(now).getMonth() }));
+  const [selected, setSelected] = useState<number>(() => startOfDay(now));
   const byDay = sessionsByDay(sessions);
-  const cells = monthGrid(ym.y, ym.m, firstDay);
+  const cells = monthGrid(ym.y, ym.m, firstDay, now);
   const monthLabel = new Date(ym.y, ym.m, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
   const inMonthWorkouts = cells.filter((c) => c.inMonth && byDay.has(c.date)).length;
   const daySessions = byDay.get(selected) ?? [];
