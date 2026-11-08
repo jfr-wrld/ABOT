@@ -1,5 +1,6 @@
 "use client";
 
+import { setNumbers } from "@/lib/sets";
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -107,7 +108,7 @@ function Editor() {
 
         {routine.exercises.map((ex, i) => {
           const def = byId[ex.exerciseId];
-          let n = 0;
+          const nums = setNumbers(ex.sets);
           return (
             <section key={ex.id} aria-labelledby={`rex-${ex.id}`} className="rounded-card bg-surface p-3">
               <div className="flex items-start justify-between gap-2">
@@ -171,8 +172,8 @@ function Editor() {
                 <span className="text-center">Reps</span>
               </div>
               <ol className="mt-1 flex flex-col gap-1" aria-label={`Planned sets for ${def?.name ?? "exercise"}`}>
-                {ex.sets.map((s) => {
-                  const num = s.type === "warmup" ? null : ++n;
+                {ex.sets.map((s, i) => {
+                  const num = nums[i] ?? null;
                   const name = setTypeA11yName(s.type, num);
                   return (
                     <li

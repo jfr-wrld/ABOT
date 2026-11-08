@@ -1,5 +1,6 @@
 "use client";
 
+import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -71,7 +72,7 @@ function SessionDetail() {
       <div className="flex flex-col gap-3 px-4 pt-4">
         {session.exercises.map((ex) => {
           const def = byId[ex.exerciseId];
-          let n = 0;
+          const nums = setNumbers(ex.sets);
           return (
             <section key={ex.id} className="rounded-card bg-surface p-3">
               <h2 className="text-base font-semibold">
@@ -85,8 +86,8 @@ function SessionDetail() {
               </h2>
               {ex.notes && <p className="mt-1 text-xs text-text-muted">{ex.notes}</p>}
               <ol className="mt-2 flex flex-col gap-1">
-                {ex.sets.map((s) => {
-                  const num = s.type === "warmup" ? null : ++n;
+                {ex.sets.map((s, i) => {
+                  const num = nums[i] ?? null;
                   return (
                     <li key={s.id} className="flex items-center gap-3 text-sm">
                       <SetTypeChip type={s.type} number={num} />

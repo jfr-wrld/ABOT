@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Exercise } from "@/types/workout";
-import { SEED_EXERCISES } from "@/data/exercises";
+import { buildExerciseIndex } from "@/lib/sets";
 import { newId } from "@/lib/id";
 
 interface ExerciseState {
@@ -32,11 +33,8 @@ export const useExerciseStore = create<ExerciseState>()(
   ),
 );
 
-/** Seed + custom, as a list and as a lookup. Stable across renders for the same `custom`. */
+/** Seed + custom, as a sorted list and an id lookup. Stable while `custom` is unchanged. */
 export function useAllExercises() {
   const custom = useExerciseStore((s) => s.custom);
-  const list = [...SEED_EXERCISES, ...custom].sort((a, b) => a.name.localeCompare(b.name));
-  const byId: Record<string, Exercise> = {};
-  for (const e of list) byId[e.id] = e;
-  return { list, byId };
+  return useMemo(() => buildExerciseIndex(custom), [custom]);
 }

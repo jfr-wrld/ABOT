@@ -1,5 +1,6 @@
 "use client";
 
+import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -177,7 +178,7 @@ function Detail() {
             <ul className="mt-2 flex flex-col gap-2">
               {recent.map((s) => {
                 const ex = s.exercises.find((e) => e.exerciseId === id)!;
-                let n = 0;
+                const nums = setNumbers(ex.sets);
                 return (
                   <li key={s.id} className="rounded-card bg-surface p-3">
                     <Link href={`/history/${s.id}`} className="flex items-baseline justify-between gap-2 hover:underline">
@@ -187,8 +188,8 @@ function Detail() {
                       </time>
                     </Link>
                     <ol className="mt-2 flex flex-col gap-1">
-                      {ex.sets.map((st) => {
-                        const num = st.type === "warmup" ? null : ++n;
+                      {ex.sets.map((st, i) => {
+                        const num = nums[i] ?? null;
                         return (
                           <li key={st.id} className="flex items-center gap-3 text-sm tabular-nums">
                             <SetTypeChip type={st.type} number={num} />

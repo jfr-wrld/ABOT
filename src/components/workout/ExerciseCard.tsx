@@ -1,5 +1,6 @@
 "use client";
 
+import { setNumbers } from "@/lib/sets";
 import { useState } from "react";
 import { setGridColumns } from "./setGrid";
 import { ArrowDown, ArrowUp, MoreHorizontal, Plus, Timer, Trash2 } from "lucide-react";
@@ -42,8 +43,7 @@ export function ExerciseCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
-  let working = 0;
-  const numbers = item.sets.map((s) => (s.type === "warmup" ? null : ++working));
+  const numbers = setNumbers(item.sets);
 
   const name = exercise?.name ?? "Unknown exercise";
   const subtitle = exercise
