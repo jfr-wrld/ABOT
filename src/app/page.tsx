@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronRight, Settings } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
@@ -22,15 +24,26 @@ function HomeScreen() {
   const router = useRouter();
   const active = useWorkoutStore((s) => s.active);
   const sessions = useWorkoutStore((s) => s.sessions);
-  const startEmpty = useWorkoutStore((s) => s.startEmpty);
+  const { startEmpty, startFromRoutine } = useWorkoutStore();
+  const routines = useRoutineStore((s) => s.routines);
   const { weightUnit, defaultRestSeconds } = useSettingsStore();
   const now = useNow(1000, active !== null);
 
   const recent = [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 10);
+  const startable = routines.filter((r) => r.exercises.length > 0).slice(0, 4);
 
   return (
     <main className="flex flex-1 flex-col px-4 pt-4">
-      <h1 className="text-xl font-bold">Heavy</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold">Heavy</h1>
+        <Link
+          href="/settings"
+          aria-label="Settings"
+          className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
+        >
+          <Settings aria-hidden="true" size={22} />
+        </Link>
+      </div>
 
       {active ? (
         <Link
@@ -45,16 +58,39 @@ function HomeScreen() {
           </span>
         </Link>
       ) : (
-        <Button
-          variant="primary"
-          onClick={() => {
-            startEmpty(defaultRestSeconds);
-            router.push("/workout");
-          }}
-          className="mt-4 w-full"
-        >
-          Start an empty workout
-        </Button>
+        <>
+          <Button
+            variant="primary"
+            onClick={() => {
+              startEmpty(defaultRestSeconds);
+              router.push("/workout");
+            }}
+            className="mt-4 w-full"
+          >
+            Start an empty workout
+          </Button>
+          {startable.length > 0 && (
+            <ul className="mt-2 grid grid-cols-2 gap-2">
+              {startable.map((r) => (
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      startFromRoutine(r);
+                      router.push("/workout");
+                    }}
+                    className="flex min-h-14 w-full flex-col items-start justify-center rounded-card bg-surface px-3 text-left hover:bg-surface-2"
+                  >
+                    <span className="w-full truncate text-sm font-semibold">{r.name}</span>
+                    <span className="text-xs text-text-muted">
+                      {r.exercises.length} {r.exercises.length === 1 ? "exercise" : "exercises"}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
 
       <section className="mt-8" aria-labelledby="recent-heading">
@@ -70,21 +106,22 @@ function HomeScreen() {
             {recent.map((s) => {
               const { completed } = countSets(s);
               return (
-                <li key={s.id} className="rounded-card bg-surface p-4">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="truncate text-base font-semibold">{s.name}</span>
-                    <time dateTime={new Date(s.startedAt).toISOString()} className="shrink-0 text-xs text-text-muted">
-                      {new Date(s.startedAt).toLocaleDateString(undefined, {
-                        weekday: "short",
-                        day: "numeric",
-                        month: "short",
-                      })}
-                    </time>
-                  </div>
-                  <p className="mt-1 text-sm text-text-muted">
-                    {formatDuration(sessionDurationSec(s))} · {formatVolume(sessionVolume(s), weightUnit)} ·{" "}
-                    {completed} {completed === 1 ? "set" : "sets"} · {s.exercises.length} {s.exercises.length === 1 ? "exercise" : "exercises"}
-                  </p>
+                <li key={s.id}>
+                  <Link href={`/history/${s.id}`} className="block rounded-card bg-surface p-4 hover:bg-surface-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="truncate text-base font-semibold">{s.name}</span>
+                      <time dateTime={new Date(s.startedAt).toISOString()} className="shrink-0 text-xs text-text-muted">
+                        {new Date(s.startedAt).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
+                      </time>
+                    </div>
+                    <p className="mt-1 flex items-center justify-between text-sm text-text-muted">
+                      <span>
+                        {formatDuration(sessionDurationSec(s))} · {formatVolume(sessionVolume(s), weightUnit)} · {completed}{" "}
+                        {completed === 1 ? "set" : "sets"} · {s.exercises.length} {s.exercises.length === 1 ? "exercise" : "exercises"}
+                      </span>
+                      <ChevronRight aria-hidden="true" size={16} />
+                    </p>
+                  </Link>
                 </li>
               );
             })}
