@@ -68,3 +68,11 @@ test("the filter dropdowns work from the keyboard and match the theme", async ({
   await expect(page.getByRole("listbox")).toHaveCount(0);
   await expect(muscle).toHaveText("Chest");
 });
+
+test("the exercise page shows the muscle and equipment with their icons", async ({ page }) => {
+  await page.goto("/exercises/bench-press-barbell");
+  const header = page.locator("header").filter({ has: page.getByRole("heading", { level: 1, name: "Bench Press (Barbell)" }) });
+  await expect(header.getByText("Chest", { exact: true })).toBeVisible();
+  await expect(header.getByText("Barbell", { exact: true })).toBeVisible();
+  await expect(header.locator("svg g[fill='#ccff00']").first()).toBeAttached();
+});

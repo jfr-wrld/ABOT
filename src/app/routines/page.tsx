@@ -11,6 +11,7 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
+import { TemplatesSection } from "@/components/routines/TemplatesSection";
 import type { Routine } from "@/types/workout";
 
 export default function RoutinesPage() {
@@ -80,8 +81,8 @@ function RoutinesScreen() {
       <div className="flex flex-col gap-6 px-4 pt-4">
         {routines.length === 0 && (
           <p className="panel px-4 py-8 text-center text-sm text-text-muted">
-            No routines saved. Create one, add its exercises and target sets, and you can start the same
-            workout in one tap next time.
+            No routines saved. Add a template below, or create your own with its exercises and target sets,
+            and you can start the same workout in one tap next time.
           </p>
         )}
 
@@ -151,6 +152,8 @@ function RoutinesScreen() {
             </ul>
           </section>
         ))}
+
+        <TemplatesSection />
       </div>
 
       <Sheet

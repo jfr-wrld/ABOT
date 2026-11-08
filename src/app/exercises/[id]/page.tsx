@@ -11,6 +11,8 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { MuscleIcon } from "@/components/icons/MuscleIcon";
+import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseForm } from "@/components/exercises/ExerciseForm";
@@ -69,11 +71,23 @@ function Detail() {
       <PageHeader
         title={exercise.name}
         back={{ href: "/exercises", label: "Exercises" }}
-        subtitle={`${primaryMusclesLabel(exercise)} · ${EQUIPMENT_LABELS[exercise.equipment]}${
-          exercise.secondaryMuscles.length
-            ? ` · also ${exercise.secondaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}`
-            : ""
-        }`}
+        subtitle={
+          <span className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="inline-flex items-center gap-1.5">
+              <MuscleIcon muscle={exercise.primaryMuscles[0]} size={24} />
+              {primaryMusclesLabel(exercise)}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="text-accent">
+                <EquipmentIcon equipment={exercise.equipment} size={20} />
+              </span>
+              {EQUIPMENT_LABELS[exercise.equipment]}
+            </span>
+            {exercise.secondaryMuscles.length > 0 && (
+              <span>also {exercise.secondaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}</span>
+            )}
+          </span>
+        }
         action={
           exercise.isCustom ? (
             <div className="flex">

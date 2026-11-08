@@ -35,7 +35,7 @@ test("creates a routine with targets and starts it", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 
   await page.getByRole("link", { name: "Routines", exact: true }).first().click();
-  await expect(page.getByRole("heading", { name: "Push / Pull / Legs" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Push / Pull / Legs" })).toBeVisible();
   await expect(page.getByText("1 exercise · 3 sets")).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.getByRole("button", { name: "Start Push A" }).click();
@@ -54,7 +54,7 @@ test("duplicates and deletes a routine", async ({ page }) => {
   await page.getByRole("button", { name: "Delete Legs (copy)" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Legs", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 3, name: "Legs", exact: true })).toBeVisible();
 });
 
 test("a routine without exercises cannot be started", async ({ page }) => {
@@ -74,4 +74,22 @@ test("blocks starting a routine while a workout is active", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "A workout is already in progress" })).toBeVisible();
   await page.getByRole("button", { name: "Go to current workout" }).click();
   await page.waitForURL("**/workout");
+});
+
+test("a template is added to the routines and can be started from its preview", async ({ page }) => {
+  await page.goto("/routines");
+  await expect(page.getByRole("heading", { name: "Templates" })).toBeVisible();
+  await page.getByRole("button", { name: "Add to routines: Push" }).click();
+  await expect(page.getByRole("status")).toHaveText("Push added to your routines, in Push / Pull / Legs.");
+  await expect(page.getByRole("button", { name: "Start Push" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Add again: Push" })).toBeVisible();
+
+  await page.getByRole("button", { name: "See exercises: Legs" }).click();
+  const sheet = page.getByRole("dialog", { name: "Push / Pull / Legs: Legs" });
+  await expect(sheet.getByText("Squat (Barbell)")).toBeVisible();
+  await expect(sheet.getByText("4 × 6")).toBeVisible();
+  await sheet.getByRole("button", { name: "Add and start" }).click();
+  await page.waitForURL("**/workout");
+  await expect(page.getByRole("heading", { name: "Squat (Barbell)", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Standing Calf Raise (Machine)", exact: true })).toBeVisible();
 });
