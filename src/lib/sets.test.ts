@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildExerciseIndex, setNumbers } from "./sets";
 import type { Exercise, SetType } from "@/types/workout";
+import { SEED_EXERCISES } from "@/data/exercises";
 
 const t = (...types: SetType[]) => types.map((type) => ({ type }));
 
@@ -17,10 +18,10 @@ describe("setNumbers", () => {
 });
 
 describe("buildExerciseIndex", () => {
-  it("contains the 44 seed exercises sorted by name", () => {
+  it("contains every seed exercise sorted by name", () => {
     const { list, byId } = buildExerciseIndex([]);
-    expect(list).toHaveLength(44);
-    expect(Object.keys(byId)).toHaveLength(44);
+    expect(list).toHaveLength(SEED_EXERCISES.length);
+    expect(Object.keys(byId)).toHaveLength(SEED_EXERCISES.length);
     const names = list.map((e) => e.name);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
   });
@@ -41,7 +42,7 @@ describe("buildExerciseIndex", () => {
       isMachineDependent: false,
     };
     const { list, byId } = buildExerciseIndex([custom]);
-    expect(list).toHaveLength(45);
+    expect(list).toHaveLength(SEED_EXERCISES.length + 1);
     expect(byId["custom-1"]).toBe(custom);
   });
 });

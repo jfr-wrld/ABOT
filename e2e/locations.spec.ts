@@ -56,12 +56,12 @@ test("bodyweight exercises accept added weight", async ({ page }) => {
 test("custom exercise form sets the load mode", async ({ page }) => {
   await page.goto("/exercises");
   await page.getByRole("button", { name: "New", exact: true }).click();
-  await page.getByLabel("Name").fill("Incline Curl");
+  await page.getByLabel("Name").fill("Spider Curl");
   await page.getByLabel("Equipment", { exact: true }).last().selectOption("dumbbell");
   await expect(page.getByLabel("Load")).toHaveValue("per_hand");
   await page.getByLabel("Load").selectOption("unilateral");
   await page.getByRole("button", { name: "Add to library" }).click();
   await startEmptyWorkout(page);
-  await addExercise(page, "Incline Curl");
+  await addExercise(page, "Spider Curl");
   await expect(page.getByText("kg/side", { exact: true })).toBeVisible();
 });

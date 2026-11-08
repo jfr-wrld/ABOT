@@ -193,7 +193,7 @@ describe("per-location records", () => {
 describe("bodyweight sets", () => {
   it("count as working sets for the muscle split even without added weight", () => {
     const s = session("bw", 1, [set({ id: "p1", weightKg: null, reps: 8 }), set({ id: "p2", weightKg: 0, reps: 6 })], "pull-up");
-    expect(muscleSplit([s], SEED_EXERCISES_BY_ID).back).toBe(2);
+    expect(muscleSplit([s], SEED_EXERCISES_BY_ID).lats).toBe(2);
     expect(sessionVolume(s)).toBe(0);
   });
   it("added weight counts toward volume", () => {
@@ -202,7 +202,7 @@ describe("bodyweight sets", () => {
   });
   it("sets without reps are not working sets", () => {
     const s = session("bw", 1, [set({ id: "p1", weightKg: null, reps: null })], "pull-up");
-    expect(muscleSplit([s], SEED_EXERCISES_BY_ID).back).toBeUndefined();
+    expect(muscleSplit([s], SEED_EXERCISES_BY_ID).lats).toBeUndefined();
   });
 });
 

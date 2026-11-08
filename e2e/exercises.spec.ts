@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("filters by muscle and equipment", async ({ page }) => {
   await page.goto("/exercises");
-  await expect(page.getByText("44 in your library")).toBeVisible();
+  await expect(page.getByText("81 in your library")).toBeVisible();
   await page.getByLabel("Muscle group").selectOption("chest");
   await page.getByLabel("Equipment").selectOption("cable");
   await expect(page.getByRole("link", { name: /Cable Fly/ })).toBeVisible();
@@ -27,7 +27,7 @@ test("creates a custom exercise and opens its detail", async ({ page }) => {
   await page.getByLabel("Primary muscle").selectOption("back");
   await page.getByLabel("Equipment", { exact: true }).last().selectOption("barbell");
   await page.getByRole("button", { name: "Add to library" }).click();
-  await expect(page.getByText("45 in your library")).toBeVisible();
+  await expect(page.getByText("82 in your library")).toBeVisible();
   await page.getByRole("link", { name: /Pendlay Row/ }).click();
   await expect(page.getByRole("heading", { name: "Pendlay Row" })).toBeVisible();
   await expect(page.getByText("No completed working sets yet.")).toBeVisible();
