@@ -205,3 +205,17 @@ describe("bodyweight sets", () => {
     expect(muscleSplit([s], SEED_EXERCISES_BY_ID).back).toBeUndefined();
   });
 });
+
+describe("multiple primary muscles (Task 18)", () => {
+  it("credits every primary muscle a full set", () => {
+    const byId = {
+      ...SEED_EXERCISES_BY_ID,
+      combo: { ...SEED_EXERCISES_BY_ID["deadlift-barbell"]!, id: "combo", primaryMuscles: ["back", "glutes"], secondaryMuscles: ["hamstrings"] },
+    } as typeof SEED_EXERCISES_BY_ID;
+    const s = session("m", 1, [set({ id: "1" })], "combo");
+    const split = muscleSplit([s], byId);
+    expect(split.back).toBe(1);
+    expect(split.glutes).toBe(1);
+    expect(split.hamstrings).toBe(0.5);
+  });
+});

@@ -125,7 +125,7 @@ describe("attachPersistence", () => {
     const r = useRoutineStore.getState().create("Legs");
     const e = useExerciseStore.getState().addCustom({
       name: "Pendlay Row",
-      primaryMuscle: "back",
+      primaryMuscles: ["back"],
       secondaryMuscles: [],
       equipment: "barbell",
     });

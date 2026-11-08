@@ -11,7 +11,7 @@ import type {
   WeightUnit,
   WorkoutSet,
 } from "@/types/workout";
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
+import { EQUIPMENT_LABELS, primaryMusclesLabel } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { SetRow } from "./SetRow";
 import { Sheet } from "@/components/ui/Sheet";
@@ -47,7 +47,7 @@ export function ExerciseCard({
 
   const name = exercise?.name ?? "Unknown exercise";
   const subtitle = exercise
-    ? `${MUSCLE_GROUP_LABELS[exercise.primaryMuscle]} · ${EQUIPMENT_LABELS[exercise.equipment]}`
+    ? `${primaryMusclesLabel(exercise)} · ${EQUIPMENT_LABELS[exercise.equipment]}`
     : "This exercise was removed from the library";
 
   return (

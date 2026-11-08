@@ -28,7 +28,11 @@ describe("buildExerciseIndex", () => {
     const custom: Exercise = {
       id: "custom-1",
       name: "Pendlay Row",
-      primaryMuscle: "back",
+      primaryMuscles: ["back"],
+      category: "compound",
+      instructions: [],
+      formCues: [],
+      media: {},
       secondaryMuscles: [],
       equipment: "barbell",
       isCustom: true,

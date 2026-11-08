@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import type { Exercise, MuscleGroup } from "@/types/workout";
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
+import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
 import { useAllExercises } from "@/store/useExerciseStore";
 
 const MUSCLES: MuscleGroup[] = [
-  "chest", "back", "shoulders", "biceps", "triceps", "quads", "hamstrings", "glutes", "calves", "abs", "traps", "forearms", "lower_back",
+  "chest", "back", "lats", "shoulders", "biceps", "triceps", "quads", "hamstrings", "glutes", "calves", "abs", "traps", "forearms", "lower_back",
 ];
 
 export function ExercisePicker({
@@ -30,7 +30,7 @@ export function ExercisePicker({
     const q = query.trim().toLowerCase();
     return list.filter(
       (e) =>
-        (!muscle || e.primaryMuscle === muscle || e.secondaryMuscles.includes(muscle)) &&
+        (!muscle || e.primaryMuscles.includes(muscle) || e.secondaryMuscles.includes(muscle)) &&
         (!q || e.name.toLowerCase().includes(q) || EQUIPMENT_LABELS[e.equipment].toLowerCase().includes(q)),
     );
   }, [list, query, muscle]);
@@ -80,7 +80,7 @@ export function ExercisePicker({
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold">{e.name}</span>
                   <span className="block text-xs text-text-muted">
-                    {MUSCLE_GROUP_LABELS[e.primaryMuscle]} · {EQUIPMENT_LABELS[e.equipment]}
+                    {primaryMusclesLabel(e)} · {EQUIPMENT_LABELS[e.equipment]}
                   </span>
                 </span>
                 {inWorkout.has(e.id) && (

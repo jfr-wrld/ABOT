@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Plus } from "lucide-react";
 import type { Equipment, MuscleGroup } from "@/types/workout";
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
+import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { HydrationGate } from "@/components/ui/Loading";
@@ -39,7 +39,7 @@ function LibraryScreen() {
     const q = query.trim().toLowerCase();
     return list.filter(
       (e) =>
-        (!muscle || e.primaryMuscle === muscle || e.secondaryMuscles.includes(muscle)) &&
+        (!muscle || e.primaryMuscles.includes(muscle) || e.secondaryMuscles.includes(muscle)) &&
         (!equipment || e.equipment === equipment) &&
         (!q || e.name.toLowerCase().includes(q)),
     );
@@ -123,7 +123,7 @@ function LibraryScreen() {
                       {e.isCustom && <span className="ml-2 text-xs font-normal text-text-muted">custom</span>}
                     </span>
                     <span className="block text-xs text-text-muted">
-                      {MUSCLE_GROUP_LABELS[e.primaryMuscle]} · {EQUIPMENT_LABELS[e.equipment]}
+                      {primaryMusclesLabel(e)} · {EQUIPMENT_LABELS[e.equipment]}
                       {pr && ` · best ${pr.weightKg} kg × ${pr.reps}`}
                     </span>
                   </span>

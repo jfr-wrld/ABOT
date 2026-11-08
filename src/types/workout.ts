@@ -26,7 +26,11 @@ export type MuscleGroup =
   | "glutes"
   | "calves"
   | "traps"
+  | "lats"
   | "lower_back"
+  | "adductors"
+  | "abductors"
+  | "neck"
   | "full_body"
   | "cardio";
 
@@ -34,6 +38,7 @@ export type Equipment =
   | "barbell"
   | "dumbbell"
   | "machine"
+  | "smith_machine"
   | "cable"
   | "bodyweight"
   | "kettlebell"
@@ -54,26 +59,47 @@ export type LogType = "weight_reps" | "reps_only" | "duration" | "distance_durat
 /** W = warm-up (yellow), N = normal (default), D = drop set (purple), F = failure (red). */
 export type SetType = "warmup" | "normal" | "dropset" | "failure";
 
+export type ExerciseCategory = "compound" | "isolation" | "cardio" | "mobility";
+
+export interface ExerciseMedia {
+  /** Image frames (start, end) or a looping .mp4/.webm/.gif. */
+  motionUrls?: string[];
+  youtubeId?: string;
+  youtubeStart?: number;
+  youtubeEnd?: number;
+  tiktokUrl?: string;
+  /** Pasted by the user: YouTube, Shorts, TikTok or a direct video file. */
+  customVideoUrl?: string;
+}
+
 export interface Exercise {
   id: string;
   name: string;
-  primaryMuscle: MuscleGroup;
+  primaryMuscles: MuscleGroup[];
   secondaryMuscles: MuscleGroup[];
   equipment: Equipment;
+  category: ExerciseCategory;
   /** Bodyweight movements: the weight input is optional added load (weighted pull-up). */
   isBodyweight?: boolean;
   loadMode: LoadMode;
   logType: LogType;
   /** Machine and cable loads differ between gyms, so records are kept per location. */
   isMachineDependent: boolean;
+  instructions: string[];
+  formCues: string[];
+  media: ExerciseMedia;
+  /** free-exercise-db id when the exercise came from that dataset. */
+  sourceId?: string;
   /** Set when the user created it, so we can let them edit/delete it. */
   isCustom?: boolean;
+  /** Downloaded from the full catalog on demand. */
+  isCatalog?: boolean;
   notes?: string;
 }
 
 /** What a create/edit form supplies; derived fields are filled by normalizeExercise. */
-export type ExerciseDraft = Pick<Exercise, "name" | "primaryMuscle" | "secondaryMuscles" | "equipment" | "isBodyweight"> &
-  Partial<Pick<Exercise, "loadMode" | "logType" | "isMachineDependent">>;
+export type ExerciseDraft = Pick<Exercise, "name" | "primaryMuscles" | "secondaryMuscles" | "equipment" | "isBodyweight"> &
+  Partial<Pick<Exercise, "loadMode" | "logType" | "isMachineDependent" | "category" | "instructions" | "formCues" | "media">>;
 
 /** A single performed set inside an active or finished workout. */
 export interface WorkoutSet {
@@ -223,6 +249,10 @@ export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
   glutes: "Glutes",
   calves: "Calves",
   traps: "Traps",
+  lats: "Lats",
+  adductors: "Adductors",
+  abductors: "Abductors",
+  neck: "Neck",
   lower_back: "Lower Back",
   full_body: "Full Body",
   cardio: "Cardio",
@@ -232,6 +262,7 @@ export const EQUIPMENT_LABELS: Record<Equipment, string> = {
   barbell: "Barbell",
   dumbbell: "Dumbbell",
   machine: "Machine",
+  smith_machine: "Smith Machine",
   cable: "Cable",
   bodyweight: "Bodyweight",
   kettlebell: "Kettlebell",
@@ -248,3 +279,8 @@ export const SET_TYPE_META: Record<
   dropset: { short: "D", label: "Drop set", colorClass: "text-purple-400" },
   failure: { short: "F", label: "Failure", colorClass: "text-red-400" },
 };
+
+/** "Chest" or "Back / Glutes": the primary muscles as one display string. */
+export function primaryMusclesLabel(e: Pick<Exercise, "primaryMuscles">): string {
+  return e.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(" / ");
+}

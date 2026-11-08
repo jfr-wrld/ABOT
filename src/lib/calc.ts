@@ -310,7 +310,7 @@ export function muscleSplit(
       if (!def) continue;
       const n = ex.sets.filter(isWorkingSet).length;
       if (!n) continue;
-      out[def.primaryMuscle] = (out[def.primaryMuscle] ?? 0) + n;
+      for (const m of def.primaryMuscles) out[m] = (out[m] ?? 0) + n;
       for (const m of def.secondaryMuscles) out[m] = (out[m] ?? 0) + n * 0.5;
     }
   }

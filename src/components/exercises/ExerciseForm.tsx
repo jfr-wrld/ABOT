@@ -22,7 +22,7 @@ export function ExerciseForm({
   onSave: (data: ExerciseDraft) => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [primary, setPrimary] = useState<MuscleGroup>(initial?.primaryMuscle ?? "chest");
+  const [primary, setPrimary] = useState<MuscleGroup>(initial?.primaryMuscles[0] ?? "chest");
   const [equipment, setEquipment] = useState<Equipment>(initial?.equipment ?? "barbell");
   const [error, setError] = useState<string | null>(null);
   // Load and machine dependence follow the equipment until the user picks them explicitly.
@@ -39,7 +39,8 @@ export function ExerciseForm({
     }
     onSave({
       name: trimmed,
-      primaryMuscle: primary,
+      // One primary from the form; extra primaries from the seed or a file are kept on edit.
+      primaryMuscles: [primary, ...(initial?.primaryMuscles.slice(1).filter((m) => m !== primary) ?? [])],
       secondaryMuscles: initial?.secondaryMuscles ?? [],
       equipment,
       isBodyweight: equipment === "bodyweight",

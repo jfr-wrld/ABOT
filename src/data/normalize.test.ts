@@ -116,3 +116,50 @@ describe("DEFAULT_PLATES_KG", () => {
     expect(DEFAULT_PLATES_KG).toEqual([25, 20, 15, 10, 5, 2.5, 1.25]);
   });
 });
+
+import { normalizeStoredExercise } from "./normalize";
+
+describe("exercise model v2 (Task 18)", () => {
+  it("turns a legacy single primaryMuscle into primaryMuscles", () => {
+    const e = normalizeStoredExercise({ id: "c1", name: "Old", primaryMuscle: "chest", equipment: "barbell", secondaryMuscles: [] })!;
+    expect(e.primaryMuscles).toEqual(["chest"]);
+    expect("primaryMuscle" in e).toBe(false);
+  });
+  it("fills category, instructions, form cues and media defaults", () => {
+    const e = normalizeExercise({ id: "x", name: "X", primaryMuscles: ["chest"], secondaryMuscles: ["triceps"], equipment: "barbell" });
+    expect(e.category).toBe("compound");
+    expect(e.instructions).toEqual([]);
+    expect(e.formCues).toEqual([]);
+    expect(e.media).toEqual({});
+    const iso = normalizeExercise({ id: "y", name: "Y", primaryMuscles: ["biceps"], equipment: "dumbbell" });
+    expect(iso.category).toBe("isolation");
+  });
+  it("smith machine is accepted and keeps records per gym", () => {
+    const e = normalizeExercise({ id: "s", name: "Smith Squat", primaryMuscles: ["quads"], equipment: "smith_machine" });
+    expect(e.isMachineDependent).toBe(true);
+    expect(e.loadMode).toBe("total");
+  });
+  it("stored exercises from a file are validated, not trusted", () => {
+    const e = normalizeStoredExercise({
+      id: "c2",
+      name: "Edited",
+      primaryMuscles: ["chest", "wings"],
+      secondaryMuscles: "triceps",
+      equipment: "barbell",
+      formCues: ["Keep elbows at 45 degrees", 7],
+      media: { youtubeId: 5, customVideoUrl: "https://example.com/a.mp4" },
+    })!;
+    expect(e.primaryMuscles).toEqual(["chest"]);
+    expect(e.secondaryMuscles).toEqual([]);
+    expect(e.formCues).toEqual(["Keep elbows at 45 degrees"]);
+    expect(e.media).toEqual({ customVideoUrl: "https://example.com/a.mp4" });
+    expect(e.isCustom).toBe(true);
+    expect(normalizeStoredExercise({ id: "c3", name: "No muscles", primaryMuscles: ["wings"], equipment: "barbell" })).toBeNull();
+    expect(normalizeStoredExercise({ id: "c4", name: "Bad equipment", primaryMuscles: ["chest"], equipment: "rocket" })).toBeNull();
+  });
+  it("new muscle groups exist", () => {
+    for (const m of ["lats", "adductors", "abductors", "neck"] as const) {
+      expect(normalizeExercise({ id: m, name: m, primaryMuscles: [m], equipment: "machine" }).primaryMuscles).toEqual([m]);
+    }
+  });
+});

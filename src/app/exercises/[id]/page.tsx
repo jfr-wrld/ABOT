@@ -18,7 +18,7 @@ import { SetTypeChip } from "@/components/workout/SetTypeChip";
 import { CHART, tooltipStyle } from "@/components/analytics/chartTheme";
 import { buildPRTable, exerciseHistory } from "@/lib/calc";
 import { formatWeight, toDisplay } from "@/lib/units";
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
+import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
 
 export default function ExerciseDetailPage() {
   return (
@@ -67,7 +67,7 @@ function Detail() {
       <PageHeader
         title={exercise.name}
         back={{ href: "/exercises", label: "Exercises" }}
-        subtitle={`${MUSCLE_GROUP_LABELS[exercise.primaryMuscle]} · ${EQUIPMENT_LABELS[exercise.equipment]}${
+        subtitle={`${primaryMusclesLabel(exercise)} · ${EQUIPMENT_LABELS[exercise.equipment]}${
           exercise.secondaryMuscles.length
             ? ` · also ${exercise.secondaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}`
             : ""

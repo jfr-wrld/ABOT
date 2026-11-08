@@ -1,16 +1,21 @@
-import type {
-  Equipment,
-  Exercise,
-  LoadMode,
-  LogType,
-  Routine,
-  RoutineExercise,
-  RoutineSet,
-  SessionExercise,
-  SessionStatus,
-  SetType,
-  WorkoutSession,
-  WorkoutSet,
+import {
+  EQUIPMENT_LABELS,
+  MUSCLE_GROUP_LABELS,
+  type Equipment,
+  type Exercise,
+  type ExerciseCategory,
+  type ExerciseMedia,
+  type MuscleGroup,
+  type LoadMode,
+  type LogType,
+  type Routine,
+  type RoutineExercise,
+  type RoutineSet,
+  type SessionExercise,
+  type SessionStatus,
+  type SetType,
+  type WorkoutSession,
+  type WorkoutSet,
 } from "@/types/workout";
 
 /**
@@ -40,18 +45,32 @@ function defaultLogType(name: string, isBodyweight: boolean | undefined): LogTyp
   return isBodyweight ? "reps_only" : "weight_reps";
 }
 
-export function normalizeExercise(
-  raw: Partial<Exercise> & Pick<Exercise, "id" | "name" | "primaryMuscle" | "equipment">,
-): Exercise {
+const CATEGORIES: ExerciseCategory[] = ["compound", "isolation", "cardio", "mobility"];
+
+/** Input accepted by normalizeExercise: v2 fields, or the v1 single `primaryMuscle`. */
+export type ExerciseInput = Partial<Omit<Exercise, "primaryMuscles">> &
+  Pick<Exercise, "id" | "name" | "equipment"> &
+  ({ primaryMuscles: MuscleGroup[] } | { primaryMuscle: MuscleGroup });
+
+export function normalizeExercise(raw: ExerciseInput): Exercise {
+  const { primaryMuscle, ...rest } = raw as ExerciseInput & { primaryMuscle?: MuscleGroup };
+  const primaryMuscles = "primaryMuscles" in raw && raw.primaryMuscles ? raw.primaryMuscles : primaryMuscle ? [primaryMuscle] : [];
+  const secondaryMuscles = raw.secondaryMuscles ?? [];
   return {
-    ...raw,
-    secondaryMuscles: raw.secondaryMuscles ?? [],
+    ...rest,
+    primaryMuscles,
+    secondaryMuscles,
+    category:
+      raw.category && CATEGORIES.includes(raw.category) ? raw.category : secondaryMuscles.length > 0 ? "compound" : "isolation",
     loadMode: raw.loadMode && LOAD_MODES.includes(raw.loadMode) ? raw.loadMode : defaultLoadMode(raw.equipment, raw.name),
     logType: raw.logType && LOG_TYPES.includes(raw.logType) ? raw.logType : defaultLogType(raw.name, raw.isBodyweight),
     isMachineDependent:
       typeof raw.isMachineDependent === "boolean"
         ? raw.isMachineDependent
-        : raw.equipment === "machine" || raw.equipment === "cable",
+        : raw.equipment === "machine" || raw.equipment === "cable" || raw.equipment === "smith_machine",
+    instructions: raw.instructions ?? [],
+    formCues: raw.formCues ?? [],
+    media: raw.media ?? {},
   };
 }
 
@@ -158,11 +177,56 @@ export function normalizeRoutine(raw: unknown): Routine | null {
   };
 }
 
-/** Custom exercises from storage; returns null for rows missing required fields. */
+const isMuscle = (v: unknown): v is MuscleGroup => typeof v === "string" && v in MUSCLE_GROUP_LABELS;
+const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.length > 0) : []);
+const muscles = (v: unknown): MuscleGroup[] => (Array.isArray(v) ? v.filter(isMuscle) : []);
+
+function normalizeMedia(v: unknown): ExerciseMedia {
+  if (!isObj(v)) return {};
+  const m: ExerciseMedia = {};
+  const motion = strings(v.motionUrls);
+  if (motion.length) m.motionUrls = motion;
+  for (const k of ["youtubeId", "tiktokUrl", "customVideoUrl"] as const) {
+    const val = str(v[k]);
+    if (val) m[k] = val;
+  }
+  for (const k of ["youtubeStart", "youtubeEnd"] as const) {
+    const val = num(v[k]);
+    if (val !== undefined && val >= 0) m[k] = val;
+  }
+  return m;
+}
+
+/**
+ * Custom exercises from storage or a backup file. Every field is checked: unknown muscles are
+ * dropped, wrong types fall back to defaults, and rows without a usable primary muscle or a
+ * known equipment are rejected. The result is always marked custom.
+ */
 export function normalizeStoredExercise(raw: unknown): Exercise | null {
   if (!isObj(raw)) return null;
   const id = str(raw.id);
   const name = str(raw.name);
-  if (!id || !name || !str(raw.primaryMuscle) || !str(raw.equipment)) return null;
-  return normalizeExercise(raw as unknown as Exercise);
+  const equipment = raw.equipment;
+  if (!id || !name || typeof equipment !== "string" || !(equipment in EQUIPMENT_LABELS)) return null;
+  const primaryMuscles = muscles(raw.primaryMuscles);
+  if (primaryMuscles.length === 0 && isMuscle(raw.primaryMuscle)) primaryMuscles.push(raw.primaryMuscle);
+  if (primaryMuscles.length === 0) return null;
+  return normalizeExercise({
+    id,
+    name,
+    equipment: equipment as Equipment,
+    primaryMuscles,
+    secondaryMuscles: muscles(raw.secondaryMuscles),
+    isBodyweight: raw.isBodyweight === true,
+    loadMode: raw.loadMode as LoadMode | undefined,
+    logType: raw.logType as LogType | undefined,
+    category: raw.category as ExerciseCategory | undefined,
+    isMachineDependent: typeof raw.isMachineDependent === "boolean" ? raw.isMachineDependent : undefined,
+    instructions: strings(raw.instructions),
+    formCues: strings(raw.formCues),
+    media: normalizeMedia(raw.media),
+    sourceId: str(raw.sourceId),
+    notes: str(raw.notes),
+    isCustom: true,
+  });
 }
