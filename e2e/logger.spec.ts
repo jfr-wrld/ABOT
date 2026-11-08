@@ -73,6 +73,8 @@ test("finish saves the workout and the previous column autofills next time", asy
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await expect(page.getByText("2 sets were not marked done and will not be saved.")).toBeVisible();
   await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.waitForURL(/\/workout\/summary\//);
+  await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
   await expect(page.getByText(/480 kg · 1 set · 1 exercise/)).toBeVisible();
 
@@ -112,6 +114,8 @@ test("mark remaining sets done from the finish dialog", async ({ page }) => {
   await page.getByRole("button", { name: "Mark 1 remaining set done" }).click();
   await expect(page.getByText("1 set was not marked done and will not be saved.")).toBeVisible();
   await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.waitForURL(/\/workout\/summary\//);
+  await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
   await expect(page.getByText(/960 kg · 2 sets/)).toBeVisible();
 });
