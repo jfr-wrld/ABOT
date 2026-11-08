@@ -129,13 +129,13 @@ const ex = (id: string, sets: WorkoutSet[], locationId?: string, startedAt = 1):
 });
 
 describe("load mode volume", () => {
-  it("doubles per-hand dumbbell volume and counts unilateral once", () => {
+  it("doubles per-hand and unilateral volume (both sides moved the load)", () => {
     expect(volumeFactor("per_hand")).toBe(2);
-    expect(volumeFactor("unilateral")).toBe(1);
+    expect(volumeFactor("unilateral")).toBe(2);
     expect(volumeFactor("total")).toBe(1);
     const s = set({ id: "x", weightKg: 30, reps: 10 });
     expect(setVolume(s, "per_hand")).toBe(600);
-    expect(setVolume(s, "unilateral")).toBe(300);
+    expect(setVolume(s, "unilateral")).toBe(600);
     expect(setVolume(s)).toBe(300);
   });
   it("sessionVolume uses the exercise's load mode when given the lookup", () => {

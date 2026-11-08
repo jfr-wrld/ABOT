@@ -41,9 +41,12 @@ function isLoadedSet(set: WorkoutSet): boolean {
   return isWorkingSet(set) && set.weightKg !== null && set.weightKg > 0;
 }
 
-/** Per-hand dumbbell numbers are one hand's load; the lifter moved twice that. */
+/**
+ * Per-hand and one-side-at-a-time numbers are one side's load and reps; both sides moved it,
+ * so tonnage counts twice (owner decision 2026-11-08).
+ */
 export function volumeFactor(mode: LoadMode): 1 | 2 {
-  return mode === "per_hand" ? 2 : 1;
+  return mode === "total" ? 1 : 2;
 }
 
 export function setVolume(set: WorkoutSet, mode: LoadMode = "total"): number {

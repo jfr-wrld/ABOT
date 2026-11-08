@@ -131,7 +131,7 @@ export function ExerciseForm({
           <select id="ex-load" value={loadMode} onChange={(e) => setLoadChoice(e.target.value as LoadMode)} className={field}>
             <option value="total">Total (one bar or stack)</option>
             <option value="per_hand">Per hand (volume counts both)</option>
-            <option value="unilateral">One side at a time</option>
+            <option value="unilateral">One side at a time (volume counts both sides)</option>
           </select>
         </div>
         <label htmlFor="ex-machine" className="flex min-h-11 items-center gap-3 text-sm">

@@ -49,7 +49,7 @@ export type Equipment =
  * How the typed weight maps to volume:
  * total      the number is the whole load (barbell, machine, cable)
  * per_hand   the number is one dumbbell; volume counts both hands (x2)
- * unilateral one side at a time; the number and reps are per side, volume counts once
+ * unilateral one side at a time; the number and reps are per side, volume counts both sides (x2)
  */
 export type LoadMode = "total" | "per_hand" | "unilateral";
 
