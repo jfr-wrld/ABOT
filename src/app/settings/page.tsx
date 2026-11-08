@@ -5,6 +5,7 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { BackupSection } from "@/components/settings/BackupSection";
 import { StorageSection } from "@/components/settings/StorageSection";
+import { SyncSection } from "@/components/settings/SyncSection";
 import { LocationsSection } from "@/components/settings/LocationsSection";
 import { formatClock } from "@/lib/calc";
 
@@ -94,6 +95,10 @@ function SettingsScreen() {
 
         <div className="border-t border-line pt-5">
           <LocationsSection />
+        </div>
+
+        <div id="sync" className="scroll-mt-16 border-t border-line pt-5">
+          <SyncSection />
         </div>
 
         <div className="border-t border-line pt-5">

@@ -44,12 +44,18 @@ test("skipping the intro goes straight to Home", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
 });
 
-test("login says plainly that Google sign-in is not connected yet", async ({ page }) => {
+test("login offers Google sign-in only when this build can use it", async ({ page }) => {
   await freshStart(page);
   await page.goto("/login");
   await expect(page.getByRole("heading", { name: "Back up and sync" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign in with Google" })).toBeDisabled();
-  await expect(page.getByText("Not connected yet.")).toBeVisible();
+  const google = page.getByRole("button", { name: "Sign in with Google" });
+  // A build without Supabase settings says so; with them the button is live (not clicked here:
+  // it would leave for Google). e2e/sync.spec.ts covers the signed-in flow.
+  if (await page.getByText("Cloud sync is not set up for this build.").isVisible()) {
+    await expect(google).toBeDisabled();
+  } else {
+    await expect(google).toBeEnabled();
+  }
   await expectNoHorizontalOverflow(page);
   await page.getByRole("link", { name: "Continue without an account" }).click();
   await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();

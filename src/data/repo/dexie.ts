@@ -88,7 +88,9 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
 
   async function setKv(k: KvKey, value: unknown, track: boolean) {
     if (track && TRACKED_KV.includes(k)) {
-      for (const c of kvChanges(k, await kvValue(k), value)) await mark(c.kind, c.id, c.deleted);
+      // Settings is one item: no need to read the old value to know what changed.
+      const prev = k === "settings" ? undefined : await kvValue(k);
+      for (const c of kvChanges(k, prev, value)) await mark(c.kind, c.id, c.deleted);
     }
     await db.kv.put({ key: k, value });
   }
@@ -181,8 +183,9 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
           const s = (await db.syncStatus.get([kind, id])) ?? null;
           return { record: s?.deleted ? null : await record(kind, id, s), status: s };
         }),
-      applyRemote: (rec, at) =>
+      applyRemote: (rec, at, expected) =>
         rw(async () => {
+          if (expected !== undefined && ((await db.syncStatus.get([rec.kind, rec.id]))?.localUpdatedAt ?? null) !== expected) return false;
           const n = KIND_TABLES[rec.kind];
           if (n) {
             const t = db[n] as unknown as Dexie.Table<unknown, string>;
@@ -203,6 +206,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
             lastSyncedAt: at,
             deleted: rec.deleted,
           });
+          return true;
         }),
       markSynced: (kind, id, version, at) =>
         rw(async () => {

@@ -128,7 +128,8 @@ export function createMemoryRepository(): Repository {
         const s = status.get(key(kind, id)) ?? null;
         return { record: s?.deleted ? null : record(kind, id, s), status: s ? clone(s) : null };
       },
-      async applyRemote(rec, at) {
+      async applyRemote(rec, at, expected) {
+        if (expected !== undefined && (status.get(key(rec.kind, rec.id))?.localUpdatedAt ?? null) !== expected) return false;
         const name = KIND_TABLES[rec.kind];
         if (name) {
           const map = tables[name] as Map<string, unknown>;
@@ -146,6 +147,7 @@ export function createMemoryRepository(): Repository {
           lastSyncedAt: at,
           deleted: rec.deleted,
         });
+        return true;
       },
       async markSynced(kind, id, version, at) {
         const s = status.get(key(kind, id));

@@ -74,25 +74,27 @@ async function merge(repo: Repository, r: RemoteRecord, now: number): Promise<"a
   const remoteRec: SyncRecord = { kind: r.kind, id: r.id, payload: r.payload, updatedAt: r.updatedAt, deleted: r.deleted };
   const { record: local, status } = await repo.sync.get(r.kind, r.id);
 
+  // Every apply passes the version just read: if the lifter edits this item in between, the
+  // apply is skipped and their edit stays pending, to be pushed or resolved on the next sync.
+  const seen = status?.localUpdatedAt ?? null;
   if (!status) {
     // Never tracked here. Nothing to protect: take the server's version (a tombstone for
     // something this device never had changes nothing but is recorded as synced).
-    await repo.sync.applyRemote(remoteRec, now);
+    if (!(await repo.sync.applyRemote(remoteRec, now, seen))) return "skipped";
     return local || !r.deleted ? "applied" : "skipped";
   }
 
   if (status.status === "pending_sync") {
     if (status.localUpdatedAt > r.updatedAt) return "skipped"; // ours is newer; the push sends it
     const losing: SyncRecord = local ?? { kind: r.kind, id: r.id, payload: null, updatedAt: status.localUpdatedAt, deleted: true };
-    await repo.sync.applyRemote(remoteRec, now);
+    if (!(await repo.sync.applyRemote(remoteRec, now, seen))) return "skipped";
     return { record: losing, replacedAt: now };
   }
 
   // Synced here: the server wins when newer. Equal means it is the version we already have
   // (usually our own push coming back), so nothing changes.
   if (r.updatedAt > status.localUpdatedAt) {
-    await repo.sync.applyRemote(remoteRec, now);
-    return "applied";
+    return (await repo.sync.applyRemote(remoteRec, now, seen)) ? "applied" : "skipped";
   }
   return "skipped";
 }

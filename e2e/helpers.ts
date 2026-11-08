@@ -64,3 +64,25 @@ export async function finishWorkout(page: Page): Promise<void> {
 function escape(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+/** Waits until a settings change has reached IndexedDB, before a test reloads the page. */
+export async function waitForSavedSetting(page: Page, field: string, value: unknown): Promise<void> {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (f) =>
+          new Promise<unknown>((resolve) => {
+            const open = indexedDB.open("abot");
+            open.onsuccess = () => {
+              const req = open.result.transaction("kv").objectStore("kv").get("settings");
+              req.onsuccess = () => {
+                resolve((req.result?.value as Record<string, unknown> | undefined)?.[f]);
+                open.result.close();
+              };
+            };
+          }),
+        field,
+      ),
+    )
+    .toEqual(value);
+}

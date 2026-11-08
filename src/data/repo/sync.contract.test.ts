@@ -50,6 +50,17 @@ describe.each([
     expect((await repo.sync.get("routine", "r")).status).toMatchObject({ status: "synced", localUpdatedAt: 50, lastSyncedAt: 60 });
   });
 
+  it("applyRemote with an expected version skips an item edited after it was read", async () => {
+    const repo = make();
+    await repo.routines.put(routine("r"));
+    const seen = (await repo.sync.get("routine", "r")).status!.localUpdatedAt;
+    await repo.routines.put({ ...routine("r"), name: "edited meanwhile" });
+    const applied = await repo.sync.applyRemote({ kind: "routine", id: "r", payload: routine("r"), updatedAt: seen + 1, deleted: false }, 60, seen);
+    expect(applied).toBe(false);
+    expect((await repo.routines.all())[0]!.name).toBe("edited meanwhile");
+    expect(await repo.sync.applyRemote({ kind: "routine", id: "x", payload: routine("x"), updatedAt: 5, deleted: false }, 60, null)).toBe(true);
+  });
+
   it("a remote tombstone deletes the local row", async () => {
     const repo = make();
     await repo.sync.applyRemote({ kind: "routine", id: "r", payload: routine("r"), updatedAt: 50, deleted: false }, 60);

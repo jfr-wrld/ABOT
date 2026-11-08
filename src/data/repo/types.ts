@@ -78,8 +78,12 @@ export interface Repository {
     pending(): Promise<SyncRecord[]>;
     /** The local item (null when absent or deleted) and its sync status (null if never tracked). */
     get(kind: SyncKind, id: string): Promise<{ record: SyncRecord | null; status: SyncStatusRow | null }>;
-    /** Writes a server version locally without marking it pending; status becomes synced. */
-    applyRemote(rec: SyncRecord, at: number): Promise<void>;
+    /**
+     * Writes a server version locally without marking it pending; status becomes synced.
+     * With `expected` (the localUpdatedAt that was read, or null for "never tracked") it only
+     * applies if the item is still at that version, and returns whether it applied.
+     */
+    applyRemote(rec: SyncRecord, at: number, expected?: number | null): Promise<boolean>;
     /** Marks synced only if the item is still at `version`, so an edit made meanwhile stays pending. */
     markSynced(kind: SyncKind, id: string, version: number, at: number): Promise<void>;
     /** Forgets synced tombstones whose last sync is older than `olderThan`; returns how many. */
