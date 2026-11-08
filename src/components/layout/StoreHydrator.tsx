@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useHydration } from "@/store/hydration";
 import { getRepository } from "@/data/repo";
+import { migrateFromLocalStorage } from "@/data/migrateLegacy";
 import { attachPersistence, hydrateStores, setActiveRepository } from "@/store/persistence";
 
 export function StoreHydrator() {
@@ -13,6 +14,8 @@ export function StoreHydrator() {
     (async () => {
       const { repo, durable, error } = await getRepository();
       try {
+        // Data saved by the first, localStorage-based version is copied over once.
+        if (durable) await migrateFromLocalStorage(repo, window.localStorage);
         await hydrateStores(repo);
       } catch (e) {
         if (!cancelled) {
