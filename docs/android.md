@@ -54,6 +54,12 @@ installs over the old one and keeps the workouts. That key is for side-loaded te
   ABOT is frozen or closed. Android 12+ may deliver alarms late unless exact alarms are
   allowed; Settings offers the switch.
 - `src/lib/native/haptics.ts`: vibration (`@capacitor/haptics`).
+- Permissions (`AppPermissionsPlugin.java`, `src/lib/native/permissions.ts`): a step after the
+  intro (`/permissions`, once per install) and a Settings section. Each access maps to a
+  feature: notifications (rest alarm, live workout, reminders), camera (Take photo for the
+  profile and story background), location (gyms pinned in Settings are picked by themselves
+  when a workout starts nearby, `AutoGym`). Photos use Android's picker, which needs none.
+  `USE_EXACT_ALARM` keeps the rest alarm on time; a Play release must justify it as a timer.
 - `src/components/layout/NativeShell.tsx`: back button and swipe, notification taps, and the
   Google sign-in return (`app.abot.gym://auth/callback`; setup in `docs/cloud-sync-setup.md`).
 - The system splash is plain black with no icon, so the app's animated splash is the only one.

@@ -43,7 +43,7 @@ function Island() {
   const pathname = usePagePath();
   useLiveWorkoutNotification();
   // The intro and sign-in have no dock, so there is nothing to sit above.
-  const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login" && !pathname.startsWith("/workout/summary");
+  const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login" && pathname !== "/permissions" && !pathname.startsWith("/workout/summary");
 
   // Pages pad their bottom by this much more, so the bar never covers the last row.
   useEffect(() => {

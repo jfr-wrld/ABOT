@@ -13,6 +13,8 @@ import { formatClock } from "@/lib/calc";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { LiveStatusSetting } from "@/components/settings/LiveStatusSetting";
 import { AppVersion } from "@/components/settings/AppVersion";
+import { AppPermissionsSection } from "@/components/settings/AppPermissions";
+import { isNativeApp } from "@/lib/native/files";
 
 const REST_OPTIONS = [30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -129,6 +131,12 @@ function SettingsScreen() {
         <div id="sync" className="scroll-mt-16 border-t border-line pt-5">
           <SyncSection />
         </div>
+
+        {isNativeApp() && (
+          <div className="border-t border-line pt-5">
+            <AppPermissionsSection />
+          </div>
+        )}
 
         <div className="border-t border-line pt-5">
           <StorageSection />

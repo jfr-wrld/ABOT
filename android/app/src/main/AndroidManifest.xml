@@ -56,4 +56,11 @@
     <!-- The rest alarm rings on the second without asking (Android 13+). A Play release must
          justify it as a timer; otherwise drop it and keep the Settings switch for exact alarms. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- Take a profile photo or a story background with the camera. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Pick the gym you are at when a workout starts (gyms pinned in Settings). -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 </manifest>

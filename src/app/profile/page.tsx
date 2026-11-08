@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, ChevronRight, Pencil, Settings, Trophy } from "lucide-react";
+import { Camera, ChevronRight, Image as ImageIcon, Pencil, Settings, Trophy } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -21,6 +21,9 @@ import { useNow } from "@/lib/useNow";
 import { cmToFtIn, formatVolume, formatWeight, ftInToCm } from "@/lib/units";
 import { PROFILE_LIMITS } from "@/types/workout";
 import { exercisePath } from "@/lib/routes";
+import { Sheet } from "@/components/ui/Sheet";
+import { isNativeApp } from "@/lib/native/files";
+import { openPhotoInput } from "@/lib/native/photo-input";
 
 export default function ProfilePage() {
   return (
@@ -458,16 +461,37 @@ function usePhotoPicker(onChange: (url: string | null) => void) {
     }
   }
 
+  // The app's WebView offers no camera in its file picker, so there the avatar asks first.
+  const [choosing, setChoosing] = useState(false);
+  const choose = (source: "gallery" | "camera") => {
+    setChoosing(false);
+    openPhotoInput(ref.current, source, "user");
+  };
   const input = (
-    <input
-      ref={ref}
-      type="file"
-      accept="image/*"
-      aria-label="Profile photo file"
-      className="sr-only"
-      tabIndex={-1}
-      onChange={(e) => pick(e.target.files?.[0])}
-    />
+    <>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        aria-label="Profile photo file"
+        className="sr-only"
+        tabIndex={-1}
+        onChange={(e) => pick(e.target.files?.[0])}
+      />
+      <Sheet open={choosing} onClose={() => setChoosing(false)} title="Profile photo">
+        <div className="grid grid-cols-2 gap-2 pb-2">
+          <Button onClick={() => choose("camera")} className="min-h-14">
+            <Camera aria-hidden="true" size={18} />
+            Take photo
+          </Button>
+          <Button onClick={() => choose("gallery")} className="min-h-14">
+            <ImageIcon aria-hidden="true" size={18} />
+            Choose photo
+          </Button>
+        </div>
+      </Sheet>
+    </>
   );
-  return { input, open: () => ref.current?.click(), busy, error };
+  const open = () => (isNativeApp() ? setChoosing(true) : ref.current?.click());
+  return { input, open, busy, error };
 }

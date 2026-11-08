@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Download, Image as ImageIcon, ImagePlus, Share2, Trash2 } from "lucide-react";
+import { Camera, Download, Image as ImageIcon, ImagePlus, Share2, Trash2 } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { formatDuration } from "@/lib/calc";
@@ -29,6 +29,7 @@ import {
   type StoryPresetId,
 } from "@/lib/story-exporter";
 import { openSaved, type SaveResult } from "@/lib/native/files";
+import { openPhotoInput } from "@/lib/native/photo-input";
 
 const THUMB_W = 120;
 const THUMB_H = (THUMB_W * STORY_HEIGHT) / STORY_WIDTH;
@@ -390,9 +391,12 @@ function Studio({
           onChange={(e) => pickPhoto(e.target.files?.[0])}
         />
         <div className="flex gap-2">
-          <Button onClick={() => fileInput.current?.click()} disabled={photoBusy} className="flex-1">
+          <Button onClick={() => openPhotoInput(fileInput.current, "gallery")} disabled={photoBusy} className="flex-1">
             <ImagePlus aria-hidden="true" size={18} />
             {photoBusy ? "Reading photo" : photo ? "Change photo" : "Upload Background Photo"}
+          </Button>
+          <Button onClick={() => openPhotoInput(fileInput.current, "camera")} disabled={photoBusy} aria-label="Take a background photo" className="px-3">
+            <Camera aria-hidden="true" size={18} />
           </Button>
           {photo && (
             <Button variant="ghost" onClick={() => setPhoto(null)} aria-label="Remove background photo" className="px-3">

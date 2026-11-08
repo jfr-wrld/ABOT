@@ -180,6 +180,9 @@ export interface GymLocation {
   /** Plate sizes available, heaviest first. */
   plateInventoryKg: number[];
   isDefault: boolean;
+  /** Where the gym is, if pinned in Settings: lets ABOT pick it when a workout starts there. */
+  lat?: number;
+  lng?: number;
 }
 
 export interface RoutineFolder {

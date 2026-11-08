@@ -6,6 +6,8 @@ import { isNativeApp } from "@/lib/native/files";
 import { onLiveAction, setupNativeNotifications } from "@/lib/native/notify";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { syncPermission } from "@/store/useReminderStore";
+import { hasSeenOnboarding } from "@/lib/onboarding";
+import { withPermissionsStep } from "@/lib/native/permissions-step";
 import { finishNativeSignIn } from "@/store/useSyncStore";
 import { startApp } from "@/store/appSession";
 
@@ -60,6 +62,12 @@ export function NativeShell() {
     })
       .then(keep)
       .catch(() => {});
+    // Installs from before the permissions step see it once, on top of where they are.
+    const here = window.location.pathname;
+    if (hasSeenOnboarding() && !/^\/(onboarding|permissions|login)/.test(here)) {
+      const to = withPermissionsStep(here + window.location.search);
+      if (to.startsWith("/permissions")) router.push(to);
+    }
     // Back in the app: notification access may have changed in Android settings.
     void import("@capacitor/app").then(async ({ App }) => {
       const h = await App.addListener("resume", () => void syncPermission());

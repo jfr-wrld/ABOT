@@ -49,8 +49,11 @@ function normalizeLocation(raw: unknown): GymLocation | null {
     barWeightKg: typeof raw.barWeightKg === "number" && raw.barWeightKg >= 0 ? raw.barWeightKg : 20,
     plateInventoryKg: plates,
     isDefault: raw.isDefault === true,
+    ...(isCoord(raw.lat, 90) && isCoord(raw.lng, 180) ? { lat: raw.lat, lng: raw.lng } : {}),
   };
 }
+
+const isCoord = (v: unknown, max: number): v is number => typeof v === "number" && Number.isFinite(v) && Math.abs(v) <= max;
 
 function normalizeSettings(raw: unknown): StoredSettings | null {
   if (!isObj(raw)) return null;

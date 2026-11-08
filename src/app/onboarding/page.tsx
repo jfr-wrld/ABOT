@@ -8,6 +8,7 @@ import { AbotMark } from "@/components/brand/AbotMark";
 import { Button } from "@/components/ui/Button";
 import { markOnboardingSeen } from "@/lib/onboarding";
 import { DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
+import { withPermissionsStep } from "@/lib/native/permissions-step";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
 /** A swipe counts once the finger travels this far, or flicks faster than this. */
@@ -62,7 +63,7 @@ export default function OnboardingPage() {
   }
   function finish(to: string) {
     markOnboardingSeen();
-    router.replace(to);
+    router.replace(withPermissionsStep(to));
   }
   function onDragEnd(_: unknown, info: PanInfo) {
     if (info.offset.x < -SWIPE_PX || info.velocity.x < -SWIPE_VELOCITY) go(index + 1);

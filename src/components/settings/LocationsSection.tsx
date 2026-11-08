@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { GymLocation } from "@/types/workout";
 import { InfoTip } from "@/components/ui/InfoTip";
+import { MapPin } from "lucide-react";
+import { currentPosition, openAppSettings, requestAccess } from "@/lib/native/permissions";
+import { isNativeApp } from "@/lib/native/files";
 
 const BARS = [20, 15, 10, 7];
 
@@ -147,6 +150,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
           {platesError}
         </p>
       )}
+      <GymPin gym={gym} />
       <Button variant="danger" onClick={() => setConfirm(true)} className="mt-3 w-full">
         Delete {gym.name}
       </Button>
@@ -168,5 +172,67 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
         </p>
       </Sheet>
     </li>
+  );
+}
+
+/**
+ * Pins the gym to where the lifter stands, so a workout started there picks it by itself
+ * (useAutoGym). Location is read once, on this tap.
+ */
+function GymPin({ gym }: { gym: GymLocation }) {
+  const update = useLocationStore((s) => s.update);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ text: string; denied?: boolean } | null>(null);
+  const pinned = gym.lat !== undefined && gym.lng !== undefined;
+
+  async function pin() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const access = await requestAccess("location");
+      if (access === "denied") {
+        setMessage({ text: "Location is off for ABOT, so the gym cannot be pinned.", denied: true });
+        return;
+      }
+      const fix = await currentPosition();
+      update(gym.id, { lat: fix.lat, lng: fix.lng });
+      setMessage({ text: `Pinned within ${Math.round(fix.accuracy)} m.` });
+    } catch {
+      setMessage({ text: "Could not find where you are. Try again near a window or outdoors." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-ctl border border-line bg-surface-2 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="flex min-w-0 items-center gap-2 text-xs text-text-muted">
+          <MapPin aria-hidden="true" size={16} className={pinned ? "shrink-0 text-accent" : "shrink-0"} />
+          {pinned ? "Picked by itself when a workout starts here." : "Pin it to have workouts here pick it by themselves."}
+        </p>
+        {pinned ? (
+          <Button variant="ghost" onClick={() => update(gym.id, { lat: undefined, lng: undefined })} className="shrink-0">
+            Unpin
+          </Button>
+        ) : (
+          <Button onClick={() => void pin()} disabled={busy} className="shrink-0">
+            {busy ? "Finding you…" : "Pin to where I am"}
+          </Button>
+        )}
+      </div>
+      {message && (
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p role="status" className="text-xs text-text-muted">
+            {message.text}
+          </p>
+          {message.denied && isNativeApp() && (
+            <Button variant="ghost" onClick={() => void openAppSettings()} className="shrink-0">
+              Open settings
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
