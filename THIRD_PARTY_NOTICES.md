@@ -32,7 +32,8 @@ SOFTWARE.
 
 ## Exercise data and images
 
-Exercise instructions in `src/data/seed-exercises.generated.ts`, the on-demand catalog, and the
-exercise images loaded from GitHub come from
+Exercise instructions in `src/data/seed-exercises.generated.ts`, the on-demand catalog, the
+exercise images loaded from GitHub, and the list thumbnails in `public/thumbs/` (first frame,
+cropped and scaled by `scripts/make-exercise-thumbs.py`) come from
 [free-exercise-db](https://github.com/yuhonas/free-exercise-db), released into the public
 domain under the Unlicense.

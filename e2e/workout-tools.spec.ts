@@ -51,25 +51,24 @@ test("replace swaps the movement and keeps what was typed", async ({ page }) => 
   await logSet(page, 1, "60", "8");
 });
 
-test("each exercise row shows a muscle map of what it trains", async ({ page }) => {
+test("the library is grouped by muscle, each exercise with a bundled photo", async ({ page }) => {
   await page.goto("/exercises");
   await expect(page.getByRole("button", { name: "Body map" })).toHaveCount(0);
-  const thumb = page.getByRole("link", { name: /^Squat \(Barbell\)/ }).locator("[data-thumb]");
-  await expect(thumb).toBeVisible();
-  await expect(thumb).toHaveAttribute("data-primary", /quads/);
-  // The quads light in Volt through the shared body drawing; untrained muscles stay unset.
-  const vars = await thumb.evaluate((el) => ({
-    quads: getComputedStyle(el).getPropertyValue("--m-quadriceps").trim(),
-    chest: getComputedStyle(el).getPropertyValue("--m-chest").trim(),
-  }));
-  expect(vars.quads).toBe("#ccff00");
-  expect(vars.chest).toBe("");
-  await expect(page.locator("#abot-muscle-body")).toHaveCount(1);
+  const chest = page.getByRole("region", { name: /^Chest/ });
+  const legs = page.getByRole("region", { name: /^Quads/ });
+  await expect(chest.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toBeVisible();
+  await expect(legs.getByRole("link", { name: /^Squat \(Barbell\)/ })).toBeVisible();
+  await expect(chest.getByRole("link", { name: /^Squat/ })).toHaveCount(0);
+
+  // The photo ships with the app: same origin, and it really decodes.
+  const img = chest.getByRole("link", { name: /^Bench Press \(Barbell\)/ }).locator("[data-thumb] img");
+  await expect(img).toHaveAttribute("src", "/thumbs/bench-press-barbell.webp");
+  await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBe(128);
 
   await page.goto("/workout");
   await page.getByRole("button", { name: "Start an empty workout" }).click();
   await page.getByRole("button", { name: "Add exercise" }).click();
-  await expect(page.getByRole("dialog").locator("[data-thumb]").first()).toBeVisible();
+  await expect(page.getByRole("dialog").locator("[data-thumb] img").first()).toBeVisible();
 });
 
 test("the muscle filter counts groups drawn as one shape together", async ({ page }) => {

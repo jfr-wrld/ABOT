@@ -50,6 +50,15 @@ function LibraryScreen() {
     );
   }, [list, query, muscle, equipment]);
 
+  // One section per muscle, in the dropdown's order; an exercise sits under its first primary muscle.
+  const groups = useMemo(() => {
+    const by = new Map<MuscleGroup, typeof filtered>();
+    for (const e of filtered) {
+      const m = e.primaryMuscles[0] ?? "full_body";
+      by.set(m, [...(by.get(m) ?? []), e]);
+    }
+    return MUSCLES.filter((m) => by.has(m)).map((m) => ({ muscle: m, items: by.get(m)! }));
+  }, [filtered]);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -111,33 +120,47 @@ function LibraryScreen() {
           No exercise matches these filters. Clear a filter, or add it as a new exercise with the button above.
         </p>
       ) : (
-        <ul className="mt-3 flex flex-col px-2">
-          {filtered.map((e) => {
-            const pr = prTable[e.id]?.heaviest_weight;
-            return (
-              <li key={e.id}>
-                <Link
-                  href={`/exercises/${e.id}`}
-                  className="flex min-h-16 items-center gap-3 rounded-xl px-2 py-1 hover:bg-surface active:bg-surface-2"
-                >
-                  <ExerciseThumb exercise={e} size={48} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">
-                      {e.name}
-                      {e.isCustom && <span className="ml-2 text-xs font-normal text-text-muted">custom</span>}
-                      {e.isCatalog && <span className="ml-2 text-xs font-normal text-text-muted">catalog</span>}
-                    </span>
-                    <span className="block text-xs text-text-muted">
-                      {primaryMusclesLabel(e)} · {EQUIPMENT_LABELS[e.equipment]}
-                      {pr && ` · best ${pr.weightKg} kg × ${pr.reps}`}
-                    </span>
-                  </span>
-                  <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="mt-3 flex flex-col gap-4">
+          {groups.map(({ muscle: m, items }) => (
+            <section key={m} aria-labelledby={`group-${m}`}>
+              {/* Sticky so the muscle stays named while its list scrolls. */}
+              <h2
+                id={`group-${m}`}
+                className="sticky top-0 z-10 flex items-baseline justify-between bg-bg/95 px-4 py-2 backdrop-blur-sm"
+              >
+                <span className="text-sm font-bold">{MUSCLE_GROUP_LABELS[m]}</span>
+                <span className="num text-xs text-text-muted">{items.length}</span>
+              </h2>
+              <ul className="flex flex-col px-2">
+                {items.map((e) => {
+                  const pr = prTable[e.id]?.heaviest_weight;
+                  return (
+                    <li key={e.id}>
+                      <Link
+                        href={`/exercises/${e.id}`}
+                        className="flex min-h-16 items-center gap-3 rounded-xl px-2 py-1 hover:bg-surface active:bg-surface-2"
+                      >
+                        <ExerciseThumb exercise={e} size={52} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold">
+                            {e.name}
+                            {e.isCustom && <span className="ml-2 text-xs font-normal text-text-muted">custom</span>}
+                            {e.isCatalog && <span className="ml-2 text-xs font-normal text-text-muted">catalog</span>}
+                          </span>
+                          <span className="block text-xs text-text-muted">
+                            {primaryMusclesLabel(e)} · {EQUIPMENT_LABELS[e.equipment]}
+                            {pr && ` · best ${pr.weightKg} kg × ${pr.reps}`}
+                          </span>
+                        </span>
+                        <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
 
       {formOpen && (

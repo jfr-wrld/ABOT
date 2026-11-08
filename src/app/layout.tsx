@@ -9,7 +9,6 @@ import { DynamicIsland } from "@/components/layout/DynamicIsland";
 import { SplashScreen } from "@/components/animations/SplashScreen";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { MotionProvider } from "@/components/animations/MotionProvider";
-import { MuscleSprite } from "@/components/anatomy/MuscleSprite";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -32,8 +31,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        {/* Rendered on the server: the shared body drawing every muscle thumbnail points at. */}
-        <MuscleSprite />
         <MotionProvider>
           <StoreHydrator />
           <TabNotice />
