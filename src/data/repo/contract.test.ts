@@ -88,6 +88,7 @@ describe.each([
         showRpe: false,
       },
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },
+      exerciseMedia: { "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" } },
     };
     await repo.replaceAll(data);
     const snap = await repo.snapshot();
@@ -137,7 +138,7 @@ describe.each([
   it("replaceAll clears a running rest timer", async () => {
     const repo = make();
     await repo.kv.set("restTimer", { endsAt: 1, totalSec: 90, sessionExerciseId: "x" });
-    await repo.replaceAll({ sessions: [], routines: [], exercises: [], locations: [], settings: null, activeWorkout: null });
+    await repo.replaceAll({ sessions: [], routines: [], exercises: [], locations: [], settings: null, activeWorkout: null, exerciseMedia: {} });
     expect(await repo.kv.get("restTimer")).toBeNull();
   });
 
@@ -145,9 +146,28 @@ describe.each([
     const repo = make();
     await repo.sessions.put(session("a"));
     await repo.sessions.put(session("b"));
-    await repo.mergeAll({ sessions: [{ ...session("a"), name: "A2" }, session("c")], routines: [routine("r")], exercises: [], locations: [location("g")] });
+    await repo.mergeAll({ sessions: [{ ...session("a"), name: "A2" }, session("c")], routines: [routine("r")], exercises: [], locations: [location("g")], exerciseMedia: {} });
     expect((await repo.sessions.all()).map((s) => `${s.id}:${s.name}`).sort()).toEqual(["a:A2", "b:b", "c:c"]);
     expect((await repo.routines.all()).map((r) => r.id)).toEqual(["r"]);
     expect((await repo.locations.all()).map((l) => l.id)).toEqual(["g"]);
+  });
+});
+
+describe.each([
+  ["memory", () => createMemoryRepository()],
+  ["dexie", () => createDexieRepository(`t-${crypto.randomUUID()}`)],
+] as [string, () => Repository][])("%s repository exercise media", (_n, make) => {
+  it("snapshot defaults to no custom videos", async () => {
+    expect((await make().snapshot()).exerciseMedia).toEqual({});
+  });
+  it("mergeAll adds custom videos and the incoming link wins per exercise", async () => {
+    const repo = make();
+    await repo.kv.set("exerciseMedia", { a: { customVideoUrl: "https://youtu.be/aaaaaaaaaaa" }, b: { customVideoUrl: "https://youtu.be/bbbbbbbbbbb" } });
+    await repo.mergeAll({ sessions: [], routines: [], exercises: [], locations: [], exerciseMedia: { b: { customVideoUrl: "https://youtu.be/BBBBBBBBBBB" }, c: { customVideoUrl: "https://youtu.be/ccccccccccc" } } });
+    expect((await repo.snapshot()).exerciseMedia).toEqual({
+      a: { customVideoUrl: "https://youtu.be/aaaaaaaaaaa" },
+      b: { customVideoUrl: "https://youtu.be/BBBBBBBBBBB" },
+      c: { customVideoUrl: "https://youtu.be/ccccccccccc" },
+    });
   });
 });

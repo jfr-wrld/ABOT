@@ -77,6 +77,7 @@ describe("importBackup", () => {
     locations: [],
     settings: null,
     activeWorkout: live("from-file"),
+    exerciseMedia: {},
   });
   const backupOf = (data: RepoSnapshot) => ({ app: "ABOT" as const, schemaVersion: 1 as const, exportedAt: "x", data });
 
@@ -111,7 +112,7 @@ describe("merge keeps a single default gym (final review #5)", () => {
     app: "ABOT" as const,
     schemaVersion: 1 as const,
     exportedAt: "x",
-    data: { sessions: [], routines: [], exercises: [], locations, settings: null, activeWorkout: null },
+    data: { sessions: [], routines: [], exercises: [], locations, settings: null, activeWorkout: null, exerciseMedia: {} },
   });
 
   it("re-merging your own backup keeps the local default gym", async () => {
@@ -136,5 +137,31 @@ describe("merge keeps a single default gym (final review #5)", () => {
     await importBackup(repo, backupOf([gym("other", true)]), "merge");
     const locs = await repo.locations.all();
     expect(locs.filter((l) => l.isDefault).map((l) => l.id)).toEqual(["home"]);
+  });
+});
+
+describe("custom videos in backups", () => {
+  it("keep valid links and drop anything that is not a supported video", () => {
+    const text = JSON.stringify({
+      app: "ABOT",
+      schemaVersion: 1,
+      exportedAt: "x",
+      data: {
+        sessions: [], routines: [], exercises: [], locations: [], settings: null, activeWorkout: null,
+        exerciseMedia: {
+          "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" },
+          "squat-barbell": { customVideoUrl: "javascript:alert(1)" },
+          "push-up": "nope",
+        },
+      },
+    });
+    const parsed = parseBackup(text);
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.data.exerciseMedia).toEqual({ "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" } });
+  });
+  it("an older backup without the field parses to no custom videos", () => {
+    const parsed = parseBackup(JSON.stringify({ app: "ABOT", schemaVersion: 1, exportedAt: "x", data: { sessions: [] } }));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.data.exerciseMedia).toEqual({});
   });
 });

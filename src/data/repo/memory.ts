@@ -69,6 +69,7 @@ export function createMemoryRepository(): Repository {
       else kv.delete("settings");
       kv.set("activeWorkout", clone(data.activeWorkout));
       kv.set("restTimer", null);
+      kv.set("exerciseMedia", clone(data.exerciseMedia));
     },
     async commitFinishedWorkout(session) {
       sessions.map.set(session.id, clone(session));
@@ -80,6 +81,7 @@ export function createMemoryRepository(): Repository {
       for (const r of data.routines) routines.map.set(r.id, clone(r));
       for (const e of data.exercises) exercises.map.set(e.id, clone(e));
       for (const l of data.locations) locations.map.set(l.id, clone(l));
+      kv.set("exerciseMedia", { ...((kv.get("exerciseMedia") as object) ?? {}), ...clone(data.exerciseMedia) });
     },
     async snapshot() {
       return {
@@ -89,6 +91,7 @@ export function createMemoryRepository(): Repository {
         locations: await locations.all(),
         settings: (await repo.kv.get("settings")) ?? null,
         activeWorkout: (await repo.kv.get("activeWorkout")) ?? null,
+        exerciseMedia: (await repo.kv.get("exerciseMedia")) ?? {},
       };
     },
   };

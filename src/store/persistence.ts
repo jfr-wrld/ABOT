@@ -54,7 +54,11 @@ export async function hydrateStores(repo: Repository): Promise<void> {
   try {
     useWorkoutStore.setState({ sessions: snap.sessions, active: snap.activeWorkout, restTimer });
     useRoutineStore.setState({ routines: snap.routines });
-    useExerciseStore.setState({ custom: snap.exercises.map((e: Exercise) => normalizeExercise(e)), catalog });
+    useExerciseStore.setState({
+      custom: snap.exercises.map((e: Exercise) => normalizeExercise(e)),
+      catalog,
+      mediaOverrides: snap.exerciseMedia,
+    });
     useLocationStore.setState({ locations: snap.locations });
     // A repository without settings means defaults, not "keep whatever was in memory".
     useSettingsStore.setState(snap.settings ?? DEFAULT_STORED_SETTINGS);
@@ -73,6 +77,7 @@ export function snapshotFromStores(): RepoSnapshot {
     locations: useLocationStore.getState().locations,
     settings: pickSettings(useSettingsStore.getState()),
     activeWorkout: w.active,
+    exerciseMedia: useExerciseStore.getState().mediaOverrides,
   };
 }
 
@@ -82,7 +87,13 @@ export function snapshotFromStores(): RepoSnapshot {
  * older version.
  */
 type TableName = "sessions" | "routines" | "exercises" | "locations";
-type WriteKey = `${TableName}:${string}` | "kv:activeWorkout" | "kv:restTimer" | "kv:settings" | `finish:${string}`;
+type WriteKey =
+  | `${TableName}:${string}`
+  | "kv:activeWorkout"
+  | "kv:restTimer"
+  | "kv:settings"
+  | "kv:exerciseMedia"
+  | `finish:${string}`;
 
 function currentRows(table: TableName): { id: string }[] {
   switch (table) {
@@ -101,6 +112,7 @@ async function writeKey(repo: Repository, key: WriteKey): Promise<void> {
   if (key === "kv:activeWorkout") return repo.kv.set("activeWorkout", useWorkoutStore.getState().active);
   if (key === "kv:restTimer") return repo.kv.set("restTimer", useWorkoutStore.getState().restTimer);
   if (key === "kv:settings") return repo.kv.set("settings", pickSettings(useSettingsStore.getState()));
+  if (key === "kv:exerciseMedia") return repo.kv.set("exerciseMedia", useExerciseStore.getState().mediaOverrides);
   const sep = key.indexOf(":");
   const kind = key.slice(0, sep);
   const id = key.slice(sep + 1);
@@ -199,7 +211,9 @@ export function attachPersistence(repo: Repository): PersistenceHandle {
       if (!loadingFromRepo) for (const id of changedIds(prev.routines, next.routines)) enqueue(`routines:${id}`);
     }),
     useExerciseStore.subscribe((next, prev) => {
-      if (!loadingFromRepo) for (const id of changedIds(prev.custom, next.custom)) enqueue(`exercises:${id}`);
+      if (loadingFromRepo) return;
+      for (const id of changedIds(prev.custom, next.custom)) enqueue(`exercises:${id}`);
+      if (next.mediaOverrides !== prev.mediaOverrides) enqueue("kv:exerciseMedia");
     }),
     useLocationStore.subscribe((next, prev) => {
       if (!loadingFromRepo) for (const id of changedIds(prev.locations, next.locations)) enqueue(`locations:${id}`);

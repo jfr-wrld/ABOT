@@ -11,6 +11,9 @@ interface ExerciseState {
   /** The optional downloaded catalog (stored separately, not backed up). */
   catalog: Exercise[];
   setCatalog: (rows: Exercise[]) => void;
+  /** Videos the user pasted per exercise; works for seed exercises too. */
+  mediaOverrides: Record<string, { customVideoUrl: string }>;
+  setCustomVideo: (exerciseId: string, url: string | null) => void;
   /** Keeps a copy of a catalog exercise once it is used, so history and backups keep its name. */
   adopt: (e: Exercise) => void;
   addCustom: (ex: ExerciseDraft) => Exercise;
@@ -23,6 +26,14 @@ export const useExerciseStore = create<ExerciseState>()(
       custom: [],
       catalog: [],
       setCatalog: (catalog) => set({ catalog }),
+      mediaOverrides: {},
+      setCustomVideo: (id, url) =>
+        set((s) => {
+          const next = { ...s.mediaOverrides };
+          if (url) next[id] = { customVideoUrl: url };
+          else delete next[id];
+          return { mediaOverrides: next };
+        }),
       adopt: (e) => {
         if (!e.isCatalog) return;
         set((s) => (s.custom.some((c) => c.id === e.id) ? s : { custom: [...s.custom, e] }));

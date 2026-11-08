@@ -78,6 +78,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         else await db.kv.delete("settings");
         await db.kv.put({ key: "activeWorkout", value: data.activeWorkout });
         await db.kv.put({ key: "restTimer", value: null });
+        await db.kv.put({ key: "exerciseMedia", value: data.exerciseMedia });
       });
     },
     async commitFinishedWorkout(session) {
@@ -88,11 +89,13 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
       });
     },
     async mergeAll(data) {
-      await db.transaction("rw", [db.sessions, db.routines, db.exercises, db.locations], async () => {
+      await db.transaction("rw", [db.sessions, db.routines, db.exercises, db.locations, db.kv], async () => {
         await db.sessions.bulkPut(data.sessions);
         await db.routines.bulkPut(data.routines);
         await db.exercises.bulkPut(data.exercises);
         await db.locations.bulkPut(data.locations);
+        const current = ((await db.kv.get("exerciseMedia"))?.value as KvValues["exerciseMedia"] | undefined) ?? {};
+        await db.kv.put({ key: "exerciseMedia", value: { ...current, ...data.exerciseMedia } });
       });
     },
     async snapshot() {
@@ -103,6 +106,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         locations: await db.locations.toArray(),
         settings: ((await db.kv.get("settings"))?.value as KvValues["settings"] | undefined) ?? null,
         activeWorkout: ((await db.kv.get("activeWorkout"))?.value as KvValues["activeWorkout"] | undefined) ?? null,
+        exerciseMedia: ((await db.kv.get("exerciseMedia"))?.value as KvValues["exerciseMedia"] | undefined) ?? {},
       }));
     },
   };

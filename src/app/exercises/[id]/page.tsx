@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseForm } from "@/components/exercises/ExerciseForm";
+import { SmartExerciseMedia } from "@/components/exercise/SmartExerciseMedia";
 import { SetTypeChip } from "@/components/workout/SetTypeChip";
 import { CHART, tooltipStyle } from "@/components/analytics/chartTheme";
 import { buildPRTable, exerciseHistory } from "@/lib/calc";
@@ -97,6 +98,8 @@ function Detail() {
       />
 
       <div className="flex flex-col gap-3 px-4 pt-4">
+        <SmartExerciseMedia exercise={exercise} />
+
         <section aria-labelledby="pr-heading" className="rounded-card bg-surface p-3">
           <h2 id="pr-heading" className="flex items-center gap-2 text-sm font-semibold">
             <Trophy aria-hidden="true" size={16} className="text-accent" /> Personal records

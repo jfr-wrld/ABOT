@@ -2,6 +2,7 @@ import type { GymLocation } from "@/types/workout";
 import { DEFAULT_SETTINGS } from "@/types/workout";
 import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./normalize";
 import type { Repository, RepoSnapshot, StoredSettings } from "./repo";
+import { parseVideoUrl } from "@/lib/videoUrl";
 
 export interface AbotBackup {
   app: "ABOT";
@@ -61,6 +62,18 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
   };
 }
 
+/** Only links ABOT can actually play survive; anything else (or a script URL) is dropped. */
+function normalizeExerciseMedia(raw: unknown): RepoSnapshot["exerciseMedia"] {
+  if (!isObj(raw)) return {};
+  const out: RepoSnapshot["exerciseMedia"] = {};
+  for (const [id, v] of Object.entries(raw)) {
+    if (isObj(v) && typeof v.customVideoUrl === "string" && parseVideoUrl(v.customVideoUrl)) {
+      out[id] = { customVideoUrl: v.customVideoUrl.trim() };
+    }
+  }
+  return out;
+}
+
 function cleanList<T>(raw: unknown, fn: (x: unknown) => T | null): { rows: T[]; dropped: number } {
   const input = Array.isArray(raw) ? raw : [];
   const rows = input.map(fn).filter((x): x is T => x !== null);
@@ -97,6 +110,7 @@ export function parseBackup(
       locations: locations.rows,
       settings: normalizeSettings(data.settings),
       activeWorkout: active ? { ...active, status: "active" } : null,
+      exerciseMedia: normalizeExerciseMedia(data.exerciseMedia),
     },
   };
   return {
@@ -123,7 +137,7 @@ export async function importBackup(repo: Repository, backup: AbotBackup, mode: "
     await repo.replaceAll(backup.data);
     return;
   }
-  const { sessions, routines, exercises, locations } = backup.data;
+  const { sessions, routines, exercises, locations, exerciseMedia } = backup.data;
   const local = await repo.locations.all();
   const localDefault = local.find((l) => l.isDefault)?.id;
   const fileDefault = locations.find((l) => l.isDefault)?.id;
@@ -134,5 +148,5 @@ export async function importBackup(repo: Repository, backup: AbotBackup, mode: "
     // Local gyms not in the file are rewritten only if their default flag has to change.
     ...local.filter((l) => !incomingIds.has(l.id) && l.isDefault !== (l.id === defaultId)).map((l) => ({ ...l, isDefault: l.id === defaultId })),
   ];
-  await repo.mergeAll({ sessions, routines, exercises, locations: merged });
+  await repo.mergeAll({ sessions, routines, exercises, locations: merged, exerciseMedia });
 }

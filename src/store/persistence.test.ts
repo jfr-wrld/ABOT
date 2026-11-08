@@ -331,3 +331,23 @@ describe("import through the queue (final review #4)", () => {
     expect(useSettingsStore.getState().showRpe).toBe(true);
   });
 });
+
+describe("custom exercise videos", () => {
+  it("are saved, reloaded and exported", async () => {
+    const repo = mem();
+    const p = await attach(repo);
+    useExerciseStore.getState().setCustomVideo("bench-press-barbell", "https://youtu.be/dQw4w9WgXcQ");
+    await p.flush();
+    expect(await repo.kv.get("exerciseMedia")).toEqual({ "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" } });
+    expect(snapshotFromStores().exerciseMedia).toEqual({ "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" } });
+    // Simulate a reload: memory is gone, persistence is not watching while it is cleared.
+    p.detach();
+    useExerciseStore.setState({ mediaOverrides: {} });
+    await hydrateStores(repo);
+    expect(useExerciseStore.getState().mediaOverrides["bench-press-barbell"]?.customVideoUrl).toBe("https://youtu.be/dQw4w9WgXcQ");
+    const p2 = await attach(repo);
+    useExerciseStore.getState().setCustomVideo("bench-press-barbell", null);
+    await p2.flush();
+    expect(await repo.kv.get("exerciseMedia")).toEqual({});
+  });
+});

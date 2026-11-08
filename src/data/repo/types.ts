@@ -9,11 +9,15 @@ export interface RestTimerState {
   sessionExerciseId: string;
 }
 
+/** Videos the user pasted for an exercise, keyed by exercise id (seed, custom or catalog). */
+export type ExerciseMediaOverrides = Record<string, { customVideoUrl: string }>;
+
 export interface KvValues {
   settings: StoredSettings;
   activeWorkout: WorkoutSession | null;
   restTimer: RestTimerState | null;
   migratedFromLocalStorage: boolean;
+  exerciseMedia: ExerciseMediaOverrides;
 }
 export type KvKey = keyof KvValues;
 
@@ -31,6 +35,7 @@ export interface RepoSnapshot {
   locations: GymLocation[];
   settings: StoredSettings | null;
   activeWorkout: WorkoutSession | null;
+  exerciseMedia: ExerciseMediaOverrides;
 }
 
 /**
@@ -62,7 +67,7 @@ export interface Repository {
    */
   commitFinishedWorkout(session: WorkoutSession): Promise<void>;
   /** Adds or overwrites rows by id in one transaction; removes nothing. */
-  mergeAll(data: Pick<RepoSnapshot, "sessions" | "routines" | "exercises" | "locations">): Promise<void>;
+  mergeAll(data: Pick<RepoSnapshot, "sessions" | "routines" | "exercises" | "locations" | "exerciseMedia">): Promise<void>;
   /** Replaces every table and the settings/active workout in one transaction; clears the rest timer. */
   replaceAll(data: RepoSnapshot): Promise<void>;
   snapshot(): Promise<RepoSnapshot>;
