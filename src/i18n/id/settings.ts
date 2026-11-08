@@ -396,4 +396,15 @@ export const settings: Record<string, string> = {
   "Loading saved workouts from this device": "Memuat latihan tersimpan dari perangkat ini",
   "ABOT keeps your changes in memory and retries when you come back to the app. Export a backup from Settings to keep a copy now.":
     "ABOT menyimpan perubahanmu di memori dan mencoba lagi saat kamu kembali ke aplikasi. Ekspor backup dari Pengaturan untuk menyimpan salinan sekarang.",
+  // Errors from data and photo helpers, translated where they are shown
+  "This file is not valid JSON": "File ini bukan JSON yang valid",
+  "This is not an ABOT backup": "Ini bukan file backup ABOT",
+  "This backup was made by a newer version of ABOT": "Backup ini dibuat oleh versi ABOT yang lebih baru",
+  "Pick a photo (JPEG, PNG or WebP).": "Pilih foto (JPEG, PNG atau WebP).",
+  "This photo could not be read. Try a JPEG or PNG.": "Foto ini tidak bisa dibaca. Coba JPEG atau PNG.",
+  "This browser cannot resize photos.": "Browser ini tidak bisa mengubah ukuran foto.",
+  "This photo is too detailed to store. Try another one.": "Foto ini terlalu besar untuk disimpan. Coba foto lain.",
+  "This browser cannot draw photos.": "Browser ini tidak bisa menggambar foto.",
+  "Could not download the catalog. Check your connection and try again.": "Katalog gagal diunduh. Cek koneksimu lalu coba lagi.",
+  "The catalog file was not in the expected format.": "Format file katalog tidak sesuai.",
 };

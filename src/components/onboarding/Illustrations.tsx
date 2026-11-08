@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { Check, Dumbbell, House, Search, Trophy, WifiOff } from "lucide-react";
+import { useT } from "@/i18n";
 
 /*
  * The intro's three illustrations, drawn from ABOT's own parts (the set row, the rest capsule, the
@@ -151,11 +152,12 @@ function Row({ n, weight, reps, dim }: { n: number; weight: string; reps: string
 /** Slide 2: a phone with the rest capsule above the dock, counting down inside the thumb's reach. */
 export function RestScene() {
   const reduce = useReducedMotion();
+  const t = useT();
   const [left, setLeft] = useState(90);
   useEffect(() => {
     if (reduce) return;
-    const t = setInterval(() => setLeft((s) => (s <= 75 ? 90 : s - 1)), 1000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setLeft((s) => (s <= 75 ? 90 : s - 1)), 1000);
+    return () => clearInterval(timer);
   }, [reduce]);
   const clock = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
 
@@ -187,7 +189,7 @@ export function RestScene() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             transition={{ ...SPRING, delay: 0.5 }}
           >
-            <span className="label-caps !text-[8px]">Rest</span>
+            <span className="label-caps !text-[8px]">{t("Rest")}</span>
             <span className="num text-sm font-extrabold text-accent">{clock}</span>
             <span className="ml-auto flex gap-2 text-text-muted">
               <span className="text-xs">−</span>

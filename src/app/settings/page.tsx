@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SECTION_TITLE, SettingsHome, type SettingsSection } from "@/components/settings/SettingsHome";
 import { DataSection, GeneralSection, NotificationsSection, WorkoutSection } from "@/components/settings/sections";
 import { AboutSection, FaqSection } from "@/components/settings/SupportSections";
+import { useT } from "@/i18n";
 
 const SECTIONS: Record<SettingsSection, () => React.ReactNode> = {
   general: GeneralSection,
@@ -32,6 +33,7 @@ function SettingsScreen() {
   const router = useRouter();
   const raw = useSearchParams().get("section");
   const section = raw && raw in SECTIONS ? (raw as SettingsSection) : null;
+  const t = useT();
 
   useEffect(() => {
     const to = HASH_SECTION[window.location.hash];
@@ -41,7 +43,7 @@ function SettingsScreen() {
   if (!section) {
     return (
       <main className="flex flex-1 flex-col">
-        <PageHeader title="Settings" back={{ href: "/", label: "Home" }} />
+        <PageHeader title={t("Settings")} back={{ href: "/", label: t("Home") }} />
         <SettingsHome />
       </main>
     );
@@ -49,7 +51,7 @@ function SettingsScreen() {
   const Body = SECTIONS[section];
   return (
     <main className="flex flex-1 flex-col">
-      <PageHeader title={SECTION_TITLE[section]} back={{ href: "/settings", label: "Settings" }} />
+      <PageHeader title={t(SECTION_TITLE[section])} back={{ href: "/settings", label: t("Settings") }} />
       <div className="px-4 pb-8 pt-4">
         <Body />
       </div>

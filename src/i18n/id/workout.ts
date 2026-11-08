@@ -228,4 +228,7 @@ export const workout: Record<string, string> = {
   Kettlebell: "Kettlebell",
   Band: "Band",
   Other: "Lainnya",
+  "Morning Workout": "Latihan Pagi",
+  "Afternoon Workout": "Latihan Siang",
+  "Evening Workout": "Latihan Malam",
 };

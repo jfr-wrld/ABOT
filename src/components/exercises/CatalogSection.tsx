@@ -80,7 +80,7 @@ export function CatalogSection() {
       )}
       {phase.kind === "error" && (
         <p role="alert" className="mt-2 text-xs text-failure">
-          {phase.message}
+          {t(phase.message)}
         </p>
       )}
 

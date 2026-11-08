@@ -7,10 +7,9 @@ import { backupFileName, backupFromSnapshot, importBackup, parseBackup, type Abo
 import { getActivePersistence, getActiveRepository, hydrateStores, snapshotFromStores } from "@/store/persistence";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { saveFile } from "@/lib/native/files";
+import { useT } from "@/i18n";
 
 type Pending = { backup: AbotBackup; counts: BackupCounts; fileName: string };
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export function BackupSection() {
   const [pending, setPending] = useState<Pending | null>(null);
@@ -19,16 +18,21 @@ export function BackupSection() {
   const [confirmReplace, setConfirmReplace] = useState(false);
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const t = useT();
 
   async function doExport() {
     setError(null);
     try {
       const backup = backupFromSnapshot(snapshotFromStores());
       const saved = await saveFile(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }), backupFileName());
-      const where = saved.kind === "saved" ? ` to ${saved.folder}` : "";
-      setStatus(`Exported ${plural(backup.data.sessions.length, "workout", "workouts")}${where}.`);
+      const n = backup.data.sessions.length;
+      setStatus(
+        saved.kind === "saved"
+          ? t.n(n, "Exported {n} workout to {folder}.", "Exported {n} workouts to {folder}.", { folder: saved.folder })
+          : t.n(n, "Exported {n} workout.", "Exported {n} workouts."),
+      );
     } catch (e) {
-      setError(`Export failed: ${e instanceof Error ? e.message : String(e)}.`);
+      setError(t("Export failed: {error}.", { error: e instanceof Error ? e.message : String(e) }));
     }
   }
 
@@ -41,7 +45,7 @@ export function BackupSection() {
     try {
       text = await file.text();
     } catch {
-      return setError("This file could not be read. Pick it again.");
+      return setError(t("This file could not be read. Pick it again."));
     }
     const parsed = parseBackup(text);
     if (!parsed.ok) return setError(parsed.error);
@@ -52,7 +56,7 @@ export function BackupSection() {
     const repo = getActiveRepository();
     const persistence = getActivePersistence();
     if (!repo || !persistence || !pending) {
-      setError("Saved data is not loaded, so nothing can be imported. Reload ABOT and try again.");
+      setError(t("Saved data is not loaded, so nothing can be imported. Reload ABOT and try again."));
       return;
     }
     setBusy(true);
@@ -62,7 +66,7 @@ export function BackupSection() {
       await persistence.runExclusive(() => importBackup(repo, pending.backup, mode));
     } catch (e) {
       // Both import modes run in one transaction, so a failure leaves the data as it was.
-      setError(`Import failed: ${msg(e)}. Your data was not changed.`);
+      setError(t("Import failed: {error}. Your data was not changed.", { error: msg(e) }));
       setBusy(false);
       setConfirmReplace(false);
       return;
@@ -70,12 +74,14 @@ export function BackupSection() {
     try {
       await persistence.runExclusive(() => hydrateStores(repo));
       setStatus(
-        `Imported ${plural(pending.counts.sessions, "workout", "workouts")} (${mode === "merge" ? "merged" : "replaced all data"}).`,
+        t.n(pending.counts.sessions, "Imported {n} workout ({how}).", "Imported {n} workouts ({how}).", {
+          how: mode === "merge" ? t("merged") : t("replaced all data"),
+        }),
       );
       setPending(null);
       if (fileInput.current) fileInput.current.value = "";
     } catch (e) {
-      setError(`The backup was imported, but ABOT could not reload it (${msg(e)}). Reload the page to see it.`);
+      setError(t("The backup was imported, but ABOT could not reload it ({error}). Reload the page to see it.", { error: msg(e) }));
     } finally {
       setBusy(false);
       setConfirmReplace(false);
@@ -87,19 +93,19 @@ export function BackupSection() {
       <InfoTip
         title={
           <h2 id="backup-heading" className="text-sm font-semibold">
-            Backup file
+            {t("Backup file")}
           </h2>
         }
-        name="backup file"
+        name={t("backup file")}
       >
-        A copy of every workout, routine, custom exercise, gym and setting on this device.
+        {t("A copy of every workout, routine, custom exercise, gym and setting on this device.")}
       </InfoTip>
 
-      <Button onClick={doExport}>Export backup</Button>
+      <Button onClick={doExport}>{t("Export backup")}</Button>
 
       <div>
         <label htmlFor="import-file" className="mb-1 block text-sm font-semibold">
-          Import backup
+          {t("Import backup")}
         </label>
         <input
           ref={fileInput}
@@ -113,33 +119,38 @@ export function BackupSection() {
 
       {error && (
         <p role="alert" className="rounded-ctl border border-failure/60 px-3 py-2 text-sm text-failure">
-          {error}
+          {t(error)}
         </p>
       )}
 
       {pending && (
         <div className="rounded-ctl border border-line-strong p-3">
           <p className="text-sm">
-            <span className="font-semibold">{pending.fileName}</span> contains{" "}
-            {plural(pending.counts.sessions, "workout", "workouts")}, {plural(pending.counts.routines, "routine", "routines")},{" "}
-            {plural(pending.counts.exercises, "custom exercise", "custom exercises")}
-            {pending.counts.locations > 0 && `, ${plural(pending.counts.locations, "gym", "gyms")}`}.
+            <span className="font-semibold">{pending.fileName}</span>{" "}
+            {t("contains {list}.", {
+              list: [
+                t.n(pending.counts.sessions, "{n} workout", "{n} workouts"),
+                t.n(pending.counts.routines, "{n} routine", "{n} routines"),
+                t.n(pending.counts.exercises, "{n} custom exercise", "{n} custom exercises"),
+                ...(pending.counts.locations > 0 ? [t.n(pending.counts.locations, "{n} gym", "{n} gyms")] : []),
+              ].join(", "),
+            })}
           </p>
           {pending.counts.dropped > 0 && (
             <p className="mt-1 text-xs text-text-muted">
-              {plural(pending.counts.dropped, "damaged row", "damaged rows")} will be skipped.
+              {t.n(pending.counts.dropped, "{n} damaged row will be skipped.", "{n} damaged rows will be skipped.")}
             </p>
           )}
           <div className="mt-3 grid gap-2">
             <Button variant="primary" onClick={() => doImport("merge")} disabled={busy}>
-              Merge into my data
+              {t("Merge into my data")}
             </Button>
             <Button variant="danger" onClick={() => setConfirmReplace(true)} disabled={busy}>
-              Replace all my data
+              {t("Replace all my data")}
             </Button>
           </div>
           <p className="mt-2 text-xs text-text-muted">
-            Merge adds what is missing and keeps your workout in progress. Replace makes this device match the file.
+            {t("Merge adds what is missing and keeps your workout in progress. Replace makes this device match the file.")}
           </p>
         </div>
       )}
@@ -153,19 +164,20 @@ export function BackupSection() {
       <Sheet
         open={confirmReplace}
         onClose={() => setConfirmReplace(false)}
-        title="Replace all data on this device?"
+        title={t("Replace all data on this device?")}
         footer={
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setConfirmReplace(false)}>Cancel</Button>
+            <Button onClick={() => setConfirmReplace(false)}>{t("Cancel")}</Button>
             <Button variant="danger" onClick={() => doImport("replace")} disabled={busy}>
-              Yes, replace everything
+              {t("Yes, replace everything")}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-text-muted">
-          Every workout, routine and setting here is removed and replaced with the file. Export a backup first if you
-          might need the current data.
+          {t(
+            "Every workout, routine and setting here is removed and replaced with the file. Export a backup first if you might need the current data.",
+          )}
         </p>
       </Sheet>
     </section>

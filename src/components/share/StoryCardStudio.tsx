@@ -259,7 +259,7 @@ function Studio({
     try {
       setPhoto(await createStoryPhoto(file));
     } catch (err) {
-      setStatus({ kind: "error", text: err instanceof Error ? err.message : t("This photo could not be read.") });
+      setStatus({ kind: "error", text: err instanceof Error ? t(err.message) : t("This photo could not be read.") });
     } finally {
       setPhotoBusy(false);
       if (fileInput.current) fileInput.current.value = "";

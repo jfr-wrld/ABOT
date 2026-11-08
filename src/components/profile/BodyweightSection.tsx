@@ -11,8 +11,9 @@ import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme"
 import { changeOver, dayKey } from "@/lib/bodyweight";
 import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
 import { PROFILE_LIMITS } from "@/types/workout";
+import { useT } from "@/i18n";
 
-const shortDate = (t: number) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+const shortDate = (at: number, locale: string) => new Date(at).toLocaleDateString(locale, { day: "numeric", month: "short" });
 
 /** Daily weigh-ins: log today's weight, see the trend, correct a mistake. */
 export function BodyweightSection({ now }: { now: number }) {
@@ -22,12 +23,13 @@ export function BodyweightSection({ now }: { now: number }) {
   const { weightUnit: unit, bodyweightKg } = useSettingsStore();
   const [draft, setDraft] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   const current = entries[entries.length - 1]?.weightKg ?? bodyweightKg;
   const change = changeOver(entries, 30, now);
   const loggedToday = entries.some((e) => e.id === dayKey(now));
   const recent = [...entries].reverse().slice(0, 7);
-  const chartData = entries.slice(-90).map((e) => ({ date: shortDate(e.date), w: Math.round(toDisplay(e.weightKg, unit) * 10) / 10 }));
+  const chartData = entries.slice(-90).map((e) => ({ date: shortDate(e.date, t.locale), w: Math.round(toDisplay(e.weightKg, unit) * 10) / 10 }));
   /** Bodyweight reads to 0.1 in the user's unit: "79.5", "80". */
   const shown = (kg: number) => String(Math.round(toDisplay(kg, unit) * 10) / 10);
 
@@ -35,7 +37,7 @@ export function BodyweightSection({ now }: { now: number }) {
     const kg = draft === null ? null : fromDisplay(draft, unit);
     const [min, max] = PROFILE_LIMITS.bodyweightKg;
     if (kg === null || kg < min || kg > max) {
-      setError(`Enter ${formatWeight(min, unit)} to ${formatWeight(max, unit)}`);
+      setError(t("Enter {min} to {max}", { min: formatWeight(min, unit), max: formatWeight(max, unit) }));
       return;
     }
     logWeight(kg);
@@ -46,7 +48,7 @@ export function BodyweightSection({ now }: { now: number }) {
   return (
     <section aria-labelledby="bw-heading" className="panel p-3">
       <h2 id="bw-heading" className="label-caps">
-        Bodyweight
+        {t("Bodyweight")}
       </h2>
       <div className="mt-1 flex items-baseline justify-between gap-3">
         <p className="num text-3xl font-bold tracking-tight">
@@ -56,7 +58,7 @@ export function BodyweightSection({ now }: { now: number }) {
         {change !== null && (
           <p className="num text-sm text-text-muted">
             {change > 0 ? "+" : change < 0 ? "−" : "±"}
-            {shown(Math.abs(change))} {unit} in 30 days
+            {t("{weight} {unit} in 30 days", { weight: shown(Math.abs(change)), unit })}
           </p>
         )}
       </div>
@@ -70,7 +72,7 @@ export function BodyweightSection({ now }: { now: number }) {
       >
         <div className="min-w-0 flex-1">
           <label htmlFor="bw-log" className="sr-only">
-            Weight to log in {unit}
+            {t("Weight to log in {unit}", { unit })}
           </label>
           <NumberField
             id="bw-log"
@@ -80,7 +82,7 @@ export function BodyweightSection({ now }: { now: number }) {
               setError(null);
             }}
             max={unit === "kg" ? PROFILE_LIMITS.bodyweightKg[1] : 882}
-            placeholder={loggedToday ? `Update today (${unit})` : `Today's weight (${unit})`}
+            placeholder={loggedToday ? t("Update today ({unit})", { unit }) : t("Today's weight ({unit})", { unit })}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? "bw-log-error" : undefined}
             className="!px-3 !text-left !text-base"
@@ -92,20 +94,20 @@ export function BodyweightSection({ now }: { now: number }) {
           )}
         </div>
         <Button type="submit" variant="primary" className="shrink-0">
-          {loggedToday ? "Update" : "Log weight"}
+          {loggedToday ? t("Update") : t("Log weight")}
         </Button>
       </form>
 
       {entries.length >= 2 ? (
         <figure className="mt-3">
-          <figcaption className="sr-only">Bodyweight over time in {unit}</figcaption>
+          <figcaption className="sr-only">{t("Bodyweight over time in {unit}", { unit })}</figcaption>
           <div className="h-36">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke={CHART.grid} />
                 <XAxis dataKey="date" tick={numTick} axisLine={false} tickLine={false} minTickGap={24} />
                 <YAxis tick={numTick} axisLine={false} tickLine={false} width={40} domain={["dataMin - 1", "dataMax + 1"]} allowDecimals={false} />
-                <Tooltip {...tooltipStyle} cursor={{ stroke: CHART.axis }} formatter={(v) => [`${v} ${unit}`, "Bodyweight"]} />
+                <Tooltip {...tooltipStyle} cursor={{ stroke: CHART.axis }} formatter={(v) => [`${v} ${unit}`, t("Bodyweight")]} />
                 <Line type="monotone" dataKey="w" stroke={CHART.series} strokeWidth={2} dot={{ r: 3, fill: CHART.series, stroke: CHART.surface, strokeWidth: 2 }} isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
@@ -113,16 +115,16 @@ export function BodyweightSection({ now }: { now: number }) {
         </figure>
       ) : (
         <p className="mt-3 text-sm text-text-muted">
-          {entries.length === 0 ? "One weigh-in a day builds your trend." : "Log another day to see the trend."}
+          {entries.length === 0 ? t("One weigh-in a day builds your trend.") : t("Log another day to see the trend.")}
         </p>
       )}
 
       {recent.length > 0 && (
-        <ul className="mt-3 flex flex-col" aria-label="Recent weigh-ins">
+        <ul className="mt-3 flex flex-col" aria-label={t("Recent weigh-ins")}>
           {recent.map((e) => (
             <li key={e.id} className="flex min-h-11 items-center gap-3 border-t border-line">
               <time dateTime={e.id} className="num flex-1 text-sm text-text-muted">
-                {new Date(e.date).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
+                {new Date(e.date).toLocaleDateString(t.locale, { weekday: "short", day: "numeric", month: "short" })}
               </time>
               <span className="num text-sm font-semibold">
                 {shown(e.weightKg)} {unit}
@@ -130,7 +132,7 @@ export function BodyweightSection({ now }: { now: number }) {
               <button
                 type="button"
                 onClick={() => remove(e.id)}
-                aria-label={`Delete weigh-in on ${shortDate(e.date)}`}
+                aria-label={t("Delete weigh-in on {date}", { date: shortDate(e.date, t.locale) })}
                 className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted transition-colors hover:bg-failure/10 hover:text-failure"
               >
                 <Trash2 aria-hidden="true" size={16} />

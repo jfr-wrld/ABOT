@@ -9,6 +9,7 @@ import type {
 import { newId } from "@/lib/id";
 import { linkSupersetIn, removeFromList, unlinkSupersetIn } from "@/lib/superset";
 import { useLocationStore } from "./useLocationStore";
+import { currentT } from "@/i18n";
 
 export interface RestTimer {
   /** Epoch ms when the countdown reaches zero. Persisted so a refresh keeps the clock. */
@@ -348,9 +349,11 @@ function defaultLocationId(): string | undefined {
   return useLocationStore.getState().locations.find((l) => l.isDefault)?.id;
 }
 
+/** Named in the app's language when the workout starts; the name is then the workout's own. */
 function defaultWorkoutName(): string {
   const h = new Date().getHours();
-  if (h < 11) return "Morning Workout";
-  if (h < 17) return "Afternoon Workout";
-  return "Evening Workout";
+  const t = currentT();
+  if (h < 11) return t("Morning Workout");
+  if (h < 17) return t("Afternoon Workout");
+  return t("Evening Workout");
 }

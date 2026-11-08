@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { useT } from "@/i18n";
 
 /**
  * Bottom sheet on phones, centred dialog from 640px up. Native <dialog> gives us
@@ -22,6 +23,7 @@ export function Sheet({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const t = useT();
 
   useEffect(() => {
     const el = ref.current;
@@ -47,7 +49,7 @@ export function Sheet({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("Close")}
             className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
           >
             <X aria-hidden="true" size={20} />

@@ -5,6 +5,7 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
 import { AppPermissionsList, useAppPermissions } from "@/components/settings/AppPermissions";
 import { markPermissionsSeen } from "@/lib/native/permissions-step";
+import { useT } from "@/i18n";
 
 /** The Android app's first-run step after the intro: what each access turns on, one tap each. */
 export default function PermissionsPage() {
@@ -20,6 +21,7 @@ function PermissionsStep() {
   const raw = useSearchParams().get("next");
   const next = raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
   const perms = useAppPermissions();
+  const t = useT();
 
   function done() {
     markPermissionsSeen();
@@ -28,8 +30,8 @@ function PermissionsStep() {
 
   return (
     <main className="flex min-h-[100dvh] flex-1 flex-col px-5 pb-[calc(16px+env(safe-area-inset-bottom))] pt-8">
-      <h1 className="text-2xl font-bold tracking-tight">Allow access</h1>
-      <p className="mt-1 text-sm text-text-muted">Each one turns on a feature. Change them any time in Settings.</p>
+      <h1 className="text-2xl font-bold tracking-tight">{t("Allow access")}</h1>
+      <p className="mt-1 text-sm text-text-muted">{t("Each one turns on a feature. Change them any time in Settings.")}</p>
       <div className="mt-6">
         <AppPermissionsList perms={perms} />
       </div>
@@ -42,10 +44,10 @@ function PermissionsStep() {
           }}
           className="min-h-12 w-full text-base"
         >
-          Allow all
+          {t("Allow all")}
         </Button>
         <Button variant="ghost" onClick={done} className="w-full">
-          Not now
+          {t("Not now")}
         </Button>
       </div>
     </main>

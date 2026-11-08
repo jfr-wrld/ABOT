@@ -57,4 +57,15 @@ export const DYNAMIC_KEYS: string[] = [
   "Each lift a plate on the bar, sized by its volume",
   "A honeycomb of plates, one per lift",
   "Swiss poster in black on Volt",
+  // Errors thrown by data/backup, lib/photo, story-exporter and data/catalog, shown with t()
+  "This file is not valid JSON",
+  "This is not an ABOT backup",
+  "This backup was made by a newer version of ABOT",
+  "Pick a photo (JPEG, PNG or WebP).",
+  "This photo could not be read. Try a JPEG or PNG.",
+  "This browser cannot resize photos.",
+  "This photo is too detailed to store. Try another one.",
+  "This browser cannot draw photos.",
+  "Could not download the catalog. Check your connection and try again.",
+  "The catalog file was not in the expected format.",
 ];

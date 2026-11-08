@@ -2,6 +2,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import { Info } from "lucide-react";
+import { useT } from "@/i18n";
 
 /**
  * A title with an (i) beside it: the explanation stays hidden until asked for, so a settings
@@ -21,13 +22,14 @@ export function InfoTip({
 }) {
   const [open, setOpen] = useState(false);
   const id = useId();
+  const t = useT();
   return (
     <div className={`min-w-0 ${className}`}>
       <div className="flex items-center">
         {title}
         <button
           type="button"
-          aria-label={`About ${name}`}
+          aria-label={t("About {name}", { name })}
           aria-expanded={open}
           aria-controls={id}
           onClick={() => setOpen((o) => !o)}

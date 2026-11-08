@@ -24,6 +24,7 @@ import { exercisePath } from "@/lib/routes";
 import { Sheet } from "@/components/ui/Sheet";
 import { isNativeApp } from "@/lib/native/files";
 import { openPhotoInput } from "@/lib/native/photo-input";
+import { useT, type T } from "@/i18n";
 
 export default function ProfilePage() {
   return (
@@ -34,11 +35,7 @@ export default function ProfilePage() {
 }
 
 type Tab = "progress" | "lifts" | "about";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "progress", label: "Progress" },
-  { id: "lifts", label: "Lifts" },
-  { id: "about", label: "About" },
-];
+const TABS: Tab[] = ["progress", "lifts", "about"];
 
 /** The open tab lives in the address (?tab=lifts), so Back and shared links keep it. */
 function useTab(): [Tab, (t: Tab) => void] {
@@ -76,10 +73,12 @@ function ProfileScreen() {
   const unit = s.weightUnit;
   const photo = usePhotoPicker((profilePhoto) => s.update({ profilePhoto }));
   const name = s.profileName.trim();
+  const t = useT();
+  const tabLabel: Record<Tab, string> = { progress: t("Progress"), lifts: t("Lifts"), about: t("About") };
 
   const record = [
-    `${stats.workouts} ${stats.workouts === 1 ? "workout" : "workouts"}`,
-    stats.weekStreak > 0 ? `${stats.weekStreak}-wk streak` : null,
+    t.n(stats.workouts, "{n} workout", "{n} workouts"),
+    stats.weekStreak > 0 ? t("{n}-wk streak", { n: stats.weekStreak }) : null,
   ].filter(Boolean);
 
   function edit(target: "profile-name" | "account") {
@@ -90,17 +89,17 @@ function ProfileScreen() {
   return (
     <main className="flex flex-1 flex-col">
       <header className="flex items-center justify-between px-4 pt-4">
-        <h1 className="text-xl font-bold">Profile</h1>
+        <h1 className="text-xl font-bold">{t("Profile")}</h1>
         <Link
           href="/settings"
-          aria-label="Settings"
+          aria-label={t("Settings")}
           className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
         >
           <Settings aria-hidden="true" size={22} />
         </Link>
       </header>
 
-      <section aria-label="Identity" className="px-4 pt-3">
+      <section aria-label={t("Identity")} className="px-4 pt-3">
         <Cover weeks={covers.map((b) => b.volumeKg)} />
         <div className="relative -mt-12 flex items-end justify-between gap-3 pl-3">
           {photo.input}
@@ -108,7 +107,7 @@ function ProfileScreen() {
             type="button"
             onClick={photo.open}
             disabled={photo.busy}
-            aria-label={s.profilePhoto ? "Change photo" : "Add photo"}
+            aria-label={s.profilePhoto ? t("Change photo") : t("Add photo")}
             className="relative shrink-0 rounded-full transition-transform active:scale-95 disabled:opacity-50"
           >
             <ProfileAvatar name={s.profileName} photo={s.profilePhoto} size={96} ringed />
@@ -121,14 +120,14 @@ function ProfileScreen() {
           </button>
           <Button onClick={() => edit("profile-name")} className="mb-1">
             <Pencil aria-hidden="true" size={15} />
-            Edit profile
+            {t("Edit profile")}
           </Button>
         </div>
         <div className="mt-2 flex flex-col items-start">
           {name ? (
             <h2 className="max-w-full truncate text-2xl font-bold tracking-tight">{name}</h2>
           ) : (
-            <h2 className="text-2xl font-bold tracking-tight text-text-muted">Your name</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-text-muted">{t("Your name")}</h2>
           )}
           {s.profileHandle && <p className="num text-sm text-text-muted">@{s.profileHandle}</p>}
           <p className="num mt-0.5 text-xs text-text-muted">{record.join(" · ")}</p>
@@ -136,39 +135,39 @@ function ProfileScreen() {
         </div>
         {photo.error && (
           <p role="alert" className="text-xs text-failure">
-            {photo.error}
+            {t(photo.error)}
           </p>
         )}
       </section>
 
       <div
         role="tablist"
-        aria-label="Profile sections"
+        aria-label={t("Profile sections")}
         className="sticky top-[env(safe-area-inset-top)] z-10 mt-2 flex border-b border-line bg-bg/95 px-4 backdrop-blur"
         onKeyDown={(e) => {
           if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-          const i = TABS.findIndex((t) => t.id === tab);
-          const next = TABS[(i + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length].id;
+          const i = TABS.indexOf(tab);
+          const next = TABS[(i + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
           setTab(next);
           requestAnimationFrame(() => document.getElementById(`tab-${next}`)?.focus());
         }}
       >
-        {TABS.map((t) => (
+        {TABS.map((id) => (
           <button
-            key={t.id}
-            id={`tab-${t.id}`}
+            key={id}
+            id={`tab-${id}`}
             type="button"
             role="tab"
-            aria-selected={tab === t.id}
-            aria-controls={`panel-${t.id}`}
-            tabIndex={tab === t.id ? 0 : -1}
-            onClick={() => setTab(t.id)}
+            aria-selected={tab === id}
+            aria-controls={`panel-${id}`}
+            tabIndex={tab === id ? 0 : -1}
+            onClick={() => setTab(id)}
             className={`relative min-h-12 flex-1 text-sm font-semibold transition-colors ${
-              tab === t.id ? "text-text" : "text-text-muted hover:text-text"
+              tab === id ? "text-text" : "text-text-muted hover:text-text"
             }`}
           >
-            {t.label}
-            {tab === t.id && <span aria-hidden="true" className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-accent" />}
+            {tabLabel[id]}
+            {tab === id && <span aria-hidden="true" className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-accent" />}
           </button>
         ))}
       </div>
@@ -178,15 +177,15 @@ function ProfileScreen() {
           <>
             <section aria-labelledby="lifetime-heading" className="panel p-3">
               <h2 id="lifetime-heading" className="label-caps">
-                Lifetime
+                {t("Lifetime")}
               </h2>
               <dl className="mt-2 grid grid-cols-2 gap-2">
-                <Stat label="Workouts" value={String(stats.workouts)} />
-                <Stat label="Volume" value={formatVolume(stats.volumeKg, unit)} />
-                <Stat label="Time trained" value={formatHours(stats.trainingSec)} />
+                <Stat label={t("Workouts")} value={String(stats.workouts)} />
+                <Stat label={t("Volume")} value={formatVolume(stats.volumeKg, unit)} />
+                <Stat label={t("Time trained")} value={formatHours(stats.trainingSec, t)} />
                 <Stat
-                  label="Week streak"
-                  value={`${stats.weekStreak} ${stats.weekStreak === 1 ? "week" : "weeks"}`}
+                  label={t("Week streak")}
+                  value={t.n(stats.weekStreak, "{n} week", "{n} weeks")}
                   accent={stats.weekStreak > 0}
                 />
               </dl>
@@ -202,11 +201,11 @@ function ProfileScreen() {
             <BodyweightSection now={now} />
             <section aria-labelledby="body-heading" className="panel flex flex-col gap-3 p-3">
               <h2 id="body-heading" className="label-caps">
-                About you
+                {t("About you")}
               </h2>
               <div>
                 <label htmlFor="profile-name" className="mb-1 block text-sm font-semibold">
-                  Name
+                  {t("Name")}
                 </label>
                 <input
                   id="profile-name"
@@ -214,13 +213,13 @@ function ProfileScreen() {
                   maxLength={PROFILE_LIMITS.nameMax}
                   autoComplete="name"
                   onChange={(e) => s.update({ profileName: e.target.value })}
-                  placeholder="What should ABOT call you?"
+                  placeholder={t("What should ABOT call you?")}
                   className="h-11 w-full rounded-ctl border border-zinc-800 bg-well px-3 text-base text-text placeholder:text-text-muted hover:border-zinc-700 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
               </div>
               <div>
                 <label htmlFor="profile-handle" className="mb-1 block text-sm font-semibold">
-                  Username <span className="font-normal text-text-muted">(on shared stories)</span>
+                  {t("Username")} <span className="font-normal text-text-muted">{t("(on shared stories)")}</span>
                 </label>
                 <div className="flex h-11 items-center rounded-ctl border border-zinc-800 bg-well focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30 hover:border-zinc-700">
                   <span aria-hidden="true" className="num pl-3 text-base text-text-muted">
@@ -234,7 +233,7 @@ function ProfileScreen() {
                     autoCapitalize="none"
                     spellCheck={false}
                     onChange={(e) => s.update({ profileHandle: normalizeHandle(e.target.value) })}
-                    placeholder="yourname"
+                    placeholder={t("yourname")}
                     className="h-full min-w-0 flex-1 bg-transparent pl-0.5 pr-3 text-base text-text placeholder:text-text-muted focus:outline-none"
                   />
                 </div>
@@ -242,13 +241,13 @@ function ProfileScreen() {
               <HeightField imperial={unit === "lbs"} heightCm={s.heightCm} onChange={(heightCm) => s.update({ heightCm })} />
               {s.profilePhoto && (
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold">Photo</span>
+                  <span className="text-sm font-semibold">{t("Photo")}</span>
                   <button
                     type="button"
                     onClick={() => s.update({ profilePhoto: null })}
                     className="min-h-11 rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
                   >
-                    Remove photo
+                    {t("Remove photo")}
                   </button>
                 </div>
               )}
@@ -259,7 +258,7 @@ function ProfileScreen() {
               className="panel flex min-h-14 items-center gap-3 px-4 text-sm font-semibold transition-colors hover:bg-surface-2"
             >
               <Settings aria-hidden="true" size={18} className="text-text-muted" />
-              <span className="flex-1">All settings</span>
+              <span className="flex-1">{t("All settings")}</span>
               <ChevronRight aria-hidden="true" size={16} className="text-text-muted" />
             </Link>
           </>
@@ -269,7 +268,11 @@ function ProfileScreen() {
   );
 }
 
-const formatHours = (sec: number) => (sec >= 3600 ? `${(sec / 3600).toFixed(1)} h` : `${Math.round(sec / 60)} min`);
+function formatHours(sec: number, t: T): string {
+  if (sec < 3600) return t("{n} min", { n: Math.round(sec / 60) });
+  const h = (sec / 3600).toFixed(1);
+  return t("{n} h", { n: t.lang === "id" ? h.replace(".", ",") : h });
+}
 
 /**
  * The cover is the lifter's last twelve weeks of volume as a skyline: real data in place of a
@@ -277,6 +280,7 @@ const formatHours = (sec: number) => (sec >= 3600 ? `${(sec / 3600).toFixed(1)} 
  */
 function Cover({ weeks }: { weeks: number[] }) {
   const max = Math.max(...weeks, 0);
+  const t = useT();
   return (
     <div aria-hidden="true" className="relative h-32 overflow-hidden rounded-card border border-line bg-surface">
       {max > 0 && (
@@ -298,23 +302,24 @@ function Cover({ weeks }: { weeks: number[] }) {
           })}
         </svg>
       )}
-      <span className="label-caps absolute top-3 right-3">12 wk volume</span>
+      <span className="label-caps absolute top-3 right-3">{t("12 wk volume")}</span>
     </div>
   );
 }
 
 function TopLifts({ lifts, unit }: { lifts: ProfileStats["topLifts"]; unit: "kg" | "lbs" }) {
+  const t = useT();
   if (lifts.length === 0) {
-    return <p className="panel px-4 py-6 text-center text-sm text-text-muted">Finish a workout to rank your lifts.</p>;
+    return <p className="panel px-4 py-6 text-center text-sm text-text-muted">{t("Finish a workout to rank your lifts.")}</p>;
   }
   return (
     <section aria-labelledby="lifts-heading" className="panel p-3">
       <div className="flex items-baseline justify-between">
         <h2 id="lifts-heading" className="label-caps flex items-center gap-1.5">
           <Trophy aria-hidden="true" size={12} className="text-pr" />
-          Top lifts
+          {t("Top lifts")}
         </h2>
-        <span className="label-caps" title="Estimated one-rep max from your best set">
+        <span className="label-caps" title={t("Estimated one-rep max from your best set")}>
           e1RM
         </span>
       </div>
@@ -366,20 +371,21 @@ function HeightField({
   const [min, max] = PROFILE_LIMITS.heightCm;
   // Stored as typed and flagged when out of range: a check per keystroke would wipe "1" on the way to "170".
   const off = heightCm !== null && (heightCm < min || heightCm > max);
+  const t = useT();
   const range = imperial
-    ? `${cmToFtIn(min).ft} ft ${cmToFtIn(min).inch} in to ${cmToFtIn(max).ft} ft ${cmToFtIn(max).inch} in`
-    : `${min} to ${max} cm`;
+    ? t("{min} to {max}", { min: `${cmToFtIn(min).ft} ft ${cmToFtIn(min).inch} in`, max: `${cmToFtIn(max).ft} ft ${cmToFtIn(max).inch} in` })
+    : t("{min} to {max}", { min, max: `${max} cm` });
   const errorProps = { "aria-invalid": off || undefined, "aria-describedby": off ? "profile-height-error" : undefined };
 
   if (!imperial) {
     return (
       <div>
         <label htmlFor="profile-height" className="mb-1 block text-sm font-semibold">
-          Height <span className="font-normal text-text-muted">(cm)</span>
+          {t("Height")} <span className="font-normal text-text-muted">(cm)</span>
         </label>
         <NumberField
           id="profile-height"
-          aria-label="Height in cm"
+          aria-label={t("Height in cm")}
           value={heightCm}
           onCommit={onChange}
           max={max}
@@ -397,11 +403,11 @@ function HeightField({
     onChange(ft === null && inch === null ? null : ftInToCm(ft ?? 0, Math.min(11, inch ?? 0)));
   return (
     <fieldset>
-      <legend className="mb-1 text-sm font-semibold">Height</legend>
+      <legend className="mb-1 text-sm font-semibold">{t("Height")}</legend>
       <div className="grid grid-cols-2 gap-2">
         <div className="relative">
           <NumberField
-            aria-label="Height, feet"
+            aria-label={t("Height, feet")}
             value={parts?.ft ?? null}
             onCommit={(ft) => set(ft, parts?.inch ?? null)}
             max={8}
@@ -415,7 +421,7 @@ function HeightField({
         </div>
         <div className="relative">
           <NumberField
-            aria-label="Height, inches"
+            aria-label={t("Height, inches")}
             value={parts?.inch ?? null}
             onCommit={(inch) => set(parts?.ft ?? null, inch)}
             max={11}
@@ -434,9 +440,10 @@ function HeightField({
 }
 
 function HeightError({ range }: { range: string }) {
+  const t = useT();
   return (
     <p id="profile-height-error" className="mt-1 text-xs text-failure">
-      Enter {range}
+      {t("Enter {range}", { range })}
     </p>
   );
 }
@@ -446,6 +453,7 @@ function usePhotoPicker(onChange: (url: string | null) => void) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   async function pick(file: File | undefined) {
     if (!file) return;
@@ -454,7 +462,7 @@ function usePhotoPicker(onChange: (url: string | null) => void) {
     try {
       onChange(await squareJpeg(file));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "This photo could not be used.");
+      setError(e instanceof Error ? e.message : t("This photo could not be used."));
     } finally {
       setBusy(false);
       if (ref.current) ref.current.value = "";
@@ -473,20 +481,20 @@ function usePhotoPicker(onChange: (url: string | null) => void) {
         ref={ref}
         type="file"
         accept="image/*"
-        aria-label="Profile photo file"
+        aria-label={t("Profile photo file")}
         className="sr-only"
         tabIndex={-1}
         onChange={(e) => pick(e.target.files?.[0])}
       />
-      <Sheet open={choosing} onClose={() => setChoosing(false)} title="Profile photo">
+      <Sheet open={choosing} onClose={() => setChoosing(false)} title={t("Profile photo")}>
         <div className="grid grid-cols-2 gap-2 pb-2">
           <Button onClick={() => choose("camera")} className="min-h-14">
             <Camera aria-hidden="true" size={18} />
-            Take photo
+            {t("Take photo")}
           </Button>
           <Button onClick={() => choose("gallery")} className="min-h-14">
             <ImageIcon aria-hidden="true" size={18} />
-            Choose photo
+            {t("Choose photo")}
           </Button>
         </div>
       </Sheet>
