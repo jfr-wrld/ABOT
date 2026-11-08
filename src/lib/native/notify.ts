@@ -1,4 +1,6 @@
+import { registerPlugin } from "@capacitor/core";
 import type { LocalNotificationSchema } from "@capacitor/local-notifications";
+import type { NativeLive } from "@/lib/notifications/live-workout";
 import { DEFAULT_SCHEDULE, reminderContent, type ReminderContent, type Weekday, type WorkoutSchedule } from "@/lib/notifications/schedule";
 
 /**
@@ -11,8 +13,8 @@ const plugin = () => import("@capacitor/local-notifications").then((m) => m.Loca
 
 export type NativePermission = "granted" | "denied" | "default";
 
-/** Fixed ids: one live status, one rest alarm, one snooze, two per weekday (prep, session). */
-const ID = { live: 1, rest: 2, snooze: 3 } as const;
+/** Fixed ids: one rest alarm, one snooze, two per weekday (prep, session). */
+const ID = { rest: 2, snooze: 3 } as const;
 const sessionId = (wd: Weekday) => 100 + wd;
 const prepId = (wd: Weekday) => 110 + wd;
 const REMINDER_IDS = [0, 1, 2, 3, 4, 5, 6].flatMap((wd) => [sessionId(wd as Weekday), prepId(wd as Weekday)]);
@@ -82,30 +84,39 @@ export async function setupNativeNotifications(open: (url: string) => void): Pro
 /* Live workout                                                        */
 /* ------------------------------------------------------------------ */
 
-/** The ongoing status, and when a rest is running, an alarm at the moment it ends. */
-export async function showNativeLive(now: { title: string; body: string }, restOver: { at: number; title: string; body: string } | null) {
-  const ln = await plugin();
-  const notifications: LocalNotificationSchema[] = [
-    { id: ID.live, title: now.title, body: now.body, channelId: CHANNEL.live, ongoing: true, autoCancel: false, smallIcon: ICON, extra: { url: "/workout" } },
-  ];
-  if (restOver && restOver.at > Date.now()) {
-    notifications.push({
-      id: ID.rest,
-      title: restOver.title,
-      body: restOver.body,
-      channelId: CHANNEL.rest,
-      smallIcon: ICON,
-      schedule: { at: new Date(restOver.at), allowWhileIdle: true },
-      extra: { url: "/workout" },
-    });
-  }
-  await ln.schedule({ notifications });
+interface LiveWorkoutPlugin {
+  show(opts: NativeLive): Promise<void>;
+  clear(): Promise<void>;
+}
+
+/** App-local plugin: android/app/src/main/java/app/abot/gym/LiveWorkoutPlugin.java. */
+const LiveWorkout = registerPlugin<LiveWorkoutPlugin>("LiveWorkout");
+
+/**
+ * The ongoing workout notification with a clock Android ticks itself (LiveWorkout), and when a
+ * rest is running, a ringing "rest over" alarm at the moment it ends.
+ */
+export async function showNativeLive(live: NativeLive, restOver: { title: string; body: string } | null) {
+  await LiveWorkout.show(live);
+  if (!restOver || !live.restEndsAt || live.restEndsAt <= Date.now()) return;
+  await (await plugin()).schedule({
+    notifications: [
+      {
+        id: ID.rest,
+        title: restOver.title,
+        body: restOver.body,
+        channelId: CHANNEL.rest,
+        smallIcon: ICON,
+        schedule: { at: new Date(live.restEndsAt), allowWhileIdle: true },
+        extra: { url: "/workout" },
+      },
+    ],
+  });
 }
 
 export async function clearNativeLive() {
   const ln = await plugin();
-  const ids = [{ id: ID.live }, { id: ID.rest }];
-  await Promise.all([ln.cancel({ notifications: ids }), ln.removeDeliveredNotifications({ notifications: ids.map((n) => ({ ...n, title: "", body: "" })) })]);
+  await Promise.all([LiveWorkout.clear(), ln.cancel({ notifications: [{ id: ID.rest }] })]);
 }
 
 /* ------------------------------------------------------------------ */

@@ -32,6 +32,9 @@
 
         </activity>
 
+        <!-- Swaps the live workout notification from the rest countdown to "rest over". -->
+        <receiver android:name=".LiveWorkoutReceiver" android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -48,4 +51,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Saving a story or backup on Android 9 and older; 10+ writes through MediaStore without it. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <!-- Android 16 Live Update: the workout clock as a status bar chip. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 </manifest>

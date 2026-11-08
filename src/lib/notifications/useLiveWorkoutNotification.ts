@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
-import { LIVE_TAG, liveContent } from "./live-workout";
-import { askPermission, notificationPermission, registerReminderWorker } from "./reminder-service";
+import { LIVE_TAG, liveContent, nativeLiveContent } from "./live-workout";
+import { askPermission, notificationPermission, refreshPermission, registerReminderWorker } from "./reminder-service";
 import { isNativeApp } from "@/lib/native/files";
 import { clearNativeLive, showNativeLive } from "@/lib/native/notify";
 
@@ -56,13 +56,14 @@ export function useLiveWorkoutNotification(): void {
 
     async function show(over: boolean) {
       const { active: a, timer: t, byId: ids } = latest.current;
-      if (!a || !liveStatusEnabled() || notificationPermission() !== "granted") return;
       if (isNativeApp()) {
-        const now = Date.now();
-        const over = t && t.endsAt > now ? { at: t.endsAt, ...liveContent(a, ids, t, t.endsAt) } : null;
-        await showNativeLive(liveContent(a, ids, t, now), over).catch(() => {});
+        // Permission may have changed in Android settings since the app started.
+        if (!a || !liveStatusEnabled() || (await refreshPermission()) !== "granted") return;
+        const ring = t ? liveContent(a, ids, t, t.endsAt) : null;
+        await showNativeLive(nativeLiveContent(a, ids, t, Date.now()), ring && { title: ring.title, body: ring.body }).catch(() => {});
         return;
       }
+      if (!a || !liveStatusEnabled() || notificationPermission() !== "granted") return;
       const reg = await registerReminderWorker();
       if (!reg) return;
       const c = liveContent(a, ids, t, Date.now());
@@ -82,12 +83,27 @@ export function useLiveWorkoutNotification(): void {
       if (document.visibilityState === "hidden") {
         void show(false);
         const t = latest.current.timer;
-        if (!isNativeApp() && t && t.endsAt > Date.now()) restOver = setTimeout(() => void show(true), t.endsAt - Date.now());
+        if (t && t.endsAt > Date.now()) restOver = setTimeout(() => void show(true), t.endsAt - Date.now());
       } else {
         void clearLive();
       }
     }
 
+    // The app's WebView keeps reporting "visible" in the background, so Android's own
+    // pause/resume decide there.
+    if (isNativeApp()) {
+      let remove: (() => void) | undefined;
+      let cancelled = false;
+      void import("@capacitor/app").then(async ({ App }) => {
+        const h = await App.addListener("appStateChange", ({ isActive }) => void (isActive ? clearLive() : show(false)));
+        if (cancelled) void h.remove();
+        else remove = () => void h.remove();
+      });
+      return () => {
+        cancelled = true;
+        remove?.();
+      };
+    }
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       clearTimeout(restOver);

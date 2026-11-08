@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // App-local plugins register before the bridge starts.
         registerPlugin(FileSaverPlugin.class);
+        registerPlugin(LiveWorkoutPlugin.class);
         super.onCreate(savedInstanceState);
         // The rest timer beeps from a timer, not a tap; the WebView would otherwise mute it.
         getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
