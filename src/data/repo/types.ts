@@ -1,4 +1,5 @@
 import type { BodyweightEntry, Exercise, GymLocation, Routine, UserSettings, WorkoutSession } from "@/types/workout";
+import type { WorkoutSchedule } from "@/lib/notifications/schedule";
 
 /** Settings as persisted: the domain settings plus UI preferences. */
 export type StoredSettings = UserSettings & { showRpe: boolean };
@@ -23,6 +24,12 @@ export interface KvValues {
   syncState: SyncState;
   /** Local versions that lost to a newer remote edit, newest first, at most 50 (Task 16). */
   conflicts: ConflictEntry[];
+  /** Workout reminders. Device-local (notifications belong to this phone): not synced or backed up. */
+  reminders: WorkoutSchedule;
+  /** What the reminder loop has already shown, so nothing fires twice. */
+  reminderState: { lastCheck: number; fired: string[] };
+  /** Written by the service worker when "Snooze 30 min" is tapped; read by the reminder loop. */
+  reminderSnooze: { until: number; routineId: string | null } | null;
 }
 export type KvKey = keyof KvValues;
 

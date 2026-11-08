@@ -1,18 +1,28 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { addExercise, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
 
-/** Records every request that leaves the app's own origin. */
+/**
+ * Records every request that leaves the app's own origin, except exercise photo thumbnails
+ * (owner decision 2026-11-08): plain image GETs from the public-domain free-exercise-db, which
+ * carry no user data. Anything else, and any photo request that is not an image GET, counts.
+ */
 function watchExternal(page: Page): string[] {
   const external: string[] = [];
   page.on("request", (r: Request) => {
     const u = new URL(r.url());
     if (u.protocol === "data:" || u.protocol === "blob:") return;
-    if (u.hostname !== "localhost" && u.hostname !== "127.0.0.1") external.push(r.url());
+    if (u.hostname === "localhost" || u.hostname === "127.0.0.1") return;
+    const photo =
+      u.hostname === "raw.githubusercontent.com" &&
+      u.pathname.startsWith("/yuhonas/free-exercise-db/main/exercises/") &&
+      r.method() === "GET" &&
+      r.resourceType() === "image";
+    if (!photo) external.push(r.url());
   });
   return external;
 }
 
-test("a full training day makes no request outside the app", async ({ page }) => {
+test("a full training day makes no request outside the app, apart from exercise photos", async ({ page }) => {
   const external = watchExternal(page);
   await freshStart(page);
   await startEmptyWorkout(page);

@@ -36,6 +36,10 @@ interface WorkoutState {
   /** Stops the workout clock and the rest timer; ticking a set or resume starts it again. */
   pauseActive: () => void;
   resumeActive: () => void;
+  /** Puts two exercises in one superset (joining the one either is already in). */
+  linkSuperset: (sessionExerciseId: string, withSessionExerciseId: string) => void;
+  /** Takes an exercise out of its superset; a superset left with one exercise dissolves. */
+  unlinkSuperset: (sessionExerciseId: string) => void;
   setExerciseRest: (sessionExerciseId: string, restSeconds: number) => void;
   setExerciseNotes: (sessionExerciseId: string, notes: string) => void;
   addSet: (sessionExerciseId: string) => void;
@@ -184,6 +188,39 @@ export const useWorkoutStore = create<WorkoutState>()(
           return { active: { ...s.active, pausedAt: Date.now() }, restTimer: null };
         }),
 
+      linkSuperset: (id, withId) =>
+        set((s) =>
+          patchActive(s, (a) => {
+            const x = a.exercises.find((e) => e.id === id);
+            const y = a.exercises.find((e) => e.id === withId);
+            if (!x || !y || x === y) return a;
+            const group = y.supersetId ?? x.supersetId ?? newId();
+            const old = new Set([x.supersetId, y.supersetId].filter(Boolean));
+            return {
+              ...a,
+              // Merging: everything in either superset ends up in one.
+              exercises: a.exercises.map((e) =>
+                e.id === id || e.id === withId || (e.supersetId && old.has(e.supersetId)) ? { ...e, supersetId: group } : e,
+              ),
+            };
+          }),
+        ),
+
+      unlinkSuperset: (id) =>
+        set((s) =>
+          patchActive(s, (a) => {
+            const group = a.exercises.find((e) => e.id === id)?.supersetId;
+            if (!group) return a;
+            const remaining = a.exercises.filter((e) => e.supersetId === group && e.id !== id).length;
+            return {
+              ...a,
+              exercises: a.exercises.map((e) =>
+                e.id === id || (remaining < 2 && e.supersetId === group) ? { ...e, supersetId: undefined } : e,
+              ),
+            };
+          }),
+        ),
+
       resumeActive: () => set((s) => (s.active ? { active: resumed(s.active, Date.now()) } : {})),
 
       setExerciseRest: (id, restSeconds) =>
@@ -246,8 +283,14 @@ export const useWorkoutStore = create<WorkoutState>()(
                 : st,
             ),
           }));
+          // In a superset the lifter moves straight to the next exercise; rest comes after the last.
+          const idx = s.active.exercises.findIndex((e) => e.id === id);
+          const moreInSuperset =
+            ex.supersetId !== undefined && s.active.exercises.slice(idx + 1).some((e) => e.supersetId === ex.supersetId);
           const restTimer: RestTimer | null = completed
-            ? ex.restSeconds > 0
+            ? moreInSuperset
+              ? null
+              : ex.restSeconds > 0
               ? { endsAt: Date.now() + ex.restSeconds * 1000, totalSec: ex.restSeconds, sessionExerciseId: id }
               : null
             : s.restTimer?.sessionExerciseId === id
