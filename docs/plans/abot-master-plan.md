@@ -5,7 +5,8 @@ Branch: `claude/vigilant-fermat-2dcmbe` (PR draft jfr-wrld/ABOT#1)
 Status dokumen: DRAFT untuk persetujuan owner. Belum ada kode yang ditulis berdasarkan dokumen ini.
 
 ABOT (bahasa Jawa: "berat") adalah gym progress tracker yang mengambil seluruh kelebihan Hevy,
-memperbaiki kelemahannya, dan menambahkan fitur AI lewat Replicate. Dokumen ini menjawab tiga hal:
+memperbaiki kelemahannya, dan menambahkan mesin visual, suara, dan canvas yang berjalan 100% di
+sisi klien (Zero External Paid API). Dokumen ini menjawab tiga hal:
 apa yang sudah ada di repo hari ini, produk apa yang mau dibangun, dan dalam urutan apa.
 
 Aturan yang mengikat dokumen ini dan semua kerja turunannya:
@@ -13,9 +14,10 @@ Aturan yang mengikat dokumen ini dan semua kerja turunannya:
 - `antislop` (mode DURING, dipilih owner di sesi ini): tidak ada em dash, tidak ada angka palsu,
   tidak ada kontrol mati, setiap keputusan visual punya alasan satu baris, Delivery Gate dijalankan
   sebelum setiap rilis.
-- `replicate/skills`: pilih model lewat API Replicate, bukan dari ingatan; cek schema model sebelum
-  mengirim input; URL output kedaluwarsa 1 jam jadi harus disimpan; jangan pernah menaruh token di
-  client.
+- **Zero External Paid API** (keputusan owner 2026-11-08): tidak ada panggilan ke Replicate atau
+  layanan berbayar mana pun; tidak ada token server. Semua fitur "pintar" (voice, ilustrasi otot,
+  PR card, coach, recovery) dihitung dan dirender di browser. Skill `replicate/skills` tetap
+  terpasang di repo tetapi tidak dipakai oleh roadmap ini.
 - `superpowers`: dokumen ini adalah design doc (brainstorming). Setelah disetujui, setiap milestone
   mendapat implementation plan terpisah di `docs/plans/` lewat skill `writing-plans`, dieksekusi
   per task dengan TDD dan commit kecil.
@@ -134,14 +136,16 @@ per set), dengan analitik yang jujur, dan lapisan AI yang membantu memutuskan be
 
 - Logging jadi lebih lambat dari Hevy karena fitur bertumpuk di baris set.
 - Angka yang tidak bisa dipertanggungjawabkan (persentase recovery tanpa dasar, PR palsu).
-- Fitur AI yang memblokir alur dasar saat offline atau token tidak ada.
+- Fitur pintar (voice, coach) yang memblokir alur dasar saat browser tidak mendukungnya.
 - UI yang terlihat seperti template dashboard generik.
 
 ### 2.5 Constraints
 
 - Mobile-first 360px, satu tangan, kondisi gym (dim, tangan berkeringat, terburu-buru).
-- Offline-first: logging harus bekerja tanpa jaringan; AI bersifat progressive enhancement.
-- Token Replicate hanya di server (Route Handler Next.js), tidak pernah di bundle client.
+- Offline-first: logging harus bekerja tanpa jaringan dengan latensi 0 ms saat mencentang set
+  (tulis ke state in-memory dulu, persist ke IndexedDB di belakang).
+- Zero External Paid API: tidak ada layanan berbayar, tidak ada token, tidak ada server yang
+  dibutuhkan untuk fitur apa pun. Next.js dipakai sebagai static/PWA shell.
 - Data pengguna adalah milik pengguna: ekspor penuh tersedia sebelum fitur berbasis data berikutnya.
 - Tidak ada angka, testimoni, atau klaim performa yang tidak diukur (R-17, R-36).
 
@@ -157,9 +161,12 @@ Postgres tanpa offline: bertentangan dengan constraint gym offline).
 - Data di perangkat: pindah dari `localStorage` ke IndexedDB (Dexie) untuk sesi, routine, foto,
   ilustrasi. Zustand tetap untuk state UI dan sesi aktif.
 - PWA installable, service worker untuk shell dan aset.
-- Fitur AI lewat Route Handler `/api/ai/*` yang memegang `REPLICATE_API_TOKEN`; client mengirim
-  audio/prompt, menerima hasil, menyimpan hasil ke IndexedDB (URL Replicate kedaluwarsa 1 jam).
+- Fitur pintar sepenuhnya lokal: Web Speech API untuk suara, SVG parametrik untuk otot, Canvas
+  untuk PR card, fungsi murni untuk coach dan recovery.
 - Ekspor/impor JSON untuk backup dan pindah perangkat.
+
+Keputusan owner (2026-11-08): **Pendekatan C dipilih** (A dengan repository layer). Bagian ini
+dipertahankan sebagai catatan alternatif yang ditimbang.
 
 Trade-off: tanpa akun, tidak ada sync antar perangkat; kehilangan browser = kehilangan data
 kecuali rajin ekspor. Biaya infrastruktur hampir nol; semua fitur Pilar 1 dan 2 tidak butuh server.
@@ -269,11 +276,11 @@ Tambahan:
   Core, Quads, Hamstrings+Glutes, Calves) menampilkan sets 4 minggu terakhir, dinormalisasi
   terhadap sumbu terbesar. Satu seri, satu hue, label langsung di tiap sumbu. Radar hanya untuk
   "bentuk keseimbangan"; angka tetap di bar chart (radar buruk untuk membaca nilai).
-- **Heatmap tubuh**: dua siluet (depan/belakang) sebagai SVG statis buatan sendiri dengan path
-  per grup otot; isi warna sequential satu hue (5 step, divalidasi validator `dataviz` terhadap
-  surface gelap) berdasarkan sets 7 hari. Tooltip per grup dengan angka. Ini aset visual; sesuai
-  R-23, bentuk siluet dikonfirmasi ke owner lewat sketsa sebelum dibuat (atau digenerate lewat
-  Replicate, lihat 6.3, dengan placeholder berlabel sampai disetujui).
+- **Heatmap tubuh**: komponen `MuscleMap` (lihat 6.3A) dalam mode heatmap: isi warna sequential
+  satu hue (5 step, divalidasi validator `dataviz` terhadap surface gelap) berdasarkan sets 7
+  hari atau 4 minggu. Tooltip per grup dengan angka. Arahan owner sudah ada (siluet depan dan
+  belakang, satu `<path>` per grup otot), jadi tidak perlu konfirmasi R-23 lagi; owner melihat
+  hasil pertama di PR milestone yang bersangkutan.
 - **Grafik per exercise**: 1RM estimasi sudah ada; tambah toggle "Heaviest set" dan "Volume per
   session" (bukan dual-axis; satu metrik per tampilan).
 - **Kalender**: sudah ada; tambah penanda hari dengan PR.
@@ -340,11 +347,11 @@ dev build, dilaporkan hanya jika benar-benar diukur.
 
 ---
 
-## 6. PILAR 3: ABOT Differentiators dan Replicate
+## 6. PILAR 3: ABOT Differentiators dan Local Visual, Voice & Canvas Engine
 
-Prinsip: setiap fitur AI punya jalur non-AI yang setara (voice -> ketik; anatomi -> placeholder
-teks; PR card -> render lokal). Semua panggilan Replicate lewat Route Handler dengan token
-server; client tidak pernah melihat token.
+Prinsip: semua fitur di pilar ini berjalan 100% di browser, offline, tanpa token dan tanpa server.
+Setiap fitur punya jalur manual yang setara (voice -> ketik; ilustrasi -> label teks jika SVG
+gagal dimuat; PR card -> ringkasan teks yang bisa disalin).
 
 ### 6.1 Auto-Progressive Overload Coach (double progression, tanpa AI)
 
@@ -382,58 +389,61 @@ Tampil sebagai daftar otot dengan bar 0 sampai 100 (satu hue sequential) dan tek
 trained 2 days ago, 12 sets". Label jujur: "Estimate based on your logged sets and rest time, not
 a medical measurement". Unit test memuat tabel nilai.
 
-### 6.3 Integrasi Replicate
+### 6.3 Local Visual, Voice & Canvas Engine (100% client-side)
 
-Infrastruktur bersama (milestone 4):
+Tidak ada Route Handler, tidak ada token, tidak ada panggilan jaringan. Tiga mesin:
 
-- `src/app/api/ai/[task]/route.ts`: POST, validasi input dengan zod, panggil
-  `POST https://api.replicate.com/v1/predictions` dengan `Prefer: wait` untuk model cepat
-  (< 60 s) atau polling; batas `lifetime: "2m"`; rate limit sederhana per IP; log biaya per
-  panggilan.
-- Pemilihan model dilakukan lewat API pencarian Replicate saat implementasi (aturan skill:
-  "choose a model with the API, not from memory"), lalu `owner/name:version` dipin di
-  `src/lib/ai/models.ts` bersama schema input yang sudah dicek. Kandidat awal untuk dicek:
-  keluarga `openai/whisper` atau model speech-to-text yang lebih cepat untuk voice; model
-  text-to-image dengan dukungan style reference untuk anatomi; tidak ada yang dianggap final
-  sebelum schema dibaca.
-- Output file Replicate kedaluwarsa 1 jam: Route Handler mengunduh dan mengembalikan bytes ke
-  client, client menyimpan ke IndexedDB.
-- Tanpa `REPLICATE_API_TOKEN`: endpoint mengembalikan 503 dengan pesan jelas, UI menyembunyikan
-  tombol AI dan menampilkan "AI features need a server token" di settings (bukan tombol mati).
+**A. Parametric SVG Muscle Map (ilustrasi otot dan heatmap)**
 
-**A. Custom Exercise Anatomy Generator**
+- Komponen `MuscleMap` di `src/components/anatomy/MuscleMap.tsx`: dua siluet (front, back) dalam
+  satu `viewBox`, setiap grup otot adalah `<path id="m-<key>">` tersendiri. Grup yang didukung
+  (16): `chest`, `front_delts`, `side_delts`, `rear_delts`, `biceps`, `triceps`, `forearms`,
+  `abs`, `obliques`, `lats`, `traps`, `lower_back`, `glutes`, `quads`, `hamstrings`, `calves`.
+- Pemetaan dari `MuscleGroup` model data (15 nilai) ke 16 region SVG lewat tabel
+  `MUSCLE_TO_REGIONS` (mis. `shoulders` -> front_delts + side_delts + rear_delts; `back` ->
+  lats + traps; `abs` -> abs + obliques). Model data boleh dipertajam nanti dengan sub-otot
+  (`side_delts` dll.) tanpa mengubah SVG.
+- Mode `highlight` (halaman exercise, picker, kartu exercise): primary muscle isi solid aksen,
+  secondary muscle isi aksen opacity 35%, sisanya `#27272a` dengan stroke `#3f3f46`.
+- Mode `heatmap` (halaman Progress): isi per region dari skala sequential 5 step satu hue
+  berdasarkan sets 7 hari / 4 minggu; angka di tooltip dan di daftar di bawahnya (R-17: tanpa
+  data, siluet abu-abu dan teks "No sets logged in this range").
+- Aksesibilitas: `<svg role="img" aria-labelledby>` dengan judul "Primary: Chest. Secondary:
+  Triceps, Shoulders"; `<title>` per path; ukuran intrinsik `width/height` (R-40).
+- Path digambar tangan sebagai poligon sederhana bergaya flat vector (bukan trace anatomi
+  realistis) agar konsisten dengan identitas industrial; satu file `paths.ts` berisi koordinat.
+- Custom exercise otomatis mendapat ilustrasi dari primary/secondary yang dipilih user; tidak ada
+  placeholder "no illustration".
 
-- Tujuan: ilustrasi otot konsisten gaya dark-vector untuk 44 gerakan seed + custom.
-- Pipeline: prompt template tunggal (gaya: "flat dark vector, obsidian background #09090b,
-  single highlighted muscle group in electric blue, no text") + style reference image yang
-  disetujui owner (R-23: owner mengonfirmasi 3 contoh pertama sebelum batch). Batch 44 gambar
-  dijalankan paralel, hasil disimpan ke `public/anatomy/<exerciseId>.webp` lewat skrip CLI
-  (bukan runtime), dengan `width/height` tetap 512x512 (R-40).
-- Untuk custom exercise: tombol "Generate illustration" di detail exercise, hasil ke IndexedDB,
-  placeholder berlabel "No illustration yet" sebelum itu.
-- Biaya: dicatat per gambar dari respons API; tidak diklaim sebelum diukur.
+**B. Voice Set Logger (Web Speech API + parser lokal)**
 
-**B. AI Voice Set Logger**
+- `useSpeechInput()` membungkus `window.SpeechRecognition || webkitSpeechRecognition`; `lang`
+  mengikuti settings (`id-ID` atau `en-US`, default dari `navigator.language`). Jika API tidak
+  ada, tombol mic tidak dirender dan settings menampilkan "Voice input is not available in this
+  browser" (bukan tombol mati, R-26).
+- Parser deterministik `parseSetUtterance(text: string, unit: WeightUnit): ParsedSet | null` di
+  `src/lib/voice/parseSetUtterance.ts`, tanpa jaringan dan tanpa model. Mendukung:
+  - angka digit dan kata (Indonesia: "delapan puluh", "enam puluh dua setengah", "koma lima";
+    Inggris: "eighty", "sixty two point five", "and a half");
+  - unit: "kg", "kilo", "kilogram", "lbs", "pound" (konversi ke kg sesuai aturan units);
+  - reps: "kali", "rep", "reps", "repetisi", "for", "x";
+  - RPE: "rpe", "RPE", "at", "pada" diikuti 6 sampai 10 step 0.5;
+  - urutan bebas: "8 reps 80 kilo", "80 kg for 8 reps", "80 kilo 8 repetisi RPE 8.5".
+- Hasil tampil sebagai konfirmasi inline (weight, reps, rpe) yang bisa dikoreksi sebelum
+  dicentang. 30 kasus uji dalam tabel; ambiguitas (dua angka tanpa unit) menghasilkan `null` dan
+  UI meminta ulang, bukan menebak.
 
-- Tombol mic di header exercise card (44px). Rekam lewat `MediaRecorder` (webm/opus), maksimal
-  8 detik, kirim ke `/api/ai/transcribe`.
-- Transkrip diurai lokal oleh parser deterministik `parseSetUtterance(text, unit)` yang menangani
-  pola Indonesia dan Inggris: "enam puluh dua setengah kali delapan rpe delapan", "62.5 for 8 at
-  8", "8 reps 60 kilo". Parser diuji unit dengan 30 contoh; tidak bergantung pada LLM.
-- Hasil ditampilkan sebagai konfirmasi inline (weight, reps, rpe) yang bisa dikoreksi sebelum
-  dicentang. Target latensi < 3 detik end-to-end; diukur, bukan diklaim.
-- Fallback: Web Speech API di browser yang mendukung (gratis, offline di beberapa perangkat)
-  dipakai lebih dulu; Replicate dipakai bila tidak tersedia atau pengguna memilih.
+**C. HTML5 Canvas Shareable PR Card**
 
-**C. Shareable ABOT PR Card**
-
-- Render lokal dengan Canvas/`OffscreenCanvas` ke PNG 1080x1350: nama gerakan, angka besar
-  (tabular), jenis PR, tanggal, estimasi 1RM, wordmark ABOT sebagai teks. Tidak butuh AI dan
-  tidak butuh jaringan; dibagikan lewat Web Share API dengan fallback unduh.
-- Opsi AI (nanti, setelah A dan B stabil): latar belakang industrial yang digenerate sekali per
-  pengguna dan di-cache; bukan prasyarat.
-
----
+- `renderPrCard(opts): Promise<Blob>` di `src/lib/share/prCard.ts` menggambar PNG 1080x1350
+  (rasio 4:5) dengan `OffscreenCanvas` bila ada, fallback `<canvas>`: wordmark "ABOT", ikon pelat,
+  nama gerakan, angka raksasa tabular (beban x reps), jenis PR, estimasi 1RM, tanggal, lokasi
+  gym opsional. Palet Obsidian/Steel/aksen; font dari `document.fonts` (Geist) dengan fallback
+  system-ui.
+- Varian `renderSessionCard` untuk ringkasan workout (durasi, volume, sets, PR count).
+- Bagikan lewat `navigator.share({ files })` bila didukung, kalau tidak unduh PNG; keduanya
+  nyata, tidak ada tombol tanpa aksi.
+- Tombol muncul di FinishDialog (bila ada PR) dan di detail sesi.
 
 ## 7. PILAR 4: Standar Desain ABOT dan Gap Analysis
 
@@ -444,7 +454,7 @@ penajaman ke arah industrial:
 
 | Keputusan | Nilai | Alasan satu baris |
 |---|---|---|
-| Nama dan wordmark | "ABOT" sebagai teks, bold, tracking normal, tanpa logo gambar sampai owner memberi arahan (R-23) | Wordmark teks adalah placeholder jujur dan cukup kuat |
+| Nama dan wordmark | "ABOT" bold, industrial, tight-tracking (`tracking-tight`), plus ikon SVG geometris pelat beban (hexagon dengan lubang bulat di tengah) dalam Obsidian/Steel/aksen; dipakai sebagai favicon, ikon PWA, dan di PR card | Arahan owner 2026-11-08; satu motif geometris yang bisa digambar ulang di ukuran apa pun |
 | Latar | Obsidian `#09090b`, Steel `#18181b`, `#27272a` | Sudah dicek kontras; gym dim |
 | Aksen | `#3b82f6` teks/outline/tint, `#2563eb` tombol terisi | Putih di `#3b82f6` hanya 3.68:1 |
 | Status set | W `#facc15`, D `#c084fc`, F `#f87171`, M `#2dd4bf` (cek kontras saat implementasi) | Arahan owner + satu tambahan; selalu berpasangan dengan huruf |
@@ -491,9 +501,9 @@ diverifikasi; **Not Started** = belum ada kode.
 | 2.4 | Body check-in 3 pose + ghost | Not Started | | IndexedDB, kamera, kompresi, compare |
 | 3.1 | Progressive overload coach | Not Started | | Fungsi murni + badge |
 | 3.2 | Recovery estimator | Not Started | | Fungsi murni + halaman |
-| 3.3A | Anatomy generator | Not Started | | Route Handler, skrip batch, style ref |
-| 3.3B | Voice set logger | Not Started | | MediaRecorder, transcribe route, parser |
-| 3.3C | PR card | Not Started | | Canvas render, Web Share |
+| 3.3A | Parametric SVG Muscle Map (highlight + heatmap) | Not Started | | 16 path region, tabel pemetaan, dua mode |
+| 3.3B | Voice set logger (Web Speech + parser lokal) | Not Started | | `useSpeechInput`, `parseSetUtterance` + 30 kasus uji |
+| 3.3C | Canvas PR / session card | Not Started | | `renderPrCard`, Web Share + unduh |
 | 4 | Identitas ABOT (rename, wordmark) | Not Started | masih "Heavy" | Rename, metadata, PWA manifest |
 | Fondasi | IndexedDB + repository layer | Not Started | `localStorage` | Dexie, migrasi dari localStorage |
 | Fondasi | Export / import | Not Started | | JSON + ZIP foto |
@@ -518,7 +528,7 @@ ditulis dengan skill `writing-plans` setelah dokumen ini disetujui.
 | **M3 Core parity** | Myo-reps; RPE picker; superset UI + rest; warm-up generator; plate calculator; Rep PR; routine post-session sync; radar + heatmap (siluet setelah konfirmasi owner); penanda PR di kalender | Tabel tes untuk setiap fungsi murni; click-through |
 | **M4 Ultra-fast logging dan body** | Quick-step toolbar + numpad opsional; auto-advance; instrumentasi waktu per set; body check-in 3 pose + ghost overlay + compare; export ZIP foto | Median waktu per set diukur dan dilaporkan apa adanya |
 | **M5 Coach dan recovery** | Double progression coach; recovery estimator; halaman "Readiness" | Tabel nilai uji untuk kedua model |
-| **M6 Replicate** | Route Handler AI + pemilihan model lewat API; voice logger (Web Speech dulu, Replicate kedua) + parser; anatomy generator (3 contoh -> persetujuan -> batch); PR card lokal | Tanpa token: UI tetap utuh; dengan token: latensi dan biaya diukur |
+| **M6 Local Visual, Voice & Canvas Engine** | `MuscleMap` SVG parametrik (highlight di exercise/picker/kartu, heatmap di Progress); voice logger Web Speech + `parseSetUtterance`; Canvas PR card dan session card dengan Web Share/unduh | Semua offline; 30 kasus parser lulus; screenshot MuscleMap 16 region; PNG card terbuka |
 | **M7 PWA dan rilis** | Manifest, ikon (setelah arahan owner), service worker, halaman "About / data on your device", audit akhir Delivery Gate + dataviz + human | Lighthouse dijalankan dan angkanya dilaporkan apa adanya |
 
 Urutan ini sengaja menaruh fondasi data (M2) sebelum fitur yang menambah data (M3, M4), dan
@@ -553,26 +563,21 @@ Ini perkiraan, bukan komitmen; akan direvisi di setiap implementation plan.
 
 ---
 
-## 9. Pertanyaan Terbuka untuk Owner (urut dari yang paling mengubah rencana)
+## 9. Keputusan Owner (final, 2026-11-08)
 
-- **Q1. Backend.** Pendekatan C (local-first + repository layer, Supabase nanti) direkomendasikan.
-  Setuju, atau akun + sync multi-perangkat harus ada sejak awal (Pendekatan B)?
-- **Q2. Bahasa UI.** Saat ini semua string UI bahasa Inggris. ABOT mau Inggris saja, Indonesia
-  saja, atau keduanya (i18n menambah pekerjaan di setiap task)?
-- **Q3. Logo dan ikon PWA.** Perlu arahan (bentuk, konsep) sebelum dibuat; sampai itu ada,
-  wordmark teks "ABOT" dipakai.
-- **Q4. Siluet heatmap dan gaya anatomi.** Owner ingin menyetujui 3 contoh gambar Replicate dulu,
-  atau menyerahkan gaya ke agen dengan placeholder berlabel sampai batch selesai?
-- **Q5. Token Replicate.** Siap disediakan untuk M6 lewat form kredensial aman (bukan chat)?
-  Tanpa itu M6 hanya bisa diuji dengan mock.
-- **Q6. Voice logger.** Boleh memakai Web Speech API bawaan browser sebagai jalur pertama
-  (gratis, tanpa server) dan Replicate sebagai jalur kedua?
+| # | Topik | Keputusan |
+|---|---|---|
+| Q1 | Penyimpanan | **Pendekatan C**: local-first, IndexedDB lewat Dexie.js, Repository Pattern bersih, export/import JSON. Mencentang set harus 0 ms (state in-memory dulu, persist asinkron). Supabase Cloud Sync nanti hanya menambah adapter tanpa menyentuh UI |
+| Q2 | Bahasa UI | **Inggris** untuk seluruh istilah gym dan UI utama (Set, Prev, Weight, Reps, RPE, 1RM, Superset, Drop Set, Warm-up). Brand "ABOT" |
+| Q3 | Logo | Wordmark "ABOT" bold industrial tight-tracking + ikon SVG geometris pelat beban (hexagon). Palet Obsidian `#09090b`, Steel `#18181b`, aksen tajam |
+| Q4 | Anatomi | **Parametric SVG Muscle Map** di dalam kode, front dan back, satu `<path>` per grup otot (16 region), primary solid, secondary 35% |
+| Q5 | API eksternal | **Zero External Paid API.** Tidak ada Replicate, tidak ada token. Milestone 6 menjadi Local Visual, Voice & Canvas Engine |
+| Q6 | Voice | **Web Speech API** + parser regex deterministik lokal, Inggris dan Indonesia ("80 kilo 8 repetisi RPE 8.5" -> `{ weight: 80, reps: 8, rpe: 8.5 }`) |
 
-Keputusan yang sudah diambil agen dan bisa dikoreksi owner: unit penyimpanan kg; Epley untuk
-1RM; fractional set 0.5 untuk otot sekunder; default rep range 8 sampai 12; model recovery
-eksponensial dengan tau 48/72 jam; warna myo-reps teal; Geist Sans dipertahankan.
-
----
+Keputusan yang diambil agen dan bisa dikoreksi owner: unit penyimpanan kg; Epley untuk 1RM;
+fractional set 0.5 untuk otot sekunder; default rep range 8 sampai 12; model recovery
+eksponensial dengan tau 48/72 jam; warna myo-reps teal (dicek kontras saat implementasi);
+Geist Sans dipertahankan; path otot digambar sebagai poligon flat, bukan trace realistis.
 
 ## 10. Definisi "Selesai" untuk setiap milestone
 
