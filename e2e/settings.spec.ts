@@ -20,7 +20,7 @@ test("switching to lbs changes the logger label and header unit", async ({ page 
 
 test("RPE toggle hides the RPE column", async ({ page }) => {
   await page.goto("/settings");
-  const toggle = page.getByRole("switch", { name: "Show RPE column in the logger" });
+  const toggle = page.getByRole("switch", { name: "RPE column" });
   await expect(toggle).toHaveAttribute("aria-checked", "true");
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-checked", "false");
@@ -33,4 +33,17 @@ test("storage protection status is shown", async ({ page }) => {
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Storage on this device" })).toBeVisible();
   await expect(page.getByText(/^(Protected|Not protected|This browser cannot)/)).toBeVisible();
+});
+
+test("each setting keeps its explanation behind an info button", async ({ page }) => {
+  await freshStart(page);
+  await page.goto("/settings");
+  const text = page.getByText("Stored in kg; this only changes what you see and type.");
+  await expect(text).toBeHidden();
+  const info = page.getByRole("button", { name: "About weight unit" });
+  await info.click();
+  await expect(info).toHaveAttribute("aria-expanded", "true");
+  await expect(text).toBeVisible();
+  await info.click();
+  await expect(text).toBeHidden();
 });

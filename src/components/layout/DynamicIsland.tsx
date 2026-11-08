@@ -10,6 +10,7 @@ import { useSettingsStore } from "@/store/useSettingsStore";
 import { useHydration } from "@/store/hydration";
 import { useNow } from "@/lib/useNow";
 import { formatClock, formatDuration, sessionDurationSec } from "@/lib/calc";
+import { useLiveWorkoutNotification } from "@/lib/notifications/useLiveWorkoutNotification";
 import type { WorkoutSession } from "@/types/workout";
 
 /** Fast to settle, a little overshoot: the capsule should feel like hardware snapping open. */
@@ -18,10 +19,11 @@ const ISLAND_SPRING = { type: "spring", stiffness: 520, damping: 38, mass: 0.9 }
 const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.14, delay: 0.06 } };
 
 /**
- * A black capsule pinned under the status bar, centred where a phone's punch-hole camera sits.
- * Compact while a workout runs (elapsed time, tap to return to it); it morphs open into the rest
- * countdown with its controls, then shows "Go" when rest is over. One layoutId, so the change is
- * a single shape stretching, not one box swapped for another.
+ * A black capsule that sits just above the dock, where the thumb already is. Compact while a
+ * workout runs (elapsed time, tap to return to it); it morphs open into the rest countdown with
+ * its controls, then shows "Go" when rest is over. One layoutId, so the change is a single shape
+ * stretching, not one box swapped for another. Outside the app, the same state is shown as a
+ * status notification (useLiveWorkoutNotification).
  */
 export function DynamicIsland() {
   return (
@@ -36,11 +38,21 @@ function Island() {
   const active = useWorkoutStore((s) => s.active);
   const timer = useWorkoutStore((s) => s.restTimer);
   const pathname = usePathname();
-  if (!hydrated || !active) return null;
+  useLiveWorkoutNotification();
+  // The intro and sign-in have no dock, so there is nothing to sit above.
+  const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login";
+
+  // Pages pad their bottom by this much more, so the bar never covers the last row.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--live-bar", shown ? (timer ? "72px" : "52px") : "0px");
+    return () => document.documentElement.style.setProperty("--live-bar", "0px");
+  }, [shown, timer]);
+
+  if (!shown || !active) return null;
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="pointer-events-none sticky top-0 z-30 flex justify-center px-4 pt-[max(8px,env(safe-area-inset-top))]">
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-[640px] justify-center px-3">
         <LayoutGroup>
           {timer ? (
             <RestCapsule key="rest" />
@@ -134,7 +146,7 @@ function RestCapsule() {
       role="timer"
       aria-live={done ? "assertive" : "off"}
       aria-label={done ? "Rest finished" : `Rest, ${formatClock(remainingSec)} left`}
-      className={`${capsule} relative h-14 w-full max-w-[420px] rounded-[28px]`}
+      className={`${capsule} relative h-14 w-full rounded-[28px]`}
     >
       <motion.div {...fade} className="flex w-full items-center gap-1 pl-5 pr-1.5">
         <div className="flex min-w-0 flex-1 items-baseline gap-2" aria-hidden="true">

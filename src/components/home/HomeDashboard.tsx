@@ -185,7 +185,7 @@ function ActiveCard({ now }: { now: number }) {
       <span className="label-caps !text-accent">Workout in progress</span>
       <span className="mt-1 block truncate text-2xl font-bold tracking-tight">{active.name}</span>
       <span className="num mt-1 block text-sm text-text-muted">
-        {formatDuration(sessionDurationSec(active, now))} · {countSets(active).completed} sets done
+        {formatDuration(sessionDurationSec(active, now))} · {countSets(active).completed} {countSets(active).completed === 1 ? "set" : "sets"} done
       </span>
       <span className="mt-3 flex min-h-12 items-center justify-center rounded-xl bg-accent text-base font-bold text-on-accent">
         Continue workout

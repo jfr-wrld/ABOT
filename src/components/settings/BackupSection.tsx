@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { backupFileName, backupFromSnapshot, importBackup, parseBackup, type AbotBackup, type BackupCounts } from "@/data/backup";
 import { getActivePersistence, getActiveRepository, hydrateStores, snapshotFromStores } from "@/store/persistence";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 type Pending = { backup: AbotBackup; counts: BackupCounts; fileName: string };
 
@@ -87,14 +88,16 @@ export function BackupSection() {
 
   return (
     <section aria-labelledby="backup-heading" className="flex flex-col gap-3">
-      <div>
-        <h2 id="backup-heading" className="text-sm font-semibold">
-          Backup file
-        </h2>
-        <p className="text-xs text-text-muted">
-          A copy of every workout, routine, custom exercise, gym and setting on this device.
-        </p>
-      </div>
+      <InfoTip
+        title={
+          <h2 id="backup-heading" className="text-sm font-semibold">
+            Backup file
+          </h2>
+        }
+        name="backup file"
+      >
+        A copy of every workout, routine, custom exercise, gym and setting on this device.
+      </InfoTip>
 
       <Button onClick={doExport}>Export backup</Button>
 

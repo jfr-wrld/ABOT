@@ -6,6 +6,7 @@ import { useLocationStore } from "@/store/useLocationStore";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { GymLocation } from "@/types/workout";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 const BARS = [20, 15, 10, 7];
 
@@ -25,17 +26,19 @@ export function LocationsSection() {
 
   return (
     <section aria-labelledby="gyms-heading" className="flex flex-col gap-3">
-      <div>
-        <h2 id="gyms-heading" className="text-sm font-semibold">
-          Gyms
-        </h2>
-        <p className="text-xs text-text-muted">
-          Machine and cable weights differ between gyms, so their records and previous sets are kept per gym.
-        </p>
-      </div>
+      <InfoTip
+        title={
+          <h2 id="gyms-heading" className="text-sm font-semibold">
+            Gyms
+          </h2>
+        }
+        name="gyms"
+      >
+        Machine and cable weights differ between gyms, so their records and previous sets are kept per gym.
+      </InfoTip>
 
       {locations.length === 0 ? (
-        <p className="text-sm text-text-muted">No gyms yet. Add the gym you train at to keep machine records apart.</p>
+        <p className="text-sm text-text-muted">No gyms yet.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {locations.map((l) => (

@@ -89,6 +89,21 @@ out like a social profile.
   underline on the current one. Progress holds the lifetime figures and the charts, Lifts the
   e1RM ranking, About the bodyweight log, name and height, the account and settings.
 
+## Workout bar, info tips and status outside the app
+
+Owner brief 2026-11-08:
+- **Workout bar above the dock.** The camera capsule (elapsed time; the rest countdown with
+  -15 s, +15 s and skip) moved from under the status bar to just above the dock, where the thumb
+  already is between sets. Pages add its height to their bottom padding (`--live-bar`), so it
+  never covers the last row.
+- **Info tips in Settings.** Each setting is a short title with an (i) beside it; the sentence
+  that explains it opens under the title on tap, instead of every explanation always showing.
+- **Status outside the app.** The owner asked for a Dynamic Island while ABOT is in the
+  background. iOS Live Activities (Dynamic Island) and Android live updates are only open to
+  native apps, so the web app posts one status notification instead when it is hidden during a
+  workout: "<workout> · rest until 14:32" with the next set below, cleared on return. Times are
+  absolute because background pages cannot tick. Opt-in under Settings, Status outside the app.
+
 ## Identity motif
 
 The set row as a hardware switch: a dark panel that, when you tap the square check, lights Volt,

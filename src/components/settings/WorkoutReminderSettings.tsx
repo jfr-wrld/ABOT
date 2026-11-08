@@ -9,6 +9,7 @@ import { buildIcs, nextSession, reminderContent, type Weekday } from "@/lib/noti
 import { showReminder } from "@/lib/notifications/reminder-service";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
@@ -64,10 +65,17 @@ export function WorkoutReminderSettings() {
   return (
     <section aria-labelledby="schedule-heading" className="panel p-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="schedule-heading" className="flex items-center gap-2 text-sm font-semibold">
-          <BellRing aria-hidden="true" size={16} className="text-text-muted" />
-          Workout schedule
-        </h2>
+        <InfoTip
+          title={
+            <h2 id="schedule-heading" className="flex items-center gap-2 text-sm font-semibold">
+              <BellRing aria-hidden="true" size={16} className="text-text-muted" />
+              Workout schedule
+            </h2>
+          }
+          name="workout schedule"
+        >
+          Pick your training days and ABOT calls you to the session.
+        </InfoTip>
         <button
           type="button"
           role="switch"
@@ -85,9 +93,7 @@ export function WorkoutReminderSettings() {
         </button>
       </div>
 
-      {!schedule.enabled ? (
-        <p className="mt-2 text-sm text-text-muted">Pick your training days and ABOT calls you to the session.</p>
-      ) : (
+      {!schedule.enabled ? null : (
         <div className="mt-3 flex flex-col gap-4">
           <div role="group" aria-label="Training days" className="grid grid-cols-7 gap-1">
             {WEEK.map((d) => {

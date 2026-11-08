@@ -7,6 +7,7 @@ import { useNow } from "@/lib/useNow";
 import { Button } from "@/components/ui/Button";
 import { SyncError } from "@/components/sync/SyncError";
 import { syncStatus } from "@/lib/syncStatus";
+import { InfoTip } from "@/components/ui/InfoTip";
 
 /** Settings > Backup & Sync: the optional Google sign-in and the sync status in plain words. */
 export function SyncSection() {
@@ -22,10 +23,18 @@ export function SyncSection() {
 
   return (
     <section aria-labelledby="sync-heading" className="panel p-3">
-      <h2 id="sync-heading" className="flex items-center gap-2 text-sm font-semibold">
-        <Cloud aria-hidden="true" size={16} className="text-text-muted" />
-        Backup &amp; Sync
-      </h2>
+      <InfoTip
+        title={
+          <h2 id="sync-heading" className="flex items-center gap-2 text-sm font-semibold">
+            <Cloud aria-hidden="true" size={16} className="text-text-muted" />
+            Backup &amp; Sync
+          </h2>
+        }
+        name="backup and sync"
+      >
+        Optional. Sign in to copy your training to your own cloud space and keep your phones in step. ABOT works the same
+        without it. Signing out keeps everything on this device.
+      </InfoTip>
 
       {s.phase === "unconfigured" && (
         <p className="mt-2 text-sm text-text-muted">
@@ -36,10 +45,6 @@ export function SyncSection() {
 
       {(s.phase === "signed_out" || s.phase === "signing_in" || (s.phase === "error" && s.userId === null)) && (
         <>
-          <p className="mt-2 text-sm text-text-muted">
-            Optional. Sign in to copy your training to your own cloud space and keep your phones in step. ABOT works the same
-            without it.
-          </p>
           <Button
             variant="primary"
             onClick={() => void s.signIn()}
@@ -76,7 +81,6 @@ export function SyncSection() {
             </Button>
             <Button onClick={() => void s.signOut()}>Sign out</Button>
           </div>
-          <p className="mt-2 text-xs text-text-muted">Signing out keeps everything on this device.</p>
         </>
       )}
 

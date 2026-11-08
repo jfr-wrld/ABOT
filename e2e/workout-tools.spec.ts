@@ -96,3 +96,16 @@ test("each exercise in the logger shows its photo and equipment icon", async ({ 
   await expect(card.locator("[data-equipment]")).toHaveAttribute("data-equipment", "barbell");
   await expect(card.getByText("Chest · Barbell")).toBeVisible();
 });
+
+test("the rest timer sits just above the dock, within thumb reach", async ({ page }) => {
+  await freshStart(page);
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "5");
+  const timer = page.getByRole("timer");
+  await expect(timer).toBeVisible();
+  const t = (await timer.boundingBox())!;
+  const dock = (await page.getByRole("navigation", { name: "Primary" }).boundingBox())!;
+  expect(t.y + t.height).toBeLessThanOrEqual(dock.y + 12);
+  expect(dock.y - (t.y + t.height)).toBeLessThan(40);
+});
