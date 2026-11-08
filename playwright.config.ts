@@ -14,7 +14,9 @@ export default defineConfig({
   webServer: {
     command: "npm run dev -- -p 3100",
     url: "http://localhost:3100",
-    reuseExistingServer: true,
+    // A server left running from an earlier build silently tests old code; reuse only on request
+    // (E2E_REUSE_SERVER=1, e.g. to run the suite against `next start`).
+    reuseExistingServer: process.env.E2E_REUSE_SERVER === "1",
     timeout: 120_000,
   },
 });
