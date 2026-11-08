@@ -64,6 +64,11 @@ test("the library is grouped by muscle, each exercise with a bundled photo", asy
   const img = chest.getByRole("link", { name: /^Bench Press \(Barbell\)/ }).locator("[data-thumb] img");
   await expect(img).toHaveAttribute("src", "/thumbs/bench-press-barbell.webp");
   await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBe(128);
+  // The corner badge names the equipment with the same icon as the equipment filter.
+  await expect(chest.getByRole("link", { name: /^Bench Press \(Barbell\)/ }).locator("[data-equipment]")).toHaveAttribute(
+    "data-equipment",
+    "barbell",
+  );
 
   await page.goto("/workout");
   await page.getByRole("button", { name: "Start an empty workout" }).click();
