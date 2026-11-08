@@ -78,3 +78,38 @@ test("blocks starting a routine while a workout is active", async ({ page }) => 
   await page.getByRole("button", { name: "Go to current workout" }).click();
   await page.waitForURL("**/workout");
 });
+
+test("the routine editor builds a superset that carries into the workout", async ({ page }) => {
+  await createRoutine(page, "Arms", "");
+  for (const name of ["Bicep Curl (Barbell)", "Triceps Pushdown (Cable)", "Lateral Raise (Dumbbell)"]) {
+    await page.getByRole("button", { name: "Add exercise" }).click();
+    await page.getByLabel("Search exercises").fill(name);
+    await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${name.replace(/[()]/g, "\\$&")}`) }).click();
+  }
+  await page.getByRole("button", { name: "Superset Bicep Curl (Barbell) with" }).click();
+  await page.getByRole("dialog", { name: "Superset Bicep Curl (Barbell) with" }).getByRole("button", { name: /Triceps Pushdown/ }).click();
+  await expect(page.getByText("Superset A")).toHaveCount(2);
+
+  await page.reload();
+  await expect(page.getByText("Superset A")).toHaveCount(2);
+
+  await page.goto("/routines");
+  await page.getByRole("tab", { name: "My Routines" }).click();
+  await page.getByRole("button", { name: "Start Arms" }).click();
+  await page.waitForURL("**/workout");
+  await expect(page.getByText("Superset A")).toHaveCount(2);
+});
+
+test("removing one of a two-exercise superset in the editor dissolves it", async ({ page }) => {
+  await createRoutine(page, "Pair", "");
+  for (const name of ["Bicep Curl (Barbell)", "Triceps Pushdown (Cable)"]) {
+    await page.getByRole("button", { name: "Add exercise" }).click();
+    await page.getByLabel("Search exercises").fill(name);
+    await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${name.replace(/[()]/g, "\\$&")}`) }).click();
+  }
+  await page.getByRole("button", { name: "Superset Bicep Curl (Barbell) with" }).click();
+  await page.getByRole("dialog", { name: "Superset Bicep Curl (Barbell) with" }).getByRole("button", { name: /Triceps Pushdown/ }).click();
+  await expect(page.getByText("Superset A")).toHaveCount(2);
+  await page.getByRole("button", { name: "Remove Triceps Pushdown (Cable) from superset" }).click();
+  await expect(page.getByText("Superset A")).toHaveCount(0);
+});

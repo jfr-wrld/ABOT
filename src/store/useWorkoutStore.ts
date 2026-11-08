@@ -7,6 +7,7 @@ import type {
   WorkoutSet,
 } from "@/types/workout";
 import { newId } from "@/lib/id";
+import { linkSupersetIn, removeFromList, unlinkSupersetIn } from "@/lib/superset";
 import { useLocationStore } from "./useLocationStore";
 
 export interface RestTimer {
@@ -148,7 +149,7 @@ export const useWorkoutStore = create<WorkoutState>()(
 
       removeExercise: (id) =>
         set((s) => ({
-          ...patchActive(s, (a) => ({ ...a, exercises: a.exercises.filter((e) => e.id !== id) })),
+          ...patchActive(s, (a) => ({ ...a, exercises: removeFromList(a.exercises, id) })),
           restTimer: s.restTimer?.sessionExerciseId === id ? null : s.restTimer,
         })),
 
@@ -190,37 +191,9 @@ export const useWorkoutStore = create<WorkoutState>()(
         }),
 
       linkSuperset: (id, withId) =>
-        set((s) =>
-          patchActive(s, (a) => {
-            const x = a.exercises.find((e) => e.id === id);
-            const y = a.exercises.find((e) => e.id === withId);
-            if (!x || !y || x === y) return a;
-            const group = y.supersetId ?? x.supersetId ?? newId();
-            const old = new Set([x.supersetId, y.supersetId].filter(Boolean));
-            return {
-              ...a,
-              // Merging: everything in either superset ends up in one.
-              exercises: a.exercises.map((e) =>
-                e.id === id || e.id === withId || (e.supersetId && old.has(e.supersetId)) ? { ...e, supersetId: group } : e,
-              ),
-            };
-          }),
-        ),
+        set((s) => patchActive(s, (a) => ({ ...a, exercises: linkSupersetIn(a.exercises, id, withId, newId) }))),
 
-      unlinkSuperset: (id) =>
-        set((s) =>
-          patchActive(s, (a) => {
-            const group = a.exercises.find((e) => e.id === id)?.supersetId;
-            if (!group) return a;
-            const remaining = a.exercises.filter((e) => e.supersetId === group && e.id !== id).length;
-            return {
-              ...a,
-              exercises: a.exercises.map((e) =>
-                e.id === id || (remaining < 2 && e.supersetId === group) ? { ...e, supersetId: undefined } : e,
-              ),
-            };
-          }),
-        ),
+      unlinkSuperset: (id) => set((s) => patchActive(s, (a) => ({ ...a, exercises: unlinkSupersetIn(a.exercises, id) }))),
 
       resumeActive: () => set((s) => (s.active ? { active: resumed(s.active, Date.now()) } : {})),
 

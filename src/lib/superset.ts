@@ -23,3 +23,30 @@ export function supersetLabels(
  * yellow/purple/red = set types). Each is above 6:1 on the Carbon surface.
  */
 export const SUPERSET_COLORS = ["#fb923c", "#60a5fa", "#f472b6", "#34d399"] as const;
+
+type Linkable = { id: string; supersetId?: string };
+
+/** Puts two items in one superset, joining (or merging) any superset either is already in. */
+export function linkSupersetIn<T extends Linkable>(list: T[], id: string, withId: string, newId: () => string): T[] {
+  const x = list.find((e) => e.id === id);
+  const y = list.find((e) => e.id === withId);
+  if (!x || !y || x === y) return list;
+  const group = y.supersetId ?? x.supersetId ?? newId();
+  const old = new Set([x.supersetId, y.supersetId].filter(Boolean));
+  return list.map((e) =>
+    e.id === id || e.id === withId || (e.supersetId && old.has(e.supersetId)) ? { ...e, supersetId: group } : e,
+  );
+}
+
+/** Takes one item out of its superset; a superset left with one item dissolves. */
+export function unlinkSupersetIn<T extends Linkable>(list: T[], id: string): T[] {
+  const group = list.find((e) => e.id === id)?.supersetId;
+  if (!group) return list;
+  const remaining = list.filter((e) => e.supersetId === group && e.id !== id).length;
+  return list.map((e) => (e.id === id || (remaining < 2 && e.supersetId === group) ? { ...e, supersetId: undefined } : e));
+}
+
+/** Removes an item, unlinking it first so no superset is left with a single member. */
+export function removeFromList<T extends Linkable>(list: T[], id: string): T[] {
+  return unlinkSupersetIn(list, id).filter((e) => e.id !== id);
+}
