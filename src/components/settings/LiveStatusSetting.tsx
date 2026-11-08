@@ -7,6 +7,7 @@ import { liveStatusEnabled, setLiveStatusEnabled } from "@/lib/notifications/use
 import { isNativeApp } from "@/lib/native/files";
 import { exactAlarmsAllowed, openExactAlarmSettings, testRestAlert } from "@/lib/native/notify";
 import { Button } from "@/components/ui/Button";
+import { useT } from "@/i18n";
 
 /** Settings row: the workout status notification shown while ABOT is in the background. */
 export function LiveStatusSetting() {
@@ -14,6 +15,7 @@ export function LiveStatusSetting() {
   const requestPermission = useReminderStore((s) => s.requestPermission);
   const [enabled, setEnabled] = useState(liveStatusEnabled);
   const [tested, setTested] = useState<string | null>(null);
+  const t = useT();
 
   const unsupported = permission === "unsupported";
   const blocked = permission === "denied";
@@ -49,16 +51,20 @@ export function LiveStatusSetting() {
         <InfoTip
           title={
             <label htmlFor="live-status" className="text-sm font-semibold">
-              Status outside the app
+              {t("Status outside the app")}
             </label>
           }
-          name="status outside the app"
+          name={t("status outside the app")}
         >
           {app
-            ? "While a workout runs and you leave ABOT, a notification shows the workout and your next set, and rings when rest is over."
-            : "While a workout runs and you leave ABOT, a notification shows the workout, when rest ends and your next set. Phones only give the Dynamic Island and live updates to installed native apps, so this is a notification."}
-          {blocked && (app ? " Notifications are off for ABOT; turn them on in Android settings." : " Notifications are blocked for ABOT; allow them in the browser or phone settings.")}
-          {unsupported && " This browser cannot show notifications."}
+            ? t("While a workout runs and you leave ABOT, a notification shows the workout and your next set, and rings when rest is over.")
+            : t("While a workout runs and you leave ABOT, a notification shows the workout, when rest ends and your next set. Phones only give the Dynamic Island and live updates to installed native apps, so this is a notification.")}
+          {blocked &&
+            " " +
+              (app
+                ? t("Notifications are off for ABOT; turn them on in Android settings.")
+                : t("Notifications are blocked for ABOT; allow them in the browser or phone settings."))}
+          {unsupported && " " + t("This browser cannot show notifications.")}
         </InfoTip>
         <button
           id="live-status"
@@ -75,33 +81,34 @@ export function LiveStatusSetting() {
             aria-hidden="true"
             className={`absolute top-0.5 size-6 rounded-full transition-[left] ${on ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`}
           />
-          <span className="sr-only">{on ? "On" : "Off"}</span>
+          <span className="sr-only">{on ? t("On") : t("Off")}</span>
         </button>
       </div>
       {app && on && (
         <div className="mt-2 flex items-center justify-between gap-3">
           <p role="status" className="text-xs text-text-muted">
-            {tested ?? "Check the sound of the rest-over alert."}
+            {tested ?? t("Check the sound of the rest-over alert.")}
           </p>
           <Button
             variant="ghost"
             className="shrink-0"
             onClick={() =>
               void testRestAlert().then(
-                (shown) => setTested(shown ? "Alert sent. Check the sound and the notification." : "Android blocked it. Turn on notifications for ABOT."),
-                () => setTested("The alert could not be sent."),
+                (shown) =>
+                  setTested(shown ? t("Alert sent. Check the sound and the notification.") : t("Android blocked it. Turn on notifications for ABOT.")),
+                () => setTested(t("The alert could not be sent.")),
               )
             }
           >
-            Test alert
+            {t("Test alert")}
           </Button>
         </div>
       )}
       {app && on && !exact && (
         <div className="mt-2 rounded-ctl border border-line bg-surface-2 p-3">
-          <p className="text-xs text-text-muted">Android may ring the rest alarm a few minutes late. Allow alarms for ABOT to ring on the second.</p>
+          <p className="text-xs text-text-muted">{t("Android may ring the rest alarm a few minutes late. Allow alarms for ABOT to ring on the second.")}</p>
           <Button onClick={() => void openExactAlarmSettings()} className="mt-2 w-full">
-            Allow on-time alarms
+            {t("Allow on-time alarms")}
           </Button>
         </div>
       )}

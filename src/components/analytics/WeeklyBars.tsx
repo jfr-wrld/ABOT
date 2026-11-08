@@ -3,6 +3,7 @@
 import { useReducedMotion } from "framer-motion";
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART, numTick, tooltipStyle } from "./chartTheme";
+import { useT } from "@/i18n";
 
 export interface WeekPoint {
   label: string;
@@ -26,12 +27,13 @@ export function WeeklyBars({
   const hasData = points.some((p) => p.value > 0);
   // Bars grow from the floor when the metric or range changes, so the new shape is read as a change.
   const animate = !useReducedMotion();
+  const t = useT();
   return (
     <figure className="p-0">
       <figcaption className="text-sm font-semibold">{title}</figcaption>
       {!hasData ? (
         <p className="py-8 text-center text-sm text-text-muted">
-          Nothing in the last {points.length} weeks yet. Finish a workout and this fills in.
+          {t("Nothing in the last {n} weeks yet. Finish a workout and this fills in.", { n: points.length })}
         </p>
       ) : (
         <>
@@ -84,11 +86,11 @@ export function WeeklyBars({
             </ResponsiveContainer>
           </div>
           <details className="mt-1">
-            <summary className="text-xs text-text-muted hover:text-text">Show as table</summary>
+            <summary className="text-xs text-text-muted hover:text-text">{t("Show as table")}</summary>
             <table className="mt-2 w-full text-xs">
               <thead className="text-left text-text-muted">
                 <tr>
-                  <th className="py-1 font-medium">Week of</th>
+                  <th className="py-1 font-medium">{t("Week of")}</th>
                   <th className="py-1 text-right font-medium">{unitLabel}</th>
                 </tr>
               </thead>

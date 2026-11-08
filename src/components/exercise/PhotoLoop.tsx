@@ -7,6 +7,7 @@ import type { Exercise } from "@/types/workout";
 import { BUNDLED_THUMBS } from "@/data/exercise-thumbs.generated";
 import { MotionFigure } from "@/components/motion/MotionFigure";
 import { patternFor } from "@/components/motion/patterns";
+import { useT } from "@/i18n";
 
 const FRAME_MS = 900;
 const isImage = (u: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
@@ -18,6 +19,7 @@ const isImage = (u: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
  */
 export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; className?: string }) {
   const reduce = useReducedMotion();
+  const t = useT();
   const frames = (exercise.media.motionUrls ?? []).filter(isImage).slice(0, 2);
   const [online, setOnline] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -39,8 +41,8 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
 
   useEffect(() => {
     if (!moving) return;
-    const t = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), FRAME_MS);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), FRAME_MS);
+    return () => clearInterval(timer);
   }, [moving]);
 
   const bundled = BUNDLED_THUMBS.has(exercise.id) ? `/thumbs/${exercise.id}.webp` : null;
@@ -54,7 +56,7 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
           <img
             key={src}
             src={src}
-            alt={i === 0 ? `${exercise.name}, start position` : `${exercise.name}, end position`}
+            alt={i === 0 ? t("{name}, start position", { name: exercise.name }) : t("{name}, end position", { name: exercise.name })}
             width={640}
             height={480}
             onError={() => setFailed(true)}
@@ -65,7 +67,7 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
         ))
       ) : bundled ? (
         // eslint-disable-next-line @next/next/no-img-element -- bundled 128 px photo
-        <img src={bundled} alt={`${exercise.name}, start position`} className="absolute inset-0 size-full object-cover" />
+        <img src={bundled} alt={t("{name}, start position", { name: exercise.name })} className="absolute inset-0 size-full object-cover" />
       ) : pattern ? (
         <div className="absolute inset-0 flex items-center justify-center p-4">
           <div className="w-full max-w-[260px]">
@@ -83,13 +85,13 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
               ))}
             </span>
             <span data-testid="hero-phase" className="label-caps !text-text">
-              {frame === 0 ? "Start" : "End"}
+              {frame === 0 ? t("Start") : t("End")}
             </span>
           </span>
           <button
             type="button"
             onClick={() => setPlaying((p) => !p)}
-            aria-label={playing ? "Pause photos" : "Play photos"}
+            aria-label={playing ? t("Pause photos") : t("Play photos")}
             className="flex size-11 items-center justify-center rounded-full bg-black/50 text-text backdrop-blur hover:bg-black/70"
           >
             {playing ? <Pause aria-hidden="true" size={16} /> : <Play aria-hidden="true" size={16} />}

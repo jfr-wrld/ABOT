@@ -8,6 +8,7 @@ import { useHydration } from "@/store/hydration";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { normalizePath, usePagePath } from "@/components/layout/usePagePath";
+import { useT } from "@/i18n";
 
 /*
  * Four primary destinations, each a real page. Labels stay visible: no bare icons. Workout holds
@@ -58,11 +59,12 @@ function NavBar({ pathname }: { pathname: string | null }) {
   const hydrated = useHydration((s) => s.hydrated);
   const hasActive = useWorkoutStore((s) => s.active !== null);
   const { profileName, profilePhoto } = useSettingsStore();
+  const t = useT();
   if (!showsDock(pathname)) return null;
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t("Primary")}
       className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(10px+env(safe-area-inset-bottom))]"
     >
       <ul className="mx-auto flex max-w-[616px] rounded-2xl border border-ink/[0.08] bg-bg/80 p-1 shadow-[0_8px_32px_rgb(0_0_0/0.5)] backdrop-blur-xl">
@@ -93,8 +95,8 @@ function NavBar({ pathname }: { pathname: string | null }) {
                     <span className="absolute -right-1.5 -top-0.5 size-2 rounded-full bg-accent ring-2 ring-bg" aria-hidden="true" />
                   )}
                 </span>
-                <span className="truncate">{label}</span>
-                {live && <span className="sr-only">(workout in progress)</span>}
+                <span className="truncate">{t(label)}</span>
+                {live && <span className="sr-only">{t("(workout in progress)")}</span>}
               </Link>
             </li>
           );

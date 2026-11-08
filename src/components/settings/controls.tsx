@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { InfoTip } from "@/components/ui/InfoTip";
+import { useT } from "@/i18n";
 
 /** A labelled on/off switch with its explanation behind the info icon. */
 export function Toggle({
@@ -17,6 +18,7 @@ export function Toggle({
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex items-start justify-between gap-3">
       <InfoTip
@@ -43,7 +45,7 @@ export function Toggle({
           aria-hidden="true"
           className={`absolute top-0.5 size-6 rounded-full transition-[left] ${checked ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`}
         />
-        <span className="sr-only">{checked ? "On" : "Off"}</span>
+        <span className="sr-only">{checked ? t("On") : t("Off")}</span>
       </button>
     </div>
   );

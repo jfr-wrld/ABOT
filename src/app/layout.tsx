@@ -13,6 +13,8 @@ import { SignInReturn } from "@/components/sync/SignInReturn";
 import { NativeShell } from "@/components/layout/NativeShell";
 import { AutoGym } from "@/components/layout/AutoGym";
 import { THEME_SCRIPT, ThemeController } from "@/components/layout/ThemeController";
+import { LangAttr } from "@/components/layout/LangAttr";
+import { LoadingStatus } from "@/components/ui/Loading";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -40,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeController />
+        <LangAttr />
         <MotionProvider>
           <StoreHydrator />
           <TabNotice />
@@ -50,13 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Edge-to-edge on Android: a solid strip behind the status bar, content starts below it. */}
           <div aria-hidden="true" className="fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top)] bg-bg" />
           <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pt-[env(safe-area-inset-top)] pb-[calc(var(--dock-h,96px)+var(--live-bar,0px)+env(safe-area-inset-bottom))]">
-            <Suspense
-              fallback={
-                <p role="status" className="px-4 py-10 text-center text-sm text-text-muted">
-                  Loading
-                </p>
-              }
-            >
+            <Suspense fallback={<LoadingStatus />}>
               <PageTransition>{children}</PageTransition>
             </Suspense>
           </div>

@@ -24,7 +24,9 @@ import { formatClock } from "@/lib/calc";
 import { fromDisplay, toDisplay } from "@/lib/units";
 import type { RoutineExercise, RoutineSet } from "@/types/workout";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
-import { EQUIPMENT_LABELS, primaryMusclesLabel } from "@/types/workout";
+import { EQUIPMENT_LABELS } from "@/types/workout";
+import { useT } from "@/i18n";
+import { muscleNames } from "@/components/exercise/MuscleTags";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -45,13 +47,14 @@ function Editor() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menu, setMenu] = useState<{ exId: string; setId: string } | null>(null);
   const [supersetFor, setSupersetFor] = useState<string | null>(null);
+  const t = useT();
 
   if (!routine) {
     return (
       <main className="px-4 pt-4">
-        <PageHeader title="Routine not found" back={{ href: "/workout", label: "Workout" }} />
+        <PageHeader title={t("Routine not found")} back={{ href: "/workout", label: t("Workout") }} />
         <p className="mt-4 text-sm text-text-muted">
-          This routine does not exist on this device. It may have been deleted.
+          {t("This routine does not exist on this device. It may have been deleted.")}
         </p>
       </main>
     );
@@ -80,13 +83,13 @@ function Editor() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <PageHeader title="Edit routine" back={{ href: "/workout", label: "Workout" }} />
+      <PageHeader title={t("Edit routine")} back={{ href: "/workout", label: t("Workout") }} />
 
       <div className="flex flex-col gap-4 px-4 pt-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="r-name" className="mb-1 block text-sm font-semibold">
-              Name
+              {t("Name")}
             </label>
             <input
               id="r-name"
@@ -97,7 +100,7 @@ function Editor() {
           </div>
           <div>
             <label htmlFor="r-folder" className="mb-1 block text-sm font-semibold">
-              Folder <span className="font-normal text-text-muted">(optional)</span>
+              {t("Folder")} <span className="font-normal text-text-muted">{t("(optional)")}</span>
             </label>
             <input
               id="r-folder"
@@ -111,7 +114,7 @@ function Editor() {
 
         {routine.exercises.length === 0 && (
           <p className="panel px-4 py-6 text-center text-sm text-text-muted">
-            No exercises in this routine yet. Add the first one below; each starts with three planned sets.
+            {t("No exercises in this routine yet. Add the first one below; each starts with three planned sets.")}
           </p>
         )}
 
@@ -119,7 +122,7 @@ function Editor() {
           const def = byId[ex.exerciseId];
           const nums = setNumbers(ex.sets);
           const ss = supersets[ex.id];
-          const exName = def?.name ?? "exercise";
+          const exName = def?.name ?? t("exercise");
           return (
             <section
               key={ex.id}
@@ -133,12 +136,12 @@ function Editor() {
                   {def && <ExerciseThumb exercise={def} size={44} />}
                   <div className="min-w-0">
                     <h2 id={`rex-${ex.id}`} className="line-clamp-2 text-base leading-snug font-semibold text-accent">
-                      {def?.name ?? "Removed exercise"}
+                      {def?.name ?? t("Removed exercise")}
                     </h2>
                     {def && (
                       <p className="flex items-center gap-1.5 text-xs text-text-muted">
                         <EquipmentIcon equipment={def.equipment} size={14} />
-                        {EQUIPMENT_LABELS[def.equipment]} · {primaryMusclesLabel(def)}
+                        {t(EQUIPMENT_LABELS[def.equipment])} · {muscleNames(def.primaryMuscles, t)}
                       </p>
                     )}
                   </div>
@@ -148,7 +151,7 @@ function Editor() {
                     type="button"
                     onClick={() => move(ex.id, -1)}
                     disabled={i === 0}
-                    aria-label={`Move ${def?.name ?? "exercise"} up`}
+                    aria-label={t("Move {name} up", { name: exName })}
                     className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text disabled:opacity-40"
                   >
                     <ArrowUp aria-hidden="true" size={18} />
@@ -157,7 +160,7 @@ function Editor() {
                     type="button"
                     onClick={() => move(ex.id, 1)}
                     disabled={i === routine.exercises.length - 1}
-                    aria-label={`Move ${def?.name ?? "exercise"} down`}
+                    aria-label={t("Move {name} down", { name: exName })}
                     className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text disabled:opacity-40"
                   >
                     <ArrowDown aria-hidden="true" size={18} />
@@ -165,7 +168,7 @@ function Editor() {
                   <button
                     type="button"
                     onClick={() => setExercises(routine.id, removeFromList(routine.exercises, ex.id))}
-                    aria-label={`Remove ${def?.name ?? "exercise"} from routine`}
+                    aria-label={t("Remove {name} from routine", { name: exName })}
                     className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
                   >
                     <Trash2 aria-hidden="true" size={18} />
@@ -176,15 +179,15 @@ function Editor() {
               {ss ? (
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <span className="label-caps" style={{ color: SUPERSET_COLORS[ss.color] }}>
-                    Superset {ss.letter}
+                    {t("Superset {letter}", { letter: ss.letter })}
                   </span>
                   <button
                     type="button"
                     onClick={() => setExercises(routine.id, unlinkSupersetIn(routine.exercises, ex.id))}
-                    aria-label={`Remove ${exName} from superset`}
+                    aria-label={t("Remove {name} from superset", { name: exName })}
                     className="flex min-h-11 items-center gap-1.5 rounded-ctl px-2 text-xs font-semibold text-text-muted hover:bg-surface-2 hover:text-text"
                   >
-                    <Link2Off aria-hidden="true" size={14} /> Remove from superset
+                    <Link2Off aria-hidden="true" size={14} /> {t("Remove from superset")}
                   </button>
                 </div>
               ) : (
@@ -193,21 +196,21 @@ function Editor() {
                     type="button"
                     onClick={() => setSupersetFor(ex.id)}
                     aria-haspopup="dialog"
-                    aria-label={`Superset ${exName} with`}
+                    aria-label={t("Superset {name} with", { name: exName })}
                     className="mt-1 flex min-h-11 items-center gap-1.5 rounded-ctl px-2 -ml-2 text-xs font-semibold text-text-muted hover:bg-surface-2 hover:text-text"
                   >
-                    <Link2 aria-hidden="true" size={14} /> Superset with…
+                    <Link2 aria-hidden="true" size={14} /> {t("Superset with…")}
                   </button>
                 )
               )}
 
               <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
-                <label htmlFor={`rest-${ex.id}`}>Rest</label>
+                <label htmlFor={`rest-${ex.id}`}>{t("Rest")}</label>
                 <Select
                   id={`rest-${ex.id}`}
                   value={ex.restSeconds}
                   onChange={(restSeconds) => patchExercise(ex.id, (x) => ({ ...x, restSeconds }))}
-                  options={REST_OPTIONS.map((s) => ({ value: s, label: s === 0 ? "Off" : formatClock(s) }))}
+                  options={REST_OPTIONS.map((s) => ({ value: s, label: s === 0 ? t("Off") : formatClock(s) }))}
                 />
               </div>
 
@@ -216,15 +219,15 @@ function Editor() {
                 style={{ gridTemplateColumns: "44px minmax(0,1fr) 72px 64px" }}
                 aria-hidden="true"
               >
-                <span className="text-center">Set</span>
+                <span className="text-center">{t("Set")}</span>
                 <span />
                 <span className="text-center">{def?.isBodyweight ? "" : weightUnit}</span>
-                <span className="text-center">Reps</span>
+                <span className="text-center">{t("Reps")}</span>
               </div>
-              <ol className="mt-1 flex flex-col gap-1" aria-label={`Planned sets for ${def?.name ?? "exercise"}`}>
+              <ol className="mt-1 flex flex-col gap-1" aria-label={t("Planned sets for {name}", { name: exName })}>
                 {ex.sets.map((s, i) => {
                   const num = nums[i] ?? null;
-                  const name = setTypeA11yName(s.type, num);
+                  const name = setTypeA11yName(s.type, num, t);
                   return (
                     <li
                       key={s.id}
@@ -234,18 +237,18 @@ function Editor() {
                       <button
                         type="button"
                         onClick={() => setMenu({ exId: ex.id, setId: s.id })}
-                        aria-label={`${name}: change type or remove`}
+                        aria-label={t("{name}: change type or remove", { name })}
                         aria-haspopup="dialog"
                         className="flex h-11 w-11 items-center justify-center rounded-ctl hover:bg-surface-2"
                       >
                         <SetTypeChip type={s.type} number={num} />
                       </button>
-                      <span className="text-xs text-text-muted">target</span>
+                      <span className="text-xs text-text-muted">{t("target")}</span>
                       {def?.isBodyweight ? (
-                        <span className="text-center text-xs text-text-muted">BW</span>
+                        <span className="text-center text-xs text-text-muted">{t("BW")}</span>
                       ) : (
                         <NumberField
-                          aria-label={`${name} target weight in ${weightUnit}`}
+                          aria-label={t("{name} target weight in {unit}", { name, unit: weightUnit })}
                           placeholder="0"
                           value={s.targetWeightKg === null ? null : toDisplay(s.targetWeightKg, weightUnit)}
                           onCommit={(v) =>
@@ -255,7 +258,7 @@ function Editor() {
                         />
                       )}
                       <NumberField
-                        aria-label={`${name} target reps`}
+                        aria-label={t("{name} target reps", { name })}
                         placeholder="0"
                         value={s.targetReps}
                         onCommit={(v) => patchSet(ex.id, s.id, { targetReps: v === null ? null : Math.round(v) })}
@@ -281,20 +284,20 @@ function Editor() {
                 }
                 className="mt-2 w-full"
               >
-                <Plus aria-hidden="true" size={18} /> Add set
+                <Plus aria-hidden="true" size={18} /> {t("Add set")}
               </Button>
             </section>
           );
         })}
 
         <Button onClick={() => setPickerOpen(true)} className="w-full">
-          <Plus aria-hidden="true" size={18} /> Add exercise
+          <Plus aria-hidden="true" size={18} /> {t("Add exercise")}
         </Button>
 
         <p className="text-center text-xs text-text-muted">
-          Changes save as you type.{" "}
+          {t("Changes save as you type.")}{" "}
           <Link href="/workout" className="text-accent underline-offset-2 hover:underline">
-            Back to routines
+            {t("Back to routines")}
           </Link>
         </p>
       </div>
@@ -311,11 +314,11 @@ function Editor() {
 
       {supersetFor && (() => {
         const from = routine.exercises.find((e) => e.id === supersetFor);
-        const fromName = (from && byId[from.exerciseId]?.name) ?? "exercise";
+        const fromName = (from && byId[from.exerciseId]?.name) ?? t("exercise");
         return (
-          <Sheet open onClose={() => setSupersetFor(null)} title={`Superset ${fromName} with`}>
+          <Sheet open onClose={() => setSupersetFor(null)} title={t("Superset {name} with", { name: fromName })}>
             <p className="mb-3 text-sm text-text-muted">
-              Do one set of each back to back. Rest starts after the last exercise of the superset.
+              {t("Do one set of each back to back. Rest starts after the last exercise of the superset.")}
             </p>
             <ul className="flex flex-col gap-1">
               {routine.exercises
@@ -333,7 +336,7 @@ function Editor() {
                         className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-left hover:bg-surface-2 active:bg-ink/[0.08]"
                       >
                         {d && <ExerciseThumb exercise={d} size={40} />}
-                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{d?.name ?? "Removed exercise"}</span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{d?.name ?? t("Removed exercise")}</span>
                       </button>
                     </li>
                   );
@@ -346,7 +349,7 @@ function Editor() {
       <SetTypeMenu
         open={menu !== null && menuSet !== undefined}
         current={menuSet?.type ?? "normal"}
-        onSelect={(t) => menu && patchSet(menu.exId, menu.setId, { type: t })}
+        onSelect={(type) => menu && patchSet(menu.exId, menu.setId, { type })}
         onRemove={() =>
           menu && patchExercise(menu.exId, (e) => ({ ...e, sets: e.sets.filter((s) => s.id !== menu.setId) }))
         }

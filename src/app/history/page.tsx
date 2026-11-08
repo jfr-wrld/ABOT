@@ -33,6 +33,8 @@ import {
   type WorkoutSession,
 } from "@/types/workout";
 import { exercisePath } from "@/lib/routes";
+import { useT } from "@/i18n";
+import { muscleText } from "@/lib/home";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
 
@@ -63,6 +65,7 @@ function asRoutine(s: WorkoutSession): Routine {
 }
 
 function SessionDetail() {
+  const t = useT();
   const id = useSearchParams().get("id") ?? "";
   const router = useRouter();
   const sessions = useWorkoutStore((s) => s.sessions);
@@ -85,8 +88,8 @@ function SessionDetail() {
   if (!session) {
     return (
       <main>
-        <PageHeader title="Workout not found" back={{ href: "/", label: "Home" }} />
-        <p className="px-4 pt-4 text-sm text-text-muted">This workout is not on this device. It may have been deleted.</p>
+        <PageHeader title={t("Workout not found")} back={{ href: "/", label: t("Home") }} />
+        <p className="px-4 pt-4 text-sm text-text-muted">{t("This workout is not on this device. It may have been deleted.")}</p>
       </main>
     );
   }
@@ -102,10 +105,10 @@ function SessionDetail() {
       <div className="flex flex-col gap-3 px-4 pt-4">
         <Rise order={1}>
           <dl className="grid grid-cols-2 gap-2">
-            <Stat icon={<Timer size={16} />} label="Duration" value={sessionDurationSec(session)} format={(n) => formatDuration(Math.round(n))} />
-            <Stat icon={<Dumbbell size={16} />} label="Volume" value={total} format={(n) => formatVolume(n, weightUnit)} />
-            <Stat icon={<Layers size={16} />} label="Sets" value={sets} format={(n) => String(Math.round(n))} />
-            <Stat icon={<Trophy size={16} />} label="Records" value={prLifts} format={(n) => String(Math.round(n))} pr={prLifts > 0} />
+            <Stat icon={<Timer size={16} />} label={t("Duration")} value={sessionDurationSec(session)} format={(n) => formatDuration(Math.round(n))} />
+            <Stat icon={<Dumbbell size={16} />} label={t("Volume")} value={total} format={(n) => formatVolume(n, weightUnit)} />
+            <Stat icon={<Layers size={16} />} label={t("Sets")} value={sets} format={(n) => String(Math.round(n))} />
+            <Stat icon={<Trophy size={16} />} label={t("Records")} value={prLifts} format={(n) => String(Math.round(n))} pr={prLifts > 0} />
           </dl>
         </Rise>
 
@@ -119,17 +122,17 @@ function SessionDetail() {
               </div>
               <div className="min-w-0">
                 <h2 id="muscles-heading" className="label-caps">
-                  Muscles worked
+                  {t("Muscles worked")}
                 </h2>
                 <ul className="mt-2 flex flex-wrap gap-1">
                   {muscles.primary.slice(0, 5).map((m) => (
                     <li key={m} className="rounded-full border border-accent/40 bg-accent-tint px-2 py-0.5 text-xs font-semibold">
-                      {MUSCLE_GROUP_LABELS[m]}
+                      {muscleText(MUSCLE_GROUP_LABELS[m], t)}
                     </li>
                   ))}
                   {muscles.secondary.slice(0, 3).map((m) => (
                     <li key={m} className="rounded-full border border-ink/10 px-2 py-0.5 text-xs text-text-muted">
-                      {MUSCLE_GROUP_LABELS[m]}
+                      {muscleText(MUSCLE_GROUP_LABELS[m], t)}
                     </li>
                   ))}
                 </ul>
@@ -157,7 +160,7 @@ function SessionDetail() {
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-accent/40 text-sm font-semibold"
             >
               <Play aria-hidden="true" size={16} className="text-accent" />
-              Current workout
+              {t("Current workout")}
             </Link>
           ) : (
             <Button
@@ -169,10 +172,10 @@ function SessionDetail() {
               className="min-h-12 text-base"
             >
               <Play aria-hidden="true" size={18} />
-              Repeat
+              {t("Repeat")}
             </Button>
           )}
-          <ShareStoryButton session={session} label="Share story" className="min-h-12 w-full" />
+          <ShareStoryButton session={session} label={t("Share story")} className="min-h-12 w-full" />
         </div>
       </div>
 
@@ -185,17 +188,17 @@ function SessionDetail() {
           }}
           className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold text-failure hover:bg-failure/10"
         >
-          <Trash2 aria-hidden="true" size={18} /> Delete this workout
+          <Trash2 aria-hidden="true" size={18} /> {t("Delete this workout")}
         </button>
       </Sheet>
 
       <Sheet
         open={confirm}
         onClose={() => setConfirm(false)}
-        title="Delete this workout?"
+        title={t("Delete this workout?")}
         footer={
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setConfirm(false)}>Keep it</Button>
+            <Button onClick={() => setConfirm(false)}>{t("Keep it")}</Button>
             <Button
               variant="danger"
               onClick={() => {
@@ -203,13 +206,13 @@ function SessionDetail() {
                 router.push("/");
               }}
             >
-              Delete
+              {t("Delete")}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-text-muted">
-          Its sets leave your history and any records it set are recalculated. This cannot be undone.
+          {t("Its sets leave your history and any records it set are recalculated. This cannot be undone.")}
         </p>
       </Sheet>
     </main>
@@ -222,6 +225,7 @@ function SessionDetail() {
  * then the date and name. The backdrop drifts slightly, like a slow camera.
  */
 function Hero({ session, byId, onMenu }: { session: WorkoutSession; byId: Record<string, Exercise>; onMenu: () => void }) {
+  const t = useT();
   const reduce = useReducedMotion();
   const defs = session.exercises.map((e) => byId[e.exerciseId]).filter(Boolean) as Exercise[];
   const photos = defs.map((d) => exercisePhoto(d)).filter(Boolean).slice(0, 4) as string[];
@@ -249,12 +253,12 @@ function Hero({ session, byId, onMenu }: { session: WorkoutSession; byId: Record
             className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-surface/60 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-surface/70"
           >
             <ChevronLeft aria-hidden="true" size={18} />
-            Home
+            {t("Home")}
           </Link>
           <button
             type="button"
             onClick={onMenu}
-            aria-label="Workout options"
+            aria-label={t("Workout options")}
             aria-haspopup="dialog"
             className="-mr-2 flex size-11 items-center justify-center rounded-full bg-surface/60 backdrop-blur hover:bg-surface/70"
           >
@@ -270,8 +274,8 @@ function Hero({ session, byId, onMenu }: { session: WorkoutSession; byId: Record
             ))}
           </ul>
           <p className="num mt-3 text-xs uppercase tracking-wider text-text-muted">
-            {date.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })} ·{" "}
-            {date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+            {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })} ·{" "}
+            {date.toLocaleTimeString(t.locale, { hour: "2-digit", minute: "2-digit" })}
           </p>
           <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight">{session.name}</h1>
         </Rise>
@@ -326,6 +330,7 @@ function ExerciseCard({
   unit: WeightUnit;
   prSetIds: Set<string>;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(true);
   const controls = useEntrance();
   const nums = setNumbers(ex.sets);
@@ -351,17 +356,17 @@ function ExerciseCard({
                 {def.name}
               </Link>
             ) : (
-              "Removed exercise"
+              t("Removed exercise")
             )}
           </h2>
           {def && (
             <p className="flex items-center gap-1.5 text-xs text-text-muted">
               <EquipmentIcon equipment={def.equipment} size={14} />
-              {EQUIPMENT_LABELS[def.equipment]} · <span className="num">{ex.sets.filter((s) => s.completed).length}</span> sets
+              {t(EQUIPMENT_LABELS[def.equipment])} · <span className="num">{t.n(ex.sets.filter((s) => s.completed).length, "{n} set", "{n} sets")}</span>
             </p>
           )}
           {share > 0 && (
-            <div className="mt-1.5 flex items-center gap-2" title="Share of this workout's volume">
+            <div className="mt-1.5 flex items-center gap-2" title={t("Share of this workout's volume")}>
               <span className="h-1 flex-1 overflow-hidden rounded-full bg-zinc-800">
                 <motion.span
                   className="block h-full origin-left rounded-full bg-accent"
@@ -371,7 +376,7 @@ function ExerciseCard({
                 />
               </span>
               <span className="num text-[10px] text-text-muted">
-                {Math.round(share * 100)}%<span className="sr-only"> of the workout&apos;s volume</span>
+                {Math.round(share * 100)}%<span className="sr-only"> {t("of the workout's volume")}</span>
               </span>
             </div>
           )}
@@ -381,7 +386,7 @@ function ExerciseCard({
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-controls={panelId}
-          aria-label={`${open ? "Hide" : "Show"} sets of ${def?.name ?? "exercise"}`}
+          aria-label={open ? t("Hide sets of {name}", { name: def?.name ?? t("exercise") }) : t("Show sets of {name}", { name: def?.name ?? t("exercise") })}
           whileTap={{ scale: 0.9 }}
           transition={PRESS_SPRING}
           className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-muted hover:bg-ink/[0.06] hover:text-text"
@@ -413,7 +418,7 @@ function ExerciseCard({
                 <li key={s.id} className={`flex min-h-10 items-center gap-3 rounded-lg px-1 text-sm ${s.completed ? "" : "opacity-45"}`}>
                   <SetTypeChip type={s.type} number={num} />
                   <span className="num w-28 shrink-0">
-                    {def?.isBodyweight || s.weightKg === null ? `${s.reps} reps` : `${formatWeight(s.weightKg, unit)} × ${s.reps}`}
+                    {def?.isBodyweight || s.weightKg === null ? t("{n} reps", { n: String(s.reps) }) : `${formatWeight(s.weightKg, unit)} × ${s.reps}`}
                   </span>
                   <span aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-800/80">
                     <motion.span
@@ -436,7 +441,7 @@ function ExerciseCard({
                       <Trophy aria-hidden="true" size={12} /> PR
                     </span>
                   ) : isBest ? (
-                    <span className="label-caps shrink-0 !text-text">Best</span>
+                    <span className="label-caps shrink-0 !text-text">{t("Best")}</span>
                   ) : null}
                 </li>
               );

@@ -10,6 +10,7 @@ import { SyncError } from "@/components/sync/SyncError";
 import { useSyncStore } from "@/store/useSyncStore";
 import { useNow } from "@/lib/useNow";
 import { syncStatus } from "@/lib/syncStatus";
+import { useT } from "@/i18n";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
 const stack: Variants = { hidden: {}, shown: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } };
@@ -36,6 +37,7 @@ const LABELS: Record<string, string> = { "/profile": "Profile", "/profile?tab=ab
  */
 export default function LoginPage() {
   const from = useFrom();
+  const t = useT();
   return (
     <main className="flex min-h-[calc(100dvh-var(--dock-h,96px))] flex-1 flex-col px-5 pb-[calc(16px+env(safe-area-inset-bottom))]">
       <div className="pt-4">
@@ -44,7 +46,7 @@ export default function LoginPage() {
           className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-ctl pr-3 pl-1 text-sm text-text-muted hover:bg-surface hover:text-text"
         >
           <ChevronLeft aria-hidden="true" size={18} />
-          {(from && LABELS[from]) ?? "Back"}
+          {t((from && LABELS[from]) ?? "Back")}
         </Link>
       </div>
       <motion.div variants={stack} initial="hidden" animate="shown" className="mt-auto flex flex-col">
@@ -52,11 +54,10 @@ export default function LoginPage() {
           <AbotMark size={48} />
         </motion.span>
         <motion.h1 variants={rise} className="mt-6 text-3xl font-bold leading-tight tracking-tight">
-          Back up and sync
+          {t("Back up and sync")}
         </motion.h1>
         <motion.p variants={rise} className="mt-3 max-w-[36ch] text-base leading-relaxed text-text-muted">
-          ABOT works fully without an account. Signing in will copy your workouts to your own cloud space,
-          so a new phone can restore them.
+          {t("ABOT works fully without an account. Signing in will copy your workouts to your own cloud space, so a new phone can restore them.")}
         </motion.p>
 
         <motion.div variants={rise} className="mt-8 flex flex-col gap-3">
@@ -67,11 +68,14 @@ export default function LoginPage() {
   );
 }
 
-const exportLink = (
-  <Link href="/settings" className="font-semibold text-text underline underline-offset-4 hover:text-accent">
-    Export backup in Settings
-  </Link>
-);
+function ExportLink() {
+  const t = useT();
+  return (
+    <Link href="/settings" className="font-semibold text-text underline underline-offset-4 hover:text-accent">
+      {t("Export backup in Settings")}
+    </Link>
+  );
+}
 
 /**
  * One Volt action per state: signing in when it is possible, carrying on when it is not, and
@@ -81,6 +85,7 @@ function GoogleSignIn({ from }: { from: string | null }) {
   const s = useSyncStore();
   const now = useNow(30_000);
   const away = from ?? "/";
+  const t = useT();
 
   if (s.phase === "unconfigured") {
     return (
@@ -92,26 +97,26 @@ function GoogleSignIn({ from }: { from: string | null }) {
             aria-describedby="google-status"
             className="flex min-h-12 w-full items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 text-base font-semibold text-text disabled:opacity-60"
           >
-            Sign in with Google
+            {t("Sign in with Google")}
           </button>
           <p id="google-status" className="mt-3 text-sm text-text-muted">
-            Cloud sync is not set up for this build. Keep a copy with {exportLink}.
+            {t("Cloud sync is not set up for this build. Keep a copy with")} <ExportLink />.
           </p>
         </div>
         <Link href={away} className={PRIMARY_LINK}>
-          Continue without an account
+          {t("Continue without an account")}
         </Link>
       </>
     );
   }
 
   if (s.userId && s.phase !== "signed_out" && s.phase !== "signing_in") {
-    const status = syncStatus(s, now);
+    const status = syncStatus(s, now, t);
     return (
       <>
         <div className="rounded-card border border-ink/[0.08] bg-surface p-4">
           <p className="text-sm">
-            Signed in as <span className="break-all font-semibold">{s.email ?? "your Google account"}</span>
+            {t("Signed in as")} <span className="break-all font-semibold">{s.email ?? t("your Google account")}</span>
           </p>
           <p role="status" className={`mt-1 text-sm ${status.tone === "error" ? "text-failure" : "text-text-muted"}`}>
             {status.text}
@@ -121,10 +126,10 @@ function GoogleSignIn({ from }: { from: string | null }) {
           )}
         </div>
         <Link href={away} className={PRIMARY_LINK}>
-          Done
+          {t("Done")}
         </Link>
         <Link href="/settings?section=data" className={SECONDARY_LINK}>
-          Backup &amp; Sync settings
+          {t("Backup & Sync settings")}
         </Link>
       </>
     );
@@ -138,15 +143,15 @@ function GoogleSignIn({ from }: { from: string | null }) {
         disabled={s.phase === "signing_in"}
         className="min-h-12 w-full text-base"
       >
-        {s.phase === "signing_in" ? "Opening Google" : "Sign in with Google"}
+        {s.phase === "signing_in" ? t("Opening Google") : t("Sign in with Google")}
       </Button>
       {s.phase === "error" && s.lastError ? (
         <SyncError stage={s.errorStage ?? "sign_in"} raw={s.lastError} />
       ) : (
-        <p className="text-sm text-text-muted">Google opens to confirm it is you, then brings you back to ABOT.</p>
+        <p className="text-sm text-text-muted">{t("Google opens to confirm it is you, then brings you back to ABOT.")}</p>
       )}
       <Link href={away} className={QUIET_LINK}>
-        Continue without an account
+        {t("Continue without an account")}
       </Link>
     </>
   );

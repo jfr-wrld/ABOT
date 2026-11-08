@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AnimatedAbotMark, AnimatedWordmark } from "@/components/brand/AnimatedAbotMark";
 import { useHydration } from "@/store/hydration";
+import { useT } from "@/i18n";
 
 /** Long enough for the plate to assemble; short enough that it never feels like a wait. */
 const MIN_MS = 1150;
@@ -16,13 +17,14 @@ export const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as const;
  * appears to come forward from behind it.
  */
 export function SplashScreen() {
+  const t = useT();
   const hydrated = useHydration((s) => s.hydrated);
   const [minDone, setMinDone] = useState(false);
   const reduce = useReducedMotion();
 
   useEffect(() => {
-    const t = setTimeout(() => setMinDone(true), MIN_MS);
-    return () => clearTimeout(t);
+    const id = setTimeout(() => setMinDone(true), MIN_MS);
+    return () => clearTimeout(id);
   }, []);
 
   const show = !(hydrated && minDone);
@@ -33,7 +35,7 @@ export function SplashScreen() {
         <motion.div
           key="splash"
           role="status"
-          aria-label="Loading ABOT"
+          aria-label={t("Loading ABOT")}
           className="force-dark fixed inset-0 z-50 flex flex-col items-center justify-center bg-black"
           initial={false}
           exit={{ opacity: 0, scale: 1.04 }}

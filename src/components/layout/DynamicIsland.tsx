@@ -15,6 +15,7 @@ import { usePagePath } from "@/components/layout/usePagePath";
 import { buzz } from "@/lib/native/haptics";
 import { isNativeApp } from "@/lib/native/files";
 import { notificationPermission } from "@/lib/notifications/reminder-service";
+import { useT } from "@/i18n";
 
 /** Fast to settle, a little overshoot: the capsule should feel like hardware snapping open. */
 const ISLAND_SPRING = { type: "spring", stiffness: 520, damping: 38, mass: 0.9 } as const;
@@ -72,6 +73,7 @@ const capsule =
   "force-dark pointer-events-auto flex items-center overflow-hidden rounded-full border border-accent/25 bg-black text-text shadow-[0_0_14px_rgb(204_255_0/0.14)]";
 
 function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; onWorkoutPage: boolean }) {
+  const t = useT();
   const now = useNow(1000);
   const elapsed = formatDuration(sessionDurationSec(session, now));
   const paused = session.pausedAt !== undefined;
@@ -87,7 +89,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
       </span>
       {paused && (
         <span className="text-[11px] font-semibold text-text-muted" aria-hidden="true">
-          Paused
+          {t("Paused")}
         </span>
       )}
     </motion.span>
@@ -95,13 +97,13 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
   return (
     <motion.div layoutId="island" transition={ISLAND_SPRING} className={`${capsule} h-9`}>
       {onWorkoutPage ? (
-        <span className="flex h-full items-center" role="status" aria-label={`Workout ${paused ? "paused" : "running"}, ${elapsed}`}>
+        <span className="flex h-full items-center" role="status" aria-label={paused ? t("Workout paused, {time}", { time: elapsed }) : t("Workout running, {time}", { time: elapsed })}>
           {body}
         </span>
       ) : (
         <Link
           href="/workout"
-          aria-label="Open the workout in progress"
+          aria-label={t("Open the workout in progress")}
           className="flex h-full items-center hover:bg-ink/[0.06]"
         >
           {body}
@@ -112,6 +114,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
 }
 
 function RestCapsule() {
+  const t = useT();
   const timer = useWorkoutStore((s) => s.restTimer);
   const adjust = useWorkoutStore((s) => s.adjustRest);
   const skip = useWorkoutStore((s) => s.skipRest);
@@ -137,8 +140,8 @@ function RestCapsule() {
       beep();
     }
     // Hold "Go" for a moment so the lifter sees rest is over, then fold back to compact.
-    const t = setTimeout(skip, 2500);
-    return () => clearTimeout(t);
+    const id = setTimeout(skip, 2500);
+    return () => clearTimeout(id);
   }, [timer, remainingMs, alert, skip]);
 
   if (!timer) return null;
@@ -150,21 +153,21 @@ function RestCapsule() {
       transition={ISLAND_SPRING}
       role="timer"
       aria-live={done ? "assertive" : "off"}
-      aria-label={done ? "Rest finished" : `Rest, ${formatClock(remainingSec)} left`}
+      aria-label={done ? t("Rest finished") : t("Rest, {time} left", { time: formatClock(remainingSec) })}
       className={`${capsule} relative h-14 w-full rounded-[28px]`}
     >
       <motion.div {...fade} className="flex w-full items-center gap-1 pl-5 pr-1.5">
         <div className="flex min-w-0 flex-1 items-baseline gap-2" aria-hidden="true">
-          <span className="label-caps">{done ? "Rest over" : "Rest"}</span>
-          <span className="num text-xl font-extrabold text-accent">{done ? "Go" : formatClock(remainingSec)}</span>
+          <span className="label-caps">{done ? t("Rest over") : t("Rest")}</span>
+          <span className="num text-xl font-extrabold text-accent">{done ? t("Go") : formatClock(remainingSec)}</span>
         </div>
-        <IslandButton label="Shorten rest by 15 seconds" onClick={() => adjust(-15)} disabled={done}>
+        <IslandButton label={t("Shorten rest by 15 seconds")} onClick={() => adjust(-15)} disabled={done}>
           <Minus aria-hidden="true" size={18} />
         </IslandButton>
-        <IslandButton label="Extend rest by 15 seconds" onClick={() => adjust(15)} disabled={done}>
+        <IslandButton label={t("Extend rest by 15 seconds")} onClick={() => adjust(15)} disabled={done}>
           <Plus aria-hidden="true" size={18} />
         </IslandButton>
-        <IslandButton label="Skip rest" onClick={skip}>
+        <IslandButton label={t("Skip rest")} onClick={skip}>
           <X aria-hidden="true" size={18} />
         </IslandButton>
       </motion.div>

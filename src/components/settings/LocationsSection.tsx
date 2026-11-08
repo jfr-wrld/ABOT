@@ -10,6 +10,7 @@ import { InfoTip } from "@/components/ui/InfoTip";
 import { MapPin } from "lucide-react";
 import { currentPosition, openAppSettings, requestAccess } from "@/lib/native/permissions";
 import { isNativeApp } from "@/lib/native/files";
+import { useT } from "@/i18n";
 
 const BARS = [20, 15, 10, 7];
 
@@ -26,22 +27,23 @@ export function LocationsSection() {
   const { locations, add, setDefault } = useLocationStore();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   return (
     <section aria-labelledby="gyms-heading" className="flex flex-col gap-3">
       <InfoTip
         title={
           <h2 id="gyms-heading" className="text-sm font-semibold">
-            Gyms
+            {t("Gyms")}
           </h2>
         }
-        name="gyms"
+        name={t("gyms")}
       >
-        Machine and cable weights differ between gyms, so their records and previous sets are kept per gym.
+        {t("Machine and cable weights differ between gyms, so their records and previous sets are kept per gym.")}
       </InfoTip>
 
       {locations.length === 0 ? (
-        <p className="text-sm text-text-muted">No gyms yet.</p>
+        <p className="text-sm text-text-muted">{t("No gyms yet.")}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {locations.map((l) => (
@@ -54,7 +56,7 @@ export function LocationsSection() {
         onSubmit={(e) => {
           e.preventDefault();
           const n = name.trim();
-          if (!n) return setError("Enter a gym name");
+          if (!n) return setError(t("Enter a gym name"));
           add(n);
           setName("");
           setError(null);
@@ -62,7 +64,7 @@ export function LocationsSection() {
         className="flex gap-2"
       >
         <label htmlFor="new-gym" className="sr-only">
-          New gym name
+          {t("New gym name")}
         </label>
         <input
           id="new-gym"
@@ -71,12 +73,12 @@ export function LocationsSection() {
             setName(e.target.value);
             setError(null);
           }}
-          placeholder="Gym name"
+          placeholder={t("Gym name")}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "new-gym-error" : undefined}
           className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
         />
-        <Button type="submit">Add gym</Button>
+        <Button type="submit">{t("Add gym")}</Button>
       </form>
       {error && (
         <p id="new-gym-error" role="alert" className="text-xs text-failure">
@@ -93,22 +95,23 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
   const [platesError, setPlatesError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const base = `gym-${gym.id}`;
+  const t = useT();
 
   return (
     <li className="rounded-ctl border border-line p-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="min-w-0 truncate text-sm font-semibold">{gym.name}</h3>
         {gym.isDefault ? (
-          <span className="text-xs font-semibold text-accent">Default</span>
+          <span className="text-xs font-semibold text-accent">{t("Default")}</span>
         ) : (
           <Button variant="ghost" onClick={onMakeDefault} className="min-h-9 px-2 text-xs">
-            Make default
+            {t("Make default")}
           </Button>
         )}
       </div>
       <div className="mt-2 grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
         <label htmlFor={`${base}-name`} className="text-xs text-text-muted">
-          Name
+          {t("Name")}
         </label>
         <input
           id={`${base}-name`}
@@ -117,7 +120,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
           className="h-11 min-w-0 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
         />
         <label htmlFor={`${base}-bar`} className="text-xs text-text-muted">
-          Bar
+          {t("Bar")}
         </label>
         <Select
           id={`${base}-bar`}
@@ -126,7 +129,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
           options={BARS.map((b) => ({ value: b, label: `${b} kg` }))}
         />
         <label htmlFor={`${base}-plates`} className="text-xs text-text-muted">
-          Plates (kg)
+          {t("Plates (kg)")}
         </label>
         <input
           id={`${base}-plates`}
@@ -138,7 +141,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
             if (parsed) {
               setPlatesError(null);
               update(gym.id, { plateInventoryKg: parsed });
-            } else setPlatesError("List positive numbers separated by commas, like 25, 20, 10, 5");
+            } else setPlatesError(t("List positive numbers separated by commas, like 25, 20, 10, 5"));
           }}
           aria-invalid={platesError ? true : undefined}
           aria-describedby={platesError ? `${base}-plates-error` : undefined}
@@ -152,23 +155,23 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
       )}
       <GymPin gym={gym} />
       <Button variant="danger" onClick={() => setConfirm(true)} className="mt-3 w-full">
-        Delete {gym.name}
+        {t("Delete {name}", { name: gym.name })}
       </Button>
       <Sheet
         open={confirm}
         onClose={() => setConfirm(false)}
-        title={`Delete ${gym.name}?`}
+        title={t("Delete {name}?", { name: gym.name })}
         footer={
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setConfirm(false)}>Keep it</Button>
+            <Button onClick={() => setConfirm(false)}>{t("Keep it")}</Button>
             <Button variant="danger" onClick={() => remove(gym.id)}>
-              Delete
+              {t("Delete")}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-text-muted">
-          Workouts logged here keep their sets. Their machine records stay separate from your other gyms.
+          {t("Workouts logged here keep their sets. Their machine records stay separate from your other gyms.")}
         </p>
       </Sheet>
     </li>
@@ -184,6 +187,7 @@ function GymPin({ gym }: { gym: GymLocation }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; denied?: boolean } | null>(null);
   const pinned = gym.lat !== undefined && gym.lng !== undefined;
+  const t = useT();
 
   async function pin() {
     setBusy(true);
@@ -191,14 +195,14 @@ function GymPin({ gym }: { gym: GymLocation }) {
     try {
       const access = await requestAccess("location");
       if (access === "denied") {
-        setMessage({ text: "Location is off for ABOT, so the gym cannot be pinned.", denied: true });
+        setMessage({ text: t("Location is off for ABOT, so the gym cannot be pinned."), denied: true });
         return;
       }
       const fix = await currentPosition();
       update(gym.id, { lat: fix.lat, lng: fix.lng });
-      setMessage({ text: `Pinned within ${Math.round(fix.accuracy)} m.` });
+      setMessage({ text: t("Pinned within {m} m.", { m: Math.round(fix.accuracy) }) });
     } catch {
-      setMessage({ text: "Could not find where you are. Try again near a window or outdoors." });
+      setMessage({ text: t("Could not find where you are. Try again near a window or outdoors.") });
     } finally {
       setBusy(false);
     }
@@ -209,15 +213,15 @@ function GymPin({ gym }: { gym: GymLocation }) {
       <div className="flex items-center justify-between gap-3">
         <p className="flex min-w-0 items-center gap-2 text-xs text-text-muted">
           <MapPin aria-hidden="true" size={16} className={pinned ? "shrink-0 text-accent" : "shrink-0"} />
-          {pinned ? "Picked by itself when a workout starts here." : "Pin it to have workouts here pick it by themselves."}
+          {pinned ? t("Picked by itself when a workout starts here.") : t("Pin it to have workouts here pick it by themselves.")}
         </p>
         {pinned ? (
           <Button variant="ghost" onClick={() => update(gym.id, { lat: undefined, lng: undefined })} className="shrink-0">
-            Unpin
+            {t("Unpin")}
           </Button>
         ) : (
           <Button onClick={() => void pin()} disabled={busy} className="shrink-0">
-            {busy ? "Finding you…" : "Pin to where I am"}
+            {busy ? t("Finding you…") : t("Pin to where I am")}
           </Button>
         )}
       </div>
@@ -228,7 +232,7 @@ function GymPin({ gym }: { gym: GymLocation }) {
           </p>
           {message.denied && isNativeApp() && (
             <Button variant="ghost" onClick={() => void openAppSettings()} className="shrink-0">
-              Open settings
+              {t("Open settings")}
             </Button>
           )}
         </div>

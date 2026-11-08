@@ -19,6 +19,7 @@ import { formatVolume, toDisplay } from "@/lib/units";
 import { liftTrends, percentChange, periodTotals, rangeStart } from "@/lib/progress";
 import { buildPeriodStoryData } from "@/lib/story-data";
 import { useNow } from "@/lib/useNow";
+import { useT } from "@/i18n";
 
 const RANGES = [
   { value: 4, label: "4 wk" },
@@ -42,6 +43,7 @@ export function ProgressPanel() {
   const [metric, setMetric] = useState<Metric>("volume");
   const [splitRange, setSplitRange] = useState<"week" | "range">("week");
   const now = useNow(60_000);
+  const t = useT();
 
   const completed = useMemo(() => sessions.filter((s) => s.status === "completed"), [sessions]);
   const from = rangeStart(weeks, now, firstDayOfWeek);
@@ -65,25 +67,26 @@ export function ProgressPanel() {
     return muscleSplit(completed.filter((s) => s.startedAt >= start), byId);
   }, [completed, splitRange, now, firstDayOfWeek, from, byId]);
 
-  const weekLabel = (t: number) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const weekLabel = (time: number) => new Date(time).toLocaleDateString(t.locale, { day: "numeric", month: "short" });
   const chart = {
     volume: {
-      title: `Volume per week, last ${weeks} weeks (${weightUnit})`,
+      title: t("Volume per week, last {n} weeks ({unit})", { n: weeks, unit: weightUnit }),
       unit: weightUnit,
       points: buckets.map((b) => ({ label: weekLabel(b.weekStart), value: Math.round(toDisplay(b.volumeKg, weightUnit)), display: formatVolume(b.volumeKg, weightUnit) })),
     },
     workouts: {
-      title: `Workouts per week, last ${weeks} weeks`,
-      unit: "workouts",
+      title: t("Workouts per week, last {n} weeks", { n: weeks }),
+      unit: t("workouts"),
       points: buckets.map((b) => ({ label: weekLabel(b.weekStart), value: b.workouts, display: String(b.workouts) })),
     },
     time: {
-      title: `Time training per week, last ${weeks} weeks (minutes)`,
-      unit: "min",
+      title: t("Time training per week, last {n} weeks (minutes)", { n: weeks }),
+      unit: t("min"),
       points: buckets.map((b) => ({ label: weekLabel(b.weekStart), value: Math.round(b.durationSec / 60), display: formatDuration(b.durationSec) })),
     },
   }[metric];
 
+  // Drawn on the story card, which stays English by design.
   const shareTitle = `Last ${weeks} weeks`;
 
   return (
@@ -91,13 +94,13 @@ export function ProgressPanel() {
       {completed.length === 0 ? (
         <section className="panel flex flex-col items-center gap-3 p-6 text-center">
           <p className="text-sm text-text-muted">
-            Nothing to chart yet. Finish a workout and your volume, streak, muscles and main lifts show up here.
+            {t("Nothing to chart yet. Finish a workout and your volume, streak, muscles and main lifts show up here.")}
           </p>
           <Link
             href="/workout"
             className="inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-4 text-sm font-bold text-on-accent hover:brightness-110"
           >
-            Go to Workout
+            {t("Go to Workout")}
           </Link>
         </section>
       ) : null}
@@ -105,11 +108,14 @@ export function ProgressPanel() {
       <div className="flex flex-col gap-3">
         <motion.div custom={0} variants={section} initial="hidden" animate="show" className="flex items-center gap-2">
           <div className="flex-1">
-            <RangeTabs id="range" label="Range" options={RANGES} value={weeks} onChange={setWeeks} />
+            <RangeTabs
+              id="range"
+              label={t("Range")}
+              options={RANGES.map((r) => ({ value: r.value, label: t("{n} wk", { n: r.value }) }))} value={weeks} onChange={setWeeks} />
           </div>
           {totals.workouts > 0 && (
             <StoryShareButton
-              label="Share"
+              label={t("Share")}
               className="shrink-0"
               makeData={() => buildPeriodStoryData(sessions, from, to, byId, weightUnit, shareTitle)}
             />
@@ -124,14 +130,14 @@ export function ProgressPanel() {
           <StreakPlates buckets={buckets} streak={streak} />
         </motion.div>
 
-        <motion.section custom={3} variants={section} initial="hidden" animate="show" className="panel flex flex-col gap-3 p-4" aria-label="Weekly chart">
+        <motion.section custom={3} variants={section} initial="hidden" animate="show" className="panel flex flex-col gap-3 p-4" aria-label={t("Weekly chart")}>
           <RangeTabs
             id="metric"
-            label="Chart"
+            label={t("Chart")}
             options={[
-              { value: "volume" as Metric, label: "Volume" },
-              { value: "workouts" as Metric, label: "Workouts" },
-              { value: "time" as Metric, label: "Time" },
+              { value: "volume" as Metric, label: t("Volume") },
+              { value: "workouts" as Metric, label: t("Workouts") },
+              { value: "time" as Metric, label: t("Time") },
             ]}
             value={metric}
             onChange={setMetric}
@@ -146,17 +152,17 @@ export function ProgressPanel() {
         <motion.div custom={5} variants={section} initial="hidden" animate="show" className="flex flex-col gap-2">
           <RangeTabs
             id="split"
-            label="Muscle split range"
+            label={t("Muscle split range")}
             options={[
-              { value: "week" as const, label: "This week" },
-              { value: "range" as const, label: `Last ${weeks} weeks` },
+              { value: "week" as const, label: t("This week") },
+              { value: "range" as const, label: t("Last {n} weeks", { n: weeks }) },
             ]}
             value={splitRange}
             onChange={setSplitRange}
           />
           <MuscleFocus
             key={`${splitRange}-${weeks}`}
-            title={splitRange === "week" ? "Sets per muscle, this week" : `Sets per muscle, last ${weeks} weeks`}
+            title={splitRange === "week" ? t("Sets per muscle, this week") : t("Sets per muscle, last {n} weeks", { n: weeks })}
             split={split}
           />
         </motion.div>

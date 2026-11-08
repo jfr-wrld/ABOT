@@ -24,7 +24,7 @@ import { SetTypeChip } from "@/components/workout/SetTypeChip";
 import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme";
 import { exerciseHistory } from "@/lib/calc";
 import { formatWeight, toDisplay } from "@/lib/units";
-import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel, type Exercise } from "@/types/workout";
+import { EQUIPMENT_LABELS, type Exercise } from "@/types/workout";
 import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { PhotoLoop } from "@/components/exercise/PhotoLoop";
@@ -35,6 +35,8 @@ import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { estimate1RM, isWorkingSet } from "@/lib/calc";
 import type { WeightUnit, WorkoutSession } from "@/types/workout";
 import { historyPath } from "@/lib/routes";
+import { useT } from "@/i18n";
+import { muscleNames } from "@/components/exercise/MuscleTags";
 
 type DetailTab = "summary" | "history" | "howto";
 const DETAIL_TABS: { value: DetailTab; label: string }[] = [
@@ -62,6 +64,7 @@ function Detail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [tab, setTab] = useState<DetailTab>("summary");
   const reduce = useReducedMotion();
+  const t = useT();
 
   const exercise = byId[id];
   const history = useMemo(() => exerciseHistory(id, sessions, { byId, allGyms: true }), [id, sessions, byId]);
@@ -69,8 +72,8 @@ function Detail() {
   if (!exercise) {
     return (
       <main>
-        <PageHeader title="Exercise not found" back={{ href: "/exercises", label: "Exercises" }} />
-        <p className="px-4 pt-4 text-sm text-text-muted">No exercise with this id is in your library.</p>
+        <PageHeader title={t("Exercise not found")} back={{ href: "/exercises", label: t("Exercises") }} />
+        <p className="px-4 pt-4 text-sm text-text-muted">{t("No exercise with this id is in your library.")}</p>
       </main>
     );
   }
@@ -81,7 +84,7 @@ function Detail() {
     .slice(0, 10);
 
   const chartData = history.map((h) => ({
-    date: new Date(h.date).toLocaleDateString(undefined, { day: "numeric", month: "short" }),
+    date: new Date(h.date).toLocaleDateString(t.locale, { day: "numeric", month: "short" }),
     e1rm: Math.round(toDisplay(h.estimated1RM, weightUnit) * 10) / 10,
     best: `${formatWeight(h.bestSetWeightKg, weightUnit, false)} × ${h.bestSetReps}`,
   }));
@@ -96,7 +99,7 @@ function Detail() {
               <button
                 type="button"
                 onClick={() => setEditOpen(true)}
-                aria-label="Edit exercise"
+                aria-label={t("Edit exercise")}
                 className="flex size-11 items-center justify-center rounded-full bg-black/40 backdrop-blur hover:bg-black/60"
               >
                 <Pencil aria-hidden="true" size={18} />
@@ -104,7 +107,7 @@ function Detail() {
               <button
                 type="button"
                 onClick={() => setDeleteOpen(true)}
-                aria-label="Delete exercise"
+                aria-label={t("Delete exercise")}
                 className="flex size-11 items-center justify-center rounded-full bg-black/40 text-text backdrop-blur hover:bg-failure/30"
               >
                 <Trash2 aria-hidden="true" size={18} />
@@ -121,7 +124,7 @@ function Detail() {
       </div>
 
       <div className="flex flex-col gap-3 px-4 pt-3">
-        <Tabs id="ex-detail" label="Exercise details" tabs={DETAIL_TABS} value={tab} onChange={setTab} />
+        <Tabs id="ex-detail" label={t("Exercise details")} tabs={DETAIL_TABS.map((d) => ({ ...d, label: t(d.label) }))} value={tab} onChange={setTab} />
 
         {tab === "summary" && (
           <div {...tabPanelProps("ex-detail", "summary")} className="flex flex-col gap-3 outline-none">
@@ -130,14 +133,14 @@ function Detail() {
             {!exercise.isBodyweight && (
               <figure className="panel p-3">
                 <figcaption className="flex items-center justify-between gap-2 text-sm font-semibold">
-                  <span>Estimated 1RM over time ({weightUnit}, Epley)</span>
+                  <span>{t("Estimated 1RM over time ({unit}, Epley)", { unit: weightUnit })}</span>
                   {chartData.length >= 2 && <TrendChip from={chartData[0].e1rm} to={chartData[chartData.length - 1].e1rm} unit={weightUnit} />}
                 </figcaption>
                 {chartData.length < 2 ? (
                   <p className="py-6 text-center text-sm text-text-muted">
                     {chartData.length === 0
-                      ? "No data yet. The line starts after your first finished workout with this exercise."
-                      : "One point so far. A second workout draws the line."}
+                      ? t("No data yet. The line starts after your first finished workout with this exercise.")
+                      : t("One point so far. A second workout draws the line.")}
                   </p>
                 ) : (
                   <div className="mt-2 h-44">
@@ -149,7 +152,10 @@ function Detail() {
                         <Tooltip
                           {...tooltipStyle}
                           cursor={{ stroke: CHART.axis }}
-                          formatter={(v, _n, item) => [`${v} ${weightUnit} (best set ${(item.payload as { best: string }).best})`, "1RM"]}
+                          formatter={(v, _n, item) => [
+                            t("{value} {unit} (best set {best})", { value: String(v), unit: weightUnit, best: (item.payload as { best: string }).best }),
+                            "1RM",
+                          ]}
                         />
                         <Line
                           type="monotone"
@@ -172,10 +178,10 @@ function Detail() {
         )}
 
         {tab === "history" && (
-          <section {...tabPanelProps("ex-detail", "history")} aria-label="History" className="outline-none">
+          <section {...tabPanelProps("ex-detail", "history")} aria-label={t("History")} className="outline-none">
             {recent.length === 0 ? (
               <p className="mt-2 panel px-4 py-6 text-center text-sm text-text-muted">
-                Not logged yet. Add it to a workout and finish the workout to see sets here.
+                {t("Not logged yet. Add it to a workout and finish the workout to see sets here.")}
               </p>
             ) : (
               <ul className="mt-2 flex flex-col gap-2">
@@ -216,10 +222,10 @@ function Detail() {
       <Sheet
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        title={`Delete ${exercise.name}?`}
+        title={t("Delete {name}?", { name: exercise.name })}
         footer={
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setDeleteOpen(false)}>Keep it</Button>
+            <Button onClick={() => setDeleteOpen(false)}>{t("Keep it")}</Button>
             <Button
               variant="danger"
               onClick={() => {
@@ -227,14 +233,15 @@ function Detail() {
                 router.push("/exercises");
               }}
             >
-              Delete
+              {t("Delete")}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-text-muted">
-          Past workouts keep their sets but will show “Removed exercise” for this one. Routines using it keep a
-          dead reference until you edit them.
+          {t(
+            "Past workouts keep their sets but will show “Removed exercise” for this one. Routines using it keep a dead reference until you edit them.",
+          )}
         </p>
       </Sheet>
     </main>
@@ -243,7 +250,8 @@ function Detail() {
 
 /** A small map of the worked muscles with a legend: which part of the body this trains, at a glance. */
 function MusclesWorked({ exercise }: { exercise: Exercise }) {
-  const names = (ms: Exercise["primaryMuscles"]) => ms.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ");
+  const t = useT();
+  const names = (ms: Exercise["primaryMuscles"]) => muscleNames(ms, t, ", ");
   return (
     <section aria-labelledby="muscles-heading" className="panel flex items-center gap-3 p-3">
       <div className="w-36 shrink-0">
@@ -251,20 +259,20 @@ function MusclesWorked({ exercise }: { exercise: Exercise }) {
       </div>
       <div className="min-w-0">
         <h2 id="muscles-heading" className="label-caps">
-          Muscles worked
+          {t("Muscles worked")}
         </h2>
         <p className="mt-2 flex items-start gap-2 text-sm">
           <span aria-hidden="true" className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />
           <span>
-            <span className="text-text-muted">Primary </span>
-            {names(exercise.primaryMuscles) || "Not set"}
+            <span className="text-text-muted">{t("Primary ")}</span>
+            {names(exercise.primaryMuscles) || t("Not set")}
           </span>
         </p>
         {exercise.secondaryMuscles.length > 0 && (
           <p className="mt-1 flex items-start gap-2 text-sm">
             <span aria-hidden="true" className="mt-1.5 size-2 shrink-0 rounded-full bg-accent/40" />
             <span>
-              <span className="text-text-muted">Secondary </span>
+              <span className="text-text-muted">{t("Secondary ")}</span>
               {names(exercise.secondaryMuscles)}
             </span>
           </p>
@@ -280,6 +288,7 @@ function MusclesWorked({ exercise }: { exercise: Exercise }) {
  * full width, with the back pill over them; then the name, and the muscle and gear with icons.
  */
 function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.ReactNode }) {
+  const t = useT();
   return (
     <header className="force-dark relative">
       <PhotoLoop exercise={exercise} className="aspect-[4/3] max-h-[52vh] w-full" />
@@ -289,7 +298,7 @@ function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.React
           className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-black/50 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-black/70"
         >
           <ChevronLeft aria-hidden="true" size={18} />
-          Exercises
+          {t("Exercises")}
         </Link>
         {actions}
       </div>
@@ -298,16 +307,16 @@ function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.React
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-muted">
           <span className="inline-flex items-center gap-1.5 text-text">
             <MuscleIcon muscle={exercise.primaryMuscles[0]} size={24} />
-            {primaryMusclesLabel(exercise)}
+            {muscleNames(exercise.primaryMuscles, t)}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="text-accent">
               <EquipmentIcon equipment={exercise.equipment} size={20} />
             </span>
-            {EQUIPMENT_LABELS[exercise.equipment]}
+            {t(EQUIPMENT_LABELS[exercise.equipment])}
           </span>
           {exercise.secondaryMuscles.length > 0 && (
-            <span className="text-xs">also {exercise.secondaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}</span>
+            <span className="text-xs">{t("also {muscles}", { muscles: muscleNames(exercise.secondaryMuscles, t, ", ") })}</span>
           )}
         </div>
       </Rise>
@@ -336,27 +345,28 @@ function QuickStats({ exercise, recent, unit }: { exercise: Exercise; recent: Wo
   }
   const last = recent[0]?.startedAt;
   const now = useNow(60_000);
+  const t = useT();
   const tiles = [
     exercise.isBodyweight
-      ? { icon: <Trophy size={16} />, label: "Most reps", value: mostReps, format: (n: number) => String(Math.round(n)), pr: mostReps > 0 }
-      : { icon: <Trophy size={16} />, label: "Best e1RM", value: bestE1rm, format: (n: number) => (bestE1rm ? formatWeight(n, unit) : "–"), pr: bestE1rm > 0 },
-    { icon: <Dumbbell size={16} />, label: "Heaviest", value: heaviest, format: (n: number) => (heaviest ? formatWeight(n, unit) : "–") },
-    { icon: <Repeat size={16} />, label: "Workouts", value: recent.length, format: (n: number) => String(Math.round(n)) },
+      ? { icon: <Trophy size={16} />, label: t("Most reps"), value: mostReps, format: (n: number) => String(Math.round(n)), pr: mostReps > 0 }
+      : { icon: <Trophy size={16} />, label: t("Best e1RM"), value: bestE1rm, format: (n: number) => (bestE1rm ? formatWeight(n, unit) : "–"), pr: bestE1rm > 0 },
+    { icon: <Dumbbell size={16} />, label: t("Heaviest"), value: heaviest, format: (n: number) => (heaviest ? formatWeight(n, unit) : "–") },
+    { icon: <Repeat size={16} />, label: t("Workouts"), value: recent.length, format: (n: number) => String(Math.round(n)) },
   ];
   return (
     <dl className="grid grid-cols-2 gap-2">
-      {tiles.map((t) => (
-        <div key={t.label} className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
+      {tiles.map((tile) => (
+        <div key={tile.label} className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
           <span
             aria-hidden="true"
-            className={`hidden size-9 shrink-0 items-center justify-center rounded-lg min-[360px]:flex ${t.pr ? "bg-pr/10 text-pr" : "bg-surface-2 text-text-muted"}`}
+            className={`hidden size-9 shrink-0 items-center justify-center rounded-lg min-[360px]:flex ${tile.pr ? "bg-pr/10 text-pr" : "bg-surface-2 text-text-muted"}`}
           >
-            {t.icon}
+            {tile.icon}
           </span>
           <div className="min-w-0">
-            <dt className="label-caps">{t.label}</dt>
-            <dd className={`num truncate text-base font-bold tabular-nums min-[360px]:text-lg ${t.pr ? "text-pr" : ""}`}>
-              <CountFromZero value={t.value} format={t.format} />
+            <dt className="label-caps">{tile.label}</dt>
+            <dd className={`num truncate text-base font-bold tabular-nums min-[360px]:text-lg ${tile.pr ? "text-pr" : ""}`}>
+              <CountFromZero value={tile.value} format={tile.format} />
             </dd>
           </div>
         </div>
@@ -366,8 +376,8 @@ function QuickStats({ exercise, recent, unit }: { exercise: Exercise; recent: Wo
           <CalendarClock size={16} />
         </span>
         <div className="min-w-0">
-          <dt className="label-caps">Last done</dt>
-          <dd className="num truncate text-base font-bold min-[360px]:text-lg">{last ? relativeDay(last, now) : "Never"}</dd>
+          <dt className="label-caps">{t("Last done")}</dt>
+          <dd className="num truncate text-base font-bold min-[360px]:text-lg">{last ? relativeDay(last, now, t) : t("Never")}</dd>
         </div>
       </div>
     </dl>
@@ -394,6 +404,7 @@ function TrendChip({ from, to, unit }: { from: number; to: number; unit: WeightU
 /** One past workout with this lift: when, and each set with a bar for its load. */
 function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exercise: Exercise; unit: WeightUnit }) {
   const controls = useEntrance();
+  const t = useT();
   const now = useNow(60_000);
   const ex = session.exercises.find((e) => e.exerciseId === exercise.id)!;
   const nums = setNumbers(ex.sets);
@@ -403,7 +414,7 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
       <Link href={historyPath(session.id)} className="flex items-baseline justify-between gap-2 hover:underline">
         <span className="truncate text-sm font-semibold">{session.name}</span>
         <time dateTime={new Date(session.startedAt).toISOString()} className="num shrink-0 text-xs text-text-muted">
-          {relativeDay(session.startedAt, now)}
+          {relativeDay(session.startedAt, now, t)}
         </time>
       </Link>
       <ol className="mt-2 flex flex-col gap-1">
@@ -414,7 +425,7 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
             <li key={st.id} className="num flex items-center gap-3 text-sm">
               <SetTypeChip type={st.type} number={num} />
               <span className="w-28 shrink-0">
-                {exercise.isBodyweight || st.weightKg === null ? `${st.reps} reps` : `${formatWeight(st.weightKg, unit)} × ${st.reps}`}
+                {exercise.isBodyweight || st.weightKg === null ? t("{n} reps", { n: String(st.reps) }) : `${formatWeight(st.weightKg, unit)} × ${st.reps}`}
               </span>
               <span aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-800/80">
                 <motion.span
@@ -447,6 +458,7 @@ function TrainBar({ exercise }: { exercise: Exercise }) {
   const rest = useSettingsStore((s) => s.defaultRestSeconds);
   const inWorkout = active?.exercises.some((e) => e.exerciseId === exercise.id) ?? false;
   const [added, setAdded] = useState(false);
+  const t = useT();
   useActionBarSpace(76);
   return (
     <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[640px] border-t border-line bg-bg/85 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
@@ -462,11 +474,11 @@ function TrainBar({ exercise }: { exercise: Exercise }) {
             className="min-h-12 text-base"
           >
             <Plus aria-hidden="true" size={18} />
-            {added || inWorkout ? "In your workout" : "Add to workout"}
+            {added || inWorkout ? t("In your workout") : t("Add to workout")}
           </Button>
           <Link
             href="/workout"
-            aria-label="Open the workout in progress"
+            aria-label={t("Open the workout in progress")}
             className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] hover:border-ink/25"
           >
             <Play aria-hidden="true" size={18} />
@@ -483,7 +495,7 @@ function TrainBar({ exercise }: { exercise: Exercise }) {
           className="min-h-12 w-full text-base"
         >
           <Play aria-hidden="true" size={18} />
-          Start a workout with this
+          {t("Start a workout with this")}
         </Button>
       )}
     </div>

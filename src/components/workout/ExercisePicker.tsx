@@ -7,6 +7,8 @@ import { Sheet } from "@/components/ui/Sheet";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleTags } from "@/components/exercise/MuscleTags";
+import { useT } from "@/i18n";
+import { muscleText } from "@/lib/home";
 
 const MUSCLES: MuscleGroup[] = [
   "chest", "back", "lats", "shoulders", "biceps", "triceps", "quads", "hamstrings", "glutes", "calves", "abs", "traps", "forearms", "lower_back",
@@ -17,7 +19,7 @@ export function ExercisePicker({
   onClose,
   onPick,
   inWorkout = new Set<string>(),
-  title = "Add exercise",
+  title,
 }: {
   title?: string;
   open: boolean;
@@ -26,6 +28,7 @@ export function ExercisePicker({
   /** Exercise ids already in the current workout, so they can be marked. */
   inWorkout?: Set<string>;
 }) {
+  const t = useT();
   const { list } = useAllExercises();
   const searchId = `exercise-search-${useId()}`;
   const [query, setQuery] = useState("");
@@ -36,33 +39,36 @@ export function ExercisePicker({
     return list.filter(
       (e) =>
         (!muscle || e.primaryMuscles.includes(muscle) || e.secondaryMuscles.includes(muscle)) &&
-        (!q || e.name.toLowerCase().includes(q) || EQUIPMENT_LABELS[e.equipment].toLowerCase().includes(q)),
+        (!q ||
+          e.name.toLowerCase().includes(q) ||
+          EQUIPMENT_LABELS[e.equipment].toLowerCase().includes(q) ||
+          t(EQUIPMENT_LABELS[e.equipment]).toLowerCase().includes(q)),
     );
-  }, [list, query, muscle]);
+  }, [list, query, muscle, t]);
 
   return (
-    <Sheet open={open} onClose={onClose} title={title}>
+    <Sheet open={open} onClose={onClose} title={title ?? t("Add exercise")}>
       <label htmlFor={searchId} className="sr-only">
-        Search exercises
+        {t("Search exercises")}
       </label>
       <input
         id={searchId}
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by name or equipment"
+        placeholder={t("Search by name or equipment")}
         autoComplete="off"
         className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
       />
 
-      <div className="-mx-4 mt-3 overflow-x-auto px-4" role="group" aria-label="Filter by muscle">
+      <div className="-mx-4 mt-3 overflow-x-auto px-4" role="group" aria-label={t("Filter by muscle")}>
         <div className="flex w-max gap-1.5 pb-1">
           <FilterChip pressed={muscle === null} onClick={() => setMuscle(null)}>
-            All
+            {t("All")}
           </FilterChip>
           {MUSCLES.map((m) => (
             <FilterChip key={m} pressed={muscle === m} onClick={() => setMuscle(muscle === m ? null : m)}>
-              {MUSCLE_GROUP_LABELS[m]}
+              {muscleText(MUSCLE_GROUP_LABELS[m], t)}
             </FilterChip>
           ))}
         </div>
@@ -70,8 +76,12 @@ export function ExercisePicker({
 
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-sm text-text-muted">
-          No exercise matches “{query}”{muscle ? ` in ${MUSCLE_GROUP_LABELS[muscle]}` : ""}. Try another name, or
-          clear the filter.
+          {muscle
+            ? t("No exercise matches “{query}” in {muscle}. Try another name, or clear the filter.", {
+                query,
+                muscle: muscleText(MUSCLE_GROUP_LABELS[muscle], t),
+              })
+            : t("No exercise matches “{query}”. Try another name, or clear the filter.", { query })}
         </p>
       ) : (
         <ul className="mt-2 flex flex-col">
@@ -91,7 +101,7 @@ export function ExercisePicker({
                   <MuscleTags exercise={e} />
                 </span>
                 {inWorkout.has(e.id) && (
-                  <span className="shrink-0 text-xs text-text-muted">In workout</span>
+                  <span className="shrink-0 text-xs text-text-muted">{t("In workout")}</span>
                 )}
               </button>
             </li>

@@ -8,12 +8,14 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { useT } from "@/i18n";
 
 /**
  * Reorder the workout's exercises: drag a row by its handle, or use the arrows (the keyboard and
  * screen reader route). Nothing changes until Done, so a stray drag can be undone with Cancel.
  */
 export function ReorderSheet({ onClose }: { onClose: () => void }) {
+  const t = useT();
   const exercises = useWorkoutStore((s) => s.active?.exercises ?? []);
   const reorder = useWorkoutStore((s) => s.reorderExercises);
   const { byId } = useAllExercises();
@@ -33,10 +35,10 @@ export function ReorderSheet({ onClose }: { onClose: () => void }) {
     <Sheet
       open
       onClose={onClose}
-      title="Reorder exercises"
+      title={t("Reorder exercises")}
       footer={
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t("Cancel")}</Button>
           <Button
             variant="primary"
             onClick={() => {
@@ -44,7 +46,7 @@ export function ReorderSheet({ onClose }: { onClose: () => void }) {
               onClose();
             }}
           >
-            Done
+            {t("Done")}
           </Button>
         </div>
       }
@@ -53,7 +55,7 @@ export function ReorderSheet({ onClose }: { onClose: () => void }) {
         {order.map((id, i) => {
           const item = byItem.get(id);
           const ex = item ? byId[item.exerciseId] : undefined;
-          const name = ex?.name ?? "Removed exercise";
+          const name = ex?.name ?? t("Removed exercise");
           return (
             <Row key={id} id={id}>
               {(controls) => (
@@ -73,7 +75,7 @@ export function ReorderSheet({ onClose }: { onClose: () => void }) {
                     type="button"
                     onClick={() => move(i, -1)}
                     disabled={i === 0}
-                    aria-label={`Move ${name} up`}
+                    aria-label={t("Move {name} up", { name })}
                     className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.06] hover:text-text disabled:opacity-30"
                   >
                     <ChevronUp aria-hidden="true" size={18} />
@@ -82,7 +84,7 @@ export function ReorderSheet({ onClose }: { onClose: () => void }) {
                     type="button"
                     onClick={() => move(i, 1)}
                     disabled={i === order.length - 1}
-                    aria-label={`Move ${name} down`}
+                    aria-label={t("Move {name} down", { name })}
                     className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.06] hover:text-text disabled:opacity-30"
                   >
                     <ChevronDown aria-hidden="true" size={18} />

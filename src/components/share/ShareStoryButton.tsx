@@ -11,6 +11,7 @@ import { buildStoryData, type StoryData } from "@/lib/story-data";
 // Bundled with the page rather than loaded on tap, so the studio still opens with no signal
 // right after a workout.
 import { StoryCardStudio } from "./StoryCardStudio";
+import { useT } from "@/i18n";
 
 /**
  * Opens the Story Studio with data made at tap time. The arrow marks that the result leaves
@@ -20,7 +21,7 @@ export function StoryShareButton({
   makeData,
   variant = "secondary",
   className = "",
-  label = "Share to IG Story",
+  label,
 }: {
   makeData: () => StoryData;
   variant?: "primary" | "secondary";
@@ -28,10 +29,11 @@ export function StoryShareButton({
   label?: string;
 }) {
   const [data, setData] = useState<StoryData | null>(null);
+  const t = useT();
   return (
     <>
       <Button variant={variant} onClick={() => setData(makeData())} className={className}>
-        {label} <span aria-hidden="true">↗</span>
+        {label ?? t("Share to IG Story")} <span aria-hidden="true">↗</span>
       </Button>
       {data && <StoryCardStudio open onClose={() => setData(null)} data={data} />}
     </>

@@ -9,6 +9,7 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { useLocationStore } from "@/store/useLocationStore";
+import { useT } from "@/i18n";
 
 /**
  * Heaviest weight, best estimated 1RM and best set volume for one exercise. With `locationId`
@@ -20,6 +21,7 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
   const { weightUnit } = useSettingsStore();
   const gymName = useLocationStore((s) => s.locations.find((l) => l.id === locationId)?.name);
   const perGym = Boolean(locationId && exercise.isMachineDependent);
+  const t = useT();
 
   const { mine, all } = useMemo(() => {
     const allTable = buildPRTable(sessions, byId, { allGyms: true });
@@ -38,7 +40,7 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
         <dt className="label-caps">{label}</dt>
         <dd className="text-base font-bold num">{value(r)}</dd>
         <dd className="text-xs text-text-muted">
-          {sub(r)} · {new Date(r.achievedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+          {sub(r)} · {new Date(r.achievedAt).toLocaleDateString(t.locale, { day: "numeric", month: "short" })}
         </dd>
       </div>
     );
@@ -48,28 +50,31 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
     <section aria-labelledby={`pr-${exercise.id}`} className="panel p-3">
       <h2 id={`pr-${exercise.id}`} className="flex items-center gap-2 text-sm font-semibold">
         <Trophy aria-hidden="true" size={16} className="text-pr" />
-        Personal records
-        {perGym && gymName && <span className="font-normal text-text-muted">at {gymName}</span>}
+        {t("Personal records")}
+        {perGym && gymName && <span className="font-normal text-text-muted">{t("at {gym}", { gym: gymName })}</span>}
       </h2>
       {!mine ? (
         <p className="mt-2 text-sm text-text-muted">
-          No completed working sets yet. Records appear after you log this exercise in a finished workout.
+          {t("No completed working sets yet. Records appear after you log this exercise in a finished workout.")}
         </p>
       ) : (
         <dl className="mt-2 grid grid-cols-3 gap-2">
           {tile(
             "heaviest_weight",
-            "Heaviest weight",
-            (r) => (exercise.isBodyweight ? `${r.reps} reps` : formatWeight(r.weightKg, weightUnit)),
+            t("Heaviest weight"),
+            (r) => (exercise.isBodyweight ? t("{n} reps", { n: r.reps }) : formatWeight(r.weightKg, weightUnit)),
             (r) => `× ${r.reps}`,
           )}
-          {tile("best_1rm", "Best 1RM (est.)", (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`)}
-          {tile("best_set_volume", "Best set volume", (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`)}
+          {tile("best_1rm", t("Best 1RM (est.)"), (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`)}
+          {tile("best_set_volume", t("Best set volume"), (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`)}
         </dl>
       )}
       {perGym && all?.heaviest_weight && all.heaviest_weight.value !== mine?.heaviest_weight?.value && (
         <p className="mt-2 text-xs text-text-muted">
-          Heaviest across all gyms: {formatWeight(all.heaviest_weight.weightKg, weightUnit)} × {all.heaviest_weight.reps}
+          {t("Heaviest across all gyms: {weight} × {reps}", {
+            weight: formatWeight(all.heaviest_weight.weightKg, weightUnit),
+            reps: all.heaviest_weight.reps,
+          })}
         </p>
       )}
     </section>

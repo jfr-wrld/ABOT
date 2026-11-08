@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CloudAlert, CloudCheck, X } from "lucide-react";
 import { takeSignInReturn, useSyncStore } from "@/store/useSyncStore";
 import { friendlyError } from "@/lib/syncStatus";
+import { useT } from "@/i18n";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
 
@@ -37,6 +38,7 @@ export function SignInReturn() {
   const email = useSyncStore((s) => s.email);
   const lastError = useSyncStore((s) => s.lastError);
   const clearNotice = useSyncStore((s) => s.clearNotice);
+  const t = useT();
 
   useEffect(() => {
     if (!notice) return;
@@ -49,8 +51,8 @@ export function SignInReturn() {
   // Success clears itself; a failure stays until it is read and dismissed.
   useEffect(() => {
     if (notice?.kind !== "signed_in") return;
-    const t = setTimeout(clearNotice, 6000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(clearNotice, 6000);
+    return () => clearTimeout(timer);
   }, [notice, clearNotice]);
 
   const ok = notice?.kind === "signed_in";
@@ -77,17 +79,17 @@ export function SignInReturn() {
             <p className="min-w-0 flex-1 self-center text-sm">
               {ok ? (
                 <>
-                  Signed in as <span className="break-all font-semibold">{email ?? "your Google account"}</span>. Backing up
-                  this phone now.
+                  {t("Signed in as")} <span className="break-all font-semibold">{email ?? t("your Google account")}</span>.{" "}
+                  {t("Backing up this phone now.")}
                 </>
               ) : (
-                friendlyError("sign_in", lastError ?? "")
+                friendlyError("sign_in", lastError ?? "", t)
               )}
             </p>
             <button
               type="button"
               onClick={clearNotice}
-              aria-label="Dismiss"
+              aria-label={t("Dismiss")}
               className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.06] hover:text-text"
             >
               <X aria-hidden="true" size={18} />

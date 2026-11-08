@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { markOnboardingSeen } from "@/lib/onboarding";
 import { DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
 import { withPermissionsStep } from "@/lib/native/permissions-step";
+import { useT, type T } from "@/i18n";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
 /** A swipe counts once the finger travels this far, or flicks faster than this. */
@@ -33,32 +34,35 @@ const artVariants: Variants = {
 };
 
 /** Three things a new lifter needs before their first set; each one shows the real UI piece. */
-const SLIDES = [
-  {
-    title: "Log a set in one tap",
-    body: "Type the weight and reps, tap the check. Last time's numbers sit beside each set, and records light up as you beat them.",
-    Visual: LogSetScene,
-  },
-  {
-    title: "Rest sits by your thumb",
-    body: "Tick a set and the rest countdown opens just above the dock, on every screen, with 15-second nudges and skip.",
-    Visual: RestScene,
-  },
-  {
-    title: "Your training stays on this phone",
-    body: "Every workout saves to this device and works offline. Back it up to a file or your account whenever you like.",
-    Visual: DeviceScene,
-  },
-] as const;
+const SLIDES = (t: T) =>
+  [
+    {
+      title: t("Log a set in one tap"),
+      body: t("Type the weight and reps, tap the check. Last time's numbers sit beside each set, and records light up as you beat them."),
+      Visual: LogSetScene,
+    },
+    {
+      title: t("Rest sits by your thumb"),
+      body: t("Tick a set and the rest countdown opens just above the dock, on every screen, with 15-second nudges and skip."),
+      Visual: RestScene,
+    },
+    {
+      title: t("Your training stays on this phone"),
+      body: t("Every workout saves to this device and works offline. Back it up to a file or your account whenever you like."),
+      Visual: DeviceScene,
+    },
+  ] as const;
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const t = useT();
+  const slides = SLIDES(t);
   const [[index, dir], setPage] = useState<[number, number]>([0, 1]);
-  const last = index === SLIDES.length - 1;
-  const slide = SLIDES[index]!;
+  const last = index === slides.length - 1;
+  const slide = slides[index]!;
 
   function go(next: number) {
-    if (next < 0 || next >= SLIDES.length) return;
+    if (next < 0 || next >= slides.length) return;
     setPage([next, next > index ? 1 : -1]);
   }
   function finish(to: string) {
@@ -82,7 +86,7 @@ export default function OnboardingPage() {
             onClick={() => finish("/")}
             className="min-h-11 rounded-ctl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
           >
-            Skip intro
+            {t("Skip intro")}
           </button>
         )}
       </div>
@@ -102,7 +106,7 @@ export default function OnboardingPage() {
 
       <section
         aria-roledescription="carousel"
-        aria-label="Introduction"
+        aria-label={t("Introduction")}
         className="relative mt-6 flex flex-1 flex-col overflow-hidden"
         onKeyDown={(e) => {
           if (e.key === "ArrowRight") go(index + 1);
@@ -123,7 +127,7 @@ export default function OnboardingPage() {
             onDragEnd={onDragEnd}
             role="group"
             aria-roledescription="slide"
-            aria-label={`${index + 1} of ${SLIDES.length}`}
+            aria-label={t("{n} of {total}", { n: index + 1, total: slides.length })}
             className="flex flex-1 cursor-grab touch-pan-y flex-col active:cursor-grabbing"
           >
             <motion.div custom={dir} variants={artVariants} className="flex min-h-64 items-center justify-center">
@@ -140,9 +144,9 @@ export default function OnboardingPage() {
       </section>
 
       <div className="flex items-center justify-center gap-2 py-6" aria-hidden="true">
-        {SLIDES.map((s, i) => (
+        {slides.map((s, i) => (
           <motion.span
-            key={s.title}
+            key={i}
             className="h-1.5 rounded-full"
             animate={{ width: i === index ? 24 : 6, backgroundColor: i === index ? "#ccff00" : "rgb(255 255 255 / 0.2)" }}
             transition={SPRING}
@@ -154,19 +158,19 @@ export default function OnboardingPage() {
         {last ? (
           <>
             <Button variant="primary" onClick={() => finish("/")} className="min-h-12 w-full text-base">
-              Start training
+              {t("Start training")}
             </Button>
             <Link
               href="/login"
               onClick={() => markOnboardingSeen()}
               className="flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
             >
-              Back up with an account
+              {t("Back up with an account")}
             </Link>
           </>
         ) : (
           <Button variant="primary" onClick={() => go(index + 1)} className="min-h-12 w-full text-base">
-            Next
+            {t("Next")}
           </Button>
         )}
       </div>

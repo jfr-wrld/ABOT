@@ -21,6 +21,7 @@ import { TemplateVault } from "@/components/routines/TemplateVault";
 import { EquipmentNeeded } from "@/components/routines/EquipmentNeeded";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { routineEditPath } from "@/lib/routes";
+import { useT } from "@/i18n";
 
 /**
  * The Workout tab when no workout is running: an empty start, then My Routines and the Template
@@ -35,6 +36,7 @@ export function RoutineLibrary() {
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
   const { byId } = useAllExercises();
+  const t = useT();
 
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -65,7 +67,7 @@ export function RoutineLibrary() {
   function submitNew() {
     const name = newName.trim();
     if (!name) {
-      setNameError("Give the routine a name, like Push A or Leg day");
+      setNameError(t("Give the routine a name, like Push A or Leg day"));
       return;
     }
     const r = create(name, newFolder.trim() || undefined);
@@ -78,10 +80,10 @@ export function RoutineLibrary() {
   return (
     <main className="flex flex-1 flex-col">
       <PageHeader
-        title="Workout"
+        title={t("Workout")}
         action={
           <Button onClick={() => setNewOpen(true)}>
-            <Plus aria-hidden="true" size={18} /> New routine
+            <Plus aria-hidden="true" size={18} /> {t("New routine")}
           </Button>
         }
       />
@@ -95,14 +97,14 @@ export function RoutineLibrary() {
           }}
           className="min-h-12 w-full text-base"
         >
-          Start an empty workout
+          {t("Start an empty workout")}
         </Button>
         <Tabs
           id="routines"
-          label="Routines"
+          label={t("Routines")}
           tabs={[
-            { value: "mine", label: "My Routines" },
-            { value: "vault", label: "Template Vault" },
+            { value: "mine", label: t("My Routines") },
+            { value: "vault", label: t("Template Vault") },
           ]}
           value={tab}
           onChange={setTab}
@@ -111,15 +113,16 @@ export function RoutineLibrary() {
         <div {...tabPanelProps("routines", "mine")} className="flex flex-col gap-6 outline-none">
           {routines.length === 0 && (
             <p className="panel px-4 py-8 text-center text-sm text-text-muted">
-              No routines saved. Create one, add its exercises and target sets, and you can start the same
-              workout in one tap next time.
+              {t(
+                "No routines saved. Create one, add its exercises and target sets, and you can start the same workout in one tap next time.",
+              )}
             </p>
           )}
 
           {folderNames.map((folder) => (
             <section key={folder || "__none"} aria-labelledby={`folder-${folder || "none"}`}>
               <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold uppercase text-text-muted">
-                {folder || (folderNames.length > 1 ? "No folder" : "All routines")}
+                {folder || (folderNames.length > 1 ? t("No folder") : t("All routines"))}
               </h2>
               <ul className="mt-2 flex flex-col gap-2">
                 {folders.get(folder)!.map((r) => {
@@ -133,23 +136,25 @@ export function RoutineLibrary() {
                           <h3 className="truncate text-base font-semibold">{r.name}</h3>
                           <p className="mt-0.5 text-xs text-text-muted">
                             {r.exercises.length === 0
-                              ? "No exercises yet"
-                              : `${r.exercises.length} ${r.exercises.length === 1 ? "exercise" : "exercises"} · ${setCount} sets${
-                                  ssCount ? ` · ${ssCount} ${ssCount === 1 ? "superset" : "supersets"}` : ""
-                                }`}
+                              ? t("No exercises yet")
+                              : [
+                                  t.n(r.exercises.length, "{n} exercise", "{n} exercises"),
+                                  t("{n} sets", { n: setCount }),
+                                  ...(ssCount ? [t.n(ssCount, "{n} superset", "{n} supersets")] : []),
+                                ].join(" · ")}
                           </p>
                         </div>
                         <div className="-mr-2 -mt-2 flex shrink-0">
-                          <Link href={routineEditPath(r.id)} aria-label={`Edit ${r.name}`} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
+                          <Link href={routineEditPath(r.id)} aria-label={t("Edit {name}", { name: r.name })} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
                             <Pencil aria-hidden="true" size={18} />
                           </Link>
-                          <button type="button" onClick={() => duplicate(r.id)} aria-label={`Duplicate ${r.name}`} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
+                          <button type="button" onClick={() => duplicate(r.id)} aria-label={t("Duplicate {name}", { name: r.name })} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
                             <Copy aria-hidden="true" size={18} />
                           </button>
                           <button
                             type="button"
                             onClick={() => setToDelete(r)}
-                            aria-label={`Delete ${r.name}`}
+                            aria-label={t("Delete {name}", { name: r.name })}
                             className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
                           >
                             <Trash2 aria-hidden="true" size={18} />
@@ -158,7 +163,7 @@ export function RoutineLibrary() {
                       </div>
                       {r.exercises.length > 0 && (
                         <p className="mt-2 line-clamp-2 text-sm text-text-muted">
-                          {r.exercises.map((e) => byId[e.exerciseId]?.name ?? "Removed exercise").join(", ")}
+                          {r.exercises.map((e) => byId[e.exerciseId]?.name ?? t("Removed exercise")).join(", ")}
                         </p>
                       )}
                       {r.exercises.length > 0 && (
@@ -186,10 +191,10 @@ export function RoutineLibrary() {
                         disabled={r.exercises.length === 0}
                         className="mt-3 w-full"
                       >
-                        Start {r.name}
+                        {t("Start {name}", { name: r.name })}
                       </Button>
                       {r.exercises.length === 0 && (
-                        <p className="mt-1 text-center text-xs text-text-muted">Add an exercise before starting.</p>
+                        <p className="mt-1 text-center text-xs text-text-muted">{t("Add an exercise before starting.")}</p>
                       )}
                     </li>
                   );
@@ -208,12 +213,12 @@ export function RoutineLibrary() {
       <Sheet
         open={newOpen}
         onClose={() => setNewOpen(false)}
-        title="New routine"
+        title={t("New routine")}
         footer={
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setNewOpen(false)}>Cancel</Button>
+            <Button onClick={() => setNewOpen(false)}>{t("Cancel")}</Button>
             <Button variant="primary" onClick={submitNew}>
-              Create and add exercises
+              {t("Create and add exercises")}
             </Button>
           </div>
         }
@@ -227,7 +232,7 @@ export function RoutineLibrary() {
         >
           <div>
             <label htmlFor="routine-name" className="mb-1 block text-sm font-semibold">
-              Name
+              {t("Name")}
             </label>
             <input
               id="routine-name"
@@ -250,7 +255,7 @@ export function RoutineLibrary() {
           </div>
           <div>
             <label htmlFor="routine-folder" className="mb-1 block text-sm font-semibold">
-              Folder <span className="font-normal text-text-muted">(optional, e.g. Push / Pull / Legs)</span>
+              {t("Folder")} <span className="font-normal text-text-muted">{t("(optional, e.g. Push / Pull / Legs)")}</span>
             </label>
             <input
               id="routine-folder"
@@ -267,7 +272,7 @@ export function RoutineLibrary() {
             </datalist>
           </div>
           <button type="submit" className="sr-only">
-            Create
+            {t("Create")}
           </button>
         </form>
       </Sheet>
@@ -277,10 +282,10 @@ export function RoutineLibrary() {
       <Sheet
         open={toDelete !== null}
         onClose={() => setToDelete(null)}
-        title={`Delete ${toDelete?.name ?? "routine"}?`}
+        title={t("Delete {name}?", { name: toDelete?.name ?? t("routine") })}
         footer={
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setToDelete(null)}>Keep it</Button>
+            <Button onClick={() => setToDelete(null)}>{t("Keep it")}</Button>
             <Button
               variant="danger"
               onClick={() => {
@@ -288,31 +293,31 @@ export function RoutineLibrary() {
                 setToDelete(null);
               }}
             >
-              Delete
+              {t("Delete")}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-text-muted">
-          Workouts you already logged from it are kept. Only the template is deleted.
+          {t("Workouts you already logged from it are kept. Only the template is deleted.")}
         </p>
       </Sheet>
 
       <Sheet
         open={startBlocked !== null}
         onClose={() => setStartBlocked(null)}
-        title="A workout is already in progress"
+        title={t("A workout is already in progress")}
         footer={
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setStartBlocked(null)}>Cancel</Button>
+            <Button onClick={() => setStartBlocked(null)}>{t("Cancel")}</Button>
             <Button variant="primary" onClick={() => router.push("/workout")}>
-              Go to current workout
+              {t("Go to current workout")}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-text-muted">
-          Finish or discard the current workout before starting {startBlocked?.name}.
+          {t("Finish or discard the current workout before starting {name}.", { name: startBlocked?.name ?? "" })}
         </p>
       </Sheet>
     </main>

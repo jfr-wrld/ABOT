@@ -83,5 +83,13 @@ test("language and theme choices are saved", async ({ page }) => {
   await waitForSavedSetting(page, "theme", "light");
   await page.getByRole("radiogroup", { name: "Language" }).getByText("Indonesia").click();
   await waitForSavedSetting(page, "language", "id");
+  // The app switches at once and stays Indonesian after a reload.
+  await expect(page.getByRole("heading", { level: 1, name: "Umum" })).toBeVisible();
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Navigasi utama" });
+  await expect(nav.getByRole("link", { name: "Beranda" })).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "id");
+  await page.reload();
+  await expect(nav.getByRole("link", { name: "Profil" })).toBeVisible();
 });
 

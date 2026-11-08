@@ -10,6 +10,7 @@ import { press } from "@/components/ui/Button";
 import { SetTypeChip, setTypeA11yName } from "./SetTypeChip";
 import { SetTypeMenu } from "./SetTypeMenu";
 import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
+import { useT } from "@/i18n";
 
 const PR_LABEL: Record<PRKind, string> = {
   heaviest_weight: "heaviest weight",
@@ -42,6 +43,7 @@ export function SetRow({
   onRemove: () => void;
   onComplete: (completed: boolean) => void;
 }) {
+  const t = useT();
   const [menuOpen, setMenuOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Bumped only by the lifter's own tap, so a restored or bulk-completed set does not flash.
@@ -52,7 +54,7 @@ export function SetRow({
   const prevLabel =
     previous && previous.reps !== null
       ? previous.weightKg === null || previous.weightKg <= 0
-        ? `${previous.reps} reps`
+        ? t("{n} reps", { n: previous.reps })
         : isBodyweight
           ? `+${formatWeight(previous.weightKg, unit, false)} × ${previous.reps}`
         : `${formatWeight(previous.weightKg, unit, false)} × ${previous.reps}`
@@ -80,7 +82,7 @@ export function SetRow({
       onUpdate({ reps, weightKg });
     }
     if (reps === null || reps <= 0) {
-      setError("Enter reps before completing this set");
+      setError(t("Enter reps before completing this set"));
       repsRef.current?.focus();
       return;
     }
@@ -89,7 +91,7 @@ export function SetRow({
     onComplete(true);
   }
 
-  const a11yName = setTypeA11yName(set.type, number);
+  const a11yName = setTypeA11yName(set.type, number, t);
 
   return (
     <li
@@ -106,7 +108,7 @@ export function SetRow({
       <button
         type="button"
         onClick={() => setMenuOpen(true)}
-        aria-label={`${a11yName}: change type or remove`}
+        aria-label={t("{set}: change type or remove", { set: a11yName })}
         aria-haspopup="dialog"
         className="flex h-11 w-11 items-center justify-center rounded-ctl hover:bg-surface-2"
       >
@@ -119,20 +121,20 @@ export function SetRow({
             type="button"
             onClick={fillFromPrevious}
             disabled={set.completed}
-            aria-label={`Previous ${prevLabel}. Use these values`}
+            aria-label={t("Previous {value}. Use these values", { value: prevLabel })}
             className="block h-11 w-full truncate rounded-ctl px-0.5 text-left hover:bg-ink/[0.05] hover:text-text disabled:hover:bg-transparent"
           >
             {prevLabel}
           </button>
         ) : (
-          <span className="block truncate" aria-label="No previous set">
+          <span className="block truncate" aria-label={t("No previous set")}>
             –
           </span>
         )}
         {prKinds.length > 0 && (
           <span className="flex items-center gap-1 text-pr" role="status">
             <Trophy aria-hidden="true" size={12} />
-            <span className="sr-only">New record: {prKinds.map((k) => PR_LABEL[k]).join(", ")}</span>
+            <span className="sr-only">{t("New record: {kinds}", { kinds: prKinds.map((k) => t(PR_LABEL[k])).join(", ") })}</span>
             <span aria-hidden="true" className="text-[11px] font-bold tracking-wider">
               PR
             </span>
@@ -141,7 +143,7 @@ export function SetRow({
       </div>
 
       <NumberField
-          aria-label={isBodyweight ? `${a11yName} added weight in ${unit}` : `${a11yName} weight in ${unit}`}
+          aria-label={isBodyweight ? t("{set} added weight in {unit}", { set: a11yName, unit }) : t("{set} weight in {unit}", { set: a11yName, unit })}
           placeholder={previous?.weightKg != null ? formatWeight(previous.weightKg, unit, false) : "0"}
           value={set.weightKg === null ? null : toDisplay(set.weightKg, unit)}
           onCommit={(n) => onUpdate({ weightKg: n === null ? null : fromDisplay(n, unit) })}
@@ -153,7 +155,7 @@ export function SetRow({
 
       <NumberField
         ref={repsRef}
-        aria-label={`${a11yName} reps`}
+        aria-label={t("{set} reps", { set: a11yName })}
         aria-invalid={error ? true : undefined}
         placeholder={previous?.reps != null ? String(previous.reps) : "0"}
         value={set.reps}
@@ -168,7 +170,7 @@ export function SetRow({
 
       {showRpe && (
         <NumberField
-          aria-label={`${a11yName} RPE, 6 to 10`}
+          aria-label={t("{set} RPE, 6 to 10", { set: a11yName })}
           placeholder="RPE"
           value={set.rpe}
           onCommit={(n) => onUpdate({ rpe: n === null ? null : Math.min(10, Math.max(6, Math.round(n * 2) / 2)) })}
@@ -182,7 +184,7 @@ export function SetRow({
         type="button"
         onClick={toggleComplete}
         aria-pressed={set.completed}
-        aria-label={set.completed ? `${a11yName} done. Mark as not done` : `Mark ${a11yName} done`}
+        aria-label={set.completed ? t("{set} done. Mark as not done", { set: a11yName }) : t("Mark {set} done", { set: a11yName })}
         {...press}
         className={`relative z-[1] flex size-11 items-center justify-center rounded-xl border transition-colors duration-150 ${
           set.completed

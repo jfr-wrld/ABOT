@@ -7,6 +7,7 @@ import { formatDuration } from "@/lib/calc";
 import { toDisplay } from "@/lib/units";
 import type { PeriodTotals } from "@/lib/progress";
 import { CountUp } from "./CountUp";
+import { useT } from "@/i18n";
 
 const PLATE = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
 
@@ -29,15 +30,16 @@ export function ProgressHero({
 }) {
   const max = Math.max(1, ...buckets.map((b) => b.volumeKg));
   const volume = toDisplay(totals.volumeKg, unit);
+  const t = useT();
   return (
     <section aria-labelledby="hero-title" className="panel overflow-hidden p-4">
       <h2 id="hero-title" className="label-caps">
-        Volume, last <span className="num">{weeks}</span> weeks
+        {t("Volume, last {n} weeks", { n: weeks })}
       </h2>
       <p className="mt-1 flex items-baseline gap-2">
         <CountUp
           value={volume}
-          format={(n) => Math.round(n).toLocaleString()}
+          format={(n) => Math.round(n).toLocaleString(t.locale)}
           className="num text-5xl font-extrabold leading-none tracking-tight"
         />
         <span className="num text-base font-bold text-text-muted">{unit}</span>
@@ -62,17 +64,18 @@ export function ProgressHero({
       </div>
 
       <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-3">
-        <Tile label="Workouts" value={totals.workouts} format={(n) => String(Math.round(n))} change={change.workouts} />
-        <Tile label="Time" value={totals.durationSec} format={(n) => formatDuration(Math.round(n))} change={change.time} />
-        <Tile label="Sets" value={totals.sets} format={(n) => String(Math.round(n))} change={change.sets} />
+        <Tile label={t("Workouts")} value={totals.workouts} format={(n) => String(Math.round(n))} change={change.workouts} />
+        <Tile label={t("Time")} value={totals.durationSec} format={(n) => formatDuration(Math.round(n))} change={change.time} />
+        <Tile label={t("Sets")} value={totals.sets} format={(n) => String(Math.round(n))} change={change.sets} />
       </dl>
     </section>
   );
 }
 
 function Delta({ value, weeks }: { value: number | null; weeks: number }) {
+  const t = useT();
   if (value === null)
-    return <p className="mt-2 text-sm text-text-muted">Nothing logged in the {weeks} weeks before, so no comparison yet.</p>;
+    return <p className="mt-2 text-sm text-text-muted">{t("Nothing logged in the {n} weeks before, so no comparison yet.", { n: weeks })}</p>;
   const up = value > 0;
   return (
     <p className="mt-2 text-sm">
@@ -80,7 +83,7 @@ function Delta({ value, weeks }: { value: number | null; weeks: number }) {
         {up ? "+" : value < 0 ? "-" : "±"}
         {Math.abs(value)}%
       </span>{" "}
-      <span className="text-text-muted">vs the {weeks} weeks before</span>
+      <span className="text-text-muted">{t("vs the {n} weeks before", { n: weeks })}</span>
     </p>
   );
 }
@@ -105,20 +108,15 @@ function Tile({ label, value, format, change }: { label: string; value: number; 
 /** One hexagon plate per week in the range: filled when you trained that week. */
 export function StreakPlates({ buckets, streak }: { buckets: WeekBucket[]; streak: number }) {
   const trained = buckets.filter((b) => b.workouts > 0).length;
+  const t = useT();
   return (
     <section aria-labelledby="streak-title" className="panel flex items-center justify-between gap-3 p-4">
       <div className="min-w-0">
         <h2 id="streak-title" className="text-sm font-semibold">
-          {streak > 0 ? (
-            <>
-              <span className="num">{streak}</span>-week streak
-            </>
-          ) : (
-            "No active streak"
-          )}
+          {streak > 0 ? t("{n}-week streak", { n: streak }) : t("No active streak")}
         </h2>
         <p className="text-xs text-text-muted">
-          Trained in <span className="num">{trained}</span> of <span className="num">{buckets.length}</span> weeks
+          {t("Trained in {n} of {total} weeks", { n: trained, total: buckets.length })}
         </p>
       </div>
       {/* Up to 8 plates sit on one row; 12 weeks split into two even rows of 6. */}

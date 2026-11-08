@@ -5,6 +5,7 @@ import type { Exercise, MuscleGroup } from "@/types/workout";
 import { CYCLE_SECONDS, GROUND, phaseAt, poseAt, rig, type Joints, type MotionPattern, type PhaseLabel } from "./patterns";
 import { FrontScene } from "./FrontFigure";
 import type { Vec } from "./ik";
+import { useT } from "@/i18n";
 
 type Segment = "torso" | "upperArm" | "foreArm" | "thigh" | "shin";
 
@@ -163,6 +164,7 @@ export function MotionFigure({
   playing: boolean;
   onPhase: (label: PhaseLabel) => void;
 }) {
+  const t = useT();
   const [u, setU] = useState(0);
   const start = useRef<number | null>(null);
   const offset = useRef(0);
@@ -193,5 +195,5 @@ export function MotionFigure({
     }
   }, [phase.label, onPhase]);
 
-  return <MotionScene pattern={pattern} progress={phase.progress} exercise={exercise} title={`${exercise.name} animation`} />;
+  return <MotionScene pattern={pattern} progress={phase.progress} exercise={exercise} title={t("{name} animation", { name: exercise.name })} />;
 }
