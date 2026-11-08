@@ -25,7 +25,7 @@ export default function ExercisesPage() {
 }
 
 function LibraryScreen() {
-  const { list } = useAllExercises();
+  const { list, byId } = useAllExercises();
   const addCustom = useExerciseStore((s) => s.addCustom);
   const sessions = useWorkoutStore((s) => s.sessions);
   const [query, setQuery] = useState("");
@@ -33,7 +33,7 @@ function LibraryScreen() {
   const [equipment, setEquipment] = useState<Equipment | "">("");
   const [formOpen, setFormOpen] = useState(false);
 
-  const prTable = useMemo(() => buildPRTable(sessions), [sessions]);
+  const prTable = useMemo(() => buildPRTable(sessions, byId, { allGyms: true }), [sessions, byId]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

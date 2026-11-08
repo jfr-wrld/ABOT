@@ -219,3 +219,46 @@ describe("multiple primary muscles (Task 18)", () => {
     expect(split.hamstrings).toBe(0.5);
   });
 });
+
+describe("per-hand PR and history volume (owner decision 2026-11-08)", () => {
+  const db = (sets: WorkoutSet[], startedAt = 1) => ex("bench-press-dumbbell", sets, undefined, startedAt);
+  it("best set volume counts both dumbbells", () => {
+    const s = db([set({ id: "d1", weightKg: 20, reps: 10 })]);
+    const pr = detectSessionPRs(s, [s], SEED_EXERCISES_BY_ID).find((p) => p.kind === "best_set_volume")!;
+    expect(pr.value).toBe(400);
+    expect(pr.weightKg).toBe(20); // the number typed, per hand
+    expect(buildPRTable([s], SEED_EXERCISES_BY_ID)["bench-press-dumbbell"]!.best_set_volume!.value).toBe(400);
+  });
+  it("heaviest weight and e1RM stay per hand", () => {
+    const s = db([set({ id: "d1", weightKg: 20, reps: 10 })]);
+    const t = buildPRTable([s], SEED_EXERCISES_BY_ID)["bench-press-dumbbell"]!;
+    expect(t.heaviest_weight!.value).toBe(20);
+    expect(t.best_1rm!.value).toBeCloseTo(26.67, 2);
+  });
+  it("exercise history volume matches session volume", () => {
+    const s = db([set({ id: "d1", weightKg: 20, reps: 10 }), set({ id: "d2", weightKg: 20, reps: 8 })]);
+    const h = exerciseHistory("bench-press-dumbbell", [s], { byId: SEED_EXERCISES_BY_ID });
+    expect(h[0]!.volumeKg).toBe(sessionVolume(s, SEED_EXERCISES_BY_ID));
+    expect(h[0]!.volumeKg).toBe(720);
+  });
+});
+
+describe("all-gyms view still applies the load factor", () => {
+  const day = 86_400_000;
+  it("buildPRTable with allGyms merges gyms but counts both dumbbells", () => {
+    const a = ex("lat-pulldown-cable", [set({ id: "a1", weightKg: 60, reps: 10 })], "A", day);
+    const b = ex("lat-pulldown-cable", [set({ id: "b1", weightKg: 50, reps: 10 })], "B", 2 * day);
+    const d = ex("bench-press-dumbbell", [set({ id: "d1", weightKg: 20, reps: 10 })], "A", day);
+    const t = buildPRTable([a, b, d], SEED_EXERCISES_BY_ID, { allGyms: true });
+    expect(t["lat-pulldown-cable"]!.heaviest_weight!.value).toBe(60);
+    expect(t["lat-pulldown-cable@A"]).toBeUndefined();
+    expect(t["bench-press-dumbbell"]!.best_set_volume!.value).toBe(400);
+  });
+  it("exerciseHistory with allGyms includes every gym and applies the factor", () => {
+    const a = ex("lat-pulldown-cable", [set({ id: "a1", weightKg: 60, reps: 10 })], "A", day);
+    const b = ex("lat-pulldown-cable", [set({ id: "b1", weightKg: 50, reps: 10 })], "B", 2 * day);
+    expect(exerciseHistory("lat-pulldown-cable", [a, b], { byId: SEED_EXERCISES_BY_ID, allGyms: true })).toHaveLength(2);
+    const d = ex("bench-press-dumbbell", [set({ id: "d1", weightKg: 20, reps: 10 })], "A", day);
+    expect(exerciseHistory("bench-press-dumbbell", [d], { byId: SEED_EXERCISES_BY_ID, allGyms: true })[0]!.volumeKg).toBe(400);
+  });
+});

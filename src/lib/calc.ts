@@ -67,18 +67,20 @@ export function variantKey(exerciseId: string, exercise: Exercise | undefined, l
   return exercise?.isMachineDependent && locationId ? `${exerciseId}@${locationId}` : exerciseId;
 }
 
-function keyFor(exerciseId: string, session: WorkoutSession, byId?: Record<string, Exercise>): string {
-  return byId ? variantKey(exerciseId, byId[exerciseId], session.locationId) : exerciseId;
+function keyFor(exerciseId: string, session: WorkoutSession, byId?: Record<string, Exercise>, allGyms = false): string {
+  return byId && !allGyms ? variantKey(exerciseId, byId[exerciseId], session.locationId) : exerciseId;
 }
 
 export interface VariantOptions {
   byId?: Record<string, Exercise>;
   /** Gym to compare within; machine exercises only match sessions at this gym. */
   locationId?: string;
+  /** Ignore gyms (one combined view) while still applying load modes from `byId`. */
+  allGyms?: boolean;
 }
 
 function matchesVariant(exerciseId: string, session: WorkoutSession, opts?: VariantOptions): boolean {
-  if (!opts?.byId) return true;
+  if (!opts?.byId || opts.allGyms) return true;
   const target = variantKey(exerciseId, opts.byId[exerciseId], opts.locationId);
   return keyFor(exerciseId, session, opts.byId) === target;
 }
@@ -106,14 +108,15 @@ export function countSets(session: WorkoutSession) {
 
 type PRTable = Record<string, Partial<Record<PRKind, PersonalRecord>>>;
 
-function prValue(kind: PRKind, weightKg: number, reps: number): number {
+/** `factor` is the load-mode volume factor: set volume for a pair of dumbbells counts both. */
+function prValue(kind: PRKind, weightKg: number, reps: number, factor: 1 | 2 = 1): number {
   switch (kind) {
     case "heaviest_weight":
       return weightKg;
     case "best_1rm":
       return estimate1RM(weightKg, reps);
     case "best_set_volume":
-      return weightKg * reps;
+      return weightKg * reps * factor;
   }
 }
 
@@ -127,7 +130,11 @@ const PR_KINDS: PRKind[] = ["heaviest_weight", "best_1rm", "best_set_volume"];
  * Keys are exercise ids, or variant keys ("id@location") when `byId` is given and the
  * exercise is machine dependent. Use `variantKey` to look a record up.
  */
-export function buildPRTable(sessions: WorkoutSession[], byId?: Record<string, Exercise>): PRTable {
+export function buildPRTable(
+  sessions: WorkoutSession[],
+  byId?: Record<string, Exercise>,
+  opts?: { allGyms?: boolean },
+): PRTable {
   const table: PRTable = {};
   const ordered = [...sessions]
     .filter((s) => s.status === "completed")
@@ -139,9 +146,9 @@ export function buildPRTable(sessions: WorkoutSession[], byId?: Record<string, E
         if (!isLoadedSet(set)) continue;
         const w = set.weightKg as number;
         const r = set.reps as number;
-        const bucket = (table[keyFor(ex.exerciseId, session, byId)] ??= {});
+        const bucket = (table[keyFor(ex.exerciseId, session, byId, opts?.allGyms)] ??= {});
         for (const kind of PR_KINDS) {
-          const value = prValue(kind, w, r);
+          const value = prValue(kind, w, r, volumeFactor(byId?.[ex.exerciseId]?.loadMode ?? "total"));
           const current = bucket[kind];
           if (!current || value > current.value) {
             bucket[kind] = {
@@ -187,7 +194,7 @@ export function detectSessionPRs(
       const w = set.weightKg as number;
       const r = set.reps as number;
       for (const kind of PR_KINDS) {
-        const value = prValue(kind, w, r);
+        const value = prValue(kind, w, r, volumeFactor(byId?.[ex.exerciseId]?.loadMode ?? "total"));
         const prev = baseline[key]?.[kind]?.value ?? 0;
         if (value <= prev) continue;
         const bucket = (best[key] ??= {});
@@ -272,7 +279,7 @@ export function exerciseHistory(
         seen = true;
         const w = set.weightKg as number;
         const r = set.reps as number;
-        vol += w * r;
+        vol += w * r * volumeFactor(opts?.byId?.[exerciseId]?.loadMode ?? "total");
         const e = estimate1RM(w, r);
         if (e > best1rm) best1rm = e;
         if (w > bestW || (w === bestW && r > bestR)) {

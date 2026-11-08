@@ -39,8 +39,8 @@ function Detail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const exercise = byId[id];
-  const history = useMemo(() => exerciseHistory(id, sessions), [id, sessions]);
-  const prs = useMemo(() => buildPRTable(sessions)[id], [id, sessions]);
+  const history = useMemo(() => exerciseHistory(id, sessions, { byId, allGyms: true }), [id, sessions, byId]);
+  const prs = useMemo(() => buildPRTable(sessions, byId, { allGyms: true })[id], [id, sessions, byId]);
 
   if (!exercise) {
     return (
