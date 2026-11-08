@@ -45,3 +45,40 @@ export function regionLevels(primary: MuscleGroup[], secondary: MuscleGroup[]): 
   for (const m of primary) for (const r of MAP[m]) out[r] = "primary";
   return out;
 }
+
+/** The muscle a tap on a drawn region means. Shapes shared by two groups take the main one. */
+const REGION_MUSCLE: Record<Region, MuscleGroup> = {
+  chest: "chest",
+  deltoids: "shoulders",
+  biceps: "biceps",
+  triceps: "triceps",
+  forearm: "forearms",
+  abs: "abs",
+  obliques: "abs",
+  trapezius: "traps",
+  "upper-back": "back",
+  "lower-back": "lower_back",
+  gluteal: "glutes",
+  quadriceps: "quads",
+  hamstring: "hamstrings",
+  adductors: "adductors",
+  calves: "calves",
+  tibialis: "calves",
+  neck: "neck",
+};
+
+export function muscleForRegion(r: Region): MuscleGroup {
+  return REGION_MUSCLE[r];
+}
+
+/**
+ * Whether an exercise works the area of `muscle` on the body drawing. Groups drawn as one shape
+ * count together (back and lats share the upper back; glutes and abductors the gluteal shape).
+ * Full-body exercises match only "full body", not every muscle.
+ */
+export function worksArea(exerciseMuscles: MuscleGroup[], muscle: MuscleGroup): boolean {
+  if (exerciseMuscles.includes(muscle)) return true;
+  if (muscle === "full_body" || muscle === "cardio") return false;
+  const area = new Set(MAP[muscle]);
+  return exerciseMuscles.some((m) => m !== "full_body" && MAP[m].some((r) => area.has(r)));
+}

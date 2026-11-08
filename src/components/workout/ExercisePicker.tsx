@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { Exercise, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 
 const MUSCLES: MuscleGroup[] = [
   "chest", "back", "lats", "shoulders", "biceps", "triceps", "quads", "hamstrings", "glutes", "calves", "abs", "traps", "forearms", "lower_back",
@@ -15,7 +16,9 @@ export function ExercisePicker({
   onClose,
   onPick,
   inWorkout = new Set<string>(),
+  title = "Add exercise",
 }: {
+  title?: string;
   open: boolean;
   onClose: () => void;
   onPick: (exercise: Exercise) => void;
@@ -23,6 +26,7 @@ export function ExercisePicker({
   inWorkout?: Set<string>;
 }) {
   const { list } = useAllExercises();
+  const searchId = `exercise-search-${useId()}`;
   const [query, setQuery] = useState("");
   const [muscle, setMuscle] = useState<MuscleGroup | null>(null);
 
@@ -36,12 +40,12 @@ export function ExercisePicker({
   }, [list, query, muscle]);
 
   return (
-    <Sheet open={open} onClose={onClose} title="Add exercise">
-      <label htmlFor="exercise-search" className="sr-only">
+    <Sheet open={open} onClose={onClose} title={title}>
+      <label htmlFor={searchId} className="sr-only">
         Search exercises
       </label>
       <input
-        id="exercise-search"
+        id={searchId}
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -78,9 +82,10 @@ export function ExercisePicker({
                   useExerciseStore.getState().adopt(e);
                   onPick(e);
                 }}
-                className="flex min-h-12 w-full items-center justify-between gap-3 rounded-ctl px-2 text-left hover:bg-surface-2 active:bg-[#303035]"
+                className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 py-1 text-left hover:bg-surface-2 active:bg-white/[0.08]"
               >
-                <span className="min-w-0">
+                <ExerciseThumb exercise={e} size={44} />
+                <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{e.name}</span>
                   <span className="block text-xs text-text-muted">
                     {primaryMusclesLabel(e)} · {EQUIPMENT_LABELS[e.equipment]}

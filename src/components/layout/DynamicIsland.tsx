@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, MotionConfig, motion } from "framer-motion";
-import { Minus, Plus, X } from "lucide-react";
+import { Minus, Pause, Plus, X } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useHydration } from "@/store/hydration";
@@ -59,18 +59,28 @@ const capsule =
 function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; onWorkoutPage: boolean }) {
   const now = useNow(1000);
   const elapsed = formatDuration(sessionDurationSec(session, now));
+  const paused = session.pausedAt !== undefined;
   const body = (
     <motion.span {...fade} className="flex items-center gap-2 px-4">
-      <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
+      {paused ? (
+        <Pause aria-hidden="true" size={12} className="text-accent" />
+      ) : (
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
+      )}
       <span className="num text-[13px] font-semibold" aria-hidden="true">
         {elapsed}
       </span>
+      {paused && (
+        <span className="text-[11px] font-semibold text-text-muted" aria-hidden="true">
+          Paused
+        </span>
+      )}
     </motion.span>
   );
   return (
     <motion.div layoutId="island" transition={ISLAND_SPRING} className={`${capsule} h-9`}>
       {onWorkoutPage ? (
-        <span className="flex h-full items-center" role="status" aria-label={`Workout running, ${elapsed}`}>
+        <span className="flex h-full items-center" role="status" aria-label={`Workout ${paused ? "paused" : "running"}, ${elapsed}`}>
           {body}
         </span>
       ) : (

@@ -10,6 +10,7 @@ import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
 import { motion } from "framer-motion";
+import { Pause, Play } from "lucide-react";
 import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 
@@ -29,6 +30,7 @@ export function ActiveWorkoutHeader({
   const volume = sessionVolume(session, byId);
   const { total, completed } = countSets(session);
   const [startOpen, setStartOpen] = useState(false);
+  const paused = session.pausedAt !== undefined;
   const locations = useLocationStore((s) => s.locations);
   const setLocation = useWorkoutStore((s) => s.setLocation);
 
@@ -74,13 +76,16 @@ export function ActiveWorkoutHeader({
 
       <dl className="mt-3 grid grid-cols-3 gap-2">
         <div className="rounded-xl border border-white/10 bg-surface px-3 py-2.5">
-          <dt className="label-caps">Duration</dt>
+          <dt className="label-caps flex items-center gap-1.5">
+            Duration
+            {paused && <span className="rounded bg-accent px-1 text-[9px] font-bold text-on-accent">Paused</span>}
+          </dt>
           <dd>
             <button
               type="button"
               onClick={() => setStartOpen(true)}
               aria-haspopup="dialog"
-              aria-label={`Duration ${formatDuration(duration)}. Adjust start time`}
+              aria-label={`Duration ${formatDuration(duration)}${paused ? ", paused" : ""}. Pause or adjust the timer`}
               className="num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-xl font-bold tracking-tight text-text underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
             >
               {formatDuration(duration)}
@@ -90,7 +95,7 @@ export function ActiveWorkoutHeader({
         <Stat label="Volume" value={formatVolume(volume, unit)} />
         <Stat label="Sets" value={`${completed} / ${total}`} />
       </dl>
-      {startOpen && <StartTimeSheet startedAt={session.startedAt} onClose={() => setStartOpen(false)} />}
+      {startOpen && <StartTimeSheet startedAt={session.startedAt} paused={paused} onClose={() => setStartOpen(false)} />}
     </header>
   );
 }
@@ -104,8 +109,11 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StartTimeSheet({ startedAt, onClose }: { startedAt: number; onClose: () => void }) {
+/** Tapping the duration: pause or resume the clock, or move the start time. */
+function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; paused: boolean; onClose: () => void }) {
   const setStartedAt = useWorkoutStore((s) => s.setStartedAt);
+  const pause = useWorkoutStore((s) => s.pauseActive);
+  const resume = useWorkoutStore((s) => s.resumeActive);
   const d = new Date(startedAt);
   const [value, setValue] = useState(
     `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
@@ -130,7 +138,7 @@ function StartTimeSheet({ startedAt, onClose }: { startedAt: number; onClose: ()
     <Sheet
       open
       onClose={onClose}
-      title="Adjust start time"
+      title="Workout timer"
       footer={
         <div className="grid grid-cols-2 gap-2">
           <Button onClick={onClose}>Cancel</Button>
@@ -140,6 +148,23 @@ function StartTimeSheet({ startedAt, onClose }: { startedAt: number; onClose: ()
         </div>
       }
     >
+      <Button
+        variant={paused ? "primary" : "secondary"}
+        onClick={() => {
+          if (paused) resume();
+          else pause();
+          onClose();
+        }}
+        className="mb-1 w-full"
+      >
+        {paused ? <Play aria-hidden="true" size={16} /> : <Pause aria-hidden="true" size={16} />}
+        {paused ? "Resume workout timer" : "Pause workout timer"}
+      </Button>
+      <p className="mb-4 text-xs text-text-muted">
+        {paused
+          ? "The clock is stopped. Ticking a set also resumes it."
+          : "Stops the clock for a break. The rest timer is cleared; ticking a set resumes."}
+      </p>
       <label htmlFor="start-time" className="mb-1 block text-sm font-semibold">
         Started at
       </label>
