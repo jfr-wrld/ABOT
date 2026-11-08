@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, ChevronRight, Plus, Settings, Trophy, TrendingDown, TrendingUp } from "lucide-react";
+import { Check, ChevronRight, Plus, Settings, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -17,17 +17,15 @@ import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
 import {
-  RECOVERY_HOURS,
   muscleRecovery,
   nextProtocol,
   prCounts,
-  sessionMuscles,
   weekStrip,
   weeklyFrequency,
   weeklyVolume,
   type NextProtocol,
 } from "@/lib/home";
-import { MUSCLE_GROUP_LABELS, type Exercise, type Routine } from "@/types/workout";
+import type { Exercise } from "@/types/workout";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-xl border border-line bg-surface p-3";
@@ -46,7 +44,6 @@ export function HomeDashboard() {
   const now = useNow(active ? 1000 : 60_000);
 
   const next = useMemo(() => nextProtocol(routines, sessions, schedule, now), [routines, sessions, schedule, now]);
-  const others = routines.filter((r) => r.exercises.length > 0 && r.id !== next?.routine.id).slice(0, 6);
 
   return (
     <main className="flex flex-1 flex-col gap-5 px-4 pt-4">
@@ -77,9 +74,7 @@ export function HomeDashboard() {
         <WeekStrip days={weekStrip(sessions, now, firstDayOfWeek)} />
       </header>
 
-      {active ? <ActiveCard now={now} /> : <ProtocolHero next={next} byId={byId} />}
-
-      {!active && others.length > 0 && <OtherRoutines routines={others} />}
+      {active ? <ActiveCard now={now} /> : <ProtocolHero next={next} />}
 
       <Metrics now={now} />
 
@@ -114,9 +109,6 @@ function WeekStrip({ days }: { days: ReturnType<typeof weekStrip> }) {
                 <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-zinc-800"}`} />
               )}
             </span>
-            <span aria-hidden="true" className={`num text-[11px] ${d.isToday ? "text-text" : "text-text-muted"}`}>
-              {date.getDate()}
-            </span>
             <span className="sr-only">
               {date.toLocaleDateString(undefined, { weekday: "long", day: "numeric" })}
               {status && `, ${status}`}
@@ -130,26 +122,7 @@ function WeekStrip({ days }: { days: ReturnType<typeof weekStrip> }) {
 
 /* ---------------------------------------------------------------- hero */
 
-function routineMuscles(r: Routine, byId: Record<string, Exercise>): string[] {
-  return [...new Set(r.exercises.flatMap((e) => byId[e.exerciseId]?.primaryMuscles ?? []))]
-    .slice(0, 3)
-    .map((m) => MUSCLE_GROUP_LABELS[m]);
-}
-
-function MuscleChips({ muscles }: { muscles: string[] }) {
-  if (muscles.length === 0) return null;
-  return (
-    <ul className="flex flex-wrap gap-1" aria-label="Muscles">
-      {muscles.map((m) => (
-        <li key={m} className="label-caps rounded-md bg-surface-2 px-1.5 py-0.5">
-          {m}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<string, Exercise> }) {
+function ProtocolHero({ next }: { next: NextProtocol | null }) {
   const router = useRouter();
   const { startEmpty, startFromRoutine } = useWorkoutStore();
   const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
@@ -163,11 +136,10 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
     return (
       <section aria-labelledby="hero-heading" className={`${TILE} flex flex-col gap-3 p-4`}>
         <div>
-          <p className="label-caps">Next protocol // none yet</p>
+          <p className="label-caps">Next up</p>
           <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
             Free session
           </h2>
-          <p className="mt-1 text-sm text-text-muted">Save a routine for a one-tap start here.</p>
         </div>
         <Button variant="primary" onClick={empty} className="min-h-12 w-full text-base">
           Start an empty workout
@@ -183,21 +155,14 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
     );
   }
 
-  const { routine, reason } = next;
-  const sets = routine.exercises.reduce((n, e) => n + e.sets.length, 0);
+  const { routine } = next;
   return (
     <section aria-labelledby="hero-heading" className={`${TILE} flex flex-col gap-3 p-4`}>
       <div className="min-w-0">
-        <p className="label-caps">Next protocol // {reason}</p>
+        <p className="label-caps">Next up</p>
         <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
           {routine.name}
         </h2>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <MuscleChips muscles={routineMuscles(routine, byId)} />
-          <span className="num text-xs text-text-muted">
-            {routine.exercises.length} ex{sets > 0 ? ` · ${sets} sets` : ""}
-          </span>
-        </div>
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
         <Button
@@ -206,9 +171,10 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
             startFromRoutine(routine);
             router.push("/workout");
           }}
+          aria-label={`Start ${routine.name}`}
           className="min-h-12 text-base"
         >
-          <span className="truncate">Start {routine.name}</span>
+          Start
         </Button>
         <Button onClick={empty} aria-label="Start an empty workout" className="min-h-12 !bg-transparent">
           <Plus aria-hidden="true" size={16} />
@@ -238,36 +204,6 @@ function ActiveCard({ now }: { now: number }) {
   );
 }
 
-function OtherRoutines({ routines }: { routines: Routine[] }) {
-  const router = useRouter();
-  const startFromRoutine = useWorkoutStore((s) => s.startFromRoutine);
-  return (
-    <section aria-labelledby="others-heading" className="-mt-2">
-      <h2 id="others-heading" className="sr-only">
-        Other routines
-      </h2>
-      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-        {routines.map((r) => (
-          <li key={r.id} className="shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                startFromRoutine(r);
-                router.push("/workout");
-              }}
-              aria-label={`Start ${r.name}`}
-              className="flex min-h-11 max-w-[11rem] items-center gap-1.5 rounded-xl border border-line bg-surface px-3 text-sm font-semibold transition-colors hover:border-line-hover"
-            >
-              <span className="truncate">{r.name}</span>
-              <span className="num text-xs text-text-muted">{r.exercises.length}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
 /* ---------------------------------------------------------------- metrics */
 
 function Metrics({ now }: { now: number }) {
@@ -280,86 +216,42 @@ function Metrics({ now }: { now: number }) {
   const freq = weeklyFrequency(sessions, schedule, now, firstDayOfWeek);
   const recovery = useMemo(() => muscleRecovery(sessions, byId, now), [sessions, byId, now]);
   const ready = recovery.filter((r) => r.hoursLeft === 0).length;
+  const [figure, unit] = formatVolume(volume.kg, weightUnit).split(" ");
 
   return (
-    <section aria-labelledby="week-heading" className="flex flex-col gap-2">
-      <h2 id="week-heading" className="label-caps">
-        This week
-      </h2>
-      <div className="grid grid-cols-2 gap-2">
-        <div className={TILE}>
-          <p className="label-caps">Volume</p>
-          <p className="num mt-1 truncate text-2xl font-bold tracking-tight tabular-nums">{formatVolume(volume.kg, weightUnit)}</p>
-          <p className="num mt-0.5 flex items-center gap-1 text-xs text-text-muted">
-            {volume.changePct === null ? (
-              "No week to compare"
-            ) : (
-              <>
-                {volume.changePct >= 0 ? (
-                  <TrendingUp aria-hidden="true" size={14} className="text-text" />
-                ) : (
-                  <TrendingDown aria-hidden="true" size={14} />
-                )}
-                <span className={volume.changePct >= 0 ? "text-text" : ""}>
-                  {volume.changePct > 0 ? "+" : ""}
-                  {volume.changePct}%
-                </span>
-                vs last wk
-              </>
-            )}
-          </p>
-        </div>
-
-        <div className={TILE}>
-          <p className="label-caps">Frequency</p>
-          <p className="num mt-1 text-2xl font-bold tracking-tight tabular-nums">
-            {freq.done}
-            {freq.target !== null && <span className="text-text-muted">/{freq.target}</span>}
-            <span className="ml-1.5 text-xs font-semibold text-text-muted">SESSIONS</span>
-          </p>
-          {freq.target !== null ? (
-            <div className="mt-2 flex gap-1" aria-hidden="true">
-              {Array.from({ length: freq.target }, (_, i) => (
-                <span key={i} className={`h-1.5 flex-1 rounded-full ${i < freq.done ? "bg-accent" : "bg-zinc-800"}`} />
-              ))}
-            </div>
-          ) : (
-            <Link href="/settings#schedule" className="num -my-2 inline-flex min-h-11 items-center text-xs text-text-muted underline underline-offset-4 hover:text-text">
-              Set a weekly plan
-            </Link>
+    <section aria-label="This week">
+      <dl className="grid grid-cols-3 gap-2">
+        <Metric label={`${unit} lifted`} value={figure}>
+          {volume.changePct !== null && (
+            <span className={volume.changePct >= 0 ? "text-text" : "text-text-muted"}>
+              {volume.changePct > 0 ? "+" : ""}
+              {volume.changePct}%<span className="sr-only"> against last week</span>
+            </span>
           )}
-        </div>
-
-        <div className={`${TILE} col-span-2`}>
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="label-caps">Recovery</p>
-            <p className="num text-xs text-text-muted">
-              <span className="font-semibold text-text">{ready}/6</span> ready · {RECOVERY_HOURS} h rule
-            </p>
-          </div>
-          <ul className="mt-2 grid grid-cols-3 gap-1.5">
-            {recovery.map((r) => (
-              <li
-                key={r.group}
-                className={`flex items-center justify-between gap-1 rounded-lg px-2 py-1.5 ${r.hoursLeft === 0 ? "bg-surface-2" : "bg-bg"}`}
-              >
-                <span className={`truncate text-xs font-semibold ${r.hoursLeft === 0 ? "text-text" : "text-text-muted"}`}>{r.group}</span>
-                {r.hoursLeft === 0 ? (
-                  <>
-                    <Check aria-hidden="true" size={14} strokeWidth={3} className="shrink-0 text-text" />
-                    <span className="sr-only">ready</span>
-                  </>
-                ) : (
-                  <span className="num text-[11px] text-text-muted">
-                    {r.hoursLeft}h<span className="sr-only"> until ready</span>
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+        </Metric>
+        <Metric label="Sessions" value={freq.target !== null ? `${freq.done}/${freq.target}` : String(freq.done)}>
+          {freq.target !== null && (
+            <span className="flex gap-0.5 pt-1" aria-hidden="true">
+              {Array.from({ length: freq.target }, (_, i) => (
+                <span key={i} className={`h-1 flex-1 rounded-full ${i < freq.done ? "bg-accent" : "bg-zinc-800"}`} />
+              ))}
+            </span>
+          )}
+        </Metric>
+        <Metric label="Ready" value={`${ready}/6`} />
+      </dl>
     </section>
+  );
+}
+
+/** One instrument: a caps label, a mono figure, and at most one short mark under it. */
+function Metric({ label, value, children }: { label: string; value: string; children?: React.ReactNode }) {
+  return (
+    <div className={`${TILE} min-w-0`}>
+      <dt className="label-caps truncate">{label}</dt>
+      <dd className="num mt-1 truncate text-xl font-bold tracking-tight tabular-nums">{value}</dd>
+      {children && <dd className="num mt-0.5 flex min-h-4 text-[11px] text-text-muted">{children}</dd>}
+    </div>
   );
 }
 
@@ -376,18 +268,17 @@ function RecentWorkouts({ unit, byId }: { unit: "kg" | "lbs"; byId: Record<strin
         Recent workouts
       </h2>
       {recent.length === 0 ? (
-        <p className={`${TILE} py-5 text-center text-sm text-text-muted`}>No workouts yet. Finished sessions land here.</p>
+        <p className={`${TILE} py-5 text-center text-sm text-text-muted`}>No workouts yet.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {recent.map((s) => {
             const { completed } = countSets(s);
             const pr = prs[s.id] ?? 0;
-            const muscles = sessionMuscles(s, byId).map((m) => MUSCLE_GROUP_LABELS[m]);
             return (
               <li key={s.id}>
                 <motion.div whileTap={{ scale: 0.98 }} transition={PRESS_SPRING}>
                   <Link href={`/history/${s.id}`} className={`${TILE} flex items-center gap-3 transition-colors hover:border-line-hover`}>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex items-center gap-2">
                         <span className="truncate text-base font-semibold">{s.name}</span>
                         {pr > 0 && (
@@ -403,7 +294,6 @@ function RecentWorkouts({ unit, byId }: { unit: "kg" | "lbs"; byId: Record<strin
                           {new Date(s.startedAt).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
                         </time>
                       </div>
-                      <MuscleChips muscles={muscles} />
                       <p className="num text-xs text-zinc-400">
                         {formatDuration(sessionDurationSec(s))} · {formatVolume(sessionVolume(s, byId), unit)} · {completed}{" "}
                         {completed === 1 ? "set" : "sets"}

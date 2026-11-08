@@ -7,13 +7,13 @@ test("an empty device gets a working dashboard, not a blank page", async ({ page
   await expect(page.getByRole("heading", { name: "Free session" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Create a routine" })).toHaveAttribute("href", "/routines");
   const week = page.getByRole("region", { name: "This week" });
-  await expect(week.getByText("0 kg")).toBeVisible();
+  await expect(week.getByText("kg lifted")).toBeVisible();
   await expect(week.getByText("6/6")).toBeVisible();
   await expect(page.getByText("No workouts yet.")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
-test("a finished workout lights today, fills the week and shows a tagged card", async ({ page }) => {
+test("a finished workout lights today, fills the week and lists the session", async ({ page }) => {
   await freshStart(page);
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");
@@ -24,12 +24,11 @@ test("a finished workout lights today, fills the week and shows a tagged card", 
   await page.goto("/");
   await expect(page.getByRole("list", { name: "This week" }).getByText(/, trained$/)).toHaveCount(1);
   const week = page.getByRole("region", { name: "This week" });
-  await expect(week.getByText("400 kg")).toBeVisible();
+  await expect(week.getByText("400", { exact: true })).toBeVisible();
   await expect(week.getByText("5/6")).toBeVisible();
-  await expect(week.getByText(/Chest.*until ready/)).toBeVisible();
 
   const card = page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first();
-  await expect(card.getByRole("list", { name: "Muscles" })).toContainText("Chest");
+  await expect(card).toContainText("400 kg · 1 set");
   // A first attempt beats nothing, so it earns no record badge.
   await expect(card.getByText(/PR$/)).toHaveCount(0);
   await card.click();

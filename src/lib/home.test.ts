@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { muscleRecovery, nextProtocol, prCounts, sessionMuscles, weekStrip, weeklyFrequency, weeklyVolume } from "./home";
+import { muscleRecovery, nextProtocol, prCounts, weekStrip, weeklyFrequency, weeklyVolume } from "./home";
 import { DEFAULT_SCHEDULE, type WorkoutSchedule } from "@/lib/notifications/schedule";
 import type { Exercise, Routine, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES } from "@/data/exercises";
@@ -104,14 +104,6 @@ describe("muscleRecovery", () => {
 });
 
 describe("recent workout tags", () => {
-  it("lists the muscles worked most", () => {
-    const s = session("s", now, [
-      ["bench-press-barbell", [set(60, 5), set(60, 5)]],
-      ["squat-barbell", [set(100, 5)]],
-    ]);
-    expect(sessionMuscles(s, byId)[0]).toBe("chest");
-  });
-
   it("counts one record per lift, and none for a first attempt", () => {
     const first = session("a", now - 2 * DAY, [["bench-press-barbell", [set(60, 5)]]]);
     const second = session("b", now - DAY, [["bench-press-barbell", [set(70, 5)]]]);

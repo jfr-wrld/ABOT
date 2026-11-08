@@ -190,20 +190,6 @@ export function muscleRecovery(sessions: WorkoutSession[], byId: Record<string, 
 
 /* ---------------------------------------------------------------- recent cards */
 
-/** Up to `n` primary muscles a session worked, most working sets first. */
-export function sessionMuscles(session: WorkoutSession, byId: Record<string, Exercise>, n = 3): MuscleGroup[] {
-  const sets: Partial<Record<MuscleGroup, number>> = {};
-  for (const ex of session.exercises) {
-    const count = ex.sets.filter(isWorkingSet).length;
-    if (!count) continue;
-    for (const m of byId[ex.exerciseId]?.primaryMuscles ?? []) sets[m] = (sets[m] ?? 0) + count;
-  }
-  return (Object.entries(sets) as [MuscleGroup, number][])
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, n)
-    .map(([m]) => m);
-}
-
 /**
  * Lifts that beat an earlier record in each session (one per lift, not one per record kind). A
  * lift done for the first time sets no record worth a badge: there was nothing to beat.
