@@ -56,6 +56,18 @@ export function createMemoryRepository(): Repository {
       if (data.settings) kv.set("settings", clone(data.settings));
       else kv.delete("settings");
       kv.set("activeWorkout", clone(data.activeWorkout));
+      kv.set("restTimer", null);
+    },
+    async commitFinishedWorkout(session) {
+      sessions.map.set(session.id, clone(session));
+      kv.set("activeWorkout", null);
+      kv.set("restTimer", null);
+    },
+    async mergeAll(data) {
+      for (const s of data.sessions) sessions.map.set(s.id, clone(s));
+      for (const r of data.routines) routines.map.set(r.id, clone(r));
+      for (const e of data.exercises) exercises.map.set(e.id, clone(e));
+      for (const l of data.locations) locations.map.set(l.id, clone(l));
     },
     async snapshot() {
       return {

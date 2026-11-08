@@ -3,8 +3,8 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
-import { backupFileName, exportBackup, importBackup, parseBackup, type AbotBackup, type BackupCounts } from "@/data/backup";
-import { getActiveRepository, hydrateStores } from "@/store/persistence";
+import { backupFileName, backupFromSnapshot, importBackup, parseBackup, type AbotBackup, type BackupCounts } from "@/data/backup";
+import { getActivePersistence, getActiveRepository, hydrateStores, snapshotFromStores } from "@/store/persistence";
 
 type Pending = { backup: AbotBackup; counts: BackupCounts; fileName: string };
 
@@ -18,17 +18,21 @@ export function BackupSection() {
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  async function doExport() {
-    const repo = getActiveRepository();
-    if (!repo) return setError("Saved data is still loading. Try again in a moment.");
-    const backup = await exportBackup(repo);
-    const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = backupFileName();
-    a.click();
-    URL.revokeObjectURL(url);
-    setStatus(`Exported ${plural(backup.data.sessions.length, "workout", "workouts")}.`);
+  function doExport() {
+    setError(null);
+    try {
+      const backup = backupFromSnapshot(snapshotFromStores());
+      const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = backupFileName();
+      a.click();
+      // Revoking in the same tick can cancel the download in Safari.
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      setStatus(`Exported ${plural(backup.data.sessions.length, "workout", "workouts")}.`);
+    } catch (e) {
+      setError(`Export failed: ${e instanceof Error ? e.message : String(e)}.`);
+    }
   }
 
   async function onFile(file: File | undefined) {
@@ -36,25 +40,45 @@ export function BackupSection() {
     setStatus(null);
     setPending(null);
     if (!file) return;
-    const parsed = parseBackup(await file.text());
+    let text: string;
+    try {
+      text = await file.text();
+    } catch {
+      return setError("This file could not be read. Pick it again.");
+    }
+    const parsed = parseBackup(text);
     if (!parsed.ok) return setError(parsed.error);
     setPending({ backup: parsed.backup, counts: parsed.counts, fileName: file.name });
   }
 
   async function doImport(mode: "merge" | "replace") {
     const repo = getActiveRepository();
-    if (!repo || !pending) return;
+    const persistence = getActivePersistence();
+    if (!repo || !persistence || !pending) {
+      setError("Saved data is not loaded, so nothing can be imported. Reload ABOT and try again.");
+      return;
+    }
     setBusy(true);
+    const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
     try {
-      await importBackup(repo, pending.backup, mode);
-      await hydrateStores(repo);
+      // Runs after every queued write and before any new one, so nothing interleaves with it.
+      await persistence.runExclusive(() => importBackup(repo, pending.backup, mode));
+    } catch (e) {
+      // Both import modes run in one transaction, so a failure leaves the data as it was.
+      setError(`Import failed: ${msg(e)}. Your data was not changed.`);
+      setBusy(false);
+      setConfirmReplace(false);
+      return;
+    }
+    try {
+      await persistence.runExclusive(() => hydrateStores(repo));
       setStatus(
         `Imported ${plural(pending.counts.sessions, "workout", "workouts")} (${mode === "merge" ? "merged" : "replaced all data"}).`,
       );
       setPending(null);
       if (fileInput.current) fileInput.current.value = "";
     } catch (e) {
-      setError(`Import failed: ${e instanceof Error ? e.message : String(e)}. Your data was not changed.`);
+      setError(`The backup was imported, but ABOT could not reload it (${msg(e)}). Reload the page to see it.`);
     } finally {
       setBusy(false);
       setConfirmReplace(false);

@@ -64,6 +64,22 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         if (data.settings) await db.kv.put({ key: "settings", value: data.settings });
         else await db.kv.delete("settings");
         await db.kv.put({ key: "activeWorkout", value: data.activeWorkout });
+        await db.kv.put({ key: "restTimer", value: null });
+      });
+    },
+    async commitFinishedWorkout(session) {
+      await db.transaction("rw", [db.sessions, db.kv], async () => {
+        await db.sessions.put(session);
+        await db.kv.put({ key: "activeWorkout", value: null });
+        await db.kv.put({ key: "restTimer", value: null });
+      });
+    },
+    async mergeAll(data) {
+      await db.transaction("rw", [db.sessions, db.routines, db.exercises, db.locations], async () => {
+        await db.sessions.bulkPut(data.sessions);
+        await db.routines.bulkPut(data.routines);
+        await db.exercises.bulkPut(data.exercises);
+        await db.locations.bulkPut(data.locations);
       });
     },
     async snapshot() {

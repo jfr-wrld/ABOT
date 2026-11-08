@@ -20,7 +20,12 @@ export interface BackupCounts {
 }
 
 export async function exportBackup(repo: Repository, now = new Date()): Promise<AbotBackup> {
-  return { app: "ABOT", schemaVersion: 1, exportedAt: now.toISOString(), data: await repo.snapshot() };
+  return backupFromSnapshot(await repo.snapshot(), now);
+}
+
+/** The app exports what it holds in memory, which includes changes that could not be saved yet. */
+export function backupFromSnapshot(data: RepoSnapshot, now = new Date()): AbotBackup {
+  return { app: "ABOT", schemaVersion: 1, exportedAt: now.toISOString(), data };
 }
 
 export function backupFileName(now = new Date()): string {
@@ -109,7 +114,8 @@ export function parseBackup(
 
 /**
  * merge: rows from the file are added, and win when the same id exists; nothing local is
- * removed; the current settings and in-progress workout are kept.
+ * removed; the current settings and in-progress workout are kept. Gyms keep the device's own
+ * default; the file's default is used only when the device has none. One transaction.
  * replace: the device ends up exactly as the file, in-progress workout included.
  */
 export async function importBackup(repo: Repository, backup: AbotBackup, mode: "replace" | "merge"): Promise<void> {
@@ -118,8 +124,15 @@ export async function importBackup(repo: Repository, backup: AbotBackup, mode: "
     return;
   }
   const { sessions, routines, exercises, locations } = backup.data;
-  for (const s of sessions) await repo.sessions.put(s);
-  for (const r of routines) await repo.routines.put(r);
-  for (const e of exercises) await repo.exercises.put(e);
-  for (const l of locations) await repo.locations.put({ ...l, isDefault: false });
+  const local = await repo.locations.all();
+  const localDefault = local.find((l) => l.isDefault)?.id;
+  const fileDefault = locations.find((l) => l.isDefault)?.id;
+  const defaultId = localDefault ?? fileDefault ?? local[0]?.id ?? locations[0]?.id;
+  const incomingIds = new Set(locations.map((l) => l.id));
+  const merged = [
+    ...locations.map((l) => ({ ...l, isDefault: l.id === defaultId })),
+    // Local gyms not in the file are rewritten only if their default flag has to change.
+    ...local.filter((l) => !incomingIds.has(l.id) && l.isDefault !== (l.id === defaultId)).map((l) => ({ ...l, isDefault: l.id === defaultId })),
+  ];
+  await repo.mergeAll({ sessions, routines, exercises, locations: merged });
 }

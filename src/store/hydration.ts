@@ -12,6 +12,9 @@ interface HydrationState {
   error: string | null;
   setHydrated: (r: { durable: boolean; error: string | null }) => void;
   reportError: (message: string) => void;
+  /** Set while some change could not be written; cleared when every retry has succeeded. */
+  writeError: string | null;
+  setWriteError: (message: string | null) => void;
   /** Whether the browser promised not to clear IndexedDB on its own; null until asked. */
   persistStatus: PersistStatus | null;
   setPersistStatus: (s: PersistStatus) => void;
@@ -23,6 +26,8 @@ export const useHydration = create<HydrationState>((set) => ({
   error: null,
   setHydrated: ({ durable, error }) => set({ hydrated: true, durable, error }),
   reportError: (message) => set({ error: message }),
+  writeError: null,
+  setWriteError: (writeError) => set({ writeError }),
   persistStatus: null,
   setPersistStatus: (persistStatus) => set({ persistStatus }),
 }));

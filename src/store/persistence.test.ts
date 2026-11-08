@@ -150,7 +150,7 @@ describe("attachPersistence", () => {
     const { exId, setId } = startWithExercise();
     useWorkoutStore.getState().updateSet(exId, setId, { reps: 5 });
     await p.flush();
-    expect(useHydration.getState().error).toMatch(/QuotaExceededError/);
+    expect(useHydration.getState().writeError).toMatch(/QuotaExceededError/);
     expect(useWorkoutStore.getState().active!.exercises[0]!.sets[0]!.reps).toBe(5);
   });
 });
@@ -195,5 +195,139 @@ describe("hydrateStores while persistence is attached", () => {
     await p.flush();
     expect(useWorkoutStore.getState().sessions).toHaveLength(1);
     expect(writes).toBe(0);
+  });
+});
+
+/* ---------- Final review fixes ---------- */
+
+import { bootstrapStores, snapshotFromStores } from "./persistence";
+import { createMemoryRepository as mem } from "@/data/repo";
+
+function failNext<T extends object>(obj: T, method: keyof T, times = 1) {
+  const orig = (obj[method] as (...a: unknown[]) => Promise<unknown>).bind(obj);
+  let left = times;
+  (obj as Record<keyof T, unknown>)[method] = async (...args: unknown[]) => {
+    if (left > 0) {
+      left--;
+      throw new Error("Connection to Indexed Database server lost");
+    }
+    return orig(...args);
+  };
+}
+
+describe("write failures (final review #1)", () => {
+  it("a failed finish keeps the workout recoverable as active, then lands on retry", async () => {
+    const repo = mem();
+    const p = await attach(repo);
+    const { exId, setId } = startWithExercise();
+    useWorkoutStore.getState().updateSet(exId, setId, { weightKg: 60, reps: 8 });
+    useWorkoutStore.getState().completeSet(exId, setId, true);
+    await p.flush();
+    failNext(repo, "commitFinishedWorkout");
+    const done = useWorkoutStore.getState().finishActive()!;
+    await p.flush();
+    // Storage never ends up with the workout in neither place.
+    const stored = await repo.snapshot();
+    expect(stored.sessions.length + (stored.activeWorkout ? 1 : 0)).toBeGreaterThan(0);
+    expect(useHydration.getState().writeError).toMatch(/Connection to Indexed Database server lost/);
+    await p.retryFailed();
+    const after = await repo.snapshot();
+    expect(after.sessions.map((s) => s.id)).toEqual([done.id]);
+    expect(after.activeWorkout).toBeNull();
+    expect(useHydration.getState().writeError).toBeNull();
+  });
+
+  it("a failed row write is retried with the latest value, never a stale one", async () => {
+    const repo = mem();
+    const p = await attach(repo);
+    failNext(repo.routines, "put");
+    const r = useRoutineStore.getState().create("Push");
+    await p.flush();
+    expect(await repo.routines.all()).toEqual([]);
+    useRoutineStore.getState().update(r.id, { name: "Push B" });
+    await p.flush();
+    expect((await repo.routines.all())[0]!.name).toBe("Push B");
+    await p.retryFailed();
+    expect((await repo.routines.all())[0]!.name).toBe("Push B");
+  });
+
+  it("a failed delete is retried as a delete", async () => {
+    const repo = mem();
+    const p = await attach(repo);
+    const r = useRoutineStore.getState().create("Legs");
+    await p.flush();
+    failNext(repo.routines, "remove");
+    useRoutineStore.getState().remove(r.id);
+    await p.flush();
+    expect(await repo.routines.all()).toHaveLength(1);
+    await p.retryFailed();
+    expect(await repo.routines.all()).toEqual([]);
+  });
+
+  it("snapshotFromStores includes data that failed to save", async () => {
+    const repo = mem();
+    const p = await attach(repo);
+    failNext(repo, "commitFinishedWorkout", 5);
+    const { exId, setId } = startWithExercise();
+    useWorkoutStore.getState().updateSet(exId, setId, { reps: 5 });
+    useWorkoutStore.getState().completeSet(exId, setId, true);
+    const done = useWorkoutStore.getState().finishActive()!;
+    await p.flush();
+    expect(snapshotFromStores().sessions.map((s) => s.id)).toEqual([done.id]);
+  });
+});
+
+describe("bootstrapStores (final review #3)", () => {
+  it("does not attach persistence when the saved data cannot be read", async () => {
+    const repo = mem();
+    await repo.kv.set("activeWorkout", { ...finished("in-progress"), status: "active", finishedAt: undefined });
+    repo.snapshot = async () => {
+      throw new Error("read failed");
+    };
+    const r = await bootstrapStores({ repo, durable: true, error: null }, { getItem: () => null });
+    expect(r.persistence).toBeNull();
+    expect(useHydration.getState().error).toMatch(/read failed/);
+    expect(useHydration.getState().hydrated).toBe(true);
+    // Logging in memory must not overwrite the unread workout.
+    useWorkoutStore.getState().startEmpty(90);
+    await new Promise((res) => setTimeout(res, 0));
+    expect((await repo.kv.get("activeWorkout"))?.id).toBe("in-progress");
+  });
+
+  it("attaches persistence after a successful load", async () => {
+    const repo = mem();
+    const r = await bootstrapStores({ repo, durable: true, error: null }, { getItem: () => null });
+    expect(r.persistence).not.toBeNull();
+    detach = r.persistence!.detach;
+    expect(useHydration.getState().error).toBeNull();
+  });
+});
+
+describe("import through the queue (final review #4)", () => {
+  it("runExclusive waits for queued writes before running", async () => {
+    const repo = mem();
+    const p = await attach(repo);
+    let release!: () => void;
+    const gate = new Promise<void>((res) => (release = res));
+    const origSet = repo.kv.set.bind(repo.kv);
+    repo.kv.set = async (k, v) => {
+      await gate;
+      return origSet(k, v);
+    };
+    useSettingsStore.getState().update({ weightUnit: "lbs" });
+    const order: string[] = [];
+    const done = p.runExclusive(async () => {
+      order.push(`import sees ${(await repo.kv.get("settings"))?.weightUnit}`);
+    });
+    release();
+    await done;
+    expect(order).toEqual(["import sees lbs"]);
+  });
+
+  it("hydrating a repository without settings resets settings to defaults", async () => {
+    useSettingsStore.getState().update({ weightUnit: "lbs", showRpe: false });
+    await hydrateStores(mem());
+    expect(useSettingsStore.getState().weightUnit).toBe("kg");
+    expect(useSettingsStore.getState().showRpe).toBe(true);
   });
 });

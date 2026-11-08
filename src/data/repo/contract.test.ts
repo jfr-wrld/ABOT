@@ -119,3 +119,35 @@ describe("getRepository", () => {
     }
   });
 });
+
+describe.each([
+  ["memory", () => createMemoryRepository()],
+  ["dexie", () => createDexieRepository(`t-${crypto.randomUUID()}`)],
+] as [string, () => Repository][])("%s repository, final review fixes", (_name, make) => {
+  it("commitFinishedWorkout stores the session and clears the active workout and timer together", async () => {
+    const repo = make();
+    await repo.kv.set("activeWorkout", { ...session("live"), status: "active" });
+    await repo.kv.set("restTimer", { endsAt: 1, totalSec: 90, sessionExerciseId: "x" });
+    await repo.commitFinishedWorkout(session("live"));
+    expect((await repo.sessions.all()).map((s) => s.id)).toEqual(["live"]);
+    expect(await repo.kv.get("activeWorkout")).toBeNull();
+    expect(await repo.kv.get("restTimer")).toBeNull();
+  });
+
+  it("replaceAll clears a running rest timer", async () => {
+    const repo = make();
+    await repo.kv.set("restTimer", { endsAt: 1, totalSec: 90, sessionExerciseId: "x" });
+    await repo.replaceAll({ sessions: [], routines: [], exercises: [], locations: [], settings: null, activeWorkout: null });
+    expect(await repo.kv.get("restTimer")).toBeNull();
+  });
+
+  it("mergeAll adds and overwrites rows by id and removes nothing", async () => {
+    const repo = make();
+    await repo.sessions.put(session("a"));
+    await repo.sessions.put(session("b"));
+    await repo.mergeAll({ sessions: [{ ...session("a"), name: "A2" }, session("c")], routines: [routine("r")], exercises: [], locations: [location("g")] });
+    expect((await repo.sessions.all()).map((s) => `${s.id}:${s.name}`).sort()).toEqual(["a:A2", "b:b", "c:c"]);
+    expect((await repo.routines.all()).map((r) => r.id)).toEqual(["r"]);
+    expect((await repo.locations.all()).map((l) => l.id)).toEqual(["g"]);
+  });
+});

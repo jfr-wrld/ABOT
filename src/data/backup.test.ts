@@ -98,3 +98,43 @@ describe("importBackup", () => {
     expect(snap.activeWorkout?.id).toBe("from-file");
   });
 });
+
+describe("merge keeps a single default gym (final review #5)", () => {
+  const gym = (id: string, isDefault: boolean) => ({
+    id,
+    name: id,
+    barWeightKg: 20,
+    plateInventoryKg: [20],
+    isDefault,
+  });
+  const backupOf = (locations: ReturnType<typeof gym>[]) => ({
+    app: "ABOT" as const,
+    schemaVersion: 1 as const,
+    exportedAt: "x",
+    data: { sessions: [], routines: [], exercises: [], locations, settings: null, activeWorkout: null },
+  });
+
+  it("re-merging your own backup keeps the local default gym", async () => {
+    const repo = createMemoryRepository();
+    await repo.locations.put(gym("home", true));
+    await repo.locations.put(gym("work", false));
+    await importBackup(repo, backupOf([gym("home", true), gym("work", false)]), "merge");
+    const locs = await repo.locations.all();
+    expect(locs.filter((l) => l.isDefault).map((l) => l.id)).toEqual(["home"]);
+  });
+
+  it("a device with no gyms gets the file's default", async () => {
+    const repo = createMemoryRepository();
+    await importBackup(repo, backupOf([gym("a", false), gym("b", true)]), "merge");
+    const locs = await repo.locations.all();
+    expect(locs.filter((l) => l.isDefault).map((l) => l.id)).toEqual(["b"]);
+  });
+
+  it("new gyms from the file never take the default from a local one", async () => {
+    const repo = createMemoryRepository();
+    await repo.locations.put(gym("home", true));
+    await importBackup(repo, backupOf([gym("other", true)]), "merge");
+    const locs = await repo.locations.all();
+    expect(locs.filter((l) => l.isDefault).map((l) => l.id)).toEqual(["home"]);
+  });
+});
