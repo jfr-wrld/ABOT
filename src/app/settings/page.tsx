@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { BackupSection } from "@/components/settings/BackupSection";
 import { StorageSection } from "@/components/settings/StorageSection";
 import { SyncSection } from "@/components/settings/SyncSection";
+import { WorkoutReminderSettings } from "@/components/settings/WorkoutReminderSettings";
 import { LocationsSection } from "@/components/settings/LocationsSection";
 import { formatClock } from "@/lib/calc";
 
@@ -91,6 +92,10 @@ function SettingsScreen() {
 
         <div className="border-t border-line pt-5">
           <LocationsSection />
+        </div>
+
+        <div id="schedule" className="scroll-mt-16 border-t border-line pt-5">
+          <WorkoutReminderSettings />
         </div>
 
         <div id="sync" className="scroll-mt-16 border-t border-line pt-5">

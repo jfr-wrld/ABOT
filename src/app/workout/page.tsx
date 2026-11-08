@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useRoutineStore } from "@/store/useRoutineStore";
 import { Plus } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -25,7 +26,27 @@ export default function WorkoutPage() {
   );
 }
 
+/**
+ * /workout?start=<routine id | "empty">, the target of a reminder's Start button: starts that
+ * routine (or an empty workout) unless one is already running, then cleans the address.
+ */
+function useStartFromLink() {
+  const router = useRouter();
+  const start = useSearchParams().get("start");
+  useEffect(() => {
+    if (!start) return;
+    const w = useWorkoutStore.getState();
+    if (!w.active) {
+      const routine = useRoutineStore.getState().routines.find((r) => r.id === start);
+      if (routine && routine.exercises.length > 0) w.startFromRoutine(routine);
+      else w.startEmpty(useSettingsStore.getState().defaultRestSeconds);
+    }
+    router.replace("/workout");
+  }, [start, router]);
+}
+
 function WorkoutScreen() {
+  useStartFromLink();
   const router = useRouter();
   const active = useWorkoutStore((s) => s.active);
   const sessions = useWorkoutStore((s) => s.sessions);
