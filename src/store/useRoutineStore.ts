@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import type { Routine, RoutineExercise, RoutineSet } from "@/types/workout";
 import { newId } from "@/lib/id";
 
@@ -26,7 +25,6 @@ export function newRoutineExercise(exerciseId: string, restSeconds: number): Rou
 }
 
 export const useRoutineStore = create<RoutineState>()(
-  persist(
     (set, get) => ({
       routines: [],
       create: (name, folder) => {
@@ -64,10 +62,4 @@ export const useRoutineStore = create<RoutineState>()(
           routines: s.routines.map((r) => (r.id === id ? { ...r, exercises, updatedAt: Date.now() } : r)),
         })),
     }),
-    {
-      name: "heavy.routines",
-      storage: createJSONStorage(() => localStorage),
-      skipHydration: true,
-    },
-  ),
 );

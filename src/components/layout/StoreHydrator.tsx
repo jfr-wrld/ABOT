@@ -2,24 +2,32 @@
 
 import { useEffect } from "react";
 import { useHydration } from "@/store/hydration";
-import { useWorkoutStore } from "@/store/useWorkoutStore";
-import { useRoutineStore } from "@/store/useRoutineStore";
-import { useExerciseStore } from "@/store/useExerciseStore";
-import { useSettingsStore } from "@/store/useSettingsStore";
+import { getRepository } from "@/data/repo";
+import { attachPersistence, hydrateStores, setActiveRepository } from "@/store/persistence";
 
 export function StoreHydrator() {
   const setHydrated = useHydration((s) => s.setHydrated);
   useEffect(() => {
-    Promise.all([
-      useWorkoutStore.persist.rehydrate(),
-      useRoutineStore.persist.rehydrate(),
-      useExerciseStore.persist.rehydrate(),
-      useSettingsStore.persist.rehydrate(),
-    ])
-      .then(() => setHydrated())
-      .catch((e: unknown) =>
-        setHydrated(e instanceof Error ? e.message : "Saved data could not be read from this browser."),
-      );
+    let detach: (() => void) | undefined;
+    let cancelled = false;
+    (async () => {
+      const { repo, durable, error } = await getRepository();
+      try {
+        await hydrateStores(repo);
+      } catch (e) {
+        if (!cancelled) {
+          setHydrated({ durable, error: `Saved data could not be read (${e instanceof Error ? e.message : String(e)}).` });
+        }
+      }
+      if (cancelled) return;
+      setActiveRepository(repo);
+      detach = attachPersistence(repo).detach;
+      if (!useHydration.getState().hydrated) setHydrated({ durable, error });
+    })();
+    return () => {
+      cancelled = true;
+      detach?.();
+    };
   }, [setHydrated]);
   return null;
 }

@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import type {
   Routine,
   SessionExercise,
@@ -73,7 +72,6 @@ function patchExercise(
 }
 
 export const useWorkoutStore = create<WorkoutState>()(
-  persist(
     (set, get) => ({
       sessions: [],
       active: null,
@@ -277,12 +275,6 @@ export const useWorkoutStore = create<WorkoutState>()(
 
       deleteSession: (id) => set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) })),
     }),
-    {
-      name: "heavy.workouts",
-      storage: createJSONStorage(() => localStorage),
-      skipHydration: true,
-    },
-  ),
 );
 
 function defaultWorkoutName(): string {

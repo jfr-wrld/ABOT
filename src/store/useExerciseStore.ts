@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import type { Exercise, ExerciseDraft } from "@/types/workout";
 import { normalizeExercise } from "@/data/normalize";
 import { buildExerciseIndex } from "@/lib/sets";
@@ -14,7 +13,6 @@ interface ExerciseState {
 }
 
 export const useExerciseStore = create<ExerciseState>()(
-  persist(
     (set) => ({
       custom: [],
       addCustom: (ex) => {
@@ -26,12 +24,6 @@ export const useExerciseStore = create<ExerciseState>()(
         set((s) => ({ custom: s.custom.map((e) => (e.id === id ? normalizeExercise({ ...e, ...patch }) : e)) })),
       removeCustom: (id) => set((s) => ({ custom: s.custom.filter((e) => e.id !== id) })),
     }),
-    {
-      name: "heavy.exercises",
-      storage: createJSONStorage(() => localStorage),
-      skipHydration: true,
-    },
-  ),
 );
 
 /** Seed + custom, as a sorted list and an id lookup. Stable while `custom` is unchanged. */

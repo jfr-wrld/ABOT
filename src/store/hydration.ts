@@ -1,18 +1,22 @@
 import { create } from "zustand";
 
 /**
- * All persisted stores use `skipHydration` so server and first client render agree.
- * `StoreHydrator` rehydrates them after mount and flips this flag; pages show a
- * loading state until then instead of flashing empty data.
+ * Stores start empty so server and first client render agree. `StoreHydrator` loads
+ * them from the repository after mount and flips `hydrated`; pages show a loading state
+ * until then. `durable` is false when data only lives in memory (IndexedDB blocked).
  */
 interface HydrationState {
   hydrated: boolean;
+  durable: boolean;
   error: string | null;
-  setHydrated: (error?: string | null) => void;
+  setHydrated: (r: { durable: boolean; error: string | null }) => void;
+  reportError: (message: string) => void;
 }
 
 export const useHydration = create<HydrationState>((set) => ({
   hydrated: false,
+  durable: true,
   error: null,
-  setHydrated: (error = null) => set({ hydrated: true, error }),
+  setHydrated: ({ durable, error }) => set({ hydrated: true, durable, error }),
+  reportError: (message) => set({ error: message }),
 }));

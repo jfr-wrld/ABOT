@@ -14,7 +14,7 @@ export function HydrationGate({ children }: { children: React.ReactNode }) {
     <>
       {error && (
         <p role="alert" className="mx-4 mt-3 rounded-ctl border border-failure/60 px-3 py-2 text-sm text-failure">
-          Saved data could not be read: {error}. You can keep logging; new data will be saved fresh.
+          {error} You can keep logging; export a backup from Settings to keep a copy.
         </p>
       )}
       {children}
