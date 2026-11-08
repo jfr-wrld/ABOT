@@ -10,6 +10,7 @@ import { showReminder } from "@/lib/notifications/reminder-service";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { InfoTip } from "@/components/ui/InfoTip";
+import { saveFile } from "@/lib/native/files";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
@@ -34,6 +35,7 @@ export function WorkoutReminderSettings() {
   const routines = useRoutineStore((s) => s.routines);
   const now = useNow(60_000);
   const [tested, setTested] = useState<string | null>(null);
+  const [calendarNote, setCalendarNote] = useState<string | null>(null);
   const next = nextSession(schedule, now);
   const routineName = (id: string | null) => routines.find((r) => r.id === id)?.name ?? "Free session";
   const anyDay = WEEK.some((d) => schedule.days[d.wd].on);
@@ -44,14 +46,10 @@ export function WorkoutReminderSettings() {
   function exportCalendar() {
     const names = Object.fromEntries(routines.map((r) => [r.id, r.name]));
     const blob = new Blob([buildIcs(schedule, names, Date.now())], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "abot-workout-schedule.ics";
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    saveFile(blob, "abot-workout-schedule.ics").then(
+      (saved) => setCalendarNote(saved.kind === "saved" ? `Saved to ${saved.folder}. Open it with your calendar app.` : null),
+      () => setCalendarNote("The calendar file could not be saved. Try again."),
+    );
   }
 
   async function sendTest() {
@@ -227,6 +225,11 @@ export function WorkoutReminderSettings() {
             <Button onClick={exportCalendar} disabled={!anyDay} className="mt-2 w-full">
               <CalendarPlus aria-hidden="true" size={16} /> Add to calendar (.ics)
             </Button>
+            {calendarNote && (
+              <p role="status" className="mt-1 text-xs text-text-muted">
+                {calendarNote}
+              </p>
+            )}
           </div>
         </div>
       )}

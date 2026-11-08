@@ -10,6 +10,7 @@ import { SplashScreen } from "@/components/animations/SplashScreen";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { MotionProvider } from "@/components/animations/MotionProvider";
 import { SignInReturn } from "@/components/sync/SignInReturn";
+import { NativeBackButton } from "@/components/layout/NativeBackButton";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TabNotice />
           <SplashScreen />
           <DynamicIsland />
+          <NativeBackButton />
           {/* Edge-to-edge on Android: a solid strip behind the status bar, content starts below it. */}
           <div aria-hidden="true" className="fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top)] bg-bg" />
           <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pt-[env(safe-area-inset-top)] pb-[calc(var(--dock-h,96px)+var(--live-bar,0px)+env(safe-area-inset-bottom))]">

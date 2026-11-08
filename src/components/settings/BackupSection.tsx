@@ -6,6 +6,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { backupFileName, backupFromSnapshot, importBackup, parseBackup, type AbotBackup, type BackupCounts } from "@/data/backup";
 import { getActivePersistence, getActiveRepository, hydrateStores, snapshotFromStores } from "@/store/persistence";
 import { InfoTip } from "@/components/ui/InfoTip";
+import { saveFile } from "@/lib/native/files";
 
 type Pending = { backup: AbotBackup; counts: BackupCounts; fileName: string };
 
@@ -19,18 +20,13 @@ export function BackupSection() {
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  function doExport() {
+  async function doExport() {
     setError(null);
     try {
       const backup = backupFromSnapshot(snapshotFromStores());
-      const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = backupFileName();
-      a.click();
-      // Revoking in the same tick can cancel the download in Safari.
-      setTimeout(() => URL.revokeObjectURL(url), 30_000);
-      setStatus(`Exported ${plural(backup.data.sessions.length, "workout", "workouts")}.`);
+      const saved = await saveFile(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }), backupFileName());
+      const where = saved.kind === "saved" ? ` to ${saved.folder}` : "";
+      setStatus(`Exported ${plural(backup.data.sessions.length, "workout", "workouts")}${where}.`);
     } catch (e) {
       setError(`Export failed: ${e instanceof Error ? e.message : String(e)}.`);
     }

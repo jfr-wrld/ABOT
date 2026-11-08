@@ -12,6 +12,7 @@ import { MUSCLE_GROUP_LABELS, type PRKind, type WeightUnit } from "@/types/worko
 import { regionsFor, type Region } from "@/components/anatomy/regions";
 import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT } from "@/components/anatomy/bodyPaths.generated";
 import type { StoryData, StorySet } from "@/lib/story-data";
+import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 
 export const STORY_WIDTH = 1080;
 export const STORY_HEIGHT = 1920;
@@ -194,48 +195,28 @@ export async function exportStoryPng(data: StoryData, opts: StoryOptions, fonts:
   });
 }
 
-/** True when the browser can hand a PNG file to the system share sheet (Instagram, WhatsApp, ...). */
+/** True when this device can hand a PNG to the share sheet (Instagram, WhatsApp, ...). */
 export function canShareStoryFiles(): boolean {
-  if (typeof navigator === "undefined" || typeof navigator.canShare !== "function") return false;
-  try {
-    return navigator.canShare({ files: [new File([new Uint8Array(1)], "abot.png", { type: "image/png" })] });
-  } catch {
-    return false;
-  }
+  if (typeof File === "undefined") return false;
+  return canShareFiles(new File([new Uint8Array(1)], "abot.png", { type: "image/png" }));
 }
 
-export type ShareResult = "shared" | "cancelled" | "unsupported";
+export type { ShareResult };
 
 /**
  * Opens the system share sheet with the PNG. Call it straight from the tap: Safari only allows
  * sharing during the user's gesture, so the blob must already exist.
  */
-export async function shareStoryPng(blob: Blob, fileName: string): Promise<ShareResult> {
-  const file = new File([blob], fileName, { type: "image/png" });
-  if (typeof navigator.canShare !== "function" || !navigator.canShare({ files: [file] })) return "unsupported";
-  try {
-    await navigator.share({
-      files: [file],
-      title: "ABOT Workout Story",
-      text: "Crushed today's workout with ABOT ⚡",
-    });
-    return "shared";
-  } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") return "cancelled";
-    throw err;
-  }
+export function shareStoryPng(blob: Blob, fileName: string): Promise<ShareResult> {
+  return shareFile(new File([blob], fileName, { type: "image/png" }), {
+    title: "ABOT Workout Story",
+    text: "Crushed today's workout with ABOT ⚡",
+  });
 }
 
-export function downloadStoryPng(blob: Blob, fileName: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  // Give the browser time to start the download before the URL goes away.
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+/** A browser download, or the phone's gallery (Pictures/ABOT) in the Android app. */
+export function downloadStoryPng(blob: Blob, fileName: string): Promise<SaveResult> {
+  return saveFile(blob, fileName);
 }
 
 /* ------------------------------------------------------------------ */

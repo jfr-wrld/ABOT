@@ -92,10 +92,18 @@ function Actions({ png, shareable, setStatus }: { png: PngState; shareable: bool
     }
   }
 
-  function download() {
+  async function download() {
     if (!blob) return;
-    downloadStoryPng(blob, fileName);
-    setStatus({ kind: "info", text: `Saved ${fileName} (1080 × 1920).` });
+    try {
+      const saved = await downloadStoryPng(blob, fileName);
+      setStatus({
+        kind: "info",
+        text: saved.kind === "saved" ? `Saved to your gallery (${saved.folder}).` : `Saved ${fileName} (1080 × 1920).`,
+      });
+    } catch (err) {
+      const denied = err instanceof Error && /permission/i.test(err.message);
+      setStatus({ kind: "error", text: denied ? "ABOT needs storage access to save the PNG. Allow it in Android settings." : "The PNG could not be saved. Try again." });
+    }
   }
 
   return (
