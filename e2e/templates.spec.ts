@@ -12,9 +12,9 @@ test("the vault lists templates and filters them by split", async ({ page }) => 
   await page.getByRole("button", { name: "Calisthenics" }).click();
   await expect(list.getByRole("article")).toHaveCount(2);
   const card = list.getByRole("article", { name: "CALISTHENICS // UPPER [FLOW]" });
-  await expect(card).toContainText("6 EXERCISES");
+  await expect(card).toContainText("6 exercises");
   await expect(card).toContainText("Pike Push Up");
-  await expect(card).toContainText("+2 more exercises");
+  await expect(card).toContainText("+1 more exercise");
   await page.getByRole("button", { name: "Full Body" }).click();
   await expect(list.getByRole("article", { name: "FULL BODY // DAY 01 [FOUNDATION]" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
