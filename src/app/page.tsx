@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { hasSeenOnboarding } from "@/lib/onboarding";
 import { ChevronRight, Settings } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
@@ -31,6 +33,13 @@ function HomeScreen() {
   const { weightUnit, defaultRestSeconds } = useSettingsStore();
   const now = useNow(1000, active !== null);
   const { byId } = useAllExercises();
+  // First open on a device with nothing logged: show the intro once. Anyone with data skips it.
+  const [needsIntro] = useState(() => sessions.length === 0 && routines.length === 0 && active === null && !hasSeenOnboarding());
+  useEffect(() => {
+    if (needsIntro) router.replace("/onboarding");
+  }, [needsIntro, router]);
+
+  if (needsIntro) return null;
 
   const recent = [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 10);
   const startable = routines.filter((r) => r.exercises.length > 0).slice(0, 4);

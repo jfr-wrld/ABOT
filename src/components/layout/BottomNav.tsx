@@ -39,6 +39,8 @@ function CurrentNav() {
 function NavBar({ pathname }: { pathname: string | null }) {
   const hydrated = useHydration((s) => s.hydrated);
   const hasActive = useWorkoutStore((s) => s.active !== null);
+  // The intro and sign-in are full-screen steps with their own way out.
+  if (pathname === "/onboarding" || pathname === "/login") return null;
 
   return (
     <nav

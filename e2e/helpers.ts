@@ -1,16 +1,21 @@
 import { expect, type Page } from "@playwright/test";
 
-/** Every test starts on a clean device: no saved workouts, routines, or settings. */
-export async function freshStart(page: Page): Promise<void> {
+/**
+ * Every test starts on a clean device: no saved workouts, routines, or settings. The intro is
+ * marked as seen (e2e/onboarding.spec.ts covers it) so tests land on Home.
+ */
+export async function freshStart(page: Page, opts: { intro?: boolean } = {}): Promise<void> {
   await page.goto("/");
-  await page.evaluate(async () => {
+  await page.evaluate(async (intro) => {
     localStorage.clear();
+    if (!intro) localStorage.setItem("abot.onboarded", "1");
     await new Promise<void>((resolve) => {
       const req = indexedDB.deleteDatabase("abot");
       req.onsuccess = req.onerror = req.onblocked = () => resolve();
     });
-  });
+  }, opts.intro ?? false);
   await page.reload();
+  if (opts.intro) return;
   await expect(page.getByRole("heading", { level: 1, name: "ABOT" })).toBeVisible();
   await expect(page).toHaveTitle("ABOT");
   await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();

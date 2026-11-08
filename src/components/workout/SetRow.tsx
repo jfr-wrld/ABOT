@@ -6,12 +6,10 @@ import { Trophy } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
 import { NumberField } from "@/components/ui/NumberField";
+import { press } from "@/components/ui/Button";
 import { SetTypeChip, setTypeA11yName } from "./SetTypeChip";
 import { SetTypeMenu } from "./SetTypeMenu";
 import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
-
-/** Stiff with a little give: a physical switch clicking into place, settled in about 200ms. */
-const CHECK_SPRING = { type: "spring", stiffness: 700, damping: 22 } as const;
 
 const PR_LABEL: Record<PRKind, string> = {
   heaviest_weight: "heaviest weight",
@@ -185,9 +183,7 @@ export function SetRow({
         onClick={toggleComplete}
         aria-pressed={set.completed}
         aria-label={set.completed ? `${a11yName} done. Mark as not done` : `Mark ${a11yName} done`}
-        // Pressed in, then the under-damped spring overshoots slightly on release.
-        whileTap={reduceMotion ? undefined : { scale: 0.86 }}
-        transition={CHECK_SPRING}
+        {...press}
         className={`relative z-[1] flex size-11 items-center justify-center rounded-xl border transition-colors duration-150 ${
           set.completed
             ? "border-accent bg-accent text-on-accent hover:brightness-110"

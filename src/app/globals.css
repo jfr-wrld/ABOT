@@ -34,7 +34,6 @@
     background: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
-    font-feature-settings: "tnum" 1;
     -webkit-tap-highlight-color: transparent;
   }
 

@@ -8,7 +8,8 @@ import { useLocationStore } from "@/store/useLocationStore";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
-import { Button } from "@/components/ui/Button";
+import { motion } from "framer-motion";
+import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 
 export function ActiveWorkoutHeader({
@@ -45,13 +46,14 @@ export function ActiveWorkoutHeader({
           />
         </div>
         {/* The screen's single glow: Finish is the one action that ends the session. */}
-        <button
+        <motion.button
           type="button"
           onClick={onFinish}
-          className="min-h-11 shrink-0 rounded-xl bg-accent px-5 text-sm font-extrabold text-on-accent shadow-volt transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.97]"
+          {...press}
+          className="min-h-11 shrink-0 rounded-xl bg-accent px-5 text-sm font-extrabold text-on-accent shadow-volt transition-[filter] duration-150 hover:brightness-110"
         >
           Finish
-        </button>
+        </motion.button>
       </div>
 
       {locations.length > 0 && (

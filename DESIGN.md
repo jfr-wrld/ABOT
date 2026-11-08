@@ -72,7 +72,27 @@ Purpose for each: the check press springs and the tick draws, so you feel the se
 sweep confirms which row changed; the camera capsule morphs between running time and rest
 countdown with one shared layout, so you see it is the same object changing state; the rest bar
 along the capsule's bottom edge shrinks with time, which is the information. Springs settle in
-about 200ms. Everything respects `prefers-reduced-motion`.
+about 200ms. Everything respects `prefers-reduced-motion` through one `MotionConfig`: movement and
+scale drop out, fades stay.
+
+Added at the owner's request (2026-11-08), each with its job:
+
+- **Splash** (`components/animations/SplashScreen.tsx`): pure black with the plate pulsing Volt
+  and a hairline filling, for 0.65s at most while saved data is read. It is in the server HTML, so
+  the first paint is never a half-built page. It leaves by scaling up 4% as it fades (0.4s,
+  ease `[0.22, 1, 0.36, 1]`), so the app seems to come forward from behind it. Cost: every full
+  load waits at least 0.65s; tab switches inside the app do not show it.
+- **Page transitions** (`components/animations/PageTransition.tsx`): the old page settles to 98%
+  and fades in 0.12s, then the new one comes forward in 0.2s. Opacity and transform only, so the
+  compositor does the work. It keeps the outgoing page on screen through Next's internal router
+  context; if a Next upgrade moves that module, drop the exit and keep the enter.
+- **Intro** (`app/onboarding`): three slides, each showing a real piece of the UI rather than an
+  illustration. Swipe or Next, spring 300/30, the visual, title and text arriving in a short
+  stagger so the eye reads them in order. Shown once per device, never to anyone with data.
+- **Sign-in** (`app/login`): content rises from the bottom with the same spring. The Google
+  button is disabled with a plain note until cloud sync exists.
+- **Press springs**: every button gives to 96% under the thumb; primary actions (Start, Finish,
+  the set check) also lift to 102% on hover.
 
 ## Logo
 

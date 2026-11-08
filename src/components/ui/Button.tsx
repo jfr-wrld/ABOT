@@ -1,4 +1,6 @@
-import type { ButtonHTMLAttributes } from "react";
+"use client";
+
+import { motion, type HTMLMotionProps } from "framer-motion";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
@@ -13,11 +15,31 @@ const variants: Record<Variant, string> = {
   danger: "border border-failure/50 text-failure hover:bg-failure/10 active:bg-failure/20",
 };
 
+/** Springy enough to feel under the thumb, damped enough to settle before the next tap. */
+export const PRESS_SPRING = { type: "spring", stiffness: 500, damping: 26, mass: 0.6 } as const;
+/** Shared by every primary control so they all press the same way. */
+export const press = { whileTap: { scale: 0.96 }, whileHover: { scale: 1.02 }, transition: PRESS_SPRING } as const;
+
 export function Button({
   variant = "secondary",
   className = "",
   type = "button",
+  disabled,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  return <button type={type} className={`${base} ${variants[variant]} ${className}`} {...rest} />;
+}: HTMLMotionProps<"button"> & { variant?: Variant }) {
+  // Only the main actions lift on hover; every enabled button gives on press.
+  const motionProps = disabled
+    ? {}
+    : variant === "primary"
+      ? press
+      : { whileTap: { scale: 0.96 }, transition: PRESS_SPRING };
+  return (
+    <motion.button
+      type={type}
+      disabled={disabled}
+      className={`${base} ${variants[variant]} ${className}`}
+      {...motionProps}
+      {...rest}
+    />
+  );
 }

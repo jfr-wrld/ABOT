@@ -5,6 +5,9 @@ import "./globals.css";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StoreHydrator } from "@/components/layout/StoreHydrator";
 import { DynamicIsland } from "@/components/layout/DynamicIsland";
+import { SplashScreen } from "@/components/animations/SplashScreen";
+import { PageTransition } from "@/components/animations/PageTransition";
+import { MotionProvider } from "@/components/animations/MotionProvider";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -27,20 +30,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <StoreHydrator />
-        <DynamicIsland />
-        <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pb-[calc(96px+env(safe-area-inset-bottom))]">
-          <Suspense
-            fallback={
-              <p role="status" className="px-4 py-10 text-center text-sm text-text-muted">
-                Loading
-              </p>
-            }
-          >
-            {children}
-          </Suspense>
-        </div>
-        <BottomNav />
+        <MotionProvider>
+          <StoreHydrator />
+          <SplashScreen />
+          <DynamicIsland />
+          <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pb-[calc(96px+env(safe-area-inset-bottom))]">
+            <Suspense
+              fallback={
+                <p role="status" className="px-4 py-10 text-center text-sm text-text-muted">
+                  Loading
+                </p>
+              }
+            >
+              <PageTransition>{children}</PageTransition>
+            </Suspense>
+          </div>
+          <BottomNav />
+        </MotionProvider>
       </body>
     </html>
   );
