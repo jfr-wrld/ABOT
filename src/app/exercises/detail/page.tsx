@@ -3,7 +3,7 @@
 import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { CalendarClock, ChevronLeft, Dumbbell, Play, Plus, Repeat, Trophy, TrendingDown, TrendingUp, Pencil, Trash2 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -34,6 +34,7 @@ import { useNow } from "@/lib/useNow";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { estimate1RM, isWorkingSet } from "@/lib/calc";
 import type { WeightUnit, WorkoutSession } from "@/types/workout";
+import { historyPath } from "@/lib/routes";
 
 type DetailTab = "summary" | "history" | "howto";
 const DETAIL_TABS: { value: DetailTab; label: string }[] = [
@@ -51,7 +52,7 @@ export default function ExerciseDetailPage() {
 }
 
 function Detail() {
-  const { id } = useParams<{ id: string }>();
+  const id = useSearchParams().get("id") ?? "";
   const router = useRouter();
   const { byId } = useAllExercises();
   const { updateCustom, removeCustom } = useExerciseStore();
@@ -399,7 +400,7 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
   const max = Math.max(...ex.sets.map((s) => s.weightKg ?? 0), 0);
   return (
     <li className="panel p-3">
-      <Link href={`/history/${session.id}`} className="flex items-baseline justify-between gap-2 hover:underline">
+      <Link href={historyPath(session.id)} className="flex items-baseline justify-between gap-2 hover:underline">
         <span className="truncate text-sm font-semibold">{session.name}</span>
         <time dateTime={new Date(session.startedAt).toISOString()} className="num shrink-0 text-xs text-text-muted">
           {relativeDay(session.startedAt, now)}

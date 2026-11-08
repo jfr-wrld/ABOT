@@ -58,7 +58,7 @@ export async function logSet(page: Page, n: number, kg: string | null, reps: str
 export async function finishWorkout(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\//);
+  await page.waitForURL(/\/workout\/summary\?id=/);
   await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
 }

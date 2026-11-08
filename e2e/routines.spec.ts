@@ -12,7 +12,7 @@ async function createRoutine(page: import("@playwright/test").Page, name: string
   await page.getByLabel("Name").fill(name);
   if (folder) await page.getByLabel(/^Folder/).fill(folder);
   await page.getByRole("button", { name: "Create and add exercises" }).click();
-  await page.waitForURL(/\/routines\/.+\/edit/);
+  await page.waitForURL(/\/routines\/edit\?id=/);
 }
 
 test("empty name shows an inline error", async ({ page }) => {

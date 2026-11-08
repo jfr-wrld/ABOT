@@ -23,7 +23,7 @@ async function finishOneSet(page: Page) {
   await logSet(page, 1, "60", "8");
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\//);
+  await page.waitForURL(/\/workout\/summary\?id=/);
 }
 
 async function openStudio(page: Page) {
@@ -50,7 +50,7 @@ test("finishing shows the summary with a way to share and a way home", async ({ 
   await expect(page.getByRole("button", { name: "Share to IG Story" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.getByRole("link", { name: "See every set" }).click();
-  await page.waitForURL(/\/history\//);
+  await page.waitForURL(/\/history\?id=/);
   await expect(page.getByRole("button", { name: "Share story" })).toBeVisible();
 });
 
@@ -176,7 +176,7 @@ test("the studio opens and exports with the network cut", async ({ page, context
 });
 
 test("an unknown summary id says the workout is not here", async ({ page }) => {
-  await page.goto("/workout/summary/does-not-exist");
+  await page.goto("/workout/summary?id=does-not-exist");
   await expect(page.getByRole("heading", { name: "Workout not found" })).toBeVisible();
 });
 
@@ -188,7 +188,7 @@ test("a heavier repeat celebrates the record and compares with last time", async
   await logSet(page, 1, "70", "8");
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\//);
+  await page.waitForURL(/\/workout\/summary\?id=/);
   await expect(page.getByRole("heading", { name: "1 personal record" })).toBeVisible();
   await expect(page.getByRole("heading", { name: /new lift/ })).toHaveCount(0);
   const compare = page.getByRole("region", { name: /Volume vs last/ });

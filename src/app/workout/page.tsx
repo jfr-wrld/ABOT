@@ -18,6 +18,7 @@ import { RoutineLibrary } from "@/components/routines/RoutineLibrary";
 import { detectSessionPRs, previousSets } from "@/lib/calc";
 import { supersetLabels } from "@/lib/superset";
 import type { PRKind } from "@/types/workout";
+import { summaryPath } from "@/lib/routes";
 
 export default function WorkoutPage() {
   return (
@@ -62,7 +63,7 @@ function WorkoutScreen() {
   // The summary route is fetched while the workout runs, so Finish still lands there with no signal.
   const activeId = active?.id;
   useEffect(() => {
-    if (activeId) router.prefetch(`/workout/summary/${activeId}`);
+    if (activeId) router.prefetch(summaryPath(activeId));
   }, [activeId, router]);
 
   const prs = useMemo(() => (active ? detectSessionPRs(active, sessions, byId) : []), [active, sessions, byId]);
@@ -144,7 +145,7 @@ function WorkoutScreen() {
         onConfirm={() => {
           const done = finishActive();
           setFinishOpen(false);
-          router.push(done ? `/workout/summary/${done.id}` : "/");
+          router.push(done ? summaryPath(done.id) : "/");
         }}
       />
 

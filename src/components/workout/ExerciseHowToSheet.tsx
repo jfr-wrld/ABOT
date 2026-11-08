@@ -6,6 +6,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { SmartExerciseMedia } from "@/components/exercise/SmartExerciseMedia";
 import { ExerciseGuide } from "@/components/exercise/ExerciseGuide";
 import { RecordsSummary } from "@/components/exercise/RecordsSummary";
+import { exercisePath } from "@/lib/routes";
 
 /** Quick how-to during a workout: media, form cues and records, without leaving the session. */
 export function ExerciseHowToSheet({
@@ -27,7 +28,7 @@ export function ExerciseHowToSheet({
           <ExerciseGuide exercise={exercise} showInstructions={false} />
           <RecordsSummary exercise={exercise} locationId={locationId} />
           <Link
-            href={`/exercises/${exercise.id}`}
+            href={exercisePath(exercise.id)}
             className="inline-flex min-h-11 items-center justify-center rounded-ctl border border-line-strong text-sm font-semibold hover:bg-surface-2"
           >
             Full exercise details

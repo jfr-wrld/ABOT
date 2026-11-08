@@ -10,6 +10,7 @@ import { ROUTINE_TEMPLATES, SPLITS, estimateMinutes, templateToRoutine, type Rou
 import { Button } from "@/components/ui/Button";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
+import { routineEditPath } from "@/lib/routes";
 
 /** Photos on a card; the sixth slot shows "+N" when there are more. */
 const PREVIEW = 5;
@@ -162,7 +163,7 @@ function TemplateCard({
         </Button>
         {savedId ? (
           <Link
-            href={`/routines/${savedId}/edit`}
+            href={routineEditPath(savedId)}
             aria-label="Saved, edit"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-accent/40 text-sm font-semibold text-text transition-colors hover:border-accent"
           >

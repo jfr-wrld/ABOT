@@ -32,6 +32,7 @@ import {
   type NextProtocol,
 } from "@/lib/home";
 import type { Exercise, WorkoutSession } from "@/types/workout";
+import { historyPath } from "@/lib/routes";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-xl border border-line bg-surface p-3";
@@ -495,7 +496,7 @@ function RecentCard({
       }}
     >
       <motion.div whileTap={{ scale: 0.98 }} transition={PRESS_SPRING}>
-        <Link href={`/history/${s.id}`} className={`${TILE} flex items-center gap-3 transition-colors hover:border-line-hover`}>
+        <Link href={historyPath(s.id)} className={`${TILE} flex items-center gap-3 transition-colors hover:border-line-hover`}>
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div className="flex items-center gap-2">
               <span className="truncate text-base font-semibold">{s.name}</span>

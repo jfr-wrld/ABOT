@@ -40,6 +40,7 @@ Env files are restored when the audit ends, even when it fails. Port 3100 must b
 - Calculations (Epley 1RM, volume, PR detection): `src/lib/calc.ts`.
 - Storage: `src/data/repo/` (Dexie behind a repository interface) and `src/store/persistence.ts`.
 - Cloud sync: `src/data/sync/` (merge engine, Supabase adapter); schema in `supabase/migrations/`.
+- Android app (Capacitor): `docs/android.md`; APK from the "Android APK" GitHub Action.
 - Roadmap and plans: `docs/plans/`.
 - Exercise data and images come from free-exercise-db (public domain); anatomy paths from
   react-muscle-highlighter (MIT). See `THIRD_PARTY_NOTICES.md`.

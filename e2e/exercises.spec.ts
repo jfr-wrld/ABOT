@@ -39,7 +39,7 @@ test("detail shows records after a finished workout", async ({ page }) => {
   await addExercise(page, "Squat (Barbell)");
   await logSet(page, 1, "100", "5");
   await finishWorkout(page);
-  await page.goto("/exercises/squat-barbell");
+  await page.goto("/exercises/detail?id=squat-barbell");
   await expect(page.getByText("Heaviest weight")).toBeVisible();
   await expect(page.getByText("100 kg", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("One point so far.")).toBeVisible();
@@ -71,7 +71,7 @@ test("the filter dropdowns work from the keyboard and match the theme", async ({
 });
 
 test("the exercise page shows the muscle and equipment with their icons", async ({ page }) => {
-  await page.goto("/exercises/bench-press-barbell");
+  await page.goto("/exercises/detail?id=bench-press-barbell");
   const header = page.locator("header").filter({ has: page.getByRole("heading", { level: 1, name: "Bench Press (Barbell)" }) });
   await expect(header.getByText("Chest", { exact: true })).toBeVisible();
   await expect(header.getByText("Barbell", { exact: true })).toBeVisible();

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { WorkoutSession } from "@/types/workout";
 import { monthGrid, sessionsByDay, startOfDay } from "@/lib/analytics";
 import { countSets, formatDuration, sessionDurationSec } from "@/lib/calc";
+import { historyPath } from "@/lib/routes";
 
 const DOW_MON = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 const DOW_SUN = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -102,7 +103,7 @@ export function WorkoutCalendar({
             {daySessions.map((s) => (
               <li key={s.id}>
                 <Link
-                  href={`/history/${s.id}`}
+                  href={historyPath(s.id)}
                   className="flex min-h-11 items-center justify-between rounded-ctl px-2 hover:bg-surface-2"
                 >
                   <span className="text-sm font-semibold">{s.name}</span>

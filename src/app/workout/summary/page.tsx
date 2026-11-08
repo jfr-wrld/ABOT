@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, Dumbbell, House, Layers, ListOrdered, Sparkles, Timer, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
@@ -19,6 +19,7 @@ import { formatVolume, formatWeight } from "@/lib/units";
 import { PR_KIND_LABEL } from "@/lib/story-data";
 import { previousComparable, sessionRecords, workedMuscles } from "@/lib/session-insights";
 import { MUSCLE_GROUP_LABELS, type Exercise, type PersonalRecord, type WeightUnit } from "@/types/workout";
+import { historyPath } from "@/lib/routes";
 
 export default function WorkoutSummaryPage() {
   return (
@@ -34,7 +35,7 @@ export default function WorkoutSummaryPage() {
  * the last time, the records and first lifts, the muscles worked, and the way to share it.
  */
 function Summary() {
-  const { id } = useParams<{ id: string }>();
+  const id = useSearchParams().get("id") ?? "";
   const sessions = useWorkoutStore((s) => s.sessions);
   const { weightUnit, restTimerAlert } = useSettingsStore();
   const { byId } = useAllExercises();
@@ -181,7 +182,7 @@ function Summary() {
         <ShareStoryButton session={session} variant="primary" className="min-h-12 w-full text-base" />
         <div className="grid grid-cols-2 gap-2">
           <Link
-            href={`/history/${session.id}`}
+            href={historyPath(session.id)}
             className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-white/[0.12] bg-surface-2 px-3 text-sm font-semibold text-text hover:border-white/25"
           >
             <ListOrdered aria-hidden="true" size={16} />

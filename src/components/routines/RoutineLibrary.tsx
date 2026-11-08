@@ -20,6 +20,7 @@ import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
 import { TemplateVault } from "@/components/routines/TemplateVault";
 import { EquipmentNeeded } from "@/components/routines/EquipmentNeeded";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { routineEditPath } from "@/lib/routes";
 
 /**
  * The Workout tab when no workout is running: an empty start, then My Routines and the Template
@@ -71,7 +72,7 @@ export function RoutineLibrary() {
     setNewOpen(false);
     setNewName("");
     setNewFolder("");
-    router.push(`/routines/${r.id}/edit`);
+    router.push(routineEditPath(r.id));
   }
 
   return (
@@ -139,7 +140,7 @@ export function RoutineLibrary() {
                           </p>
                         </div>
                         <div className="-mr-2 -mt-2 flex shrink-0">
-                          <Link href={`/routines/${r.id}/edit`} aria-label={`Edit ${r.name}`} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
+                          <Link href={routineEditPath(r.id)} aria-label={`Edit ${r.name}`} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
                             <Pencil aria-hidden="true" size={18} />
                           </Link>
                           <button type="button" onClick={() => duplicate(r.id)} aria-label={`Duplicate ${r.name}`} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">

@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
+// `npm run build:android` sets this: the app ships inside the APK as plain static files.
+const nativeApp = process.env.ABOT_TARGET === "android";
+
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
+  ...(nativeApp ? { output: "export" as const, trailingSlash: true } : {}),
+  // Partial prerendering needs a server; the static export goes without it.
+  cacheComponents: !nativeApp,
   // The dev badge sits over the Home tab of the bottom bar; errors still surface without it.
   devIndicators: false,
-  partialPrefetching: true,
+  partialPrefetching: !nativeApp,
   turbopack: {
     rules: {
       "*.css": {

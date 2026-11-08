@@ -29,7 +29,7 @@ test("a full training day makes no request outside the app, apart from exercise 
   await addExercise(page, "Bench Press (Barbell)");
   await logSet(page, 1, "60", "8");
   await finishWorkout(page);
-  for (const path of ["/", "/profile", "/exercises", "/exercises/bench-press-barbell", "/workout", "/settings"]) {
+  for (const path of ["/", "/profile", "/exercises", "/exercises/detail?id=bench-press-barbell", "/workout", "/settings"]) {
     await page.goto(path);
     await expect(page.getByRole("main")).toBeVisible();
   }

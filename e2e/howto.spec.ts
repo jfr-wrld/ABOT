@@ -28,7 +28,7 @@ test("tapping the exercise name opens the how-to sheet without leaving the worko
   await expect(sheet.getByText("Retract and depress the shoulder blades before unracking")).toBeVisible();
   await expect(sheet.getByRole("heading", { name: "Personal records" })).toBeVisible();
   await expect(sheet.getByText("80 kg", { exact: true }).first()).toBeVisible();
-  await expect(sheet.getByRole("link", { name: "Full exercise details" })).toHaveAttribute("href", "/exercises/bench-press-barbell");
+  await expect(sheet.getByRole("link", { name: "Full exercise details" })).toHaveAttribute("href", "/exercises/detail?id=bench-press-barbell");
   await expectNoHorizontalOverflow(page);
 
   await page.waitForTimeout(1500);
@@ -51,7 +51,7 @@ test("the info icon opens the same sheet", async ({ page }) => {
 });
 
 test("exercise detail shows full instructions and form cues", async ({ page }) => {
-  await page.goto("/exercises/squat-barbell");
+  await page.goto("/exercises/detail?id=squat-barbell");
   await page.getByRole("tab", { name: "How to" }).click();
   const steps = page.getByRole("list", { name: "Instructions" }).getByRole("listitem");
   await expect(steps.nth(2)).toBeVisible();

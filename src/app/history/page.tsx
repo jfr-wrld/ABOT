@@ -3,7 +3,7 @@
 import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronLeft, Dumbbell, Layers, MoreHorizontal, Play, Timer, Trash2, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
@@ -32,6 +32,7 @@ import {
   type WeightUnit,
   type WorkoutSession,
 } from "@/types/workout";
+import { exercisePath } from "@/lib/routes";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
 
@@ -62,7 +63,7 @@ function asRoutine(s: WorkoutSession): Routine {
 }
 
 function SessionDetail() {
-  const { id } = useParams<{ id: string }>();
+  const id = useSearchParams().get("id") ?? "";
   const router = useRouter();
   const sessions = useWorkoutStore((s) => s.sessions);
   const active = useWorkoutStore((s) => s.active);
@@ -346,7 +347,7 @@ function ExerciseCard({
         <div className="min-w-0 flex-1">
           <h2 id={`ex-${ex.id}`} className="truncate text-base font-semibold">
             {def ? (
-              <Link href={`/exercises/${def.id}`} className="text-text underline-offset-4 hover:underline">
+              <Link href={exercisePath(def.id)} className="text-text underline-offset-4 hover:underline">
                 {def.name}
               </Link>
             ) : (

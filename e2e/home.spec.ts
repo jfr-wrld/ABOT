@@ -38,7 +38,7 @@ test("a finished workout lights today, fills the week and lists the session", as
   // A first attempt beats nothing, so it earns no record badge.
   await expect(card.getByText(/PR$/)).toHaveCount(0);
   await card.click();
-  await page.waitForURL(/\/history\//);
+  await page.waitForURL(/\/history\?id=/);
 });
 
 test("the hero offers the saved routine first, with an empty start beside it", async ({ page }) => {
@@ -47,7 +47,7 @@ test("the hero offers the saved routine first, with an empty start beside it", a
   await page.getByRole("button", { name: "New routine" }).click();
   await page.getByLabel("Name").fill("Push A");
   await page.getByRole("button", { name: "Create and add exercises" }).click();
-  await page.waitForURL(/\/routines\/.+\/edit/);
+  await page.waitForURL(/\/routines\/edit\?id=/);
   await page.getByRole("button", { name: "Add exercise" }).click();
   await page.getByLabel("Search exercises").fill("Bench Press (Barbell)");
   await page.getByRole("button", { name: /^Bench Press \(Barbell\)/ }).first().click();

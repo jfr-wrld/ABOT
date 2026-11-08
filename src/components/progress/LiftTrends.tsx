@@ -6,6 +6,7 @@ import { Trophy } from "lucide-react";
 import type { WeightUnit } from "@/types/workout";
 import type { LiftTrend } from "@/lib/progress";
 import { formatWeight } from "@/lib/units";
+import { exercisePath } from "@/lib/routes";
 
 /**
  * The lifts trained most in the range, each with its estimated 1RM line. The line draws itself
@@ -31,7 +32,7 @@ export function LiftTrends({ trends, unit }: { trends: LiftTrend[]; unit: Weight
             return (
               <li key={t.exerciseId} className="border-t border-line first:border-t-0">
                 <Link
-                  href={`/exercises/${t.exerciseId}`}
+                  href={exercisePath(t.exerciseId)}
                   className="-mx-2 grid grid-cols-[minmax(0,1fr)_96px_auto] items-center gap-3 rounded-ctl px-2 py-3 hover:bg-surface-2"
                 >
                   <span className="min-w-0">

@@ -12,7 +12,7 @@ test("opens a finished workout from home and deletes it", async ({ page }) => {
   await logSet(page, 1, "60", "8");
   await finishWorkout(page);
   await page.getByRole("link", { name: /480 kg/ }).click();
-  await page.waitForURL(/\/history\//);
+  await page.waitForURL(/\/history\?id=/);
   await expect(page.getByRole("link", { name: "Bench Press (Barbell)" })).toBeVisible();
   await expect(page.getByText("60 kg × 8")).toBeVisible();
   // The first time a lift is logged it sets no record worth a badge: there was nothing to beat.
@@ -36,7 +36,7 @@ test("a past workout can be repeated, its sets folded, and has no dock", async (
   await logSet(page, 1, "60", "8");
   await finishWorkout(page);
   await page.getByRole("link", { name: /480 kg/ }).click();
-  await page.waitForURL(/\/history\//);
+  await page.waitForURL(/\/history\?id=/);
   await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
   await expect(page.getByRole("img", { name: /Primary: Chest/ })).toBeVisible();
 
@@ -53,6 +53,6 @@ test("a past workout can be repeated, its sets folded, and has no dock", async (
 });
 
 test("unknown workout id shows a not-found message", async ({ page }) => {
-  await page.goto("/history/does-not-exist");
+  await page.goto("/history?id=does-not-exist");
   await expect(page.getByRole("heading", { name: "Workout not found" })).toBeVisible();
 });

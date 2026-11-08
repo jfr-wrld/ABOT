@@ -20,6 +20,7 @@ import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
 import { cmToFtIn, formatVolume, formatWeight, ftInToCm } from "@/lib/units";
 import { PROFILE_LIMITS } from "@/types/workout";
+import { exercisePath } from "@/lib/routes";
 
 export default function ProfilePage() {
   return (
@@ -318,7 +319,7 @@ function TopLifts({ lifts, unit }: { lifts: ProfileStats["topLifts"]; unit: "kg"
         {lifts.map(({ exercise, record }, i) => (
           <li key={exercise.id}>
             <Link
-              href={`/exercises/${exercise.id}`}
+              href={exercisePath(exercise.id)}
               className="-mx-1 flex min-h-14 items-center gap-3 rounded-xl px-1 transition-colors hover:bg-white/[0.04]"
             >
               <span className="num w-4 text-sm text-text-muted">{i + 1}</span>

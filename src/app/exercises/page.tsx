@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { ExerciseForm } from "@/components/exercises/ExerciseForm";
 import { CatalogSection } from "@/components/exercises/CatalogSection";
 import { buildPRTable } from "@/lib/calc";
+import { exercisePath } from "@/lib/routes";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -145,7 +146,7 @@ function LibraryScreen() {
                   return (
                     <li key={e.id}>
                       <Link
-                        href={`/exercises/${e.id}`}
+                        href={exercisePath(e.id)}
                         className="flex min-h-16 items-center gap-3 rounded-xl px-2 py-1 hover:bg-surface active:bg-surface-2"
                       >
                         <ExerciseThumb exercise={e} size={52} />

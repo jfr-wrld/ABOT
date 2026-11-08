@@ -4,7 +4,7 @@ import { setNumbers } from "@/lib/sets";
 import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ArrowDown, ArrowUp, Link2, Link2Off, Plus, Trash2 } from "lucide-react";
 import { SUPERSET_COLORS, linkSupersetIn, removeFromList, supersetLabels, unlinkSupersetIn } from "@/lib/superset";
 import { newId } from "@/lib/id";
@@ -37,7 +37,7 @@ export default function EditRoutinePage() {
 }
 
 function Editor() {
-  const { id } = useParams<{ id: string }>();
+  const id = useSearchParams().get("id") ?? "";
   const routine = useRoutineStore((s) => s.routines.find((r) => r.id === id));
   const { update, setExercises } = useRoutineStore();
   const { weightUnit, defaultRestSeconds } = useSettingsStore();

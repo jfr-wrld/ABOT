@@ -28,7 +28,7 @@ test("a superset is labelled, coloured, and rests only after its last exercise",
 });
 
 test("exercise detail is split into Summary, History and How to", async ({ page }) => {
-  await page.goto("/exercises/squat-barbell");
+  await page.goto("/exercises/detail?id=squat-barbell");
   const tabs = page.getByRole("tablist", { name: "Exercise details" });
   await expect(tabs.getByRole("tab", { name: "Summary" })).toHaveAttribute("aria-selected", "true");
   const muscles = page.getByRole("region", { name: "Muscles worked" });
@@ -63,7 +63,7 @@ test("the workout card shows the movement next to its name", async ({ page }) =>
 });
 
 test("exercise detail: no dock, quick stats, and a workout started from it", async ({ page }) => {
-  await page.goto("/exercises/squat-barbell");
+  await page.goto("/exercises/detail?id=squat-barbell");
   await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
   await expect(page.getByText("Last done")).toBeVisible();
   await expect(page.getByText("Never", { exact: true })).toBeVisible();
@@ -72,7 +72,7 @@ test("exercise detail: no dock, quick stats, and a workout started from it", asy
   await expect(page.getByRole("heading", { name: "Squat (Barbell)", exact: true })).toBeVisible();
 
   // With a workout running, the same page adds to it instead.
-  await page.goto("/exercises/bench-press-barbell");
+  await page.goto("/exercises/detail?id=bench-press-barbell");
   await page.getByRole("button", { name: "Add to workout" }).click();
   await expect(page.getByRole("button", { name: "In your workout" })).toBeDisabled();
   await page.getByRole("link", { name: "Open the workout in progress" }).last().click();
@@ -82,7 +82,7 @@ test("exercise detail: no dock, quick stats, and a workout started from it", asy
 
 test("the workout capsule sits above a detail page's action bar, not over it", async ({ page }) => {
   await startEmptyWorkout(page);
-  await page.goto("/exercises/bench-press-barbell");
+  await page.goto("/exercises/detail?id=bench-press-barbell");
   const capsule = page.getByRole("link", { name: "Open the workout in progress" }).first();
   const bar = page.getByRole("button", { name: "Add to workout" });
   const c = (await capsule.boundingBox())!;
@@ -94,7 +94,7 @@ test("the exercise page shows its real start and end photos alternating", async 
   // Answer the dataset's photo URLs with a local frame so the test runs offline.
   const frame = await readFile(path.join(__dirname, "fixtures", "frame0.jpg"));
   await page.route("https://raw.githubusercontent.com/**", (r) => r.fulfill({ body: frame, contentType: "image/jpeg" }));
-  await page.goto("/exercises/bench-press-barbell");
+  await page.goto("/exercises/detail?id=bench-press-barbell");
   await expect(page.getByRole("img", { name: "Bench Press (Barbell), start position" })).toBeAttached();
   await expect(page.getByRole("img", { name: "Bench Press (Barbell), end position" })).toBeAttached();
   const phase = page.getByTestId("hero-phase");

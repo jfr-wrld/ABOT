@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("motion tab animates the rep with accurate phases and can be paused", async ({ page }) => {
-  await openHowTo(page, "/exercises/bench-press-barbell");
+  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
   await expect(media.getByRole("tab", { name: "Motion" })).toHaveAttribute("aria-selected", "true");
   // Real photos show first; the animated figure is one tap away.
@@ -50,7 +50,7 @@ test("motion tab animates the rep with accurate phases and can be paused", async
 
 test("photos view crossfades the start and end frames", async ({ page }) => {
   await serveFrames(page);
-  await openHowTo(page, "/exercises/bench-press-barbell");
+  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
   await expect(media.getByRole("button", { name: "Photos" })).toHaveAttribute("aria-pressed", "true");
   const phase = media.getByTestId("motion-phase");
@@ -60,7 +60,7 @@ test("photos view crossfades the start and end frames", async ({ page }) => {
 
 test("sideways and rotating movements animate from the front, photos still one tap away", async ({ page }) => {
   await serveFrames(page);
-  await openHowTo(page, "/exercises/hip-abduction-machine");
+  await openHowTo(page, "/exercises/detail?id=hip-abduction-machine");
   const media = page.getByRole("region", { name: "Exercise media" });
   await media.getByRole("button", { name: "Animation" }).click();
   await expect(media.getByRole("img", { name: "Hip Abduction (Machine) animation" })).toBeVisible();
@@ -68,7 +68,7 @@ test("sideways and rotating movements animate from the front, photos still one t
   await media.getByRole("button", { name: "Photos" }).click();
   await expect(media.getByTestId("motion-phase")).toHaveText(/position/);
 
-  await openHowTo(page, "/exercises/russian-twist");
+  await openHowTo(page, "/exercises/detail?id=russian-twist");
   const twist = page.getByRole("region", { name: "Exercise media" });
   if (await twist.getByRole("button", { name: "Animation" }).count()) await twist.getByRole("button", { name: "Animation" }).click();
   await expect(twist.getByTestId("motion-phase")).toHaveText("Alternate");
@@ -76,14 +76,14 @@ test("sideways and rotating movements animate from the front, photos still one t
 
 test("missing images show a text fallback instead of a broken box", async ({ page }) => {
   await page.route(FRAMES, (route) => route.abort("internetdisconnected"));
-  await openHowTo(page, "/exercises/bench-press-barbell");
+  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   await page.getByRole("region", { name: "Exercise media" }).getByRole("button", { name: "Photos" }).click();
   await expect(page.getByText("Images need a connection.")).toBeVisible();
 });
 
 test("video tab: search links, custom video validation, saved link, removal", async ({ page }) => {
   await serveFrames(page);
-  await openHowTo(page, "/exercises/bench-press-barbell");
+  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
   await media.getByRole("tab", { name: "Video" }).click();
   await expect(media.getByText("No tutorial video set for this exercise.")).toBeVisible();
@@ -112,7 +112,7 @@ test("video tab: search links, custom video validation, saved link, removal", as
 });
 
 test("video tab offline says so instead of loading a player", async ({ page, context }) => {
-  await openHowTo(page, "/exercises/bench-press-barbell");
+  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   await context.setOffline(true);
   await page.getByRole("region", { name: "Exercise media" }).getByRole("tab", { name: "Video" }).click();
   await page.getByRole("button", { name: "Set custom video" }).click();
@@ -124,7 +124,7 @@ test("video tab offline says so instead of loading a player", async ({ page, con
 });
 
 test("anatomy tab highlights primary and secondary muscles; tabs work with arrow keys", async ({ page }) => {
-  await openHowTo(page, "/exercises/bench-press-barbell");
+  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
   await media.getByRole("tab", { name: "Motion" }).focus();
   await page.keyboard.press("ArrowRight");

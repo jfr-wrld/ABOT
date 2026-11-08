@@ -99,5 +99,5 @@ test("calendar moves months and links a day to its workout", async ({ page }) =>
   await expect(monthHeading).toHaveText(before ?? "");
   await page.getByRole("gridcell", { name: /1 workout/ }).click();
   await cal.getByRole("link").first().click();
-  await page.waitForURL(/\/history\//);
+  await page.waitForURL(/\/history\?id=/);
 });
