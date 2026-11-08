@@ -214,3 +214,44 @@ export function prCounts(
   }
   return out;
 }
+
+/* ---------------------------------------------------------------- visual helpers */
+
+/** Volume per day of the current week, in the lifter's week order (7 numbers, kg). */
+export function weekDayVolumes(
+  sessions: WorkoutSession[],
+  now: number,
+  firstDay: 0 | 1 = 1,
+  byId?: Record<string, Exercise>,
+): number[] {
+  const days = weekStrip([], now, firstDay).map((d) => d.start);
+  const out = days.map(() => 0);
+  for (const s of completed(sessions)) {
+    const i = days.indexOf(startOfDay(s.startedAt));
+    if (i >= 0) out[i] += sessionVolume(s, byId);
+  }
+  return out;
+}
+
+/** Muscles worked as a primary muscle in the last 48 hours: the ones still recovering. */
+export function restingMuscles(sessions: WorkoutSession[], byId: Record<string, Exercise>, now: number): MuscleGroup[] {
+  const out = new Set<MuscleGroup>();
+  for (const s of completed(sessions)) {
+    const at = s.finishedAt ?? s.startedAt;
+    if (now - at >= RECOVERY_HOURS * HOUR) continue;
+    for (const ex of s.exercises) {
+      if (!ex.sets.some(isWorkingSet)) continue;
+      for (const m of byId[ex.exerciseId]?.primaryMuscles ?? []) if (GROUP_OF[m]) out.add(m);
+    }
+  }
+  return [...out];
+}
+
+/** "Today", "Yesterday", a weekday within the week, else a short date. */
+export function relativeDay(t: number, now: number): string {
+  const days = Math.round((startOfDay(now) - startOfDay(t)) / DAY);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return new Date(t).toLocaleDateString(undefined, { weekday: "short" });
+  return new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+}

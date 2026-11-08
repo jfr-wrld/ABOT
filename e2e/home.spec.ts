@@ -7,8 +7,9 @@ test("an empty device gets a working dashboard, not a blank page", async ({ page
   await expect(page.getByRole("heading", { name: "Free session" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Create a routine" })).toHaveAttribute("href", "/workout");
   const week = page.getByRole("region", { name: "This week" });
-  await expect(week.getByText("kg lifted")).toBeVisible();
-  await expect(week.getByText("6/6")).toBeVisible();
+  await expect(week.getByText("Volume")).toBeVisible();
+  await expect(week.getByText("0 of 7 days this week")).toBeAttached();
+  await expect(week.getByText(/^6\/6/)).toBeVisible();
   await expect(page.getByText("No workouts yet.")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
@@ -24,11 +25,16 @@ test("a finished workout lights today, fills the week and lists the session", as
   await page.goto("/");
   await expect(page.getByRole("list", { name: "This week" }).getByText(/, trained$/)).toHaveCount(1);
   const week = page.getByRole("region", { name: "This week" });
-  await expect(week.getByText("400", { exact: true })).toBeVisible();
-  await expect(week.getByText("5/6")).toBeVisible();
+  // The figure counts up, so wait for its final value (the screen-reader copy is final at once).
+  await expect(week.getByText("400", { exact: true }).first()).toBeAttached();
+  await expect(week.getByText("1 of 7 days this week")).toBeAttached();
+  await expect(week.getByText(/^5\/6/)).toBeVisible();
+  await expect(week.getByRole("img", { name: /Primary: Chest/ })).toBeVisible();
 
   const card = page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first();
-  await expect(card).toContainText("400 kg · 1 set");
+  await expect(card).toContainText("400 kg");
+  await expect(card).toContainText("Today");
+  await expect(card.locator("[data-thumb]")).toHaveCount(1);
   // A first attempt beats nothing, so it earns no record badge.
   await expect(card.getByText(/PR$/)).toHaveCount(0);
   await card.click();

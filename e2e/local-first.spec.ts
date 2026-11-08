@@ -48,8 +48,8 @@ test("logging keeps working with the network cut mid-workout", async ({ page, co
   await logSet(page, 2, "100", "5");
   await finishWorkout(page);
   // Home lists the finished workout while still offline, and again after a reload online.
-  await expect(page.getByText(/· 2 sets$/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first()).toContainText(/2 sets/);
   await context.setOffline(false);
   await page.reload();
-  await expect(page.getByText(/· 2 sets$/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first()).toContainText(/2 sets/);
 });

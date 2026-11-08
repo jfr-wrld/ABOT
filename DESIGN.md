@@ -53,22 +53,26 @@ in 18px mono; Prev takes what is left. Every tap target is 44px. At 640px and up
 
 ## Home (command centre)
 
-Owner brief 2026-11-08: Home is a dense command centre, then (same day) "less busy, less text".
-So every block is a figure or a control, with at most one short mark under it:
+Owner briefs 2026-11-08: a dense command centre; then less text; then "more visual, with
+animation". So Home tells the week in pictures, each with one job:
 
-- **Week strip**: seven day letters over seven cells. A trained day is a Volt tile with a check
-  (done, the same meaning as a ticked set), today has a thin white ring, other days a dim
-  zinc-800 dot.
-- **Next up**: the routine name and two buttons. Start (Volt, the screen's one primary action)
-  starts the scheduled routine, else the one after the last routine trained; `+ Empty` sits beside
-  it with a hairline edge. With no routines: Free session, Start an empty workout, Create a routine.
-- **Three instruments** in one row, 12px-radius Carbon tiles: kg lifted this week (with the change
-  against last week up to the same moment, so Monday is not "-90%"), sessions (against the
-  schedule when one is set, with Volt segments), and muscle groups ready on the 48-hour rule.
-  The unit lives in the label so the figure fits a 320px screen.
-- **Recent workouts**: name, a Cyan record pill only when a lift beat an earlier record (a first
-  attempt beats nothing), date, and duration, volume and sets in mono. Cards give to 98% under
-  the thumb. The trophy is the Lucide icon used for records elsewhere, not the emoji.
+- **Week strip**: day letters over cells; trained days are Volt tiles with a check that pop in one
+  after another, today has a white ring that breathes slowly, other days a dim zinc-800 dot.
+- **Next up**: the routine name, its lifts as a row of exercise photos, Start (Volt, with a play
+  icon) and a square + for an empty workout. A thin plate outline turns slowly behind it (60 s per
+  turn). With no routine: Free session, Start an empty workout and + to create one.
+- **Volume**: the week's figure counts up from zero, the change against last week at the same
+  point (trend arrow), and a bar per day of the week that grows into place, today in full Volt.
+- **Days ring**: sessions this week as a ring that draws itself, against the schedule when one is
+  set, else out of 7 days.
+- **Body map**: front and back, muscles worked in the last 48 hours lit (resting), with "4/6 ready".
+- **Recent workouts**: name, Cyan PR pill (only when a lift beat an earlier record), a relative day
+  (Today, Yesterday, Wed), the lifts as small photos, and duration, volume and sets as icons with
+  mono figures. Cards slide in in order and give to 98% under the thumb.
+
+Entrance animations start from an effect (pages mount inside AnimatePresence with
+initial={false}); every animated element starts from an inline style. Reduced motion shows the
+final state.
 
 ## Navigation and Profile
 
