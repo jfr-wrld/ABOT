@@ -7,6 +7,14 @@ import { getActivePersistence, getActiveRepository, hydrateStores } from "./pers
 import { useHydration } from "./hydration";
 import { useSettingsStore } from "./useSettingsStore";
 import type { ErrorStage } from "@/lib/syncStatus";
+import { isNativeApp } from "@/lib/native/files";
+
+/**
+ * In the Android app Google refuses to sign in inside the WebView, so sign-in opens in the
+ * system browser (a Custom Tab) and Google returns to the app through this deep link
+ * (AndroidManifest.xml). It must be listed under Redirect URLs in Supabase.
+ */
+export const NATIVE_REDIRECT = "app.abot.gym://auth/callback";
 
 export type SyncPhase = "unconfigured" | "signed_out" | "signing_in" | "idle" | "syncing" | "offline" | "error";
 
@@ -70,6 +78,21 @@ export const useSyncStore = create<SyncStoreState>()((set, get) => ({
         // Without storage the return lands on Settings, which still shows the result.
       }
       const supabase = await getSupabase();
+      if (isNativeApp()) {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: NATIVE_REDIRECT, skipBrowserRedirect: true },
+        });
+        if (error) throw error;
+        const { Browser } = await import("@capacitor/browser");
+        // Closing the tab without finishing leaves the lifter signed out, not stuck on "signing in".
+        const closed = await Browser.addListener("browserFinished", () => {
+          void closed.remove();
+          if (get().phase === "signing_in") set({ phase: "signed_out" });
+        });
+        await Browser.open({ url: data.url });
+        return;
+      }
       // Leaves the app for Google; the return lands on Settings, where initSync finishes it.
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -224,6 +247,28 @@ async function onSignedIn(user: User, returning = false): Promise<void> {
   const settings = useSettingsStore.getState();
   if (name && !settings.profileName.trim()) settings.update({ profileName: name });
   await useSyncStore.getState().syncNow();
+}
+
+/**
+ * The app's half of Google sign-in: Google sends the lifter to NATIVE_REDIRECT with a one-time
+ * code, which becomes the session here. Returns where to go next (the page sign-in started from).
+ */
+export async function finishNativeSignIn(url: string): Promise<string | null> {
+  if (!url.startsWith(NATIVE_REDIRECT)) return null;
+  const { Browser } = await import("@capacitor/browser");
+  void Browser.close().catch(() => {});
+  const params = new URL(url).searchParams;
+  const code = params.get("code");
+  try {
+    const failure = params.get("error_description");
+    if (failure || !code) throw new Error(failure ?? "Google did not send a sign-in code");
+    const { data, error } = await (await getSupabase()).auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    await onSignedIn(data.user, true);
+  } catch (e) {
+    useSyncStore.setState({ phase: "error", lastError: message(e), errorStage: "sign_in", notice: { kind: "failed" } });
+  }
+  return takeSignInReturn();
 }
 
 function message(e: unknown): string {

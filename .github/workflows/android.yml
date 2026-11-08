@@ -29,6 +29,11 @@ jobs:
 
       - name: Export the web app and copy it into the Android project
         run: npm run build:android
+        # Cloud sync: the project URL and anon key (public by design), from the repository's
+        # Actions variables. Without them the APK runs local-only. See docs/cloud-sync-setup.md.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Build the debug APK
         working-directory: android

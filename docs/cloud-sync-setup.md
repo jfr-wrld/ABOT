@@ -39,6 +39,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon public key>
 
 The anon key is public by design: row level security limits it to the signed-in user's own rows.
 
+## 4. The Android app
+
+1. In Supabase, **Authentication > URL Configuration > Redirect URLs**, add
+   `app.abot.gym://auth/callback`. Google sends the app back there after sign-in.
+2. In GitHub, **Settings > Secrets and variables > Actions > Variables**, add
+   `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` with the same values as `.env`.
+   The "Android APK" workflow builds them into the APK; without them it is local-only.
+
+In the app, sign-in opens Google in the phone's browser (a Custom Tab): Google does not allow
+sign-in inside an app's WebView. Nothing changes in Google Cloud.
+
 ## How sync behaves
 
 - Guests never load the Supabase library and never contact Supabase.

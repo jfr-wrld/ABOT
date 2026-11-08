@@ -4,12 +4,16 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { isNativeApp } from "@/lib/native/files";
 import { setupNativeNotifications } from "@/lib/native/notify";
+import { finishNativeSignIn } from "@/store/useSyncStore";
+import { startApp } from "@/store/appSession";
 
 /**
  * Android-only wiring, mounted once:
  * - Back (button or edge swipe) closes the open sheet, then goes to the previous page. On the
  *   first page it sends ABOT to the background instead of closing it.
  * - Notification channels, and a tap on a notification (or its Start button) opens that page.
+ * - Google sign-in coming back through the app.abot.gym://auth deep link, also when Android
+ *   started ABOT fresh for it.
  */
 export function NativeShell() {
   const router = useRouter();
@@ -30,6 +34,18 @@ export function NativeShell() {
         else void App.minimizeApp();
       }).then((h) => keep(() => void h.remove())),
     );
+    const signInReturn = async (url: string | undefined) => {
+      if (!url) return;
+      // Storage must be open before the session can be recorded.
+      await startApp();
+      const to = await finishNativeSignIn(url);
+      if (to) router.push(to);
+    };
+    void import("@capacitor/app").then(async ({ App }) => {
+      const h = await App.addListener("appUrlOpen", ({ url }) => void signInReturn(url));
+      keep(() => void h.remove());
+      void signInReturn((await App.getLaunchUrl())?.url);
+    });
     void setupNativeNotifications((url) => router.push(url))
       .then(keep)
       .catch(() => {});

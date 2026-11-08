@@ -51,12 +51,11 @@ installs over the old one and keeps the workouts. That key is for side-loaded te
   ABOT is frozen or closed. Android 12+ may deliver alarms late unless exact alarms are
   allowed; Settings offers the switch.
 - `src/lib/native/haptics.ts`: vibration (`@capacitor/haptics`).
-- `src/components/layout/NativeShell.tsx`: back button and swipe, notification taps.
+- `src/components/layout/NativeShell.tsx`: back button and swipe, notification taps, and the
+  Google sign-in return (`app.abot.gym://auth/callback`; setup in `docs/cloud-sync-setup.md`).
 - The system splash is plain black with no icon, so the app's animated splash is the only one.
 
 ## Not yet native
 
-- **Google sign-in** for cloud sync: Google refuses sign-in inside an embedded WebView. It needs
-  the system browser plus a deep link back into the app. Local use is unaffected.
 - **Release build** for Google Play needs its own signing key (kept outside the repo) and an
   `.aab`.
