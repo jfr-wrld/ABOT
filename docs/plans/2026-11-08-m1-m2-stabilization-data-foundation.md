@@ -254,3 +254,84 @@
 - [ ] **Step 3: Implement** the UI. A location's bar weight and plates are editable (bar select 20 / 15 / 10 / 7 kg; plates as a comma list validated to positive numbers).
 - [ ] **Step 4: Verify** `npm run lint && npm test && npm run e2e && npm run build` Expected: green.
 - [ ] **Step 5: Commit** `feat: gym locations, per-hand load and weighted bodyweight in the logger`
+
+---
+
+## M2 addendum: data protection and sync foundation (owner request 2026-11-08)
+
+Spec: `docs/plans/abot-master-plan.md` section 3.1. Added after Task 11 was complete; Tasks 12 and 13
+are unchanged.
+
+Additional Global Constraints:
+- Sync never blocks the UI and never runs inside a set-tick handler.
+- The only external service is Supabase, used only after the user signs in; without
+  `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` the app shows "Cloud sync is not set up for this build" and everything else works.
+- No secret keys in the repo or the client bundle; the anon key is public and RLS enforces ownership.
+
+Additional Review Focus:
+6. A row edited offline on device A and edited later on device B: after both sync, the later edit wins on both devices and the losing version is kept in `conflicts`. Test in Task 16.
+7. Deleting a routine on one device must not resurrect it when another device pulls older data. Test in Task 16.
+
+### Task 14: Ask the browser to keep ABOT data
+
+**Files:**
+- Create: `src/lib/storagePersistence.ts`, `src/lib/storagePersistence.test.ts`, `src/components/settings/StorageSection.tsx`
+- Modify: `src/components/layout/StoreHydrator.tsx`, `src/app/settings/page.tsx`
+
+**Interfaces:**
+- Produces: `requestPersistentStorage(nav?: Pick<Navigator, "storage">): Promise<"persisted" | "not_persisted" | "unsupported">` (calls `persisted()` first, then `persist()` only if not already persisted).
+
+- [ ] **Step 1: Failing tests** unsupported when `storage` or `persist` is missing; returns `"persisted"` without calling `persist()` when `persisted()` is already true; returns what `persist()` grants otherwise; a rejecting `persist()` yields `"not_persisted"`.
+- [ ] **Step 2: Run** Expected: FAIL.
+- [ ] **Step 3: Implement**; StoreHydrator calls it once after hydration (non-blocking); `StorageSection` shows the status in plain words plus "Ask again" when not persisted.
+- [ ] **Step 4: Verify** `npm run lint && npm test && npm run e2e` Expected: green.
+- [ ] **Step 5: Commit** `feat: request persistent storage and show its status`
+
+### Task 15: Sync metadata, tombstones and the sync queue
+
+**Files:**
+- Modify: `src/data/repo/types.ts`, `src/data/repo/memory.ts`, `src/data/repo/dexie.ts` (schema v2), `src/data/repo/contract.test.ts`
+
+**Interfaces:**
+- Produces: `type SyncKind = "session" | "routine" | "exercise" | "location" | "settings"`; `interface SyncStatusRow { kind; id; status: "pending_sync" | "synced"; localUpdatedAt: number; lastSyncedAt: number | null }`; `interface SyncState { userId: string | null; lastPulledCursor: string | null; lastSyncedAt: number | null; phase: "signed_out" | "idle" | "syncing" | "offline" | "error"; lastError: string | null }` stored as kv `syncState`; `interface SyncRecord { kind: SyncKind; id: string; payload: unknown; updatedAt: number; deleted: boolean }`.
+- `Repository` gains `sync: { pending(): Promise<SyncRecord[]>; get(kind, id): Promise<{ record: SyncRecord | null; status: SyncStatusRow | null }>; applyRemote(rec: SyncRecord): Promise<void>; markSynced(kind, id, at: number): Promise<void>; purgeTombstones(olderThan: number): Promise<number> }`.
+- Behaviour: every table `put` stamps `updatedAt = Date.now()` on the stored row and marks it `pending_sync` in the same transaction; `remove` writes a tombstone (`deletedAt`) and marks it pending; `all()` excludes tombstones; kv `settings` writes mark `("settings","settings")` pending; `applyRemote` writes without marking pending and sets status `synced`. Dexie v2 adds `syncStatus: "[kind+id], status"`; existing v1 rows are marked pending on upgrade (Guest data uploads on first sign-in).
+
+- [ ] **Step 1: Failing contract tests** (both repositories): put marks pending with `localUpdatedAt`; remove hides the row from `all()` and leaves a pending tombstone in `pending()`; `applyRemote` stores the row as `synced` and it is not in `pending()`; `markSynced` clears pending; settings writes appear in `pending()` as kind `settings`; `purgeTombstones` removes only synced tombstones older than the cutoff; Dexie upgrade from a v1 database marks existing rows pending.
+- [ ] **Step 2: Run** Expected: FAIL.
+- [ ] **Step 3: Implement**.
+- [ ] **Step 4: Verify** `npm run lint && npm test && npm run e2e` Expected: green.
+- [ ] **Step 5: Commit** `feat: sync metadata, tombstones and pending queue in the repository`
+
+### Task 16: Two-way merge sync engine
+
+**Files:**
+- Create: `src/data/sync/types.ts`, `src/data/sync/engine.ts`, `src/data/sync/fakeRemote.ts`, `src/data/sync/engine.test.ts`
+
+**Interfaces:**
+- Consumes: `Repository.sync` (Task 15).
+- Produces: `interface RemoteAdapter { pull(cursor: string | null, limit: number): Promise<{ records: (SyncRecord & { serverUpdatedAt: string })[]; cursor: string | null }>; pushIfNewer(records: SyncRecord[]): Promise<{ accepted: string[]; rejected: string[] }> }` (ids as `"kind:id"`); `syncOnce(repo: Repository, remote: RemoteAdapter, now?: number): Promise<{ pulled: number; pushed: number; conflicts: number; changedLocal: boolean }>`; `createFakeRemote(): RemoteAdapter & { rows: Map<string, ...> }` for tests.
+- Merge rules exactly as in spec section 3.1 step 2; losing local versions go to kv `conflicts` (array, newest first, max 50).
+
+- [ ] **Step 1: Failing tests**: fresh device pulls everything into an empty repo; guest data uploads on first sync; remote newer than a synced local row wins; local pending newer than remote wins and is pushed; remote newer than local pending wins and the local version lands in `conflicts` (Review Focus 6); remote tombstone deletes a synced local row; a stale remote row does not resurrect a local pending tombstone (Review Focus 7); `pushIfNewer` rejection leaves the row pending; paging across 3 pulls of 500 advances the cursor; a second `syncOnce` with no changes pulls and pushes 0.
+- [ ] **Step 2: Run** Expected: FAIL.
+- [ ] **Step 3: Implement** `syncOnce` (pull until cursor stops, merge, push pending, mark synced, save `syncState`).
+- [ ] **Step 4: Verify** `npm run lint && npm test` Expected: green.
+- [ ] **Step 5: Commit** `feat: two-way merge sync engine`
+
+### Task 17: Supabase adapter, Google sign-in and the Backup & Sync section
+
+**Files:**
+- Create: `supabase/migrations/0001_abot_records.sql`, `src/data/sync/supabase.ts`, `src/data/sync/supabase.test.ts`, `src/store/useSyncStore.ts`, `src/components/settings/SyncSection.tsx`, `e2e/sync.spec.ts`
+- Modify: `package.json` (`@supabase/supabase-js@2.119.0`), `src/app/settings/page.tsx`, `src/components/layout/StoreHydrator.tsx`, `.env.example`
+
+**Interfaces:**
+- Consumes: `RemoteAdapter`, `syncOnce`, `hydrateStores`, `getActiveRepository`.
+- Produces: `isCloudSyncConfigured(): boolean`; `createSupabaseRemote(client: SupabaseLike): RemoteAdapter` (`select ... where server_updated_at > cursor order by server_updated_at limit n`, and `rpc("upsert_if_newer", { rows })`); `useSyncStore` with `phase`, `userId`, `email`, `lastSyncedAt`, `pendingCount`, `signIn()`, `signOut()`, `syncNow()`; automatic sync on start (when signed in), on the `online` event, and after `finishActive`.
+- SQL: table, RLS policy, `server_updated_at` trigger, `upsert_if_newer(rows jsonb)` returning accepted/rejected keys, as in spec section 3.1.
+
+- [ ] **Step 1: Failing tests** with a fake `SupabaseLike`: `pull` maps rows to `SyncRecord` and returns the last `server_updated_at` as cursor; `pushIfNewer` sends one RPC call with all rows and maps the result; `isCloudSyncConfigured()` false without both env vars. e2e (no env vars): Settings shows "Cloud sync is not set up for this build" and the Export button.
+- [ ] **Step 2: Run** Expected: FAIL.
+- [ ] **Step 3: Implement**; the sign-in button calls `supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + "/settings" } })`; sign out keeps local data.
+- [ ] **Step 4: Verify** `npm run lint && npm test && npm run e2e && npm run build` Expected: green. A real round trip needs the owner's Supabase project; record that as not verified.
+- [ ] **Step 5: Commit** `feat: Supabase cloud sync with Google sign-in`

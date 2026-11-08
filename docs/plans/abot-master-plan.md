@@ -18,6 +18,10 @@ Aturan yang mengikat dokumen ini dan semua kerja turunannya:
   layanan berbayar mana pun; tidak ada token server. Semua fitur "pintar" (voice, ilustrasi otot,
   PR card, coach, recovery) dihitung dan dirender di browser. Skill `replicate/skills` tetap
   terpasang di repo tetapi tidak dipakai oleh roadmap ini.
+- **Satu pengecualian yang opsional: Cloud Sync via Supabase** (keputusan owner 2026-11-08, lihat
+  bagian 3.1). Dipakai hanya jika pengguna menekan "Sign in with Google to Backup & Sync" dan
+  hanya untuk backup/sinkronisasi data milik pengguna sendiri. Paket gratis Supabase cukup;
+  aplikasi tetap 100% berfungsi tanpa login dan tanpa jaringan.
 - `superpowers`: dokumen ini adalah design doc (brainstorming). Setelah disetujui, setiap milestone
   mendapat implementation plan terpisah di `docs/plans/` lewat skill `writing-plans`, dieksekusi
   per task dengan TDD dan commit kecil.
@@ -144,8 +148,11 @@ per set), dengan analitik yang jujur, dan lapisan AI yang membantu memutuskan be
 - Mobile-first 360px, satu tangan, kondisi gym (dim, tangan berkeringat, terburu-buru).
 - Offline-first: logging harus bekerja tanpa jaringan dengan latensi 0 ms saat mencentang set
   (tulis ke state in-memory dulu, persist ke IndexedDB di belakang).
-- Zero External Paid API: tidak ada layanan berbayar, tidak ada token, tidak ada server yang
-  dibutuhkan untuk fitur apa pun. Next.js dipakai sebagai static/PWA shell.
+- Zero External Paid API: tidak ada layanan berbayar, tidak ada token rahasia, tidak ada server
+  yang dibutuhkan untuk fitur apa pun. Next.js dipakai sebagai static/PWA shell. Cloud Sync
+  (Supabase, opsional) memakai anon key publik + Row Level Security, bukan secret server.
+- Data tidak boleh hilang karena uninstall PWA, clear cache, atau ganti HP: `navigator.storage
+  .persist()`, Cloud Sync opsional, dan Export/Import JSON sebagai tiga lapis perlindungan.
 - Data pengguna adalah milik pengguna: ekspor penuh tersedia sebelum fitur berbasis data berikutnya.
 - Tidak ada angka, testimoni, atau klaim performa yang tidak diukur (R-17, R-36).
 
@@ -194,6 +201,128 @@ Rekomendasi: **C** (A dengan repository layer). Alasan: constraint offline dan k
 adalah inti produk; semua fitur Pilar 1 sampai 3 bisa diselesaikan tanpa backend data; satu
 interface repo murah dan membuat migrasi ke Supabase tidak memerlukan penulisan ulang UI.
 Keputusan ini menunggu jawaban owner (Q1 di bagian 9).
+
+### 3.1 Hybrid Offline-First + Cloud Sync (keputusan owner 2026-11-08)
+
+Tujuan: data latihan tidak hilang saat PWA di-uninstall, cache dibersihkan, atau pindah HP, tanpa
+mengorbankan logging 0 ms dan offline di gym.
+
+**Tiga lapis perlindungan data**
+
+| Lapis | Apa | Melindungi dari |
+|---|---|---|
+| 1. Persistent storage | `navigator.storage.persist()` diminta saat aplikasi pertama dimuat; status ditampilkan di Settings ("Protected from automatic cleanup" / "Browser may clear data when space is low") | Penghapusan otomatis IndexedDB oleh browser saat ruang sempit |
+| 2. Cloud Sync (opsional) | Login Google via Supabase Auth; Two-Way Merge Sync ke Postgres dengan RLS | Uninstall, clear site data, HP hilang atau ganti HP |
+| 3. Export/Import JSON | File `abot-backup-YYYY-MM-DD.json` di Settings | Semua di atas, tanpa akun, juga untuk pindah antar browser |
+
+**Alur pengguna**
+
+- Guest/Local mode adalah default: aplikasi langsung dipakai tanpa login, semua data di IndexedDB.
+- Settings > "Backup & Sync" menampilkan tombol jelas **"Sign in with Google to Backup & Sync"**,
+  status terakhir ("Synced 2 minutes ago", "3 changes waiting to sync", "Offline, will sync when
+  back online"), tombol "Sync now", dan "Sign out" (sign out tidak menghapus data lokal).
+- Setelah login pertama di perangkat yang sudah berisi data guest: data lokal diunggah, lalu data
+  cloud ditarik dan digabung (two-way merge). Di perangkat baru atau setelah re-install: seluruh
+  riwayat, routine, custom exercise, lokasi gym, dan settings ditarik ke IndexedDB. PR tidak
+  disinkronkan sebagai data terpisah karena dihitung ulang dari sesi.
+- Sync berjalan: setelah login, saat aplikasi dibuka, saat kembali online (`online` event), setelah
+  workout selesai, dan saat tombol "Sync now". Tidak pernah memblokir UI; set dicentang tetap
+  0 ms karena sync membaca IndexedDB di belakang.
+- Workout yang sedang berjalan (`activeWorkout`) tetap lokal per perangkat dan tidak disinkronkan;
+  ia masuk sync saat selesai menjadi sesi.
+
+**Skema `sync_status` (lokal, IndexedDB, bagian dari Milestone 2)**
+
+Setiap entitas yang disinkronkan (`sessions`, `routines`, `exercises` custom, `locations`,
+`settings`) memakai `id` UUID (`crypto.randomUUID()`, sudah dipakai `newId()`), dan mendapat:
+
+```ts
+// Field pada setiap entitas yang disinkronkan
+interface Syncable {
+  id: string;             // UUID v4; seed exercise memakai slug tetap dan tidak disinkronkan
+  updatedAt: number;      // ms epoch, jam perangkat, diperbarui di setiap perubahan
+  deletedAt?: number;     // tombstone: baris dihapus secara logis agar penghapusan ikut tersinkron
+}
+
+// Tabel Dexie `syncStatus`, primary key gabungan [kind+id]
+type SyncKind = "session" | "routine" | "exercise" | "location" | "settings";
+interface SyncStatusRow {
+  kind: SyncKind;
+  id: string;
+  status: "pending_sync" | "synced";   // dirty flag
+  localUpdatedAt: number;              // updatedAt saat ditandai pending
+  lastSyncedAt: number | null;         // kapan baris ini terakhir berhasil di-push atau di-pull
+}
+
+// kv `syncState`
+interface SyncState {
+  userId: string | null;               // null = guest
+  lastPulledCursor: string | null;     // server_updated_at terbesar yang sudah ditarik
+  lastSyncedAt: number | null;
+  phase: "signed_out" | "idle" | "syncing" | "offline" | "error";
+  lastError: string | null;
+}
+```
+
+Setiap tulis lokal (lewat repository) menandai baris `pending_sync` di transaksi yang sama.
+Hapus = set `deletedAt` + pending, bukan hapus fisik; tombstone dibersihkan setelah tersinkron
+dan berumur lebih dari 30 hari. Dalam Guest mode semua baris tetap `pending_sync`, sehingga login
+pertama mengunggah seluruh data lokal.
+
+**Skema cloud (Supabase Postgres)**
+
+Satu tabel generik agar adapter kecil dan skema lokal bebas berevolusi:
+
+```sql
+create table public.abot_records (
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  kind text not null check (kind in ('session','routine','exercise','location','settings')),
+  id text not null,
+  payload jsonb not null,
+  updated_at bigint not null,              -- updatedAt dari perangkat (ms)
+  deleted boolean not null default false,
+  server_updated_at timestamptz not null default now(),
+  primary key (user_id, kind, id)
+);
+alter table public.abot_records enable row level security;
+create policy "own rows" on public.abot_records
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+-- trigger menyetel server_updated_at = now() pada setiap insert/update (cursor pull)
+create index on public.abot_records (user_id, server_updated_at);
+```
+
+Disimpan sebagai `supabase/migrations/0001_abot_records.sql` di repo.
+
+**Two-Way Merge Sync (algoritma, diuji dengan remote palsu)**
+
+1. **Pull**: ambil baris dengan `server_updated_at > lastPulledCursor` (paging 500).
+2. **Merge per baris remote**:
+   - tidak ada lokal: tulis lokal, status `synced`;
+   - lokal `synced`: remote menang bila `remote.updated_at >= local.updatedAt`;
+   - lokal `pending_sync`: lokal menang bila `local.updatedAt > remote.updated_at` (akan di-push);
+     kalau remote lebih baru, remote menang dan versi lokal disimpan ke kv `conflicts` (maks 50)
+     agar tidak ada data yang hilang diam-diam;
+   - `remote.deleted`: hapus lokal kecuali lokal pending dan lebih baru.
+3. **Push**: upsert semua baris yang masih `pending_sync`; server menolak menimpa baris yang lebih
+   baru lewat fungsi `upsert_if_newer(...)` (RPC, `security invoker`) yang membandingkan
+   `updated_at`; yang ditolak masuk kembali ke langkah pull berikutnya.
+4. Simpan `lastPulledCursor`, tandai yang ter-push `synced`, set `lastSyncedAt`, lalu
+   `hydrateStores` ulang bila ada perubahan dari remote.
+
+Last-write-wins per entitas memakai jam perangkat; untuk satu pengguna dengan beberapa HP ini
+cukup, dan konflik yang kalah tetap tersimpan di `conflicts`.
+
+**Konfigurasi**
+
+- `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publik; keamanan dari RLS).
+- Owner membuat project Supabase (paket gratis), mengaktifkan provider Google (OAuth client dari
+  Google Cloud Console, redirect URL `https://<project>.supabase.co/auth/v1/callback`), dan
+  menambahkan URL aplikasi ke "Redirect URLs".
+- Tanpa dua variabel di atas: bagian "Backup & Sync" menampilkan "Cloud sync is not set up for
+  this build" dan Export/Import tetap tersedia (tidak ada tombol mati, R-26).
+- Risiko yang perlu diketahui owner: project Supabase gratis di-pause setelah sekitar 7 hari tanpa
+  aktivitas; data tetap aman di Supabase dan di perangkat, sync berhenti sampai project dibangunkan
+  dari dashboard. Batas kuota paket gratis berlaku.
 
 ---
 
@@ -506,7 +635,11 @@ diverifikasi; **Not Started** = belum ada kode.
 | 3.3C | Canvas PR / session card | Not Started | | `renderPrCard`, Web Share + unduh |
 | 4 | Identitas ABOT (rename, wordmark) | Not Started | masih "Heavy" | Rename, metadata, PWA manifest |
 | Fondasi | IndexedDB + repository layer | Not Started | `localStorage` | Dexie, migrasi dari localStorage |
-| Fondasi | Export / import | Not Started | | JSON + ZIP foto |
+| Fondasi | Export / import | Not Started | | JSON (M2) + ZIP foto (M4) |
+| Fondasi | Persistent storage request | Not Started | | `navigator.storage.persist()` + status di Settings |
+| Fondasi | Sync metadata + queue | Not Started | | `updatedAt`, `deletedAt`, `syncStatus`, `syncState` |
+| Fondasi | Two-way merge engine | Not Started | | Pull/merge/push + tes konflik |
+| Fondasi | Supabase adapter + Google login | Not Started | | Butuh project Supabase dan OAuth client dari owner |
 | Fondasi | PWA (manifest, SW, ikon) | Not Started | | Ikon butuh arahan owner (R-23) |
 | Fondasi | E2E test di repo | Not Started | skrip di scratchpad | `e2e/` Playwright |
 | Fondasi | Settings | Needs Upgrade | `settings/page.tsx` (WIP) | Verifikasi, lokasi gym, bar/plates |
@@ -524,7 +657,8 @@ ditulis dengan skill `writing-plans` setelah dokumen ini disetujui.
 | Milestone | Isi | Keluaran yang bisa dicek |
 |---|---|---|
 | **M1 Stabilisasi dan identitas** | Perbaiki D1..D6, D9; rename ke ABOT; e2e Playwright di repo (`e2e/logger.spec.ts`, `e2e/routines.spec.ts`, ...); verifikasi semua halaman WIP; export/import JSON (D7); weighted bodyweight (D8) | `npm run lint`, `npm test`, `npm run e2e` hijau; Delivery Gate PASS untuk 7 halaman |
-| **M2 Fondasi data** | Repository layer + Dexie/IndexedDB + migrasi dari localStorage; `GymLocation`; `variantKey` di calc; `loadMode`; `logType` + durasi; `supersetId` | Tes migrasi; data lama tetap terbaca; PR per lokasi |
+| **M2 Fondasi data** | Repository layer + Dexie/IndexedDB + migrasi dari localStorage; `GymLocation`; `variantKey` di calc; `loadMode`; `logType` + durasi; `supersetId`; Export/Import JSON; `navigator.storage.persist()`; skema `sync_status` (`updatedAt`, `deletedAt`, tabel `syncStatus`, kv `syncState`) + sync queue; mesin Two-Way Merge dengan remote palsu | Tes migrasi; data lama tetap terbaca; PR per lokasi; tes merge untuk setiap aturan konflik |
+| **M2b Cloud Sync** | Adapter Supabase (`abot_records`, RLS, `upsert_if_newer`), Google Sign-in, UI "Backup & Sync", sync otomatis (open, online, finish, manual) | Unit test adapter dengan client tiruan; uji nyata end-to-end butuh project Supabase owner |
 | **M3 Core parity** | Myo-reps; RPE picker; superset UI + rest; warm-up generator; plate calculator; Rep PR; routine post-session sync; radar + heatmap (siluet setelah konfirmasi owner); penanda PR di kalender | Tabel tes untuk setiap fungsi murni; click-through |
 | **M4 Ultra-fast logging dan body** | Quick-step toolbar + numpad opsional; auto-advance; instrumentasi waktu per set; body check-in 3 pose + ghost overlay + compare; export ZIP foto | Median waktu per set diukur dan dilaporkan apa adanya |
 | **M5 Coach dan recovery** | Double progression coach; recovery estimator; halaman "Readiness" | Tabel nilai uji untuk kedua model |
@@ -573,6 +707,7 @@ Ini perkiraan, bukan komitmen; akan direvisi di setiap implementation plan.
 | Q4 | Anatomi | **Parametric SVG Muscle Map** di dalam kode, front dan back, satu `<path>` per grup otot (16 region), primary solid, secondary 35% |
 | Q5 | API eksternal | **Zero External Paid API.** Tidak ada Replicate, tidak ada token. Milestone 6 menjadi Local Visual, Voice & Canvas Engine |
 | Q6 | Voice | **Web Speech API** + parser regex deterministik lokal, Inggris dan Indonesia ("80 kilo 8 repetisi RPE 8.5" -> `{ weight: 80, reps: 8, rpe: 8.5 }`) |
+| Q7 | Perlindungan data | **Hybrid offline-first + Cloud Sync**: IndexedDB tetap utama (0 ms, offline); `navigator.storage.persist()` saat pertama dimuat; Supabase (Google OAuth + Postgres RLS) sebagai adapter sync opsional dengan Two-Way Merge; Guest mode default dengan tombol "Sign in with Google to Backup & Sync"; Export/Import JSON tetap ada |
 
 Keputusan yang diambil agen dan bisa dikoreksi owner: unit penyimpanan kg; Epley untuk 1RM;
 fractional set 0.5 untuk otot sekunder; default rep range 8 sampai 12; model recovery
