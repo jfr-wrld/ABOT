@@ -7,20 +7,21 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
  */
 
 interface FileSaverPlugin {
-  save(opts: { data: string; fileName: string; mimeType: string }): Promise<{ folder: string }>;
+  save(opts: { data: string; fileName: string; mimeType: string }): Promise<{ folder: string; uri: string }>;
+  open(opts: { uri: string; mimeType: string }): Promise<void>;
 }
 
 const FileSaver = registerPlugin<FileSaverPlugin>("FileSaver");
 
 export const isNativeApp = () => Capacitor.isNativePlatform();
 
-export type SaveResult = { kind: "downloaded" } | { kind: "saved"; folder: string };
+export type SaveResult = { kind: "downloaded" } | { kind: "saved"; folder: string; uri: string; mimeType: string };
 
 /** Saves the file: a browser download, or Pictures/ABOT (images) and Download/ABOT in the app. */
 export async function saveFile(blob: Blob, fileName: string): Promise<SaveResult> {
   if (isNativeApp()) {
-    const { folder } = await FileSaver.save({ data: await toBase64(blob), fileName, mimeType: blob.type });
-    return { kind: "saved", folder };
+    const { folder, uri } = await FileSaver.save({ data: await toBase64(blob), fileName, mimeType: blob.type });
+    return { kind: "saved", folder, uri, mimeType: blob.type };
   }
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -32,6 +33,11 @@ export async function saveFile(blob: Blob, fileName: string): Promise<SaveResult
   // Revoking in the same tick can cancel the download in Safari.
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
   return { kind: "downloaded" };
+}
+
+/** Opens a file saved in the app (the gallery for a PNG). */
+export function openSaved(saved: Extract<SaveResult, { kind: "saved" }>): Promise<void> {
+  return FileSaver.open({ uri: saved.uri, mimeType: saved.mimeType });
 }
 
 /** True when this device can hand a file to other apps (Instagram, WhatsApp, ...). */

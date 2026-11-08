@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Download, ImagePlus, Share2, Trash2 } from "lucide-react";
+import { Download, Image as ImageIcon, ImagePlus, Share2, Trash2 } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { formatDuration } from "@/lib/calc";
@@ -28,6 +28,7 @@ import {
   type StoryPhoto,
   type StoryPresetId,
 } from "@/lib/story-exporter";
+import { openSaved, type SaveResult } from "@/lib/native/files";
 
 const THUMB_W = 120;
 const THUMB_H = (THUMB_W * STORY_HEIGHT) / STORY_WIDTH;
@@ -63,7 +64,7 @@ export function StoryCardStudio({
         onClose();
       }}
       title="Share to Instagram Story"
-      footer={data ? <Actions png={png} shareable={shareable} setStatus={setStatus} /> : null}
+      footer={data ? <Actions png={png} shareable={shareable} /> : null}
     >
       {data && <Studio data={data} onPng={setPng} status={status} setStatus={setStatus} />}
     </Sheet>
@@ -76,19 +77,30 @@ interface PngState {
   busy: boolean;
 }
 
-function Actions({ png, shareable, setStatus }: { png: PngState; shareable: boolean; setStatus: (s: Status) => void }) {
+interface ActionResult {
+  /** The PNG the result is about; a new layout or photo makes a new PNG and hides it. */
+  forBlob: Blob;
+  kind: "info" | "error";
+  text: string;
+  saved?: Extract<SaveResult, { kind: "saved" }>;
+}
+
+/** Share and download, with what happened right under the buttons. */
+function Actions({ png, shareable }: { png: PngState; shareable: boolean }) {
   const { blob, fileName, busy } = png;
   const ready = blob !== null && !busy;
+  const [result, setResult] = useState<ActionResult | null>(null);
+  const shown = result && result.forBlob === blob ? result : null;
 
   async function share() {
     if (!blob) return;
     try {
-      const result = await shareStoryPng(blob, fileName);
-      if (result === "shared") setStatus({ kind: "info", text: "Sent to the share sheet." });
-      else if (result === "cancelled") setStatus({ kind: "idle" });
-      else setStatus({ kind: "error", text: "This browser cannot share images. Download the PNG and post it from your gallery." });
-    } catch {
-      setStatus({ kind: "error", text: "Sharing failed. Download the PNG and post it from your gallery." });
+      const r = await shareStoryPng(blob, fileName);
+      if (r === "shared") setResult({ forBlob: blob, kind: "info", text: "Sent to the share sheet." });
+      else if (r === "cancelled") setResult(null);
+      else setResult({ forBlob: blob, kind: "error", text: "This browser cannot share images. Download the PNG and post it from your gallery." });
+    } catch (err) {
+      setResult({ forBlob: blob, kind: "error", text: `Sharing failed${reason(err)}. Download the PNG and post it from your gallery.` });
     }
   }
 
@@ -96,13 +108,26 @@ function Actions({ png, shareable, setStatus }: { png: PngState; shareable: bool
     if (!blob) return;
     try {
       const saved = await downloadStoryPng(blob, fileName);
-      setStatus({
-        kind: "info",
-        text: saved.kind === "saved" ? `Saved to your gallery (${saved.folder}).` : `Saved ${fileName} (1080 × 1920).`,
-      });
+      setResult(
+        saved.kind === "saved"
+          ? { forBlob: blob, kind: "info", text: `Saved to your gallery, album ABOT (${saved.folder}).`, saved }
+          : { forBlob: blob, kind: "info", text: `Saved ${fileName} (1080 × 1920).` },
+      );
     } catch (err) {
       const denied = err instanceof Error && /permission/i.test(err.message);
-      setStatus({ kind: "error", text: denied ? "ABOT needs storage access to save the PNG. Allow it in Android settings." : "The PNG could not be saved. Try again." });
+      setResult({
+        forBlob: blob,
+        kind: "error",
+        text: denied ? "ABOT needs storage access to save the PNG. Allow it in Android settings." : `The PNG could not be saved${reason(err)}.`,
+      });
+    }
+  }
+
+  async function openInGallery(saved: Extract<SaveResult, { kind: "saved" }>) {
+    try {
+      await openSaved(saved);
+    } catch (err) {
+      if (blob) setResult({ forBlob: blob, kind: "error", text: `The gallery could not open it${reason(err)}.` });
     }
   }
 
@@ -116,6 +141,19 @@ function Actions({ png, shareable, setStatus }: { png: PngState; shareable: bool
         <Download aria-hidden="true" size={18} />
         Download High-Res PNG
       </Button>
+      {shown && (
+        <div className="flex items-center justify-between gap-3">
+          <p role={shown.kind === "error" ? "alert" : "status"} className={`text-xs ${shown.kind === "error" ? "text-failure" : "text-text-muted"}`}>
+            {shown.text}
+          </p>
+          {shown.saved && (
+            <Button variant="ghost" onClick={() => void openInGallery(shown.saved!)} className="shrink-0">
+              <ImageIcon aria-hidden="true" size={16} />
+              Open
+            </Button>
+          )}
+        </div>
+      )}
       {!shareable && (
         <p className="text-xs text-text-muted">
           This browser cannot hand images to other apps. Download the PNG, then add it to your story from the gallery.
@@ -123,6 +161,11 @@ function Actions({ png, shareable, setStatus }: { png: PngState; shareable: bool
       )}
     </div>
   );
+}
+
+/** ": <reason>" from a thrown error, so a failure on a phone says what went wrong. */
+function reason(err: unknown): string {
+  return err instanceof Error && err.message ? `: ${err.message.replace(/\.$/, "")}` : "";
 }
 
 function Studio({

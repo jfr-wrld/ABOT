@@ -3,6 +3,7 @@ package app.abot.gym;
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -17,6 +18,7 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import androidx.core.content.FileProvider;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -63,6 +65,7 @@ public class FileSaverPlugin extends Plugin {
         String base = image ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_DOWNLOADS;
         String folder = base + "/ABOT";
         byte[] bytes = Base64.decode(data, Base64.DEFAULT);
+        Uri saved;
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ContentResolver resolver = getContext().getContentResolver();
@@ -83,6 +86,7 @@ public class FileSaverPlugin extends Plugin {
                 values.clear();
                 values.put(MediaStore.MediaColumns.IS_PENDING, 0);
                 resolver.update(uri, values, null, null);
+                saved = uri;
             } else {
                 File dir = new File(Environment.getExternalStoragePublicDirectory(base), "ABOT");
                 if (!dir.exists() && !dir.mkdirs()) throw new IOException("The folder could not be created.");
@@ -91,12 +95,35 @@ public class FileSaverPlugin extends Plugin {
                     out.write(bytes);
                 }
                 MediaScannerConnection.scanFile(getContext(), new String[] { file.getAbsolutePath() }, new String[] { mimeType }, null);
+                saved = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
             }
             JSObject ret = new JSObject();
             ret.put("folder", folder);
+            ret.put("uri", saved.toString());
             call.resolve(ret);
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
+            // RuntimeException: MediaStore refuses an insert with IllegalArgument/Security errors.
             call.reject(e.getMessage() != null ? e.getMessage() : "The file could not be saved.", e);
+        }
+    }
+
+    /** Opens a saved file in the app that handles it (the gallery for a PNG). */
+    @PluginMethod
+    public void open(PluginCall call) {
+        String uri = call.getString("uri");
+        String mimeType = call.getString("mimeType", "*/*");
+        if (uri == null) {
+            call.reject("uri is required.");
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.parse(uri), mimeType);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(intent);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("No app on this phone can open it.", e);
         }
     }
 }

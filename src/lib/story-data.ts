@@ -11,13 +11,13 @@ import {
 import {
   buildPRTable,
   countSets,
-  detectSessionPRs,
   exerciseHistory,
   muscleSplit,
   sessionDurationSec,
   sessionVolume,
   setVolume,
 } from "@/lib/calc";
+import { sessionRecords } from "./session-insights";
 
 /** Everything a story card shows, taken from one finished workout. Weights stay in kg. */
 export interface StorySet {
@@ -95,7 +95,8 @@ export function buildStoryData(
   unit: WeightUnit,
   locations: GymLocation[] = [],
 ): StoryData {
-  const prs = detectSessionPRs(session, sessions, byId);
+  // Same rule as the summary: a lift's first time is a baseline, not a record.
+  const prs = sessionRecords(session, sessions, byId).records;
   const prSetIds = new Set(prs.map((p) => p.setId));
   const nameOf = (exerciseId: string) => byId[exerciseId]?.name ?? "Removed exercise";
 
