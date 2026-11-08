@@ -13,6 +13,7 @@ import { SignInReturn } from "@/components/sync/SignInReturn";
 import { NativeShell } from "@/components/layout/NativeShell";
 import { AutoGym } from "@/components/layout/AutoGym";
 import { THEME_SCRIPT, ThemeController } from "@/components/layout/ThemeController";
+import { LangAttr } from "@/components/layout/LangAttr";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeController />
+        <LangAttr />
         <MotionProvider>
           <StoreHydrator />
           <TabNotice />
