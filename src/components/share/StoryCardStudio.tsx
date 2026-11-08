@@ -27,6 +27,7 @@ import {
 } from "@/lib/story-exporter";
 import { openSaved, type SaveResult } from "@/lib/native/files";
 import { openPhotoInput } from "@/lib/native/photo-input";
+import { useT } from "@/i18n";
 
 const THUMB_W = 120;
 const THUMB_H = (THUMB_W * STORY_HEIGHT) / STORY_WIDTH;
@@ -55,6 +56,7 @@ export function StoryCardStudio({
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   // Mounted only after a tap, so navigator exists on the first render.
   const [shareable] = useState(canShareStoryFiles);
+  const t = useT();
 
   useEffect(() => {
     const el = ref.current;
@@ -66,7 +68,7 @@ export function StoryCardStudio({
   return (
     <dialog
       ref={ref}
-      aria-label="Share to Instagram Story"
+      aria-label={t("Share to Instagram Story")}
       onClose={() => {
         setStatus({ kind: "idle" });
         onClose();
@@ -98,35 +100,38 @@ function usePngActions(png: PngState) {
   const ready = blob !== null && !busy;
   const [result, setResult] = useState<ActionResult | null>(null);
   const shown = result && result.forBlob === blob ? result : null;
+  const t = useT();
 
   async function share() {
     if (!blob) return;
     try {
       const r = await shareStoryPng(blob, fileName);
-      if (r === "shared") setResult({ forBlob: blob, kind: "info", text: "Sent to the share sheet." });
+      if (r === "shared") setResult({ forBlob: blob, kind: "info", text: t("Sent to the share sheet.") });
       else if (r === "cancelled") setResult(null);
-      else setResult({ forBlob: blob, kind: "error", text: "This browser cannot share images. Download the PNG and post it from your gallery." });
+      else setResult({ forBlob: blob, kind: "error", text: t("This browser cannot share images. Download the PNG and post it from your gallery.") });
     } catch (err) {
-      setResult({ forBlob: blob, kind: "error", text: `Sharing failed${reason(err)}. Download the PNG and post it from your gallery.` });
+      setResult({ forBlob: blob, kind: "error", text: t("Sharing failed{reason}. Download the PNG and post it from your gallery.", { reason: reason(err) }) });
     }
   }
 
   async function download() {
     if (!blob) return;
-    setResult({ forBlob: blob, kind: "info", text: "Saving PNG…" });
+    setResult({ forBlob: blob, kind: "info", text: t("Saving PNG…") });
     try {
       const saved = await downloadStoryPng(blob, fileName);
       setResult(
         saved.kind === "saved"
-          ? { forBlob: blob, kind: "info", text: `Saved to your gallery, album ABOT.`, saved }
-          : { forBlob: blob, kind: "info", text: `Saved ${fileName} (1080 × 1920).` },
+          ? { forBlob: blob, kind: "info", text: t("Saved to your gallery, album ABOT."), saved }
+          : { forBlob: blob, kind: "info", text: t("Saved {file} (1080 × 1920).", { file: fileName }) },
       );
     } catch (err) {
       const denied = err instanceof Error && /permission/i.test(err.message);
       setResult({
         forBlob: blob,
         kind: "error",
-        text: denied ? "ABOT needs storage access to save the PNG. Allow it in Android settings." : `The PNG could not be saved${reason(err)}.`,
+        text: denied
+          ? t("ABOT needs storage access to save the PNG. Allow it in Android settings.")
+          : t("The PNG could not be saved{reason}.", { reason: reason(err) }),
       });
     }
   }
@@ -135,7 +140,7 @@ function usePngActions(png: PngState) {
     try {
       await openSaved(saved);
     } catch (err) {
-      if (blob) setResult({ forBlob: blob, kind: "error", text: `The gallery could not open it${reason(err)}.` });
+      if (blob) setResult({ forBlob: blob, kind: "error", text: t("The gallery could not open it{reason}.", { reason: reason(err) }) });
     }
   }
 
@@ -170,6 +175,7 @@ function Studio({
   const [photoBusy, setPhotoBusy] = useState(false);
   const [overlay, setOverlay] = useState<number>(OVERLAY_RANGE.initial);
   const [grayscale, setGrayscale] = useState(false);
+  const t = useT();
   // The card carries the lifter's @handle from the profile (Profile > About).
   const handle = useSettingsStore((st) => st.profileHandle);
   const card = useMemo<StoryData>(() => ({ ...data, handle: handle || null }), [data, handle]);
@@ -202,11 +208,11 @@ function Studio({
       try {
         renderStory(ctx, card, opts, fonts);
       } catch {
-        setStatus({ kind: "error", text: "The card could not be drawn. Close this and try again." });
+        setStatus({ kind: "error", text: t("The card could not be drawn. Close this and try again.") });
       }
     });
     return () => cancelAnimationFrame(raf);
-  }, [card, opts, fonts, setStatus]);
+  }, [card, opts, fonts, setStatus, t]);
 
   // Thumbnails show each layout with the same data and photo, so the choice is made on the real thing.
   useEffect(() => {
@@ -231,20 +237,20 @@ function Studio({
     if (!fonts) return;
     const from = exportKey;
     let alive = true;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       exportStoryPng(card, opts, fonts)
         .then((blob) => alive && setMade({ from, blob, fileName: storyFileName(card, opts.preset) }))
         .catch(() => {
           if (!alive) return;
           setMade({ from, blob: null, fileName: "" });
-          setStatus({ kind: "error", text: "The PNG could not be made on this device." });
+          setStatus({ kind: "error", text: t("The PNG could not be made on this device.") });
         });
     }, 250);
     return () => {
       alive = false;
-      clearTimeout(t);
+      clearTimeout(timer);
     };
-  }, [exportKey, card, opts, fonts, setStatus]);
+  }, [exportKey, card, opts, fonts, setStatus, t]);
 
   const pickPhoto = useCallback(async (file: File | undefined) => {
     if (!file) return;
@@ -253,26 +259,34 @@ function Studio({
     try {
       setPhoto(await createStoryPhoto(file));
     } catch (err) {
-      setStatus({ kind: "error", text: err instanceof Error ? err.message : "This photo could not be read." });
+      setStatus({ kind: "error", text: err instanceof Error ? err.message : t("This photo could not be read.") });
     } finally {
       setPhotoBusy(false);
       if (fileInput.current) fileInput.current.value = "";
     }
-  }, [setStatus]);
+  }, [setStatus, t]);
 
   const current = STORY_PRESETS.find((p) => p.id === preset) ?? STORY_PRESETS[0];
   const forcedGray = preset === "monochrome-steel";
-  const description = `${current.name} story card: ${data.title}, ${formatVolume(data.volumeKg, data.unit)}, ${formatDuration(
-    data.durationSec,
-  )}, ${data.setsDone} sets${data.prs.length ? `, ${data.prs.length} new records` : ""}${handle ? `, @${handle}` : ""}.`;
+  const description =
+    t("{layout} story card: {title}, {volume}, {duration}, {sets} sets", {
+      layout: current.name,
+      title: data.title,
+      volume: formatVolume(data.volumeKg, data.unit),
+      duration: formatDuration(data.durationSec),
+      sets: data.setsDone,
+    }) +
+    (data.prs.length ? t(", {n} new records", { n: data.prs.length }) : "") +
+    (handle ? `, @${handle}` : "") +
+    ".";
 
   if (fontsFailed) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
         <p role="alert" className="text-sm text-failure">
-          The card fonts could not be loaded. Close this and try again.
+          {t("The card fonts could not be loaded. Close this and try again.")}
         </p>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t("Close")}</Button>
       </div>
     );
   }
@@ -287,11 +301,11 @@ function Studio({
   return (
     <div className="mx-auto flex h-full w-full max-w-[520px] flex-col pt-[env(safe-area-inset-top)] pb-[calc(12px+env(safe-area-inset-bottom))]">
       <header className="flex h-14 shrink-0 items-center justify-between gap-2 px-2">
-        <button type="button" onClick={onClose} aria-label="Close" className="flex size-11 items-center justify-center rounded-full text-text-muted hover:bg-surface-2 hover:text-text">
+        <button type="button" onClick={onClose} aria-label={t("Close")} className="flex size-11 items-center justify-center rounded-full text-text-muted hover:bg-surface-2 hover:text-text">
           <X aria-hidden="true" size={22} />
         </button>
         <div className="min-w-0 text-center">
-          <h2 className="text-sm font-semibold">Share story</h2>
+          <h2 className="text-sm font-semibold">{t("Share story")}</h2>
           <p className="truncate text-xs text-text-muted">
             {current.name}
             {handle ? ` · @${handle}` : ""}
@@ -301,7 +315,7 @@ function Studio({
           type="button"
           onClick={() => void actions.download()}
           disabled={!actions.ready}
-          aria-label="Download High-Res PNG"
+          aria-label={t("Download High-Res PNG")}
           className="flex size-11 items-center justify-center rounded-full text-text hover:bg-surface-2 disabled:opacity-40"
         >
           <Download aria-hidden="true" size={20} />
@@ -321,7 +335,7 @@ function Studio({
         />
         {!fonts && (
           <p role="status" className="absolute inset-0 flex items-center justify-center text-sm text-text-muted">
-            Preparing the card
+            {t("Preparing the card")}
           </p>
         )}
         {message && (
@@ -332,7 +346,7 @@ function Studio({
             {status.kind === "idle" && actions.shown?.saved && (
               <Button variant="ghost" onClick={() => void actions.openInGallery(actions.shown!.saved!)} className="min-h-9 shrink-0 px-2 text-xs">
                 <ImageIcon aria-hidden="true" size={14} />
-                Open
+                {t("Open")}
               </Button>
             )}
           </div>
@@ -342,7 +356,7 @@ function Studio({
       {/* One panel at a time, fixed height, so nothing below the preview scrolls. */}
       <div className="h-[136px] shrink-0 px-4 pt-2">
         {tab === "layout" && (
-          <ul aria-label="Layouts" className="-mx-4 flex h-full snap-x gap-2 overflow-x-auto px-4 pb-1">
+          <ul aria-label={t("Layouts")} className="-mx-4 flex h-full snap-x gap-2 overflow-x-auto px-4 pb-1">
             {STORY_PRESETS.map((p) => {
               const selected = p.id === preset;
               return (
@@ -351,7 +365,7 @@ function Studio({
                     type="button"
                     aria-pressed={selected}
                     aria-label={p.name}
-                    title={p.blurb}
+                    title={t(p.blurb)}
                     onClick={() => setPreset(p.id)}
                     className={`h-full rounded-ctl border-2 p-0.5 transition-colors ${selected ? "border-accent" : "border-transparent hover:border-line-hover"}`}
                   >
@@ -377,14 +391,14 @@ function Studio({
             <div className="flex gap-2">
               <Button onClick={() => openPhotoInput(fileInput.current, "camera")} disabled={photoBusy} className="flex-1">
                 <Camera aria-hidden="true" size={18} />
-                Camera
+                {t("Camera")}
               </Button>
               <Button onClick={() => openPhotoInput(fileInput.current, "gallery")} disabled={photoBusy} className="flex-1">
                 <ImagePlus aria-hidden="true" size={18} />
-                {photoBusy ? "Reading…" : "Gallery"}
+                {photoBusy ? t("Reading…") : t("Gallery")}
               </Button>
               {photo && (
-                <Button variant="ghost" onClick={() => setPhoto(null)} aria-label="Remove background photo" className="px-3">
+                <Button variant="ghost" onClick={() => setPhoto(null)} aria-label={t("Remove background photo")} className="px-3">
                   <Trash2 aria-hidden="true" size={18} />
                 </Button>
               )}
@@ -392,7 +406,7 @@ function Studio({
             {photo ? (
               <div className="flex items-center gap-3">
                 <label htmlFor="story-overlay" className="shrink-0 text-xs text-text-muted">
-                  Overlay opacity
+                  {t("Overlay opacity")}
                 </label>
                 <input
                   id="story-overlay"
@@ -409,7 +423,7 @@ function Studio({
                   type="button"
                   role="switch"
                   aria-checked={forcedGray || grayscale}
-                  aria-label={forcedGray ? "Grayscale photo (always on for Monochrome Steel)" : "Grayscale photo"}
+                  aria-label={forcedGray ? t("Grayscale photo (always on for Monochrome Steel)") : t("Grayscale photo")}
                   disabled={forcedGray}
                   onClick={() => setGrayscale((g) => !g)}
                   className={`h-9 shrink-0 rounded-full border px-3 text-xs font-semibold transition-colors disabled:opacity-50 ${
@@ -420,7 +434,7 @@ function Studio({
                 </button>
               </div>
             ) : (
-              <p className="text-xs text-text-muted">A mirror selfie or the gym floor works best. It stays on this phone.</p>
+              <p className="text-xs text-text-muted">{t("A mirror selfie or the gym floor works best. It stays on this phone.")}</p>
             )}
           </div>
         )}
@@ -439,7 +453,7 @@ function Studio({
         }}
       />
 
-      <div role="tablist" aria-label="Edit" className="mx-4 mt-2 grid shrink-0 grid-cols-2 gap-1 rounded-ctl bg-surface-2 p-1">
+      <div role="tablist" aria-label={t("Edit")} className="mx-4 mt-2 grid shrink-0 grid-cols-2 gap-1 rounded-ctl bg-surface-2 p-1">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -452,8 +466,8 @@ function Studio({
             }`}
           >
             <Icon aria-hidden="true" size={15} />
-            {label}
-            {id === "photo" && photo && <span aria-label="(added)" className="size-1.5 rounded-full bg-accent" />}
+            {t(label)}
+            {id === "photo" && photo && <span aria-label={t("(added)")} className="size-1.5 rounded-full bg-accent" />}
           </button>
         ))}
       </div>
@@ -463,13 +477,13 @@ function Studio({
           variant="primary"
           onClick={() => void actions.share()}
           disabled={!actions.ready || !shareable}
-          aria-label="Share to Instagram / System Share"
+          aria-label={t("Share to Instagram / System Share")}
           className="min-h-12 w-full text-base"
         >
           <Share2 aria-hidden="true" size={18} />
-          Share to Instagram
+          {t("Share to Instagram")}
         </Button>
-        {!shareable && <p className="mt-1.5 text-center text-xs text-text-muted">This browser cannot hand images to other apps. Download the PNG instead.</p>}
+        {!shareable && <p className="mt-1.5 text-center text-xs text-text-muted">{t("This browser cannot hand images to other apps. Download the PNG instead.")}</p>}
       </div>
     </div>
   );

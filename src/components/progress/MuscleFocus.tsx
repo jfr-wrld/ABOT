@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MUSCLE_GROUP_LABELS, type MuscleGroup } from "@/types/workout";
+import type { MuscleGroup } from "@/types/workout";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
+import { useT } from "@/i18n";
+import { muscleLabel } from "@/components/exercise/MuscleTags";
 
 /**
  * Where the work went: the body map lights the muscles that took at least half the sets of the
@@ -13,6 +15,7 @@ export function MuscleFocus({ title, split }: { title: string; split: Partial<Re
     .filter(([m, v]) => v > 0 && m !== "cardio")
     .sort((a, b) => b[1] - a[1]);
   const max = rows[0]?.[1] ?? 0;
+  const t = useT();
   const primary = rows.filter(([, v]) => v >= max / 2).map(([m]) => m);
   const secondary = rows.filter(([, v]) => v < max / 2).map(([m]) => m);
 
@@ -20,11 +23,11 @@ export function MuscleFocus({ title, split }: { title: string; split: Partial<Re
     <figure className="panel p-4">
       <figcaption>
         <span className="block text-sm font-semibold">{title}</span>
-        <span className="block text-xs text-text-muted">Working sets; secondary muscles count half.</span>
+        <span className="block text-xs text-text-muted">{t("Working sets; secondary muscles count half.")}</span>
       </figcaption>
       {rows.length === 0 ? (
         <p className="py-8 text-center text-sm text-text-muted">
-          No working sets in this range. Sets you tick during a workout are counted here by muscle.
+          {t("No working sets in this range. Sets you tick during a workout are counted here by muscle.")}
         </p>
       ) : (
         <div className="mt-3 grid grid-cols-[minmax(0,5fr)_minmax(0,6fr)] items-center gap-3">
@@ -33,7 +36,7 @@ export function MuscleFocus({ title, split }: { title: string; split: Partial<Re
             {rows.slice(0, 7).map(([m, v], i) => (
               <li key={m}>
                 <div className="flex items-baseline justify-between gap-2 text-xs">
-                  <span className="truncate">{MUSCLE_GROUP_LABELS[m]}</span>
+                  <span className="truncate">{muscleLabel(m, t)}</span>
                   <span className="num font-semibold">{Number.isInteger(v) ? v : v.toFixed(1)}</span>
                 </div>
                 <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
@@ -49,7 +52,7 @@ export function MuscleFocus({ title, split }: { title: string; split: Partial<Re
             ))}
             {rows.length > 7 && (
               <li className="text-xs text-text-muted">
-                +<span className="num">{rows.length - 7}</span> more
+                {t("+{n} more", { n: rows.length - 7 })}
               </li>
             )}
           </ol>

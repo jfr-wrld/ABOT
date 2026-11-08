@@ -1,5 +1,9 @@
+"use client";
+
 import { useId } from "react";
-import { MUSCLE_GROUP_LABELS, type MuscleGroup } from "@/types/workout";
+import type { MuscleGroup } from "@/types/workout";
+import { useT } from "@/i18n";
+import { muscleNames } from "@/components/exercise/MuscleTags";
 import { regionLevels, type Level, type Region } from "./regions";
 import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT, type BodyPart } from "./bodyPaths.generated";
 
@@ -48,8 +52,9 @@ export function MuscleMap({
 }) {
   const uid = useId().replace(/:/g, "");
   const levels = regionLevels(primary, secondary);
-  const names = (ms: MuscleGroup[]) => ms.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ");
-  const description = `Primary: ${names(primary) || "none"}. Secondary: ${names(secondary) || "none"}.`;
+  const t = useT();
+  const names = (ms: MuscleGroup[]) => muscleNames(ms, t, ", ") || t("none");
+  const description = t("Primary: {primary}. Secondary: {secondary}.", { primary: names(primary), secondary: names(secondary) });
   return (
     <figure className="mx-auto" style={{ maxWidth: width }}>
       <svg role="img" aria-labelledby={`${uid}-t`} viewBox="0 30 1448 1360" className="block h-auto w-full">
@@ -72,8 +77,9 @@ export function MuscleMap({
         </g>
       </svg>
       <figcaption className="mt-1 grid grid-cols-2 text-center text-xs text-text-muted" aria-hidden="true">
-        <span>Front</span>
-        <span>Back</span>
+        <span>{t("Front")}</span>
+        {/* "Back" alone is the navigation word in the dictionary. */}
+        <span>{t.lang === "en" ? "Back" : t("Back (side)")}</span>
       </figcaption>
     </figure>
   );

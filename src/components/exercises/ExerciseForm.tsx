@@ -7,6 +7,8 @@ import { defaultLoadMode } from "@/data/normalize";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
+import { useT } from "@/i18n";
+import { muscleLabel } from "@/components/exercise/MuscleTags";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -26,6 +28,7 @@ export function ExerciseForm({
   const [primary, setPrimary] = useState<MuscleGroup>(initial?.primaryMuscles[0] ?? "chest");
   const [equipment, setEquipment] = useState<Equipment>(initial?.equipment ?? "barbell");
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
   // Load and machine dependence follow the equipment until the user picks them explicitly.
   const [loadChoice, setLoadChoice] = useState<LoadMode | null>(initial?.loadMode ?? null);
   const [machineChoice, setMachineChoice] = useState<boolean | null>(initial?.isMachineDependent ?? null);
@@ -35,7 +38,7 @@ export function ExerciseForm({
   function submit() {
     const trimmed = name.trim();
     if (trimmed.length < 2) {
-      setError("Enter a name of at least two characters");
+      setError(t("Enter a name of at least two characters"));
       return;
     }
     onSave({
@@ -56,12 +59,12 @@ export function ExerciseForm({
     <Sheet
       open={open}
       onClose={onClose}
-      title={initial ? "Edit exercise" : "New exercise"}
+      title={initial ? t("Edit exercise") : t("New exercise")}
       footer={
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t("Cancel")}</Button>
           <Button variant="primary" onClick={submit}>
-            {initial ? "Save changes" : "Add to library"}
+            {initial ? t("Save changes") : t("Add to library")}
           </Button>
         </div>
       }
@@ -75,7 +78,7 @@ export function ExerciseForm({
       >
         <div>
           <label htmlFor="ex-name" className="mb-1 block text-sm font-semibold">
-            Name
+            {t("Name")}
           </label>
           <input
             id="ex-name"
@@ -97,41 +100,41 @@ export function ExerciseForm({
         </div>
         <div>
           <label htmlFor="ex-muscle" className="mb-1 block text-sm font-semibold">
-            Primary muscle
+            {t("Primary muscle")}
           </label>
           <Select
             id="ex-muscle"
             value={primary}
             onChange={setPrimary}
-            options={MUSCLES.map((m) => ({ value: m, label: MUSCLE_GROUP_LABELS[m] }))}
+            options={MUSCLES.map((m) => ({ value: m, label: muscleLabel(m, t) }))}
             className="w-full !text-base"
           />
         </div>
         <div>
           <label htmlFor="ex-equipment" className="mb-1 block text-sm font-semibold">
-            Equipment
+            {t("Equipment")}
           </label>
           <Select
             id="ex-equipment"
             value={equipment}
             onChange={setEquipment}
-            options={EQUIPMENT.map((eq) => ({ value: eq, label: EQUIPMENT_LABELS[eq] }))}
+            options={EQUIPMENT.map((eq) => ({ value: eq, label: t(EQUIPMENT_LABELS[eq]) }))}
             className="w-full !text-base"
           />
-          <p className="mt-1 text-xs text-text-muted">For bodyweight exercises the weight column is optional added load.</p>
+          <p className="mt-1 text-xs text-text-muted">{t("For bodyweight exercises the weight column is optional added load.")}</p>
         </div>
         <div>
           <label htmlFor="ex-load" className="mb-1 block text-sm font-semibold">
-            Load
+            {t("Load")}
           </label>
           <Select
             id="ex-load"
             value={loadMode}
             onChange={(v: LoadMode) => setLoadChoice(v)}
             options={[
-              { value: "total", label: "Total (one bar or stack)" },
-              { value: "per_hand", label: "Per hand (volume counts both)" },
-              { value: "unilateral", label: "One side at a time (volume counts both sides)" },
+              { value: "total", label: t("Total (one bar or stack)") },
+              { value: "per_hand", label: t("Per hand (volume counts both)") },
+              { value: "unilateral", label: t("One side at a time (volume counts both sides)") },
             ]}
             className="w-full !text-base"
           />
@@ -144,10 +147,10 @@ export function ExerciseForm({
             onChange={(e) => setMachineChoice(e.target.checked)}
             className="size-5 accent-[var(--color-accent)]"
           />
-          Weight depends on the gym&apos;s machine (keep records per gym)
+          {t("Weight depends on the gym's machine (keep records per gym)")}
         </label>
         <button type="submit" className="sr-only">
-          Save
+          {t("Save")}
         </button>
       </form>
     </Sheet>

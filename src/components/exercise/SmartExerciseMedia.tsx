@@ -9,6 +9,7 @@ import { patternFor, type PhaseLabel } from "@/components/motion/patterns";
 import { Button } from "@/components/ui/Button";
 import { embedUrl, parseVideoUrl, searchLinks, type ParsedVideo } from "@/lib/videoUrl";
 import { useExerciseStore } from "@/store/useExerciseStore";
+import { useT } from "@/i18n";
 
 const TABS = ["Motion", "Video", "Anatomy"] as const;
 type Tab = (typeof TABS)[number];
@@ -18,6 +19,7 @@ export function SmartExerciseMedia({ exercise }: { exercise: Exercise }) {
   const [tab, setTab] = useState<Tab>("Motion");
   const uid = useId().replace(/:/g, "");
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const t = useT();
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const i = TABS.indexOf(tab);
@@ -30,28 +32,28 @@ export function SmartExerciseMedia({ exercise }: { exercise: Exercise }) {
   }
 
   return (
-    <section aria-label="Exercise media" className="panel p-2">
-      <div role="tablist" aria-label="Media type" className="grid grid-cols-3 gap-1" onKeyDown={onKeyDown}>
-        {TABS.map((t, i) => (
+    <section aria-label={t("Exercise media")} className="panel p-2">
+      <div role="tablist" aria-label={t("Media type")} className="grid grid-cols-3 gap-1" onKeyDown={onKeyDown}>
+        {TABS.map((name, i) => (
           <button
-            key={t}
+            key={name}
             ref={(el) => {
               tabRefs.current[i] = el;
             }}
             type="button"
             role="tab"
-            id={`${uid}-tab-${t}`}
-            aria-selected={tab === t}
+            id={`${uid}-tab-${name}`}
+            aria-selected={tab === name}
             aria-controls={`${uid}-panel`}
-            tabIndex={tab === t ? 0 : -1}
-            onClick={() => setTab(t)}
+            tabIndex={tab === name ? 0 : -1}
+            onClick={() => setTab(name)}
             className={`relative h-11 rounded-ctl text-sm font-semibold transition-colors ${
-              tab === t
+              tab === name
                 ? "bg-surface-2 text-text after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-accent"
                 : "text-text-muted hover:bg-surface-2 hover:text-text"
             }`}
           >
-            {t}
+            {t(name)}
           </button>
         ))}
       </div>
@@ -90,6 +92,7 @@ function MotionPanel({ exercise }: { exercise: Exercise }) {
   const [view, setView] = useState<"animation" | "photos">(pattern && !hasPhotos ? "animation" : "photos");
   const [playing, setPlaying] = useState(() => !prefersReducedMotion());
   const [phase, setPhase] = useState<PhaseLabel | null>(null);
+  const t = useT();
 
   if (!pattern || view === "photos") {
     return (
@@ -107,7 +110,7 @@ function MotionPanel({ exercise }: { exercise: Exercise }) {
       </div>
       <div className="mt-2 flex items-center justify-between gap-2 px-1">
         <span data-testid="motion-phase" aria-live="off" className="text-xs font-semibold text-text-muted">
-          {phase ?? ""}
+          {phase ? t(phase) : ""}
         </span>
         <PlayPause playing={playing} onToggle={() => setPlaying((p) => !p)} />
       </div>
@@ -124,9 +127,10 @@ function ViewToggle({
   setView: (v: "animation" | "photos") => void;
   hasPhotos: boolean;
 }) {
+  const t = useT();
   if (!hasPhotos) return null;
   return (
-    <div className="mb-2 grid grid-cols-2 gap-1" role="group" aria-label="Motion view">
+    <div className="mb-2 grid grid-cols-2 gap-1" role="group" aria-label={t("Motion view")}>
       {(["animation", "photos"] as const).map((v) => (
         <button
           key={v}
@@ -137,7 +141,7 @@ function ViewToggle({
             view === v ? "border-accent bg-accent-tint text-text" : "border-line-strong text-text-muted hover:text-text"
           }`}
         >
-          {v === "animation" ? "Animation" : "Photos"}
+          {v === "animation" ? t("Animation") : t("Photos")}
         </button>
       ))}
     </div>
@@ -145,11 +149,12 @@ function ViewToggle({
 }
 
 function PlayPause({ playing, onToggle }: { playing: boolean; onToggle: () => void }) {
+  const t = useT();
   return (
     <button
       type="button"
       onClick={onToggle}
-      aria-label={playing ? "Pause motion" : "Play motion"}
+      aria-label={playing ? t("Pause motion") : t("Play motion")}
       className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
     >
       {playing ? <Pause aria-hidden="true" size={18} /> : <Play aria-hidden="true" size={18} />}
@@ -164,15 +169,16 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
   const [playing, setPlaying] = useState(() => !prefersReducedMotion());
   const [failed, setFailed] = useState(false);
   const isFramePair = urls.length >= 2 && !first;
+  const t = useT();
 
   useEffect(() => {
     if (!isFramePair || !playing || failed) return;
-    const t = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), 900);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), 900);
+    return () => clearInterval(timer);
   }, [isFramePair, playing, failed]);
 
   if (urls.length === 0) {
-    return <p className="px-2 py-8 text-center text-sm text-text-muted">No motion images for this exercise.</p>;
+    return <p className="px-2 py-8 text-center text-sm text-text-muted">{t("No motion images for this exercise.")}</p>;
   }
   if (first?.kind === "file" && first.media === "video") {
     return (
@@ -184,14 +190,14 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
         playsInline
         controls
         className="aspect-[4/3] w-full rounded-ctl bg-black object-contain"
-        aria-label={`${exercise.name} demonstration`}
+        aria-label={t("{name} demonstration", { name: exercise.name })}
       />
     );
   }
   if (failed) {
     return (
       <p className="px-2 py-8 text-center text-sm text-text-muted">
-        Images need a connection. They load once you are online.
+        {t("Images need a connection. They load once you are online.")}
       </p>
     );
   }
@@ -204,7 +210,7 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
           <img
             key={src}
             src={src}
-            alt={i === 0 ? `${exercise.name}, start position` : `${exercise.name}, end position`}
+            alt={i === 0 ? t("{name}, start position", { name: exercise.name }) : t("{name}, end position", { name: exercise.name })}
             width={400}
             height={300}
             loading="lazy"
@@ -219,7 +225,7 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
       {isFramePair && (
         <div className="mt-2 flex items-center justify-between gap-2 px-1">
           <span data-testid="motion-phase" aria-live="off" className="text-xs font-semibold text-text-muted">
-            {frame === 0 ? "Start position" : "End position"}
+            {frame === 0 ? t("Start position") : t("End position")}
           </span>
           <PlayPause playing={playing} onToggle={() => setPlaying((p) => !p)} />
         </div>
@@ -271,11 +277,12 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
   const video = sourceFor(exercise, override);
   const links = searchLinks(exercise.name);
   const inputId = useId();
+  const t = useT();
 
   function save() {
     const parsed = parseVideoUrl(draft);
     if (!parsed) {
-      setError("Paste a YouTube, YouTube Shorts or TikTok video link, or a direct .mp4, .webm or .gif file.");
+      setError(t("Paste a YouTube, YouTube Shorts or TikTok video link, or a direct .mp4, .webm or .gif file."));
       return;
     }
     setCustomVideo(exercise.id, draft.trim());
@@ -286,9 +293,9 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
   return (
     <div className="flex flex-col gap-3">
       {!video ? (
-        <p className="px-2 pt-4 text-center text-sm text-text-muted">No tutorial video set for this exercise.</p>
+        <p className="px-2 pt-4 text-center text-sm text-text-muted">{t("No tutorial video set for this exercise.")}</p>
       ) : !online ? (
-        <p className="px-2 py-8 text-center text-sm text-text-muted">Video needs a connection. It plays once you are online.</p>
+        <p className="px-2 py-8 text-center text-sm text-text-muted">{t("Video needs a connection. It plays once you are online.")}</p>
       ) : video.kind === "file" ? (
         video.media === "video" ? (
           <video
@@ -298,18 +305,18 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
             muted
             playsInline
             controls
-            aria-label={`Video tutorial: ${exercise.name}`}
+            aria-label={t("Video tutorial: {name}", { name: exercise.name })}
             className="aspect-video w-full rounded-ctl bg-black object-contain"
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element -- user-supplied GIF URL
-          <img src={video.url} alt={`Video tutorial: ${exercise.name}`} width={400} height={300} className="w-full rounded-ctl bg-black object-contain" />
+          <img src={video.url} alt={t("Video tutorial: {name}", { name: exercise.name })} width={400} height={300} className="w-full rounded-ctl bg-black object-contain" />
         )
       ) : (
         <div className={`force-dark mx-auto w-full overflow-hidden rounded-ctl bg-black ${video.vertical ? "aspect-[9/16] max-w-[280px]" : "aspect-video"}`}>
           <iframe
             src={embedUrl(video)}
-            title={`Video tutorial: ${exercise.name}`}
+            title={t("Video tutorial: {name}", { name: exercise.name })}
             allow="autoplay; encrypted-media; picture-in-picture"
             allowFullScreen
             loading="lazy"
@@ -328,7 +335,7 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
           className="flex flex-col gap-2 px-1"
         >
           <label htmlFor={inputId} className="text-sm font-semibold">
-            Video link
+            {t("Video link")}
           </label>
           <input
             id={inputId}
@@ -349,9 +356,9 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
             </p>
           )}
           <div className="grid grid-cols-2 gap-2">
-            <Button onClick={() => setEditing(false)}>Cancel</Button>
+            <Button onClick={() => setEditing(false)}>{t("Cancel")}</Button>
             <Button type="submit" variant="primary">
-              Save video
+              {t("Save video")}
             </Button>
           </div>
         </form>
@@ -365,10 +372,10 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
             className="flex-1"
           >
             <Link2 aria-hidden="true" size={18} />
-            {override ? "Change video" : "Set custom video"}
+            {override ? t("Change video") : t("Set custom video")}
           </Button>
           {override && (
-            <Button variant="ghost" onClick={() => setCustomVideo(exercise.id, null)} aria-label="Remove custom video">
+            <Button variant="ghost" onClick={() => setCustomVideo(exercise.id, null)} aria-label={t("Remove custom video")}>
               <Trash2 aria-hidden="true" size={18} />
             </Button>
           )}
@@ -383,7 +390,7 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ctl border border-line-strong text-sm font-semibold text-text hover:bg-surface-2"
           >
-            Search YouTube
+            {t("Search YouTube")}
             <ExternalLink aria-hidden="true" size={16} />
           </a>
           <a
@@ -392,7 +399,7 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ctl border border-line-strong text-sm font-semibold text-text hover:bg-surface-2"
           >
-            Search TikTok
+            {t("Search TikTok")}
             <ExternalLink aria-hidden="true" size={16} />
           </a>
         </div>

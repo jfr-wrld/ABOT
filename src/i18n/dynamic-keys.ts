@@ -1,4 +1,5 @@
 import { FAQ, LANGUAGE_LABEL, SECTION_TITLE, THEME_LABEL } from "@/components/settings/labels";
+import { SPLITS } from "@/lib/seed-routines";
 
 /**
  * English texts that reach t() through a variable (labels kept in constants and maps), so the
@@ -35,4 +36,25 @@ export const DYNAMIC_KEYS: string[] = [
   LANGUAGE_LABEL.auto,
   ...FAQ.flatMap((f) => [f.q, f.a]),
   "Settings", "Back",
+  // Exercise detail tabs, SmartExerciseMedia tabs, motion phases (PhaseLabel), Story Studio tabs
+  "Summary", "History", "How to",
+  "Motion", "Video", "Anatomy",
+  "Concentric", "Eccentric", "Hold", "Carry", "Alternate",
+  "Layout", "Photo",
+  // SPLITS labels (template filter chips)
+  ...SPLITS.map((s) => s.label),
+  // WorkoutCalendar weekday heads
+  "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su",
+  // STORY_PRESETS blurbs (layout tooltips in the Story Studio; copied, story-exporter needs a DOM)
+  "Black plate, steel hairlines, one Volt point",
+  "Muscle map lit by sets worked",
+  "Every set itemised like a till slip",
+  "Cockpit readout, massive figures",
+  "Black and white editorial",
+  "Records first, with top tonnage",
+  "Your photo behind a glass card",
+  "Stats above, progress line below",
+  "Each lift a plate on the bar, sized by its volume",
+  "A honeycomb of plates, one per lift",
+  "Swiss poster in black on Volt",
 ];
