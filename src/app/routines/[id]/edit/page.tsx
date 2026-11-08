@@ -5,7 +5,11 @@ import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Link2, Link2Off, Plus, Trash2 } from "lucide-react";
+import { SUPERSET_COLORS, linkSupersetIn, removeFromList, supersetLabels, unlinkSupersetIn } from "@/lib/superset";
+import { newId } from "@/lib/id";
+import { Sheet } from "@/components/ui/Sheet";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { newRoutineExercise, newRoutineSet, useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -38,6 +42,7 @@ function Editor() {
   const { byId } = useAllExercises();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menu, setMenu] = useState<{ exId: string; setId: string } | null>(null);
+  const [supersetFor, setSupersetFor] = useState<string | null>(null);
 
   if (!routine) {
     return (
@@ -50,6 +55,7 @@ function Editor() {
     );
   }
 
+  const supersets = supersetLabels(routine.exercises);
   const patchExercise = (exId: string, fn: (e: RoutineExercise) => RoutineExercise | null) =>
     setExercises(
       routine.id,
@@ -110,10 +116,18 @@ function Editor() {
         {routine.exercises.map((ex, i) => {
           const def = byId[ex.exerciseId];
           const nums = setNumbers(ex.sets);
+          const ss = supersets[ex.id];
+          const exName = def?.name ?? "exercise";
           return (
-            <section key={ex.id} aria-labelledby={`rex-${ex.id}`} className="panel p-3">
+            <section
+              key={ex.id}
+              aria-labelledby={`rex-${ex.id}`}
+              // The coloured left edge marks exercises done back to back, as in the workout.
+              style={ss ? { borderLeftColor: SUPERSET_COLORS[ss.color] } : undefined}
+              className={`panel p-3 ${ss ? "border-l-[3px]" : ""}`}
+            >
               <div className="flex items-start justify-between gap-2">
-                <h2 id={`rex-${ex.id}`} className="min-w-0 truncate text-base font-semibold text-accent">
+                <h2 id={`rex-${ex.id}`} className="min-w-0 truncate text-base font-semibold text-text">
                   {def?.name ?? "Removed exercise"}
                 </h2>
                 <div className="flex shrink-0">
@@ -137,7 +151,7 @@ function Editor() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => patchExercise(ex.id, () => null)}
+                    onClick={() => setExercises(routine.id, removeFromList(routine.exercises, ex.id))}
                     aria-label={`Remove ${def?.name ?? "exercise"} from routine`}
                     className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
                   >
@@ -145,6 +159,34 @@ function Editor() {
                   </button>
                 </div>
               </div>
+
+              {ss ? (
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <span className="label-caps" style={{ color: SUPERSET_COLORS[ss.color] }}>
+                    Superset {ss.letter}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setExercises(routine.id, unlinkSupersetIn(routine.exercises, ex.id))}
+                    aria-label={`Remove ${exName} from superset`}
+                    className="flex min-h-11 items-center gap-1.5 rounded-ctl px-2 text-xs font-semibold text-text-muted hover:bg-surface-2 hover:text-text"
+                  >
+                    <Link2Off aria-hidden="true" size={14} /> Remove from superset
+                  </button>
+                </div>
+              ) : (
+                routine.exercises.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setSupersetFor(ex.id)}
+                    aria-haspopup="dialog"
+                    aria-label={`Superset ${exName} with`}
+                    className="mt-1 flex min-h-11 items-center gap-1.5 rounded-ctl px-2 -ml-2 text-xs font-semibold text-text-muted hover:bg-surface-2 hover:text-text"
+                  >
+                    <Link2 aria-hidden="true" size={14} /> Superset with…
+                  </button>
+                )
+              )}
 
               <div className="mt-2 flex items-center gap-2 text-xs text-text-muted">
                 <label htmlFor={`rest-${ex.id}`}>Rest</label>
@@ -253,6 +295,40 @@ function Editor() {
           setPickerOpen(false);
         }}
       />
+
+      {supersetFor && (() => {
+        const from = routine.exercises.find((e) => e.id === supersetFor);
+        const fromName = (from && byId[from.exerciseId]?.name) ?? "exercise";
+        return (
+          <Sheet open onClose={() => setSupersetFor(null)} title={`Superset ${fromName} with`}>
+            <p className="mb-3 text-sm text-text-muted">
+              Do one set of each back to back. Rest starts after the last exercise of the superset.
+            </p>
+            <ul className="flex flex-col gap-1">
+              {routine.exercises
+                .filter((e) => e.id !== supersetFor)
+                .map((e) => {
+                  const d = byId[e.exerciseId];
+                  return (
+                    <li key={e.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExercises(routine.id, linkSupersetIn(routine.exercises, supersetFor, e.id, newId));
+                          setSupersetFor(null);
+                        }}
+                        className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 text-left hover:bg-surface-2 active:bg-white/[0.08]"
+                      >
+                        {d && <ExerciseThumb exercise={d} size={40} />}
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{d?.name ?? "Removed exercise"}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+            </ul>
+          </Sheet>
+        );
+      })()}
 
       <SetTypeMenu
         open={menu !== null && menuSet !== undefined}

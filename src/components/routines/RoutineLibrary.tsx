@@ -3,18 +3,25 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { Copy, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useAllExercises } from "@/store/useExerciseStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Routine } from "@/types/workout";
+import { SUPERSET_COLORS, supersetLabels } from "@/lib/superset";
+
+/** Exercises listed on a routine card before "+N more". */
+const CARD_PREVIEW = 5;
+import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
+import { TemplateVault } from "@/components/routines/TemplateVault";
 
 /**
- * The Workout tab when no workout is running: an empty start, then the routine library (start,
- * edit, duplicate, delete, create). Routines used to be their own tab; training starts here now.
+ * The Workout tab when no workout is running: an empty start, then My Routines and the Template
+ * Vault. Routines used to be their own tab; training starts here now.
  */
 export function RoutineLibrary() {
   const router = useRouter();
@@ -24,13 +31,17 @@ export function RoutineLibrary() {
   const startFromRoutine = useWorkoutStore((s) => s.startFromRoutine);
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
+  const { byId } = useAllExercises();
 
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newFolder, setNewFolder] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<Routine | null>(null);
+  const [menuFor, setMenuFor] = useState<Routine | null>(null);
   const [startBlocked, setStartBlocked] = useState<Routine | null>(null);
+  // Someone with no routines yet lands on the templates.
+  const [tab, setTab] = useState<"mine" | "vault">(() => (routines.length > 0 ? "mine" : "vault"));
 
   const folders = new Map<string, Routine[]>();
   for (const r of [...routines].sort((a, b) => a.name.localeCompare(b.name))) {
@@ -64,9 +75,16 @@ export function RoutineLibrary() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <PageHeader title="Workout" />
+      <PageHeader
+        title="Workout"
+        action={
+          <Button onClick={() => setNewOpen(true)}>
+            <Plus aria-hidden="true" size={18} /> New routine
+          </Button>
+        }
+      />
 
-      <div className="flex flex-col gap-6 px-4 pt-4">
+      <div className="flex flex-col gap-4 px-4 pt-3">
         <Button
           variant="primary"
           onClick={() => {
@@ -77,83 +95,111 @@ export function RoutineLibrary() {
         >
           Start an empty workout
         </Button>
+        <Tabs
+          id="routines"
+          label="Routines"
+          tabs={[
+            { value: "mine", label: "My Routines" },
+            { value: "vault", label: "Template Vault" },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
+        {tab === "mine" ? (
+        <div {...tabPanelProps("routines", "mine")} className="flex flex-col gap-6 outline-none">
+          {routines.length === 0 && (
+            <p className="panel px-4 py-8 text-center text-sm text-text-muted">
+              No routines saved. Create one, add its exercises and target sets, and you can start the same
+              workout in one tap next time.
+            </p>
+          )}
 
-        <div className="-mb-3 flex items-center justify-between gap-3">
-          <h2 className="label-caps">Routines</h2>
-          <Button onClick={() => setNewOpen(true)} className="-my-1">
-            <Plus aria-hidden="true" size={16} /> New routine
-          </Button>
-        </div>
-
-        {routines.length === 0 && (
-          <p className="panel px-4 py-6 text-center text-sm text-text-muted">No routines saved.</p>
-        )}
-
-        {folderNames.map((folder) => (
-          <section key={folder || "__none"} aria-labelledby={folder || folderNames.length > 1 ? `folder-${folder || "none"}` : undefined} aria-label={folder || folderNames.length > 1 ? undefined : "Routines"}>
-            {(folder || folderNames.length > 1) && (
-              <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold text-text-muted">
-                {folder || "No folder"}
+          {folderNames.map((folder) => (
+            <section key={folder || "__none"} aria-labelledby={`folder-${folder || "none"}`}>
+              <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold uppercase text-text-muted">
+                {folder || (folderNames.length > 1 ? "No folder" : "All routines")}
               </h2>
-            )}
-            <ul className="mt-2 flex flex-col gap-2">
-              {folders.get(folder)!.map((r) => {
-                const setCount = r.exercises.reduce((n, e) => n + e.sets.length, 0);
-                return (
-                  <li key={r.id} className="panel p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-base font-semibold">{r.name}</h3>
-                        <p className="mt-0.5 text-xs text-text-muted">
-                          {r.exercises.length === 0
-                            ? "No exercises yet"
-                            : `${r.exercises.length} ${r.exercises.length === 1 ? "exercise" : "exercises"} · ${setCount} sets`}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0">
-                        <Link
-                          href={`/routines/${r.id}/edit`}
-                          aria-label={`Edit ${r.name}`}
-                          className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
-                        >
-                          <Pencil aria-hidden="true" size={18} />
-                        </Link>
+              <ul className="mt-2 flex flex-col gap-2">
+                {folders.get(folder)!.map((r) => {
+                  const setCount = r.exercises.reduce((n, e) => n + e.sets.length, 0);
+                  const ss = supersetLabels(r.exercises);
+                  const ssCount = new Set(Object.values(ss).map((x) => x.letter)).size;
+                  const shown = r.exercises.slice(0, CARD_PREVIEW);
+                  const more = r.exercises.length - shown.length;
+                  return (
+                    <li key={r.id} className="panel p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="truncate text-base font-semibold">{r.name}</h3>
+                          <p className="mt-0.5 text-xs text-text-muted">
+                            {r.exercises.length === 0
+                              ? "No exercises yet"
+                              : `${r.exercises.length} ${r.exercises.length === 1 ? "exercise" : "exercises"} · ${setCount} sets${
+                                  ssCount ? ` · ${ssCount} ${ssCount === 1 ? "superset" : "supersets"}` : ""
+                                }`}
+                          </p>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => duplicate(r.id)}
-                          aria-label={`Duplicate ${r.name}`}
-                          className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
+                          onClick={() => setMenuFor(r)}
+                          aria-label={`Options for ${r.name}`}
+                          aria-haspopup="dialog"
+                          className="-mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
                         >
-                          <Copy aria-hidden="true" size={18} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setToDelete(r)}
-                          aria-label={`Delete ${r.name}`}
-                          className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
-                        >
-                          <Trash2 aria-hidden="true" size={18} />
+                          <MoreHorizontal aria-hidden="true" size={20} />
                         </button>
                       </div>
-                    </div>
-                    <Button
-                      onClick={() => start(r)}
-                      disabled={r.exercises.length === 0}
-                      aria-label={`Start ${r.name}`}
-                      className="mt-3 w-full"
-                    >
-                      <Play aria-hidden="true" size={16} />
-                      Start
-                    </Button>
-                    {r.exercises.length === 0 && (
-                      <p className="mt-1 text-center text-xs text-text-muted">Add an exercise before starting.</p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))}
+                      {shown.length > 0 && (
+                        <ol aria-label={`Exercises in ${r.name}`} className="mt-2 flex flex-col gap-0.5">
+                          {shown.map((e) => {
+                            const label = ss[e.id];
+                            const color = label ? SUPERSET_COLORS[label.color] : undefined;
+                            return (
+                              <li
+                                key={e.id}
+                                // Superset members carry the same coloured edge and letter as in the workout.
+                                style={color ? { borderLeftColor: color } : undefined}
+                                className={`flex items-center gap-2 text-sm text-text-muted ${label ? "border-l-2 pl-2" : ""}`}
+                              >
+                                <span className="min-w-0 truncate">{byId[e.exerciseId]?.name ?? "Removed exercise"}</span>
+                                {label && (
+                                  <span className="num shrink-0 text-[10px] font-semibold" style={{ color }}>
+                                    Superset {label.letter}
+                                  </span>
+                                )}
+                              </li>
+                            );
+                          })}
+                          {more > 0 && (
+                            <li className="num text-xs text-text-muted">
+                              +{more} more {more === 1 ? "exercise" : "exercises"}
+                            </li>
+                          )}
+                        </ol>
+                      )}
+                      <Button
+                        variant="primary"
+                        onClick={() => start(r)}
+                        disabled={r.exercises.length === 0}
+                        className="mt-3 w-full"
+                      >
+                        Start {r.name}
+                      </Button>
+                      {r.exercises.length === 0 && (
+                        <p className="mt-1 text-center text-xs text-text-muted">Add an exercise before starting.</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+        ) : (
+          <div {...tabPanelProps("routines", "vault")} className="outline-none">
+            <TemplateVault onStart={start} />
+          </div>
+        )}
       </div>
 
       <Sheet
@@ -221,6 +267,36 @@ export function RoutineLibrary() {
             Create
           </button>
         </form>
+      </Sheet>
+
+      <Sheet open={menuFor !== null} onClose={() => setMenuFor(null)} title={menuFor?.name ?? "Routine"}>
+        {menuFor && (
+          <div className="flex flex-col gap-1">
+            <Link href={`/routines/${menuFor.id}/edit`} className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold hover:bg-surface-2">
+              <Pencil aria-hidden="true" size={18} className="text-text-muted" /> Edit routine
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                duplicate(menuFor.id);
+                setMenuFor(null);
+              }}
+              className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold hover:bg-surface-2"
+            >
+              <Copy aria-hidden="true" size={18} className="text-text-muted" /> Duplicate routine
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setToDelete(menuFor);
+                setMenuFor(null);
+              }}
+              className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold text-failure hover:bg-failure/10"
+            >
+              <Trash2 aria-hidden="true" size={18} /> Delete routine
+            </button>
+          </div>
+        )}
       </Sheet>
 
       <Sheet

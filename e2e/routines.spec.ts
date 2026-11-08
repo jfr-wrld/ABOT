@@ -17,6 +17,9 @@ async function createRoutine(page: import("@playwright/test").Page, name: string
 
 test("empty name shows an inline error", async ({ page }) => {
   await page.goto("/routines");
+  // A device with no routines opens on the templates; the empty state is one tab away.
+  await expect(page.getByRole("tab", { name: "Template Vault" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: "My Routines" }).click();
   await expect(page.getByText("No routines saved.")).toBeVisible();
   await page.getByRole("button", { name: "New routine" }).click();
   await page.getByRole("button", { name: "Create and add exercises" }).click();
@@ -49,9 +52,12 @@ test("creates a routine with targets and starts it", async ({ page }) => {
 test("duplicates and deletes a routine", async ({ page }) => {
   await createRoutine(page, "Legs");
   await page.goto("/routines");
-  await page.getByRole("button", { name: "Duplicate Legs" }).click();
+  await page.getByRole("button", { name: "Options for Legs" }).click();
+  await expect(page.getByRole("link", { name: "Edit routine" })).toHaveAttribute("href", /\/routines\/.+\/edit$/);
+  await page.getByRole("button", { name: "Duplicate routine" }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toBeVisible();
-  await page.getByRole("button", { name: "Delete Legs (copy)" }).click();
+  await page.getByRole("button", { name: "Options for Legs (copy)" }).click();
+  await page.getByRole("button", { name: "Delete routine" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Legs", exact: true })).toBeVisible();
@@ -74,4 +80,45 @@ test("blocks starting a routine while a workout is active", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "A workout is already in progress" })).toBeVisible();
   await page.getByRole("button", { name: "Go to current workout" }).click();
   await page.waitForURL("**/workout");
+});
+
+test("the routine editor builds a superset that carries into the workout", async ({ page }) => {
+  await createRoutine(page, "Arms", "");
+  for (const name of ["Bicep Curl (Barbell)", "Triceps Pushdown (Cable)", "Lateral Raise (Dumbbell)"]) {
+    await page.getByRole("button", { name: "Add exercise" }).click();
+    await page.getByLabel("Search exercises").fill(name);
+    await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${name.replace(/[()]/g, "\\$&")}`) }).click();
+  }
+  await page.getByRole("button", { name: "Superset Bicep Curl (Barbell) with" }).click();
+  await page.getByRole("dialog", { name: "Superset Bicep Curl (Barbell) with" }).getByRole("button", { name: /Triceps Pushdown/ }).click();
+  await expect(page.getByText("Superset A")).toHaveCount(2);
+
+  await page.reload();
+  await expect(page.getByText("Superset A")).toHaveCount(2);
+
+  await page.goto("/routines");
+  await page.getByRole("tab", { name: "My Routines" }).click();
+  // The card names the superset and marks its two exercises.
+  const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Arms" }) });
+  await expect(card).toContainText("3 exercises · 9 sets · 1 superset");
+  const list = card.getByRole("list", { name: "Exercises in Arms" });
+  await expect(list.getByRole("listitem")).toHaveCount(3);
+  await expect(list.getByRole("listitem").filter({ hasText: "Superset A" })).toHaveCount(2);
+  await page.getByRole("button", { name: "Start Arms" }).click();
+  await page.waitForURL("**/workout");
+  await expect(page.getByText("Superset A")).toHaveCount(2);
+});
+
+test("removing one of a two-exercise superset in the editor dissolves it", async ({ page }) => {
+  await createRoutine(page, "Pair", "");
+  for (const name of ["Bicep Curl (Barbell)", "Triceps Pushdown (Cable)"]) {
+    await page.getByRole("button", { name: "Add exercise" }).click();
+    await page.getByLabel("Search exercises").fill(name);
+    await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${name.replace(/[()]/g, "\\$&")}`) }).click();
+  }
+  await page.getByRole("button", { name: "Superset Bicep Curl (Barbell) with" }).click();
+  await page.getByRole("dialog", { name: "Superset Bicep Curl (Barbell) with" }).getByRole("button", { name: /Triceps Pushdown/ }).click();
+  await expect(page.getByText("Superset A")).toHaveCount(2);
+  await page.getByRole("button", { name: "Remove Triceps Pushdown (Cable) from superset" }).click();
+  await expect(page.getByText("Superset A")).toHaveCount(0);
 });

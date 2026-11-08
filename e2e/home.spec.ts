@@ -5,7 +5,7 @@ test("an empty device gets a working dashboard, not a blank page", async ({ page
   await freshStart(page);
   await expect(page.getByRole("list", { name: "This week" }).getByRole("listitem")).toHaveCount(7);
   await expect(page.getByRole("heading", { name: "Free session" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Create a routine" })).toHaveAttribute("href", "/routines");
+  await expect(page.getByRole("link", { name: "Create a routine" })).toHaveAttribute("href", "/workout");
   const week = page.getByRole("region", { name: "This week" });
   await expect(week.getByText("kg lifted")).toBeVisible();
   await expect(week.getByText("6/6")).toBeVisible();

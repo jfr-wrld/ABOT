@@ -21,15 +21,19 @@ describe("patterns", () => {
     }
   });
 
-  it("covers every seed exercise except movements a side view cannot show", () => {
+  it("covers every seed exercise (front view for the sideways and rotating ones)", () => {
     const missing = SEED_EXERCISES.filter((e) => !patternFor(e)).map((e) => e.id).sort();
-    expect(missing).toEqual(["hip-abduction-machine", "hip-adduction-machine", "russian-twist"]);
+    expect(missing).toEqual([]);
   });
 
   it("maps catalog exercises by name and skips mobility and cardio", () => {
     const cat = (name: string, extra: Partial<Exercise> = {}) =>
       ({ ...SEED_EXERCISES[0]!, id: `fedb-${name}`, name, isCatalog: true, category: "compound", ...extra }) as Exercise;
     expect(patternFor(cat("Zercher Squats"))?.id).toBe("squat_back");
+    expect(patternFor(cat("Pike Push-Up"))?.id).toBe("pike_push_up");
+    expect(patternFor(cat("Mountain Climbers"))?.id).toBe("mountain_climber");
+    expect(patternFor(cat("Standing Cable Wood Chop"))?.id).toBe("woodchop_cable");
+    expect(patternFor(cat("Dumbbell Incline Row"))?.id).toBe("row_chest_supported");
     expect(patternFor(cat("Alternate Incline Dumbbell Curl"))?.id).toBe("curl");
     expect(patternFor(cat("Incline Barbell Bench Press"))?.id).toBe("bench_incline");
     expect(patternFor(cat("Seated Cable Rows"))?.id).toBe("row_seated");

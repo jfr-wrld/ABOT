@@ -28,8 +28,11 @@ describe("seed exercise library", () => {
     for (const id of ORIGINAL_IDS) expect(ids.has(id), id).toBe(true);
   });
 
-  it("links every exercise to its free-exercise-db start and end frames", () => {
-    for (const e of SEED_EXERCISES) {
+  it("links every exercise to its free-exercise-db start and end frames (except ABOT's own entries)", () => {
+    // Not in the dataset: written by ABOT, so no photos (scripts/seed-map.json, no sourceId).
+    const own = new Set(["pike-push-up", "single-leg-calf-raise"]);
+    for (const e of SEED_EXERCISES.filter((x) => own.has(x.id))) expect(e.sourceId, e.id).toBeUndefined();
+    for (const e of SEED_EXERCISES.filter((x) => !own.has(x.id))) {
       expect(e.sourceId, e.id).toBeTruthy();
       expect(e.media.motionUrls, e.id).toEqual([`${IMAGE_BASE}${e.sourceId}/0.jpg`, `${IMAGE_BASE}${e.sourceId}/1.jpg`]);
     }

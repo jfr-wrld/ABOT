@@ -135,7 +135,7 @@ function ProtocolHero({ next }: { next: NextProtocol | null }) {
           Start an empty workout
         </Button>
         <Link
-          href="/routines"
+          href="/workout"
           className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-white/[0.12] text-sm font-semibold transition-colors hover:border-white/25"
         >
           <Plus aria-hidden="true" size={16} />

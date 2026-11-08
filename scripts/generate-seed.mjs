@@ -25,6 +25,24 @@ const byId = new Map(dataset.map((x) => [x.id, x]));
 const out = [];
 const problems = [];
 for (const row of map) {
+  // An exercise the dataset does not have (e.g. Pike Push-Up): ABOT's own steps and cues, no photos.
+  if (!row.sourceId) {
+    if ((row.instructions ?? []).length < 3) problems.push(`${row.id}: own entry needs at least 3 instruction steps`);
+    if ((row.cues ?? []).length < 2) problems.push(`${row.id}: fewer than 2 form cues`);
+    out.push({
+      id: row.id,
+      name: row.name,
+      equipment: row.equipment,
+      primaryMuscles: row.primary,
+      secondaryMuscles: row.secondary,
+      ...(row.isBodyweight ? { isBodyweight: true } : {}),
+      category: row.category ?? "compound",
+      instructions: row.instructions,
+      formCues: row.cues,
+      media: {},
+    });
+    continue;
+  }
   const src = byId.get(row.sourceId);
   if (!src) {
     problems.push(`${row.id}: sourceId ${row.sourceId} not in dataset`);

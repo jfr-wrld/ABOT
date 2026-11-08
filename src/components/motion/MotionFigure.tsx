@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Exercise, MuscleGroup } from "@/types/workout";
-import { CYCLE_SECONDS, GROUND, phaseAt, poseAt, rig, type Joints, type Pattern, type PhaseLabel } from "./patterns";
+import { CYCLE_SECONDS, GROUND, phaseAt, poseAt, rig, type Joints, type MotionPattern, type PhaseLabel } from "./patterns";
+import { FrontScene } from "./FrontFigure";
 import type { Vec } from "./ik";
 
 type Segment = "torso" | "upperArm" | "foreArm" | "thigh" | "shin";
@@ -97,13 +98,14 @@ export function MotionScene({
   title,
   fit = false,
 }: {
-  pattern: Pattern;
+  pattern: MotionPattern;
   progress: number;
   exercise: Pick<Exercise, "equipment" | "primaryMuscles">;
   title?: string;
   /** Crop to a square around the figure (thumbnails); otherwise the whole scene. */
   fit?: boolean;
 }) {
+  if ("view" in pattern) return <FrontScene pattern={pattern} progress={progress} exercise={exercise} title={title} fit={fit} />;
   const j = rig(poseAt(pattern, progress));
   const lit = new Set(exercise.primaryMuscles.flatMap((m) => SEGMENTS[m]));
   const loadAt = pattern.loadAtFeet ? j.ankle : j.hand;
@@ -156,7 +158,7 @@ export function MotionFigure({
   playing,
   onPhase,
 }: {
-  pattern: Pattern;
+  pattern: MotionPattern;
   exercise: Pick<Exercise, "name" | "equipment" | "primaryMuscles">;
   playing: boolean;
   onPhase: (label: PhaseLabel) => void;
