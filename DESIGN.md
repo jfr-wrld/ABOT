@@ -138,6 +138,13 @@ Owner brief 2026-11-08: a moment of completion, then the numbers, with motion.
   not as records: there was nothing to beat. Same rule as Home and the workout detail.
 - A body map of the muscles worked; a bottom bar with Share to IG Story, See every set, Home.
 
+## Story Studio
+
+- Eleven layouts drawn straight to a 1080 x 1920 canvas (`src/lib/story-exporter.ts`).
+- **@username**: set once (Profile > About, or the field in the studio; both save to
+  `profileHandle`). Every layout prints it in its own free space and text colour (`HANDLE_SPOTS`);
+  the receipt prints it as a MEMBER line. Empty means the story goes out without it.
+
 ## Exercise detail
 
 Owner brief 2026-11-08: revamp it with pictures, icons and motion.

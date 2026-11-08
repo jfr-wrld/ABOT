@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { formatDuration } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
 import type { StoryData } from "@/lib/story-data";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { normalizeHandle } from "@/lib/profile";
+import { PROFILE_LIMITS } from "@/types/workout";
 import {
   OVERLAY_RANGE,
   STORY_HEIGHT,
@@ -133,6 +136,10 @@ function Studio({
   const [photoBusy, setPhotoBusy] = useState(false);
   const [overlay, setOverlay] = useState<number>(OVERLAY_RANGE.initial);
   const [grayscale, setGrayscale] = useState(false);
+  const handle = useSettingsStore((st) => st.profileHandle);
+  const setHandle = (v: string) => useSettingsStore.getState().update({ profileHandle: normalizeHandle(v) });
+  // The card carries the lifter's @handle; editing it here saves it to the profile.
+  const card = useMemo<StoryData>(() => ({ ...data, handle: handle || null }), [data, handle]);
 
   const preview = useRef<HTMLCanvasElement>(null);
   const thumbs = useRef<Partial<Record<StoryPresetId, HTMLCanvasElement | null>>>({});
@@ -157,13 +164,13 @@ function Studio({
       const ctx = preview.current?.getContext("2d");
       if (!ctx) return;
       try {
-        renderStory(ctx, data, opts, fonts);
+        renderStory(ctx, card, opts, fonts);
       } catch {
         setStatus({ kind: "error", text: "The card could not be drawn. Close this and try again." });
       }
     });
     return () => cancelAnimationFrame(raf);
-  }, [data, opts, fonts, setStatus]);
+  }, [card, opts, fonts, setStatus]);
 
   // Thumbnails show each layout with the same data and photo, so the choice is made on the real thing.
   useEffect(() => {
@@ -174,14 +181,14 @@ function Studio({
         const ctx = c?.getContext("2d");
         if (!c || !ctx) continue;
         ctx.setTransform(c.width / STORY_WIDTH, 0, 0, c.width / STORY_WIDTH, 0, 0);
-        renderStory(ctx, data, { ...opts, preset: p.id }, fonts);
+        renderStory(ctx, card, { ...opts, preset: p.id }, fonts);
         ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
     });
     return () => cancelAnimationFrame(raf);
     // The preset itself does not change any thumbnail.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, photo, overlay, grayscale, fonts]);
+  }, [card, photo, overlay, grayscale, fonts]);
 
   // The PNG is made ahead of the tap: Safari only opens the share sheet inside the tap itself.
   useEffect(() => {
@@ -189,8 +196,8 @@ function Studio({
     onPng({ blob: null, fileName: "", busy: true });
     let alive = true;
     const t = setTimeout(() => {
-      exportStoryPng(data, opts, fonts)
-        .then((blob) => alive && onPng({ blob, fileName: storyFileName(data, opts.preset), busy: false }))
+      exportStoryPng(card, opts, fonts)
+        .then((blob) => alive && onPng({ blob, fileName: storyFileName(card, opts.preset), busy: false }))
         .catch(() => {
           if (!alive) return;
           onPng({ blob: null, fileName: "", busy: false });
@@ -201,7 +208,7 @@ function Studio({
       alive = false;
       clearTimeout(t);
     };
-  }, [data, opts, fonts, onPng, setStatus]);
+  }, [card, opts, fonts, onPng, setStatus]);
 
   const pickPhoto = useCallback(async (file: File | undefined) => {
     if (!file) return;
@@ -289,6 +296,29 @@ function Studio({
             );
           })}
         </ul>
+      </section>
+
+      <section aria-labelledby="story-handle-label" className="panel flex flex-col gap-2 p-3">
+        <label id="story-handle-label" htmlFor="story-handle" className="text-sm font-semibold">
+          Username on the story
+        </label>
+        <div className="flex h-11 items-center rounded-ctl border border-zinc-800 bg-well focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
+          <span aria-hidden="true" className="num pl-3 text-base text-text-muted">
+            @
+          </span>
+          <input
+            id="story-handle"
+            value={handle}
+            maxLength={PROFILE_LIMITS.handleMax}
+            autoCapitalize="none"
+            autoComplete="username"
+            spellCheck={false}
+            onChange={(e) => setHandle(e.target.value)}
+            placeholder="yourname"
+            className="h-full min-w-0 flex-1 bg-transparent pl-0.5 pr-3 text-base text-text placeholder:text-text-muted focus:outline-none"
+          />
+        </div>
+        <p className="text-xs text-text-muted">Shown on every layout. Leave it empty to share without it.</p>
       </section>
 
       <section aria-labelledby="story-photo" className="panel flex flex-col gap-3 p-3">

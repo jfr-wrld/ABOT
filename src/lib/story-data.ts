@@ -76,6 +76,8 @@ export interface StoryData {
   equipment: { label: string; count: number }[];
   /** Estimated 1RM of this workout's highest-volume lift, oldest first, up to this workout. */
   trend: { exerciseName: string; points: StoryTrendPoint[] } | null;
+  /** The lifter's social handle without "@", added by the studio; null or absent when not set. */
+  handle?: string | null;
 }
 
 export const PR_KIND_LABEL: Record<PRKind, string> = {

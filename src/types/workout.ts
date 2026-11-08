@@ -232,6 +232,8 @@ export interface UserSettings {
   activeLocationId: string | null;
   /** Profile, all optional: "" / null mean not filled in. Bodyweight in kg like every weight. */
   profileName: string;
+  /** Social handle without the "@", shown on shared story cards; "" when not set. */
+  profileHandle: string;
   /** Current bodyweight: the latest log entry, or a value typed before the log existed. */
   bodyweightKg: number | null;
   heightCm: number | null;
@@ -248,6 +250,7 @@ export interface BodyweightEntry {
 
 export const PROFILE_LIMITS = {
   nameMax: 40,
+  handleMax: 30,
   bodyweightKg: [20, 400],
   heightCm: [100, 250],
   /** Characters in the photo data URL; a 256px JPEG is about 20-40k. */
@@ -261,6 +264,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   firstDayOfWeek: 1,
   activeLocationId: null,
   profileName: "",
+  profileHandle: "",
   bodyweightKg: null,
   heightCm: null,
   profilePhoto: null,

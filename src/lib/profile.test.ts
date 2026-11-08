@@ -72,3 +72,12 @@ describe("initials", () => {
     expect(initials("   ")).toBeNull();
   });
 });
+
+describe("normalizeHandle", () => {
+  it("keeps what a social handle may contain", async () => {
+    const { normalizeHandle } = await import("./profile");
+    expect(normalizeHandle("  @@Jafar Lifts!  ")).toBe("JafarLifts");
+    expect(normalizeHandle("abot.gym_01")).toBe("abot.gym_01");
+    expect(normalizeHandle("x".repeat(40))).toHaveLength(30);
+  });
+});

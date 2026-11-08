@@ -195,3 +195,14 @@ test("a heavier repeat celebrates the record and compares with last time", async
   await expect(compare).toContainText("+17%");
   await expectNoHorizontalOverflow(page);
 });
+
+test("the username typed in the studio is kept on the profile", async ({ page }) => {
+  await finishOneSet(page);
+  const dialog = await openStudio(page);
+  const handle = dialog.getByRole("textbox", { name: "Username on the story" });
+  await handle.fill("@Jafar Lifts!");
+  await expect(handle).toHaveValue("JafarLifts");
+  await page.keyboard.press("Escape");
+  await page.goto("/profile");
+  await expect(page.getByText("@JafarLifts").first()).toBeVisible();
+});

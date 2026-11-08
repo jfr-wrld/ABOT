@@ -770,6 +770,11 @@ function brutalistReceipt(s: Scene) {
   y += 42;
   text(s, `TICKET #${data.sessionId.slice(-6).toUpperCase()}`, x, y, { ...ink, size: 28 });
   if (data.locationName) text(s, data.locationName.toUpperCase(), r, y, { ...ink, size: 28, align: "right", maxWidth: inner / 2 });
+  const handle = data.handle?.trim();
+  if (handle) {
+    y += 42;
+    text(s, `MEMBER @${handle}`, x, y, { ...ink, size: 28, maxWidth: inner });
+  }
   y += 36;
   dashed(y);
   y += 56;
@@ -1580,6 +1585,60 @@ function voltPoster(s: Scene) {
   if (shown.length < data.exercises.length) ink(`+${data.exercises.length - shown.length} MORE`, m, y, { size: 26, weight: 700, family: "mono" });
 }
 
+/* ------------------------------------------------------------------ */
+/* @handle                                                             */
+/* ------------------------------------------------------------------ */
+
+interface HandleSpot {
+  x: number;
+  y: number;
+  align: CanvasTextAlign;
+  color: string;
+}
+
+/**
+ * Where each layout carries the lifter's @handle: a quiet line placed in that layout's own free
+ * space, in the layout's text colour. `null` means the painter prints it itself.
+ */
+const HANDLE_SPOTS: Record<StoryPresetId, HandleSpot | null> = {
+  // Under the wordmark, in the brand cell.
+  "obsidian-raw": { x: 104, y: 318, align: "left", color: MUTED },
+  // Between the load bars and the stats row.
+  "thermal-matrix": { x: W - 84, y: 1652, align: "right", color: VOLT },
+  // A MEMBER line in the receipt header.
+  "brutalist-receipt": null,
+  // Above the ABOT plate on the recorder line.
+  "cyber-volt-hud": { x: 100, y: 1716, align: "left", color: CYAN },
+  // Above the white band, on the black.
+  "monochrome-steel": { x: 72, y: 1630, align: "left", color: TEXT },
+  // Above the tonnage footer.
+  "pr-trophy-vault": { x: 80, y: 1690, align: "left", color: GOLD },
+  // Under the date, over the photo.
+  "photo-backdrop": { x: W - 72, y: 270, align: "right", color: TEXT },
+  // Beside the closing plate mark.
+  "split-spec-sheet": { x: 80, y: 1810, align: "left", color: MUTED },
+  // Under the totals.
+  "loaded-bar": { x: 72, y: 1722, align: "left", color: MUTED },
+  "plate-grid": { x: 72, y: 1722, align: "left", color: MUTED },
+  // The poster's signature line.
+  "volt-poster": { x: 64, y: 1790, align: "left", color: INK },
+};
+
+function drawHandle(s: Scene) {
+  const handle = s.data.handle?.trim();
+  if (!handle) return;
+  const spot = HANDLE_SPOTS[s.opts.preset];
+  if (!spot) return;
+  text(s, `@${handle}`, spot.x, spot.y, {
+    size: 32,
+    weight: 700,
+    family: "mono",
+    color: spot.color,
+    align: spot.align,
+    maxWidth: W - 160,
+  });
+}
+
 const PAINTERS: Record<StoryPresetId, (s: Scene) => void> = {
   "obsidian-raw": obsidianRaw,
   "thermal-matrix": thermalMatrix,
@@ -1604,5 +1663,6 @@ export function renderStory(ctx: Ctx, data: StoryData, opts: StoryOptions, fonts
   ctx.clearRect(0, 0, W, H);
   ctx.textBaseline = "alphabetic";
   PAINTERS[opts.preset](scene);
+  drawHandle(scene);
   ctx.restore();
 }

@@ -1,3 +1,4 @@
+import { normalizeHandle } from "@/lib/profile";
 import type { GymLocation } from "@/types/workout";
 import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry } from "@/types/workout";
 import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./normalize";
@@ -61,6 +62,7 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     activeLocationId: typeof raw.activeLocationId === "string" ? raw.activeLocationId : null,
     showRpe: typeof raw.showRpe === "boolean" ? raw.showRpe : true,
     profileName: typeof raw.profileName === "string" ? raw.profileName.trim().slice(0, PROFILE_LIMITS.nameMax) : "",
+    profileHandle: typeof raw.profileHandle === "string" ? normalizeHandle(raw.profileHandle) : "",
     bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
     profilePhoto: normalizePhoto(raw.profilePhoto),

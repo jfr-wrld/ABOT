@@ -65,6 +65,7 @@ export async function migrateFromLocalStorage(
       firstDayOfWeek: s.firstDayOfWeek === 0 ? 0 : 1,
       activeLocationId: null,
       profileName: DEFAULT_SETTINGS.profileName,
+      profileHandle: DEFAULT_SETTINGS.profileHandle,
       bodyweightKg: DEFAULT_SETTINGS.bodyweightKg,
       heightCm: DEFAULT_SETTINGS.heightCm,
       profilePhoto: DEFAULT_SETTINGS.profilePhoto,

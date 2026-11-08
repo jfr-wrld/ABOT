@@ -39,6 +39,7 @@ function pickSettings(s: SettingsState): StoredSettings {
     activeLocationId: s.activeLocationId,
     showRpe: s.showRpe,
     profileName: s.profileName,
+    profileHandle: s.profileHandle,
     bodyweightKg: s.bodyweightKg,
     heightCm: s.heightCm,
     profilePhoto: s.profilePhoto,

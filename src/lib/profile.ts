@@ -1,3 +1,4 @@
+import { PROFILE_LIMITS } from "@/types/workout";
 import type { Exercise, PersonalRecord, WorkoutSession } from "@/types/workout";
 import { buildPRTable, isWorkingSet, sessionDurationSec, sessionVolume } from "./calc";
 import { weekStreak } from "./analytics";
@@ -60,6 +61,18 @@ export function profileStats(
 }
 
 /** "Jafar Shodiq Akram" -> "JA"; empty -> null (the avatar then shows the plate mark). */
+/**
+ * A handle as social apps write it: no leading "@", no spaces, only letters, digits, dots and
+ * underscores, at most 30 characters.
+ */
+export function normalizeHandle(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^@+/, "")
+    .replace(/[^A-Za-z0-9._]/g, "")
+    .slice(0, PROFILE_LIMITS.handleMax);
+}
+
 export function initials(name: string): string | null {
   const words = name.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return null;

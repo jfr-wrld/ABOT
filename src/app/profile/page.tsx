@@ -14,7 +14,7 @@ import { NumberField } from "@/components/ui/NumberField";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { BodyweightSection } from "@/components/profile/BodyweightSection";
 import { AccountChip, AccountSection } from "@/components/profile/AccountSection";
-import { profileStats, type ProfileStats } from "@/lib/profile";
+import { normalizeHandle, profileStats, type ProfileStats } from "@/lib/profile";
 import { weeklyBuckets } from "@/lib/analytics";
 import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
@@ -126,6 +126,7 @@ function ProfileScreen() {
           ) : (
             <h2 className="text-2xl font-bold tracking-tight text-text-muted">Your name</h2>
           )}
+          {s.profileHandle && <p className="num text-sm text-text-muted">@{s.profileHandle}</p>}
           <p className="num mt-0.5 text-xs text-text-muted">{record.join(" · ")}</p>
           <AccountChip onOpen={() => edit("account")} />
         </div>
@@ -212,6 +213,27 @@ function ProfileScreen() {
                   placeholder="What should ABOT call you?"
                   className="h-11 w-full rounded-ctl border border-zinc-800 bg-well px-3 text-base text-text placeholder:text-text-muted hover:border-zinc-700 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
+              </div>
+              <div>
+                <label htmlFor="profile-handle" className="mb-1 block text-sm font-semibold">
+                  Username <span className="font-normal text-text-muted">(on shared stories)</span>
+                </label>
+                <div className="flex h-11 items-center rounded-ctl border border-zinc-800 bg-well focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30 hover:border-zinc-700">
+                  <span aria-hidden="true" className="num pl-3 text-base text-text-muted">
+                    @
+                  </span>
+                  <input
+                    id="profile-handle"
+                    value={s.profileHandle}
+                    maxLength={PROFILE_LIMITS.handleMax}
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    onChange={(e) => s.update({ profileHandle: normalizeHandle(e.target.value) })}
+                    placeholder="yourname"
+                    className="h-full min-w-0 flex-1 bg-transparent pl-0.5 pr-3 text-base text-text placeholder:text-text-muted focus:outline-none"
+                  />
+                </div>
               </div>
               <HeightField imperial={unit === "lbs"} heightCm={s.heightCm} onChange={(heightCm) => s.update({ heightCm })} />
               {s.profilePhoto && (
