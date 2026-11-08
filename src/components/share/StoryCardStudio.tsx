@@ -2,16 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Download, ImagePlus, Share2, Trash2 } from "lucide-react";
-import type { WorkoutSession } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
-import { useWorkoutStore } from "@/store/useWorkoutStore";
-import { useSettingsStore } from "@/store/useSettingsStore";
-import { useAllExercises } from "@/store/useExerciseStore";
-import { useLocationStore } from "@/store/useLocationStore";
 import { formatDuration } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
-import { buildStoryData, type StoryData } from "@/lib/story-data";
+import type { StoryData } from "@/lib/story-data";
 import {
   OVERLAY_RANGE,
   STORY_HEIGHT,
@@ -46,21 +41,12 @@ type Status =
 export function StoryCardStudio({
   open,
   onClose,
-  session,
+  data,
 }: {
   open: boolean;
   onClose: () => void;
-  session: WorkoutSession;
+  data: StoryData | null;
 }) {
-  const sessions = useWorkoutStore((s) => s.sessions);
-  const { weightUnit } = useSettingsStore();
-  const { byId } = useAllExercises();
-  const locations = useLocationStore((s) => s.locations);
-  const data = useMemo(
-    () => (open ? buildStoryData(session, sessions, byId, weightUnit, locations) : null),
-    [open, session, sessions, byId, weightUnit, locations],
-  );
-
   const [png, setPng] = useState<PngState>({ blob: null, fileName: "", busy: true });
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   // Mounted only after a tap, so navigator exists on the first render.

@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "framer-motion";
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART, numTick, tooltipStyle } from "./chartTheme";
 
@@ -23,8 +24,10 @@ export function WeeklyBars({
   unitLabel: string;
 }) {
   const hasData = points.some((p) => p.value > 0);
+  // Bars grow from the floor when the metric or range changes, so the new shape is read as a change.
+  const animate = !useReducedMotion();
   return (
-    <figure className="panel p-3">
+    <figure className="p-0">
       <figcaption className="text-sm font-semibold">{title}</figcaption>
       {!hasData ? (
         <p className="py-8 text-center text-sm text-text-muted">
@@ -50,7 +53,14 @@ export function WeeklyBars({
                   formatter={(_v, _n, item) => [(item.payload as WeekPoint).display, unitLabel]}
                 />
                 {/* Past weeks in muted olive, this week in Volt: the eye lands on now. */}
-                <Bar dataKey="value" fill={CHART.seriesMuted} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                <Bar
+                  dataKey="value"
+                  fill={CHART.seriesMuted}
+                  radius={[4, 4, 0, 0]}
+                  isAnimationActive={animate}
+                  animationDuration={500}
+                  animationEasing="ease-out"
+                >
                   {points.map((p, i) => (
                     <Cell key={p.label} fill={i === points.length - 1 ? CHART.series : CHART.seriesMuted} />
                   ))}

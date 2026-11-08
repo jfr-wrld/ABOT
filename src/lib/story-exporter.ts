@@ -448,6 +448,17 @@ function dateDots(ts: number) {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
 
+/** One date for a workout, "12.09 - 08.11.2026" for a range. */
+function dateLabel(data: StoryData) {
+  if (data.kind === "session") return dateDots(data.startedAt);
+  const a = new Date(data.startedAt);
+  return `${pad(a.getDate())}.${pad(a.getMonth() + 1)} - ${dateDots(data.endedAt)}`;
+}
+
+function workoutsLabel(n: number) {
+  return `${n} ${n === 1 ? "workout" : "workouts"}`;
+}
+
 function timeOf(ts: number) {
   const d = new Date(ts);
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -561,9 +572,10 @@ function obsidianRaw(s: Scene) {
 
   // Top cells: brand, date. Bottom cells: duration, sets.
   wordmark(s, m + 48, m + 190, 64, VOLT);
-  caps(s, "Date", mid + 48, m + 150);
-  text(s, dateDots(data.startedAt), mid + 48, m + 214, { size: 52, weight: 700, family: "mono" });
-  caps(s, `Start ${timeOf(data.startedAt)}`, mid + 48, m + 258);
+  caps(s, data.kind === "session" ? "Date" : "Range", mid + 48, m + 150);
+  const date = data.kind === "session" ? dateDots(data.startedAt) : dateDots(data.endedAt);
+  text(s, date, mid + 48, m + 214, { size: 52, weight: 700, family: "mono" });
+  caps(s, data.kind === "session" ? `Start ${timeOf(data.startedAt)}` : `${workoutsLabel(data.workouts)} since ${dateDots(data.startedAt).slice(0, 5)}`, mid + 48, m + 258);
 
   caps(s, "Duration", m + 48, bottom + 92);
   text(s, formatDuration(data.durationSec), m + 48, bottom + 176, { size: 68, weight: 800, family: "mono" });
@@ -626,7 +638,7 @@ function thermalMatrix(s: Scene) {
 
   const x = 84;
   caps(s, "Thermal matrix // muscle load", x, SAFE_TOP + 20, { color: VOLT });
-  caps(s, dateDots(data.startedAt), W - x, SAFE_TOP + 20, { align: "right" });
+  caps(s, dateLabel(data), W - x, SAFE_TOP + 20, { align: "right" });
   text(s, data.title, x, SAFE_TOP + 100, { size: fitSize(s, data.title, W - 2 * x, 64, 44, 800, "sans"), weight: 800, maxWidth: W - 2 * x });
 
   const mapW = 900;
@@ -741,8 +753,14 @@ function brutalistReceipt(s: Scene) {
   text(s, "STRENGTH RECEIPT", W / 2, y, { ...ink, size: 26, align: "center", tracking: 6 });
   y += 64;
   const d = new Date(data.startedAt);
-  text(s, `DATE ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`, x, y, { ...ink, size: 28 });
-  text(s, `TIME ${timeOf(data.startedAt)}`, r, y, { ...ink, size: 28, align: "right" });
+  const slash = (t: Date) => `${pad(t.getDate())}/${pad(t.getMonth() + 1)}/${t.getFullYear()}`;
+  if (data.kind === "session") {
+    text(s, `DATE ${slash(d)}`, x, y, { ...ink, size: 28 });
+    text(s, `TIME ${timeOf(data.startedAt)}`, r, y, { ...ink, size: 28, align: "right" });
+  } else {
+    text(s, `FROM ${slash(d)}`, x, y, { ...ink, size: 28 });
+    text(s, `TO ${slash(new Date(data.endedAt))}`, r, y, { ...ink, size: 28, align: "right" });
+  }
   y += 42;
   text(s, `TICKET #${data.sessionId.slice(-6).toUpperCase()}`, x, y, { ...ink, size: 28 });
   if (data.locationName) text(s, data.locationName.toUpperCase(), r, y, { ...ink, size: 28, align: "right", maxWidth: inner / 2 });
@@ -785,6 +803,7 @@ function brutalistReceipt(s: Scene) {
     text(s, value, r, y, { ...ink, size: big ? 44 : 28, weight: big ? 800 : 400, align: "right" });
     y += big ? 64 : 44;
   };
+  if (data.kind === "period") row("WORKOUTS", String(data.workouts));
   row("SETS", String(data.setsDone));
   row("DURATION", formatDuration(data.durationSec));
   row("RECORDS", String(data.prs.length));
@@ -845,13 +864,13 @@ function cyberVoltHud(s: Scene) {
   ctx.stroke();
 
   const x = 100;
-  const d = new Date(data.startedAt);
-  const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${timeOf(data.startedAt)}:${pad(d.getSeconds())}`;
+  const d = new Date(data.kind === "session" ? data.startedAt : data.endedAt);
+  const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${timeOf(d.getTime())}:${pad(d.getSeconds())}`;
   caps(s, `SYS.TIME ${stamp}`, x, SAFE_TOP - 40, { color: CYAN, size: 24 });
   caps(s, `SID ${data.sessionId.slice(0, 8).toUpperCase()}`, W - x, SAFE_TOP - 40, { size: 24, align: "right" });
   hline(ctx, x, W - x, SAFE_TOP - 14, "rgba(204, 255, 0, 0.35)", 2);
 
-  caps(s, "Mission log", x, SAFE_TOP + 60, { color: VOLT });
+  caps(s, data.kind === "session" ? "Mission log" : `Campaign log // ${dateLabel(data)}`, x, SAFE_TOP + 60, { color: VOLT });
   text(s, data.title.toUpperCase(), x, SAFE_TOP + 130, {
     size: fitSize(s, data.title.toUpperCase(), W - 2 * x, 64, 40, 800, "sans"),
     weight: 800,
@@ -902,7 +921,8 @@ function cyberVoltHud(s: Scene) {
   panel(x + half + 30, y, "New PRs", String(data.prs.length), CYAN);
   y += 250;
   panel(x, y, "Sets", String(data.setsDone), TEXT);
-  panel(x + half + 30, y, "Modules", String(data.exercises.length), TEXT);
+  if (data.kind === "session") panel(x + half + 30, y, "Modules", String(data.exercises.length), TEXT);
+  else panel(x + half + 30, y, "Workouts", String(data.workouts), TEXT);
 
   y += 300;
   const rows = Math.max(1, Math.min(data.exercises.length, Math.floor((SAFE_BOTTOM - y) / 62)));
@@ -927,7 +947,7 @@ function monochromeSteel(s: Scene) {
 
   hline(ctx, x, W - x, SAFE_TOP - 50, "#ffffff", 4);
   text(s, "ABOT", x, SAFE_TOP, { size: 44, weight: 900, color: "#ffffff", tracking: -1 });
-  caps(s, `Issue ${dateDots(data.startedAt)}`, W - x, SAFE_TOP - 4, { color: "#ffffff", align: "right" });
+  caps(s, `Issue ${dateLabel(data)}`, W - x, SAFE_TOP - 4, { color: "#ffffff", align: "right" });
 
   const head = data.title.toUpperCase();
   let size = 190;
@@ -1035,7 +1055,7 @@ function prTrophyVault(s: Scene) {
   const prs = data.prs;
 
   caps(s, "PR trophy vault", x, SAFE_TOP, { color: GOLD });
-  caps(s, dateDots(data.startedAt), W - x, SAFE_TOP, { align: "right" });
+  caps(s, dateLabel(data), W - x, SAFE_TOP, { align: "right" });
 
   // One medal and one card per lift: a lift can break weight, 1RM and set volume at once.
   const lifts = groupRecords(prs);
@@ -1102,7 +1122,7 @@ function prTrophyVault(s: Scene) {
 
   const best = data.exercises.reduce((m, e) => Math.max(m, ...e.sets.map((st) => st.volumeKg)), 0);
   hline(ctx, x, W - x, H - 190, STEEL);
-  caps(s, "Session max set tonnage", x, H - 128);
+  caps(s, data.kind === "session" ? "Session max set tonnage" : "Max set tonnage", x, H - 128);
   text(s, formatVolume(best, unit), W - x, H - 122, { size: 44, weight: 800, family: "mono", color: GOLD, align: "right" });
 }
 
@@ -1112,7 +1132,7 @@ function photoBackdrop(s: Scene) {
   paintBackground(s, OBSIDIAN);
   const x = 72;
   wordmark(s, x, SAFE_TOP - 20, 60, VOLT);
-  caps(s, dateDots(data.startedAt), W - x, SAFE_TOP - 10, { align: "right", color: TEXT });
+  caps(s, dateLabel(data), W - x, SAFE_TOP - 10, { align: "right", color: TEXT });
 
   const cardX = 56;
   const cardW = W - 2 * cardX;
@@ -1134,7 +1154,7 @@ function photoBackdrop(s: Scene) {
   ctx.beginPath();
   ctx.arc(ix + 9, cardY + 72, 9, 0, Math.PI * 2);
   ctx.fill();
-  caps(s, "Today's session", ix + 32, cardY + 81, { color: TEXT });
+  caps(s, data.kind === "session" ? "Today's session" : `${workoutsLabel(data.workouts)} // ${dateLabel(data)}`, ix + 32, cardY + 81, { color: TEXT, maxWidth: inner - 40 });
   text(s, data.title, ix, cardY + 160, { size: fitSize(s, data.title, inner, 68, 44, 800, "sans"), weight: 800, maxWidth: inner });
 
   const [vol, u] = volumeParts(data.volumeKg, unit);
@@ -1177,8 +1197,8 @@ function splitSpecSheet(s: Scene) {
   const x = 80;
   const inner = W - 2 * x;
 
-  caps(s, "A // Session spec", x, SAFE_TOP);
-  caps(s, dateDots(data.startedAt), W - x, SAFE_TOP, { align: "right" });
+  caps(s, data.kind === "session" ? "A // Session spec" : "A // Block spec", x, SAFE_TOP);
+  caps(s, dateLabel(data), W - x, SAFE_TOP, { align: "right" });
   text(s, data.title, x, SAFE_TOP + 80, { size: fitSize(s, data.title, inner, 64, 44, 800, "sans"), weight: 800, maxWidth: inner });
 
   caps(s, `Total tonnage // ${unit}`, x, SAFE_TOP + 170, { color: VOLT });
@@ -1193,6 +1213,7 @@ function splitSpecSheet(s: Scene) {
     text(s, value, W - x, y + 62, { size: 44, weight: 700, family: "mono", align: "right" });
     y += 92;
   };
+  if (data.kind === "period") spec("Workouts", String(data.workouts));
   spec("Duration", formatDuration(data.durationSec));
   spec("Total sets", String(data.setsDone));
   if (y < half - 60) spec("Exercises", String(data.exercises.length));

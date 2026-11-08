@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStoryData } from "./story-data";
+import { buildPeriodStoryData, buildStoryData } from "./story-data";
 import type { GymLocation, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES_BY_ID as byId } from "@/data/exercises";
 
@@ -86,5 +86,31 @@ describe("buildStoryData", () => {
   it("has no trend when nothing carried load", () => {
     const bw = session("d", t0 + 5 * DAY, [["pull-up", [set(null, 10, { id: "d1" })]]]);
     expect(buildStoryData(bw, [...sessions, bw], byId, "kg").trend).toBeNull();
+  });
+});
+
+describe("buildPeriodStoryData", () => {
+  const a = session("a", t0, [["bench-press-barbell", [set(60, 8, { id: "a1" })]]]);
+  const b = session("b", t0 + 2 * DAY, [["bench-press-barbell", [set(70, 5, { id: "b1" }), set(65, 8, { id: "b2" })]]]);
+  const outside = session("z", t0 - 30 * DAY, [["squat-barbell", [set(200, 1, { id: "z1" })]]]);
+  const data = buildPeriodStoryData([outside, a, b], t0 - DAY, t0 + 3 * DAY, byId, "kg", "Last 4 weeks");
+
+  it("adds up only the workouts in the range", () => {
+    expect(data.kind).toBe("period");
+    expect(data.workouts).toBe(2);
+    expect(data.volumeKg).toBe(480 + 350 + 520);
+    expect(data.setsDone).toBe(3);
+    expect(data.title).toBe("Last 4 weeks");
+    expect(data.exercises.map((e) => e.name)).toEqual(["Bench Press (Barbell)"]);
+  });
+
+  it("keeps the biggest sets per lift and the records that still stand", () => {
+    expect(data.exercises[0].sets.map((s) => s.volumeKg)).toEqual([520, 480, 350]);
+    expect(data.prs.every((p) => p.exerciseName === "Bench Press (Barbell)")).toBe(true);
+    expect(data.prs.map((p) => p.kind).sort()).toEqual(["best_1rm", "best_set_volume", "heaviest_weight"]);
+  });
+
+  it("uses an id of letters and digits only", () => {
+    expect(data.sessionId).toMatch(/^R\d{16}$/);
   });
 });
