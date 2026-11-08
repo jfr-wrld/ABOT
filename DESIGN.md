@@ -124,6 +124,20 @@ Owner brief 2026-11-08:
   holds Repeat (starts the same lifts with the same numbers) and Share story. Records count once
   per lift and only when they beat an earlier one, the same rule as the PR pill on Home.
 
+## Workout summary (after Finish)
+
+Owner brief 2026-11-08: a moment of completion, then the numbers, with motion.
+- **Completion mark**: the plate outline is traced shut, fills faintly, a check is drawn, and
+  twelve small plates burst outward, Cyan when a record fell, Volt otherwise (about 1.4 s). One
+  short buzz on phones that vibrate, only if rest alerts are on and the page was reached by a tap.
+- Four icon tiles count up (duration, volume, sets, exercises).
+- **Volume vs last time**: the previous session of the same routine (or name) as two bars and a
+  change pill (Volt when up).
+- **Records** pop in as Cyan cards, one per lift, one chip per record-setting set with the kinds
+  it broke (WEIGHT, E1RM, VOLUME). **New lifts** (first time logged) are listed as the baseline,
+  not as records: there was nothing to beat. Same rule as Home and the workout detail.
+- A body map of the muscles worked; a bottom bar with Share to IG Story, See every set, Home.
+
 ## Identity motif
 
 The set row as a hardware switch: a dark panel that, when you tap the square check, lights Volt,

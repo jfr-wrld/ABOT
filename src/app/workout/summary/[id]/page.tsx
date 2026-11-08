@@ -1,19 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Trophy } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowDownRight, ArrowUpRight, Dumbbell, House, Layers, ListOrdered, Sparkles, Timer, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ShareStoryButton } from "@/components/share/ShareStoryButton";
-import { countSets, detectSessionPRs, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { MuscleMap } from "@/components/anatomy/MuscleMap";
+import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
+import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume, formatWeight } from "@/lib/units";
 import { PR_KIND_LABEL } from "@/lib/story-data";
-import type { PersonalRecord } from "@/types/workout";
+import { previousComparable, sessionRecords, workedMuscles } from "@/lib/session-insights";
+import { MUSCLE_GROUP_LABELS, type Exercise, type PersonalRecord, type WeightUnit } from "@/types/workout";
 
 export default function WorkoutSummaryPage() {
   return (
@@ -23,22 +28,44 @@ export default function WorkoutSummaryPage() {
   );
 }
 
-/** Shown right after Finish: what the workout added up to, and the way to share it. */
+/**
+ * Shown right after Finish: a moment of completion first (the plate closes, a check, a burst of
+ * small plates, Cyan when a record fell), then what the workout added up to, how it compares with
+ * the last time, the records and first lifts, the muscles worked, and the way to share it.
+ */
 function Summary() {
   const { id } = useParams<{ id: string }>();
   const sessions = useWorkoutStore((s) => s.sessions);
-  const { weightUnit } = useSettingsStore();
+  const { weightUnit, restTimerAlert } = useSettingsStore();
   const { byId } = useAllExercises();
   const session = sessions.find((s) => s.id === id);
-  const prs = useMemo(() => (session ? detectSessionPRs(session, sessions, byId) : []), [session, sessions, byId]);
-  // A lift can break weight, 1RM and set volume at once: one row per lift.
-  const prsByLift = useMemo(() => {
-    const out: Record<string, PersonalRecord[]> = {};
-    for (const pr of prs) (out[pr.exerciseId] ??= []).push(pr);
-    return out;
-  }, [prs]);
 
-  if (!session) {
+  const insights = useMemo(() => {
+    if (!session) return null;
+    const { records, newLifts } = sessionRecords(session, sessions, byId);
+    const byLift: Record<string, PersonalRecord[]> = {};
+    for (const pr of records) (byLift[pr.exerciseId] ??= []).push(pr);
+    return {
+      byLift,
+      newLifts,
+      muscles: workedMuscles(session, byId),
+      previous: previousComparable(session, sessions),
+    };
+  }, [session, sessions, byId]);
+
+  const recordLifts = insights ? Object.keys(insights.byLift).length : 0;
+
+  // One short buzz to mark the finish, on phones that vibrate and only if the lifter keeps alerts on.
+  useEffect(() => {
+    if (!session || !restTimerAlert || typeof navigator === "undefined" || !("vibrate" in navigator)) return;
+    // Browsers only allow vibration after a tap on the page (here, Finish workout).
+    if ((navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive === false) return;
+    navigator.vibrate(recordLifts > 0 ? [30, 60, 30, 60, 60] : [30]);
+    // Once per opening of the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!session || !insights) {
     return (
       <main>
         <PageHeader title="Workout not found" back={{ href: "/", label: "Home" }} />
@@ -47,76 +74,331 @@ function Summary() {
     );
   }
 
-  const exercises = session.exercises.length;
+  const volume = sessionVolume(session, byId);
+  const sets = countSets(session).completed;
+  const prev = insights.previous;
+  const prevVolume = prev ? sessionVolume(prev, byId) : 0;
 
   return (
     <main className="flex flex-1 flex-col">
-      <PageHeader
-        title="Workout saved"
-        subtitle={`${session.name}, ${new Date(session.startedAt).toLocaleDateString(undefined, {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-        })}`}
-      />
+      <header className="flex flex-col items-center px-4 pt-[max(20px,env(safe-area-inset-top))] text-center">
+        <Celebration record={recordLifts > 0} />
+        <Rise order={6}>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight">Workout saved</h1>
+          <p className="mt-1 text-sm text-text-muted">
+            {session.name} ·{" "}
+            {new Date(session.startedAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
+          </p>
+        </Rise>
+      </header>
 
-      <dl className="mx-4 mt-4 grid grid-cols-3 gap-2">
-        <Stat label="Duration" value={formatDuration(sessionDurationSec(session))} />
-        <Stat label="Volume" value={formatVolume(sessionVolume(session, byId), weightUnit)} />
-        <Stat label="Sets" value={String(countSets(session).completed)} />
-      </dl>
-      <p className="mx-4 mt-2 text-sm text-text-muted">
-        <span className="num">{exercises}</span> {exercises === 1 ? "exercise" : "exercises"} logged.
-      </p>
+      <div className="flex flex-col gap-3 px-4 pt-5">
+        <Rise order={7}>
+          <dl className="grid grid-cols-2 gap-2">
+            <Tile icon={<Timer size={16} />} label="Duration" value={sessionDurationSec(session)} format={(n) => formatDuration(Math.round(n))} />
+            <Tile icon={<Dumbbell size={16} />} label="Volume" value={volume} format={(n) => formatVolume(n, weightUnit)} />
+            <Tile icon={<Layers size={16} />} label="Sets" value={sets} format={(n) => String(Math.round(n))} />
+            <Tile
+              icon={<ListOrdered size={16} />}
+              label="Exercises"
+              value={session.exercises.length}
+              format={(n) => String(Math.round(n))}
+            />
+          </dl>
+        </Rise>
 
-      {prs.length > 0 && (
-        <section aria-labelledby="summary-prs" className="mx-4 mt-4">
-          <h2 id="summary-prs" className="flex items-center gap-2 text-sm font-semibold text-pr">
-            <Trophy aria-hidden="true" size={16} />
-            {prs.length} personal {prs.length === 1 ? "record" : "records"}
-          </h2>
-          <ul className="mt-2 flex flex-col gap-1.5">
-            {Object.entries(prsByLift).map(([exerciseId, records]) => (
-              <li key={exerciseId} className="panel px-3 py-2 text-sm">
-                <span className="font-semibold">{byId[exerciseId]?.name ?? "Removed exercise"}</span>
-                {records.map((pr) => (
-                  <span key={pr.kind} className="block text-xs text-text-muted">
-                    {PR_KIND_LABEL[pr.kind]}:{" "}
-                    <span className="num">
-                      {formatWeight(pr.weightKg, weightUnit)} × {pr.reps}
-                    </span>
-                  </span>
+        {prev && prevVolume > 0 && (
+          <Rise order={8}>
+            <Compare now={volume} before={prevVolume} unit={weightUnit} name={session.name} />
+          </Rise>
+        )}
+
+        {recordLifts > 0 && (
+          <Rise order={9}>
+            <section aria-labelledby="summary-prs" className="flex flex-col gap-2">
+              <h2 id="summary-prs" className="flex items-center gap-2 text-sm font-semibold text-pr">
+                <Trophy aria-hidden="true" size={16} />
+                {recordLifts} personal {recordLifts === 1 ? "record" : "records"}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {Object.entries(insights.byLift).map(([exerciseId, records], i) => (
+                  <RecordCard key={exerciseId} exercise={byId[exerciseId]} records={records} unit={weightUnit} order={i} />
                 ))}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+              </ul>
+            </section>
+          </Rise>
+        )}
 
-      <div className="mx-4 mt-6 flex flex-col gap-2">
-        <ShareStoryButton session={session} variant="primary" className="w-full" />
-        <Link
-          href={`/history/${session.id}`}
-          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-surface-2 px-4 text-sm font-semibold text-text hover:border-white/25 hover:bg-[#24242a]"
-        >
-          See every set
-        </Link>
-        <Link
-          href="/"
-          className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold text-text-muted hover:bg-white/[0.05] hover:text-text"
-        >
-          Back to Home
-        </Link>
+        {insights.newLifts.length > 0 && (
+          <Rise order={10}>
+            <section aria-labelledby="summary-new" className="panel p-3">
+              <h2 id="summary-new" className="flex items-center gap-2 text-sm font-semibold">
+                <Sparkles aria-hidden="true" size={16} className="text-accent" />
+                {insights.newLifts.length} new {insights.newLifts.length === 1 ? "lift" : "lifts"}
+              </h2>
+              <p className="mt-0.5 text-xs text-text-muted">Your baseline. Beat it next time for a record.</p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {insights.newLifts.map((exId) =>
+                  byId[exId] ? (
+                    <li key={exId} className="flex items-center gap-2 rounded-xl bg-surface-2 py-1 pl-1 pr-3">
+                      <ExerciseThumb exercise={byId[exId]} size={32} />
+                      <span className="text-xs font-semibold">{byId[exId].name}</span>
+                    </li>
+                  ) : null,
+                )}
+              </ul>
+            </section>
+          </Rise>
+        )}
+
+        {insights.muscles.primary.length > 0 && (
+          <Rise order={11}>
+            <section aria-labelledby="summary-muscles" className="panel flex items-center gap-3 p-3">
+              <div className="w-32 shrink-0 [&_figcaption]:hidden">
+                <MuscleMap primary={insights.muscles.primary} secondary={insights.muscles.secondary} width={128} />
+              </div>
+              <div className="min-w-0">
+                <h2 id="summary-muscles" className="label-caps">
+                  Muscles worked
+                </h2>
+                <ul className="mt-2 flex flex-wrap gap-1">
+                  {insights.muscles.primary.slice(0, 5).map((m) => (
+                    <li key={m} className="rounded-full border border-accent/40 bg-accent-tint px-2 py-0.5 text-xs font-semibold">
+                      {MUSCLE_GROUP_LABELS[m]}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          </Rise>
+        )}
+      </div>
+
+      {/* Room for the action bar, so the last block scrolls clear of it. */}
+      <div className="h-40" aria-hidden="true" />
+
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-[640px] flex-col gap-2 border-t border-line bg-bg/85 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
+        <ShareStoryButton session={session} variant="primary" className="min-h-12 w-full text-base" />
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href={`/history/${session.id}`}
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-white/[0.12] bg-surface-2 px-3 text-sm font-semibold text-text hover:border-white/25"
+          >
+            <ListOrdered aria-hidden="true" size={16} />
+            See every set
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-text-muted hover:bg-white/[0.05] hover:text-text"
+          >
+            <House aria-hidden="true" size={16} />
+            Back to Home
+          </Link>
+        </div>
       </div>
     </main>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+const HEX = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
+
+/**
+ * The completion mark: the plate outline is traced shut, it fills faintly, a check is drawn, and a
+ * ring of small plates bursts outward (Cyan when a record fell, Volt otherwise). About 1.4 s.
+ */
+function Celebration({ record }: { record: boolean }) {
+  const controls = useEntrance();
+  const reduce = useReducedMotion();
+  const color = record ? "#00f0ff" : "#ccff00";
+  const shards = Array.from({ length: 12 }, (_, i) => {
+    const a = (i / 12) * Math.PI * 2 + 0.2;
+    const d = 70 + (i % 3) * 14;
+    return { x: Math.cos(a) * d, y: Math.sin(a) * d, size: 7 + (i % 3) * 3, rot: (i % 2 ? 1 : -1) * (90 + i * 20) };
+  });
   return (
-    <div className="rounded-ctl bg-surface px-3 py-2">
-      <dt className="label-caps">{label}</dt>
-      <dd className="num text-lg font-bold">{value}</dd>
+    <div aria-hidden="true" className="relative flex size-36 items-center justify-center">
+      {!reduce &&
+        shards.map((p, i) => (
+          <motion.svg
+            key={i}
+            viewBox="0 0 100 100"
+            width={p.size}
+            height={p.size}
+            className="absolute"
+            style={{ opacity: 0, x: 0, y: 0, scale: 0.4 }}
+            animate={controls}
+            variants={{
+              still: { opacity: 0 },
+              show: {
+                opacity: [0, 1, 1, 0],
+                x: [0, p.x * 0.6, p.x],
+                y: [0, p.y * 0.6, p.y + 18],
+                scale: [0.4, 1, 0.8],
+                rotate: [0, p.rot],
+                transition: { delay: 0.95 + (i % 4) * 0.03, duration: 1.1, ease: "easeOut" },
+              },
+            }}
+          >
+            <path d={HEX} fill={i % 3 === 0 ? "#f4f4f5" : color} />
+          </motion.svg>
+        ))}
+      <svg viewBox="0 0 100 100" className="size-28 overflow-visible">
+        <motion.path
+          d={HEX}
+          fill={color}
+          style={{ fillOpacity: 0 }}
+          animate={controls}
+          variants={{ still: { fillOpacity: 0.12 }, show: { fillOpacity: 0.12, transition: { delay: 0.7, duration: 0.4 } } }}
+        />
+        <motion.path
+          d={HEX}
+          fill="none"
+          stroke={color}
+          strokeWidth={4}
+          strokeLinejoin="round"
+          style={{ pathLength: 0 }}
+          animate={controls}
+          variants={{
+            still: { pathLength: 1 },
+            show: { pathLength: 1, transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] } },
+          }}
+        />
+        <motion.path
+          d="M31 52 L44 65 L70 37"
+          fill="none"
+          stroke={color}
+          strokeWidth={7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ pathLength: 0 }}
+          animate={controls}
+          variants={{
+            still: { pathLength: 1 },
+            show: { pathLength: 1, transition: { delay: 0.7, duration: 0.35, ease: "easeOut" } },
+          }}
+        />
+      </svg>
     </div>
+  );
+}
+
+function Tile({ icon, label, value, format }: { icon: React.ReactNode; label: string; value: number; format: (n: number) => string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
+      <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <dt className="label-caps">{label}</dt>
+        <dd className="num truncate text-base font-bold tabular-nums min-[360px]:text-lg">
+          <CountFromZero value={value} format={format} delay={0.9} />
+        </dd>
+      </div>
+    </div>
+  );
+}
+
+/** This workout's volume against the last one from the same routine, as two bars and the change. */
+function Compare({ now, before, unit, name }: { now: number; before: number; unit: WeightUnit; name: string }) {
+  const controls = useEntrance();
+  const max = Math.max(now, before);
+  const change = Math.round(((now - before) / before) * 100);
+  const up = change >= 0;
+  const rows = [
+    { label: "Last time", value: before, cls: "bg-zinc-600" },
+    { label: "Today", value: now, cls: "bg-accent" },
+  ];
+  return (
+    <section aria-labelledby="summary-compare" className="panel p-3">
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="summary-compare" className="label-caps truncate">
+          Volume vs last {name}
+        </h2>
+        <span
+          className={`num inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold ${
+            up ? "bg-accent text-on-accent" : "bg-surface-2 text-text-muted"
+          }`}
+        >
+          {up ? <ArrowUpRight aria-hidden="true" size={13} /> : <ArrowDownRight aria-hidden="true" size={13} />}
+          {up ? "+" : ""}
+          {change}%
+        </span>
+      </div>
+      <dl className="mt-3 flex flex-col gap-2">
+        {rows.map((r, i) => (
+          <div key={r.label} className="grid grid-cols-[72px_1fr_auto] items-center gap-2">
+            <dt className="text-xs text-text-muted">{r.label}</dt>
+            <span aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-zinc-800">
+              <motion.span
+                className={`block h-full origin-left rounded-full ${r.cls}`}
+                style={{ scaleX: 0 }}
+                animate={controls}
+                variants={{
+                  still: { scaleX: r.value / max },
+                  show: { scaleX: r.value / max, transition: { delay: 1.1 + i * 0.15, duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
+                }}
+              />
+            </span>
+            <dd className="num text-xs font-semibold tabular-nums">{formatVolume(r.value, unit)}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+const SHORT: Record<PersonalRecord["kind"], string> = { heaviest_weight: "Weight", best_1rm: "e1RM", best_set_volume: "Volume" };
+
+/** One chip per set: a set that broke several kinds of record at once is shown once. */
+function bySet(records: PersonalRecord[]): { pr: PersonalRecord; kinds: PersonalRecord["kind"][] }[] {
+  const out = new Map<string, { pr: PersonalRecord; kinds: PersonalRecord["kind"][] }>();
+  for (const pr of records) {
+    const row = out.get(pr.setId) ?? { pr, kinds: [] };
+    row.kinds.push(pr.kind);
+    out.set(pr.setId, row);
+  }
+  return [...out.values()];
+}
+
+/** One lift's records: photo, name, and a chip per record-setting set with the kinds it broke. */
+function RecordCard({
+  exercise,
+  records,
+  unit,
+  order,
+}: {
+  exercise: Exercise | undefined;
+  records: PersonalRecord[];
+  unit: WeightUnit;
+  order: number;
+}) {
+  const controls = useEntrance();
+  return (
+    <motion.li
+      className="flex items-center gap-3 rounded-xl border border-pr/30 bg-pr/[0.05] p-2.5"
+      style={{ opacity: 0, scale: 0.94 }}
+      animate={controls}
+      variants={{
+        still: { opacity: 1, scale: 1 },
+        show: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 340, damping: 20, delay: 1.2 + order * 0.1 } },
+      }}
+    >
+      {exercise ? <ExerciseThumb exercise={exercise} size={44} /> : <span className="size-11 rounded-xl bg-surface-2" />}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold">{exercise?.name ?? "Removed exercise"}</p>
+        <ul className="mt-1 flex flex-wrap gap-1">
+          {bySet(records).map(({ pr, kinds }) => (
+            <li key={pr.setId} className="num flex items-baseline gap-1.5 rounded-md bg-black/40 px-1.5 py-0.5 text-[11px] text-pr">
+              <span className="font-bold">
+                {formatWeight(pr.weightKg, unit)} × {pr.reps}
+              </span>
+              <span className="text-[9px] uppercase tracking-wider text-pr/80">{kinds.map((k) => SHORT[k]).join(" · ")}</span>
+              <span className="sr-only">{kinds.map((k) => PR_KIND_LABEL[k]).join(", ")}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <Trophy aria-hidden="true" size={20} className="shrink-0 text-pr" />
+    </motion.li>
   );
 }

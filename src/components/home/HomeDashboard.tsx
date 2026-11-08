@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { animate, motion, useAnimationControls, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check, ChevronRight, Dumbbell, Layers, Play, Plus, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
@@ -13,6 +13,7 @@ import { useReminderStore } from "@/store/useReminderStore";
 import { Button, PRESS_SPRING } from "@/components/ui/Button";
 import { AbotWordmark } from "@/components/brand/AbotMark";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
@@ -35,52 +36,6 @@ import type { Exercise, WorkoutSession } from "@/types/workout";
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-xl border border-line bg-surface p-3";
 const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
-
-/**
- * Starts entrance animations from an effect. Pages mount inside AnimatePresence with
- * initial={false}, which would skip any `initial` here, so each animated element begins from an
- * inline style and is driven to its final state once mounted.
- */
-function useEntrance(): ReturnType<typeof useAnimationControls> {
-  const controls = useAnimationControls();
-  const reduce = useReducedMotion();
-  useEffect(() => {
-    void controls.start(reduce ? "still" : "show");
-  }, [controls, reduce]);
-  return controls;
-}
-
-/** A block that rises into place, `order` beats after the page opens. */
-function Rise({ order, children, className = "" }: { order: number; children: React.ReactNode; className?: string }) {
-  const controls = useEntrance();
-  return (
-    <motion.div
-      className={className}
-      style={{ opacity: 0, y: 14 }}
-      animate={controls}
-      variants={{ still: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0, transition: { ...SPRING, delay: order * 0.07 } } }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/** A figure that counts up from zero when the page opens; screen readers get the final value. */
-function Counter({ value, format, className = "" }: { value: number; format: (n: number) => string; className?: string }) {
-  const reduce = useReducedMotion();
-  const [shown, setShown] = useState(0);
-  useEffect(() => {
-    if (reduce) return;
-    const c = animate(0, value, { duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1], onUpdate: setShown });
-    return () => c.stop();
-  }, [value, reduce]);
-  return (
-    <span className={className}>
-      <span aria-hidden="true">{format(reduce ? value : shown)}</span>
-      <span className="sr-only">{format(value)}</span>
-    </span>
-  );
-}
 
 /**
  * Home as a command centre, told in pictures more than words: this week's days, the next routine
@@ -116,13 +71,13 @@ export function HomeDashboard() {
         <WeekStrip days={weekStrip(sessions, now, firstDayOfWeek)} />
       </header>
 
-      <Rise order={1}>{active ? <ActiveCard now={now} /> : <ProtocolHero next={next} byId={byId} />}</Rise>
+      <Rise step={0.07} order={1}>{active ? <ActiveCard now={now} /> : <ProtocolHero next={next} byId={byId} />}</Rise>
 
-      <Rise order={2}>
+      <Rise step={0.07} order={2}>
         <ThisWeek now={now} />
       </Rise>
 
-      <Rise order={3}>
+      <Rise step={0.07} order={3}>
         <RecentWorkouts unit={weightUnit} byId={byId} now={now} />
       </Rise>
     </main>
@@ -394,7 +349,7 @@ function VolumeCard({
       <div className="min-w-0">
         <p className="label-caps">Volume</p>
         <p className="num mt-1 flex items-baseline gap-1 text-3xl font-bold tracking-tight tabular-nums">
-          <Counter value={Math.round(toDisplay(kg, unit))} format={(n) => Math.round(n).toLocaleString()} />
+          <CountFromZero delay={0.2} value={Math.round(toDisplay(kg, unit))} format={(n) => Math.round(n).toLocaleString()} />
           <span className="text-sm font-semibold text-text-muted">{unit}</span>
         </p>
         {change !== null && (

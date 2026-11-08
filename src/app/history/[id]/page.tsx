@@ -1,10 +1,10 @@
 "use client";
 
 import { setNumbers } from "@/lib/sets";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { AnimatePresence, animate, motion, useAnimationControls, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, ChevronLeft, Dumbbell, Layers, MoreHorizontal, Play, Timer, Trash2, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -18,13 +18,14 @@ import { ShareStoryButton } from "@/components/share/ShareStoryButton";
 import { ExerciseThumb, exercisePhoto } from "@/components/exercise/ExerciseThumb";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
-import { countSets, detectSessionPRs, estimate1RM, formatDuration, isWorkingSet, sessionDurationSec, sessionVolume } from "@/lib/calc";
+import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
+import { sessionRecords, workedMuscles } from "@/lib/session-insights";
+import { countSets, estimate1RM, formatDuration, isWorkingSet, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume, formatWeight } from "@/lib/units";
 import {
   EQUIPMENT_LABELS,
   MUSCLE_GROUP_LABELS,
   type Exercise,
-  type MuscleGroup,
   type Routine,
   type SessionExercise,
   type WeightUnit,
@@ -38,49 +39,6 @@ export default function SessionPage() {
     <HydrationGate>
       <SessionDetail />
     </HydrationGate>
-  );
-}
-
-/**
- * Entrance animations started from an effect: pages mount inside AnimatePresence with
- * initial={false}, so each animated element begins from an inline style and is driven in.
- */
-function useEntrance() {
-  const controls = useAnimationControls();
-  const reduce = useReducedMotion();
-  useEffect(() => {
-    void controls.start(reduce ? "still" : "show");
-  }, [controls, reduce]);
-  return controls;
-}
-
-function Rise({ order, children, className = "" }: { order: number; children: React.ReactNode; className?: string }) {
-  const controls = useEntrance();
-  return (
-    <motion.div
-      className={className}
-      style={{ opacity: 0, y: 16 }}
-      animate={controls}
-      variants={{ still: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0, transition: { ...SPRING, delay: order * 0.06 } } }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function Counter({ value, format }: { value: number; format: (n: number) => string }) {
-  const reduce = useReducedMotion();
-  const [shown, setShown] = useState(0);
-  useEffect(() => {
-    if (reduce) return;
-    const c = animate(0, value, { duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1], onUpdate: setShown });
-    return () => c.stop();
-  }, [value, reduce]);
-  return (
-    <>
-      <span aria-hidden="true">{format(reduce ? value : shown)}</span>
-      <span className="sr-only">{format(value)}</span>
-    </>
   );
 }
 
@@ -117,15 +75,7 @@ function SessionDetail() {
   const session = sessions.find((s) => s.id === id);
   // A record counts once per lift, and only when it beat an earlier one: a first attempt beats
   // nothing (the same rule as the PR pill on Home).
-  const prs = useMemo(() => {
-    if (!session) return [];
-    const before = new Set(
-      sessions
-        .filter((o) => o.status === "completed" && o.id !== session.id && o.startedAt < session.startedAt)
-        .flatMap((o) => o.exercises.map((e) => e.exerciseId)),
-    );
-    return detectSessionPRs(session, sessions, byId).filter((p) => before.has(p.exerciseId));
-  }, [session, sessions, byId]);
+  const prs = useMemo(() => (session ? sessionRecords(session, sessions, byId).records : []), [session, sessions, byId]);
   const prSetIds = useMemo(() => new Set(prs.map((p) => p.setId)), [prs]);
   const prLifts = new Set(prs.map((p) => p.exerciseId)).size;
 
@@ -263,21 +213,6 @@ function SessionDetail() {
   );
 }
 
-/** Primary muscles by working sets, and secondary ones that were not also primary. */
-function workedMuscles(s: WorkoutSession, byId: Record<string, Exercise>): { primary: MuscleGroup[]; secondary: MuscleGroup[] } {
-  const prim = new Map<MuscleGroup, number>();
-  const sec = new Set<MuscleGroup>();
-  for (const ex of s.exercises) {
-    const n = ex.sets.filter(isWorkingSet).length;
-    const def = byId[ex.exerciseId];
-    if (!n || !def) continue;
-    for (const m of def.primaryMuscles) prim.set(m, (prim.get(m) ?? 0) + n);
-    for (const m of def.secondaryMuscles) sec.add(m);
-  }
-  const primary = [...prim.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => m);
-  return { primary, secondary: [...sec].filter((m) => !prim.has(m)) };
-}
-
 /**
  * The top of the page: the workout's own exercise photos blurred into a backdrop (they are small
  * files, so they are used as colour and texture, not detail), the crisp photos in a row on top,
@@ -363,7 +298,7 @@ function Stat({
       <div className="min-w-0">
         <dt className="label-caps">{label}</dt>
         <dd className={`num truncate text-base font-bold tabular-nums min-[360px]:text-lg ${pr ? "text-pr" : ""}`}>
-          <Counter value={value} format={format} />
+          <CountFromZero value={value} format={format} />
         </dd>
       </div>
     </div>

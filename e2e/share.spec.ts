@@ -40,8 +40,10 @@ test.beforeEach(async ({ page }) => {
 test("finishing shows the summary with a way to share and a way home", async ({ page }) => {
   await finishOneSet(page);
   await expect(page.getByRole("heading", { level: 1, name: "Workout saved" })).toBeVisible();
-  await expect(page.getByText("480 kg")).toBeVisible();
-  await expect(page.getByRole("heading", { name: /personal record/ })).toBeVisible();
+  await expect(page.getByText("480 kg").first()).toBeAttached();
+  // A first-ever bench is a baseline, not a record: there was nothing to beat.
+  await expect(page.getByRole("heading", { name: "1 new lift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /personal record/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Share to IG Story" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.getByRole("link", { name: "See every set" }).click();
@@ -173,4 +175,20 @@ test("the studio opens and exports with the network cut", async ({ page, context
 test("an unknown summary id says the workout is not here", async ({ page }) => {
   await page.goto("/workout/summary/does-not-exist");
   await expect(page.getByRole("heading", { name: "Workout not found" })).toBeVisible();
+});
+
+test("a heavier repeat celebrates the record and compares with last time", async ({ page }) => {
+  await finishOneSet(page);
+  await page.getByRole("link", { name: "Back to Home" }).click();
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "70", "8");
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.waitForURL(/\/workout\/summary\//);
+  await expect(page.getByRole("heading", { name: "1 personal record" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /new lift/ })).toHaveCount(0);
+  const compare = page.getByRole("region", { name: /Volume vs last/ });
+  await expect(compare).toContainText("+17%");
+  await expectNoHorizontalOverflow(page);
 });
