@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { setGridColumns } from "./setGrid";
 import { ArrowDown, ArrowUp, MoreHorizontal, Plus, Timer, Trash2 } from "lucide-react";
 import type {
   Exercise,
@@ -50,8 +51,8 @@ export function ExerciseCard({
     : "This exercise was removed from the library";
 
   return (
-    <section aria-labelledby={`ex-${item.id}`} className="rounded-card bg-surface p-3">
-      <header className="flex items-start justify-between gap-2">
+    <section aria-labelledby={`ex-${item.id}`} className="rounded-card bg-surface px-2 py-3">
+      <header className="flex items-start justify-between gap-2 px-1">
         <div className="min-w-0">
           <h2 id={`ex-${item.id}`} className="truncate text-base font-semibold text-accent">
             {name}
@@ -69,18 +70,18 @@ export function ExerciseCard({
         </button>
       </header>
 
-      <div className="mt-2 flex items-center gap-1 text-xs text-text-muted">
+      <div className="mt-2 flex items-center gap-1 px-1 text-xs text-text-muted">
         <Timer aria-hidden="true" size={14} />
         <span>Rest {item.restSeconds === 0 ? "off" : formatClock(item.restSeconds)}</span>
       </div>
 
       <div
-        className="mt-3 grid gap-1.5 px-1 text-[11px] font-semibold uppercase text-text-muted"
-        style={{ gridTemplateColumns: `44px minmax(0,1fr) 60px 52px ${showRpe ? "48px " : ""}44px` }}
+        className="mt-3 grid gap-1 px-1 text-[11px] font-semibold uppercase text-text-muted"
+        style={{ gridTemplateColumns: setGridColumns(showRpe) }}
         aria-hidden="true"
       >
         <span className="text-center">Set</span>
-        <span>Previous</span>
+        <span className="truncate">Prev</span>
         <span className="text-center">{exercise?.isBodyweight ? "" : unit}</span>
         <span className="text-center">Reps</span>
         {showRpe && <span className="text-center">RPE</span>}

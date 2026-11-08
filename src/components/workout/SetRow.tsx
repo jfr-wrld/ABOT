@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { setGridColumns } from "./setGrid";
 import { Check, Trophy } from "lucide-react";
 import type { PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
 import { NumberField } from "@/components/ui/NumberField";
@@ -84,10 +85,10 @@ export function SetRow({
 
   return (
     <li
-      className={`grid items-center gap-1.5 rounded-ctl px-1 py-1 transition-colors ${
+      className={`grid items-center gap-1 rounded-ctl px-1 py-1 transition-colors ${
         set.completed ? "bg-accent-tint" : ""
       }`}
-      style={{ gridTemplateColumns: `44px minmax(0,1fr) 60px 52px ${showRpe ? "48px " : ""}44px` }}
+      style={{ gridTemplateColumns: setGridColumns(showRpe) }}
     >
       <button
         type="button"
@@ -99,7 +100,7 @@ export function SetRow({
         <SetTypeChip type={set.type} number={number} completed={set.completed} />
       </button>
 
-      <div className="min-w-0 text-[13px] leading-tight text-text-muted">
+      <div className="min-w-0 text-xs leading-tight text-text-muted">
         {prevLabel ? (
           <button
             type="button"

@@ -35,11 +35,17 @@ export async function addExercise(page: Page, name: string): Promise<void> {
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
 }
 
-/** Fills weight and reps for working set `n` and ticks it. Pass kg = null for bodyweight. */
-export async function logSet(page: Page, n: number, kg: string | null, reps: string): Promise<void> {
-  if (kg !== null) await page.getByLabel(new RegExp(`^Set ${n} weight in `)).first().fill(kg);
-  await page.getByLabel(`Set ${n} reps`).first().fill(reps);
-  await page.getByRole("button", { name: `Mark Set ${n} done` }).first().click();
+/**
+ * Fills weight and reps for working set `n` and ticks it. Pass kg = null for bodyweight.
+ * With `exercise`, the lookup is scoped to that exercise's card.
+ */
+export async function logSet(page: Page, n: number, kg: string | null, reps: string, exercise?: string): Promise<void> {
+  const scope = exercise
+    ? page.locator("section").filter({ has: page.getByRole("heading", { name: exercise, exact: true }) })
+    : page;
+  if (kg !== null) await scope.getByLabel(new RegExp(`^Set ${n} weight in `)).first().fill(kg);
+  await scope.getByLabel(`Set ${n} reps`).first().fill(reps);
+  await scope.getByRole("button", { name: `Mark Set ${n} done` }).first().click();
 }
 
 export async function finishWorkout(page: Page): Promise<void> {

@@ -80,6 +80,10 @@ test("finish saves the workout and the previous column autofills next time", asy
   await addExercise(page, "Bench Press (Barbell)");
   const prev = page.getByRole("button", { name: /^Previous 60 × 8/ });
   await expect(prev).toBeVisible();
+  await page.setViewportSize({ width: 360, height: 780 });
+  const clipped = await prev.evaluate((el) => el.scrollWidth > el.clientWidth);
+  expect(clipped, "Prev value is cut off at 360px").toBe(false);
+  await expectNoHorizontalOverflow(page);
   await prev.click();
   await expect(page.getByLabel("Set 1 weight in kg")).toHaveValue("60");
   await expect(page.getByLabel("Set 1 reps")).toHaveValue("8");

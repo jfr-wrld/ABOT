@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, Dumbbell, House, ListChecks, Search } from "lucide-react";
@@ -15,8 +16,23 @@ const TABS = [
   { href: "/progress", label: "Progress", Icon: BarChart3 },
 ] as const;
 
+/**
+ * usePathname suspends on dynamic routes under cacheComponents, so the bar renders a
+ * same-size shell (no tab marked current) until the pathname is known.
+ */
 export function BottomNav() {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<NavBar pathname={null} />}>
+      <CurrentNav />
+    </Suspense>
+  );
+}
+
+function CurrentNav() {
+  return <NavBar pathname={usePathname()} />;
+}
+
+function NavBar({ pathname }: { pathname: string | null }) {
   const hydrated = useHydration((s) => s.hydrated);
   const hasActive = useWorkoutStore((s) => s.active !== null);
 
@@ -27,7 +43,7 @@ export function BottomNav() {
     >
       <ul className="mx-auto flex max-w-[640px]">
         {TABS.map(({ href, label, Icon }) => {
-          const current = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const current = pathname !== null && (href === "/" ? pathname === "/" : pathname.startsWith(href));
           const live = href === "/workout" && hydrated && hasActive;
           return (
             <li key={href} className="min-w-0 flex-1">

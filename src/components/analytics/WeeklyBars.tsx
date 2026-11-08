@@ -34,10 +34,17 @@ export function WeeklyBars({
         <>
           <div className="mt-2 h-44">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={points} margin={{ top: 16, right: 4, left: -20, bottom: 0 }} barCategoryGap="30%">
+              <BarChart data={points} margin={{ top: 16, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
                 <CartesianGrid vertical={false} stroke={CHART.grid} />
                 <XAxis dataKey="label" tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
+                <YAxis
+                  tick={{ fill: CHART.axis, fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                  allowDecimals={false}
+                  tickFormatter={compactTick}
+                />
                 <Tooltip
                   {...tooltipStyle}
                   formatter={(_v, _n, item) => [(item.payload as WeekPoint).display, unitLabel]}
@@ -85,4 +92,10 @@ export function WeeklyBars({
       )}
     </figure>
   );
+}
+
+/** 1200 -> "1.2k" so axis labels fit the 40px gutter at phone width. */
+function compactTick(v: number): string {
+  if (Math.abs(v) >= 1000) return `${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k`;
+  return String(v);
 }

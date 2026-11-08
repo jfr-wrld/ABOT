@@ -140,10 +140,10 @@ function Detail() {
             ) : (
               <div className="mt-2 h-44">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                  <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <CartesianGrid vertical={false} stroke={CHART.grid} />
                     <XAxis dataKey="date" tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={48} domain={["auto", "auto"]} />
+                    <YAxis tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={40} domain={["auto", "auto"]} />
                     <Tooltip
                       {...tooltipStyle}
                       cursor={{ stroke: CHART.axis }}

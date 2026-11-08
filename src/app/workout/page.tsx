@@ -71,7 +71,7 @@ function WorkoutScreen() {
 
       <h1 className="sr-only">Active workout: {active.name}</h1>
 
-      <div className="flex flex-col gap-3 px-4 pt-3">
+      <div className="flex flex-col gap-3 px-3 pt-3">
         {active.exercises.length === 0 && (
           <p className="rounded-card bg-surface px-4 py-6 text-center text-sm text-text-muted">
             This workout has no exercises yet. Add one below to start logging sets.
