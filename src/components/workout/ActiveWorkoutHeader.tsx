@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { WeightUnit, WorkoutSession } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
+import { useLocationStore } from "@/store/useLocationStore";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
@@ -26,6 +27,8 @@ export function ActiveWorkoutHeader({
   const volume = sessionVolume(session, byId);
   const { total, completed } = countSets(session);
   const [startOpen, setStartOpen] = useState(false);
+  const locations = useLocationStore((s) => s.locations);
+  const setLocation = useWorkoutStore((s) => s.setLocation);
 
   return (
     <header className="px-4 pt-4">
@@ -45,6 +48,27 @@ export function ActiveWorkoutHeader({
           Finish
         </Button>
       </div>
+
+      {locations.length > 0 && (
+        <div className="mt-2 flex items-center gap-2">
+          <label htmlFor="workout-gym" className="text-sm text-text-muted">
+            Gym
+          </label>
+          <select
+            id="workout-gym"
+            value={session.locationId ?? ""}
+            onChange={(e) => setLocation(e.target.value || undefined)}
+            className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-2 text-sm text-text"
+          >
+            <option value="">No gym</option>
+            {locations.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <dl className="mt-3 grid grid-cols-3 gap-2">
         <div className="rounded-ctl bg-surface px-3 py-2">

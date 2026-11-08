@@ -82,7 +82,7 @@ export function ExerciseCard({
       >
         <span className="text-center">Set</span>
         <span className="truncate">Prev</span>
-        <span className="text-center">{exercise?.isBodyweight ? "" : unit}</span>
+        <span className="text-center normal-case">{weightColumnLabel(exercise, unit)}</span>
         <span className="text-center">Reps</span>
         {showRpe && <span className="text-center">RPE</span>}
         <span className="text-center">Done</span>
@@ -192,4 +192,12 @@ export function ExerciseCard({
       </Sheet>
     </section>
   );
+}
+
+/** Says what the number means: per dumbbell, per side, or load added to bodyweight. */
+function weightColumnLabel(exercise: Exercise | undefined, unit: WeightUnit): string {
+  if (exercise?.isBodyweight) return `+${unit}`;
+  if (exercise?.loadMode === "per_hand") return `${unit}/hand`;
+  if (exercise?.loadMode === "unilateral") return `${unit}/side`;
+  return unit;
 }

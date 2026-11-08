@@ -71,3 +71,25 @@ describe("completeSet", () => {
     expect(useWorkoutStore.getState().restTimer?.totalSec).toBe(90);
   });
 });
+
+import { useLocationStore } from "./useLocationStore";
+
+describe("gym location", () => {
+  it("a new workout starts at the default gym and can switch", () => {
+    useLocationStore.setState({ locations: [] });
+    const a = useLocationStore.getState().add("Gym A");
+    const b = useLocationStore.getState().add("Gym B");
+    useWorkoutStore.getState().startEmpty(90);
+    expect(useWorkoutStore.getState().active!.locationId).toBe(a.id);
+    useWorkoutStore.getState().setLocation(b.id);
+    expect(useWorkoutStore.getState().active!.locationId).toBe(b.id);
+    useWorkoutStore.getState().setLocation(undefined);
+    expect(useWorkoutStore.getState().active!.locationId).toBeUndefined();
+  });
+
+  it("with no gyms the workout has no location", () => {
+    useLocationStore.setState({ locations: [] });
+    useWorkoutStore.getState().startEmpty(90);
+    expect(useWorkoutStore.getState().active!.locationId).toBeUndefined();
+  });
+});

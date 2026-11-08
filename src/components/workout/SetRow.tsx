@@ -46,8 +46,10 @@ export function SetRow({
 
   const prevLabel =
     previous && previous.reps !== null
-      ? isBodyweight || previous.weightKg === null
+      ? previous.weightKg === null || previous.weightKg <= 0
         ? `${previous.reps} reps`
+        : isBodyweight
+          ? `+${formatWeight(previous.weightKg, unit, false)} × ${previous.reps}`
         : `${formatWeight(previous.weightKg, unit, false)} × ${previous.reps}`
       : null;
 
@@ -127,13 +129,8 @@ export function SetRow({
         )}
       </div>
 
-      {isBodyweight ? (
-        <span className="text-center text-xs text-text-muted" aria-label="Bodyweight">
-          BW
-        </span>
-      ) : (
-        <NumberField
-          aria-label={`${a11yName} weight in ${unit}`}
+      <NumberField
+          aria-label={isBodyweight ? `${a11yName} added weight in ${unit}` : `${a11yName} weight in ${unit}`}
           placeholder={previous?.weightKg != null ? formatWeight(previous.weightKg, unit, false) : "0"}
           value={set.weightKg === null ? null : toDisplay(set.weightKg, unit)}
           onCommit={(n) => onUpdate({ weightKg: n === null ? null : fromDisplay(n, unit) })}
@@ -142,7 +139,6 @@ export function SetRow({
           step={0.5}
           max={2000}
         />
-      )}
 
       <NumberField
         ref={repsRef}

@@ -7,6 +7,7 @@ import type {
   WorkoutSet,
 } from "@/types/workout";
 import { newId } from "@/lib/id";
+import { useLocationStore } from "./useLocationStore";
 
 export interface RestTimer {
   /** Epoch ms when the countdown reaches zero. Persisted so a refresh keeps the clock. */
@@ -23,6 +24,8 @@ interface WorkoutState {
   startEmpty: (defaultRest: number) => void;
   startFromRoutine: (routine: Routine) => void;
   renameActive: (name: string) => void;
+  /** Which gym this workout is at; undefined when no gym is set. */
+  setLocation: (locationId: string | undefined) => void;
   addExercise: (exerciseId: string, restSeconds: number) => void;
   removeExercise: (sessionExerciseId: string) => void;
   moveExercise: (sessionExerciseId: string, dir: -1 | 1) => void;
@@ -83,6 +86,7 @@ export const useWorkoutStore = create<WorkoutState>()(
           active: {
             id: newId(),
             name: defaultWorkoutName(),
+            locationId: defaultLocationId(),
             startedAt: Date.now(),
             status: "active",
             exercises: [],
@@ -98,6 +102,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             id: newId(),
             name: routine.name,
             routineId: routine.id,
+            locationId: defaultLocationId(),
             startedAt: Date.now(),
             status: "active",
             exercises: routine.exercises.map((re) => ({
@@ -115,6 +120,8 @@ export const useWorkoutStore = create<WorkoutState>()(
       },
 
       renameActive: (name) => set((s) => patchActive(s, (a) => ({ ...a, name }))),
+
+      setLocation: (locationId) => set((s) => patchActive(s, (a) => ({ ...a, locationId }))),
 
       addExercise: (exerciseId, restSeconds) =>
         set((s) =>
@@ -276,6 +283,10 @@ export const useWorkoutStore = create<WorkoutState>()(
       deleteSession: (id) => set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) })),
     }),
 );
+
+function defaultLocationId(): string | undefined {
+  return useLocationStore.getState().locations.find((l) => l.isDefault)?.id;
+}
 
 function defaultWorkoutName(): string {
   const h = new Date().getHours();

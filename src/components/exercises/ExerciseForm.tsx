@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { Equipment, Exercise, ExerciseDraft, MuscleGroup } from "@/types/workout";
+import type { Equipment, Exercise, ExerciseDraft, LoadMode, MuscleGroup } from "@/types/workout";
+import { defaultLoadMode } from "@/data/normalize";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +25,11 @@ export function ExerciseForm({
   const [primary, setPrimary] = useState<MuscleGroup>(initial?.primaryMuscle ?? "chest");
   const [equipment, setEquipment] = useState<Equipment>(initial?.equipment ?? "barbell");
   const [error, setError] = useState<string | null>(null);
+  // Load and machine dependence follow the equipment until the user picks them explicitly.
+  const [loadChoice, setLoadChoice] = useState<LoadMode | null>(initial?.loadMode ?? null);
+  const [machineChoice, setMachineChoice] = useState<boolean | null>(initial?.isMachineDependent ?? null);
+  const loadMode = loadChoice ?? defaultLoadMode(equipment, name);
+  const machineDependent = machineChoice ?? (equipment === "machine" || equipment === "cable");
 
   function submit() {
     const trimmed = name.trim();
@@ -34,9 +40,11 @@ export function ExerciseForm({
     onSave({
       name: trimmed,
       primaryMuscle: primary,
-      secondaryMuscles: [],
+      secondaryMuscles: initial?.secondaryMuscles ?? [],
       equipment,
       isBodyweight: equipment === "bodyweight",
+      loadMode,
+      isMachineDependent: machineDependent,
     });
   }
 
@@ -113,8 +121,28 @@ export function ExerciseForm({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-text-muted">Bodyweight exercises log reps only, no weight column.</p>
+          <p className="mt-1 text-xs text-text-muted">For bodyweight exercises the weight column is optional added load.</p>
         </div>
+        <div>
+          <label htmlFor="ex-load" className="mb-1 block text-sm font-semibold">
+            Load
+          </label>
+          <select id="ex-load" value={loadMode} onChange={(e) => setLoadChoice(e.target.value as LoadMode)} className={field}>
+            <option value="total">Total (one bar or stack)</option>
+            <option value="per_hand">Per hand (volume counts both)</option>
+            <option value="unilateral">One side at a time</option>
+          </select>
+        </div>
+        <label htmlFor="ex-machine" className="flex min-h-11 items-center gap-3 text-sm">
+          <input
+            id="ex-machine"
+            type="checkbox"
+            checked={machineDependent}
+            onChange={(e) => setMachineChoice(e.target.checked)}
+            className="size-5 accent-[var(--color-accent)]"
+          />
+          Weight depends on the gym&apos;s machine (keep records per gym)
+        </label>
         <button type="submit" className="sr-only">
           Save
         </button>

@@ -189,3 +189,19 @@ describe("per-location records", () => {
     expect(exerciseHistory("lat-pulldown-cable", [a, b], { byId: SEED_EXERCISES_BY_ID, locationId: "B" })).toHaveLength(1);
   });
 });
+
+describe("bodyweight sets", () => {
+  it("count as working sets for the muscle split even without added weight", () => {
+    const s = session("bw", 1, [set({ id: "p1", weightKg: null, reps: 8 }), set({ id: "p2", weightKg: 0, reps: 6 })], "pull-up");
+    expect(muscleSplit([s], SEED_EXERCISES_BY_ID).back).toBe(2);
+    expect(sessionVolume(s)).toBe(0);
+  });
+  it("added weight counts toward volume", () => {
+    const s = session("bw", 1, [set({ id: "p1", weightKg: 10, reps: 8 })], "pull-up");
+    expect(sessionVolume(s)).toBe(80);
+  });
+  it("sets without reps are not working sets", () => {
+    const s = session("bw", 1, [set({ id: "p1", weightKg: null, reps: null })], "pull-up");
+    expect(muscleSplit([s], SEED_EXERCISES_BY_ID).back).toBeUndefined();
+  });
+});
