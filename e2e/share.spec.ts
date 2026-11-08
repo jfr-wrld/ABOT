@@ -102,22 +102,25 @@ test("a background photo brings the overlay and grayscale controls", async ({ pa
   await expect(gray).toHaveAttribute("aria-checked", "false");
   await gray.click();
   await expect(gray).toHaveAttribute("aria-checked", "true");
+  await dialog.getByRole("tab", { name: "Layout" }).click();
   await dialog.getByRole("button", { name: "Monochrome Steel", exact: true }).click();
+  await dialog.getByRole("tab", { name: /^Photo/ }).click();
   await expect(gray).toBeDisabled();
 
   await dialog.getByRole("button", { name: "Remove background photo" }).click();
   await expect(slider).toHaveCount(0);
-  await expect(dialog.getByRole("button", { name: "From gallery" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Take photo" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Gallery", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Camera", exact: true })).toBeVisible();
 });
 
 test("the background can come from the camera or the gallery", async ({ page }) => {
   await finishOneSet(page);
   const dialog = await openStudio(page);
-  const [camera] = await Promise.all([page.waitForEvent("filechooser"), dialog.getByRole("button", { name: "Take photo" }).click()]);
+  await dialog.getByRole("tab", { name: /^Photo/ }).click();
+  const [camera] = await Promise.all([page.waitForEvent("filechooser"), dialog.getByRole("button", { name: "Camera", exact: true }).click()]);
   // The app's WebView opens the camera only for an input that asks to capture.
   expect(await camera.element().getAttribute("capture")).toBe("environment");
-  const [gallery] = await Promise.all([page.waitForEvent("filechooser"), dialog.getByRole("button", { name: "From gallery" }).click()]);
+  const [gallery] = await Promise.all([page.waitForEvent("filechooser"), dialog.getByRole("button", { name: "Gallery", exact: true }).click()]);
   expect(await gallery.element().getAttribute("capture")).toBeNull();
   await gallery.setFiles(path.join(__dirname, "fixtures", "frame0.jpg"));
   await expect(dialog.getByLabel("Overlay opacity")).toBeVisible();
@@ -209,13 +212,13 @@ test("a heavier repeat celebrates the record and compares with last time", async
   await expectNoHorizontalOverflow(page);
 });
 
-test("the username typed in the studio is kept on the profile", async ({ page }) => {
+test("the story carries the username from the profile", async ({ page }) => {
+  await page.goto("/profile?tab=about");
+  await page.getByLabel(/^Username/).fill("@Jafar Lifts!");
+  await expect(page.getByLabel(/^Username/)).toHaveValue("JafarLifts");
   await finishOneSet(page);
   const dialog = await openStudio(page);
-  const handle = dialog.getByRole("textbox", { name: "Username on the story" });
-  await handle.fill("@Jafar Lifts!");
-  await expect(handle).toHaveValue("JafarLifts");
-  await page.keyboard.press("Escape");
-  await page.goto("/profile");
-  await expect(page.getByText("@JafarLifts").first()).toBeVisible();
+  await expect(dialog.getByRole("img", { name: /@JafarLifts\.$/ })).toBeVisible();
+  await expect(dialog.getByText("@JafarLifts", { exact: false }).first()).toBeVisible();
+  await expect(dialog.getByRole("textbox")).toHaveCount(0);
 });
