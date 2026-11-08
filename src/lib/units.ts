@@ -7,6 +7,19 @@ export function toDisplay(kg: number, unit: WeightUnit): number {
   return Math.round(v * 100) / 100;
 }
 
+const CM_PER_INCH = 2.54;
+
+/** Height for lbs users. Rounds to the nearest inch, carrying 12 inches into a foot. */
+export function cmToFtIn(cm: number): { ft: number; inch: number } {
+  const total = Math.round(cm / CM_PER_INCH);
+  return { ft: Math.floor(total / 12), inch: total % 12 };
+}
+
+/** Feet and inches back to cm for storage, to 0.1 cm. */
+export function ftInToCm(ft: number, inch: number): number {
+  return Math.round((ft * 12 + inch) * CM_PER_INCH * 10) / 10;
+}
+
 /** Typed value in the user's unit -> kg for storage. */
 export function fromDisplay(value: number, unit: WeightUnit): number {
   return unit === "kg" ? value : lbsToKg(value);

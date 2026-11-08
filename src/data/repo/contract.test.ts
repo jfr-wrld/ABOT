@@ -89,15 +89,42 @@ describe.each([
         profileName: "Jafar",
         bodyweightKg: 72.5,
         heightCm: 170,
+        profilePhoto: null,
       },
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },
       exerciseMedia: { "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" } },
+      bodyweightLog: [{ id: "2026-11-01", date: 1, weightKg: 80 }],
     };
     await repo.replaceAll(data);
     const snap = await repo.snapshot();
     expect(snap.sessions.map((s) => s.id)).toEqual(["x"]);
     expect(snap).toEqual({ ...data, activeWorkout: snap.activeWorkout });
     expect(snap.activeWorkout?.id).toBe("live");
+  });
+});
+
+describe.each([
+  ["memory", () => createMemoryRepository()],
+  ["dexie", () => createDexieRepository(`t-${crypto.randomUUID()}`)],
+] as const)("%s repository bodyweight merge", (_n, make) => {
+  it("merges the log by day, the incoming entry winning", async () => {
+    const repo = make();
+    await repo.kv.set("bodyweightLog", [
+      { id: "2026-11-01", date: 1, weightKg: 80 },
+      { id: "2026-11-03", date: 3, weightKg: 79 },
+    ]);
+    await repo.mergeAll({
+      sessions: [], routines: [], exercises: [], locations: [], exerciseMedia: {},
+      bodyweightLog: [
+        { id: "2026-11-01", date: 1, weightKg: 81 },
+        { id: "2026-11-02", date: 2, weightKg: 80.5 },
+      ],
+    });
+    expect((await repo.snapshot()).bodyweightLog).toEqual([
+      { id: "2026-11-01", date: 1, weightKg: 81 },
+      { id: "2026-11-02", date: 2, weightKg: 80.5 },
+      { id: "2026-11-03", date: 3, weightKg: 79 },
+    ]);
   });
 });
 
@@ -141,7 +168,7 @@ describe.each([
   it("replaceAll clears a running rest timer", async () => {
     const repo = make();
     await repo.kv.set("restTimer", { endsAt: 1, totalSec: 90, sessionExerciseId: "x" });
-    await repo.replaceAll({ sessions: [], routines: [], exercises: [], locations: [], settings: null, activeWorkout: null, exerciseMedia: {} });
+    await repo.replaceAll({ sessions: [], routines: [], exercises: [], locations: [], settings: null, activeWorkout: null, exerciseMedia: {}, bodyweightLog: [] });
     expect(await repo.kv.get("restTimer")).toBeNull();
   });
 
@@ -149,7 +176,7 @@ describe.each([
     const repo = make();
     await repo.sessions.put(session("a"));
     await repo.sessions.put(session("b"));
-    await repo.mergeAll({ sessions: [{ ...session("a"), name: "A2" }, session("c")], routines: [routine("r")], exercises: [], locations: [location("g")], exerciseMedia: {} });
+    await repo.mergeAll({ sessions: [{ ...session("a"), name: "A2" }, session("c")], routines: [routine("r")], exercises: [], locations: [location("g")], exerciseMedia: {}, bodyweightLog: [] });
     expect((await repo.sessions.all()).map((s) => `${s.id}:${s.name}`).sort()).toEqual(["a:A2", "b:b", "c:c"]);
     expect((await repo.routines.all()).map((r) => r.id)).toEqual(["r"]);
     expect((await repo.locations.all()).map((l) => l.id)).toEqual(["g"]);
@@ -166,7 +193,7 @@ describe.each([
   it("mergeAll adds custom videos and the incoming link wins per exercise", async () => {
     const repo = make();
     await repo.kv.set("exerciseMedia", { a: { customVideoUrl: "https://youtu.be/aaaaaaaaaaa" }, b: { customVideoUrl: "https://youtu.be/bbbbbbbbbbb" } });
-    await repo.mergeAll({ sessions: [], routines: [], exercises: [], locations: [], exerciseMedia: { b: { customVideoUrl: "https://youtu.be/BBBBBBBBBBB" }, c: { customVideoUrl: "https://youtu.be/ccccccccccc" } } });
+    await repo.mergeAll({ sessions: [], routines: [], exercises: [], locations: [], exerciseMedia: { b: { customVideoUrl: "https://youtu.be/BBBBBBBBBBB" }, c: { customVideoUrl: "https://youtu.be/ccccccccccc" } }, bodyweightLog: [] });
     expect((await repo.snapshot()).exerciseMedia).toEqual({
       a: { customVideoUrl: "https://youtu.be/aaaaaaaaaaa" },
       b: { customVideoUrl: "https://youtu.be/BBBBBBBBBBB" },

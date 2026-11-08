@@ -1,7 +1,8 @@
 import type { GymLocation } from "@/types/workout";
-import { DEFAULT_SETTINGS, PROFILE_LIMITS } from "@/types/workout";
+import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry } from "@/types/workout";
 import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./normalize";
 import type { Repository, RepoSnapshot, StoredSettings } from "./repo";
+import { mergeLog } from "./repo/types";
 import { parseVideoUrl } from "@/lib/videoUrl";
 
 export interface AbotBackup {
@@ -62,7 +63,26 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     profileName: typeof raw.profileName === "string" ? raw.profileName.trim().slice(0, PROFILE_LIMITS.nameMax) : "",
     bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
+    profilePhoto: normalizePhoto(raw.profilePhoto),
   };
+}
+
+/** Only a base64 JPEG/PNG/WebP data URL of photo size; never a link or another media type. */
+const PHOTO = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/;
+function normalizePhoto(v: unknown): string | null {
+  return typeof v === "string" && v.length <= PROFILE_LIMITS.photoMax && PHOTO.test(v) ? v : null;
+}
+
+const DAY_ID = /^\d{4}-\d{2}-\d{2}$/;
+function normalizeBodyweightLog(raw: unknown): BodyweightEntry[] {
+  if (!Array.isArray(raw)) return [];
+  const out: BodyweightEntry[] = [];
+  for (const e of raw) {
+    if (!isObj(e) || typeof e.id !== "string" || !DAY_ID.test(e.id) || typeof e.date !== "number") continue;
+    const weightKg = inRange(e.weightKg, PROFILE_LIMITS.bodyweightKg);
+    if (weightKg !== null) out.push({ id: e.id, date: e.date, weightKg });
+  }
+  return mergeLog([], out);
 }
 
 function inRange(v: unknown, [min, max]: readonly [number, number]): number | null {
@@ -118,6 +138,7 @@ export function parseBackup(
       settings: normalizeSettings(data.settings),
       activeWorkout: active ? { ...active, status: "active" } : null,
       exerciseMedia: normalizeExerciseMedia(data.exerciseMedia),
+      bodyweightLog: normalizeBodyweightLog(data.bodyweightLog),
     },
   };
   return {
@@ -144,7 +165,7 @@ export async function importBackup(repo: Repository, backup: AbotBackup, mode: "
     await repo.replaceAll(backup.data);
     return;
   }
-  const { sessions, routines, exercises, locations, exerciseMedia } = backup.data;
+  const { sessions, routines, exercises, locations, exerciseMedia, bodyweightLog } = backup.data;
   const local = await repo.locations.all();
   const localDefault = local.find((l) => l.isDefault)?.id;
   const fileDefault = locations.find((l) => l.isDefault)?.id;
@@ -155,5 +176,5 @@ export async function importBackup(repo: Repository, backup: AbotBackup, mode: "
     // Local gyms not in the file are rewritten only if their default flag has to change.
     ...local.filter((l) => !incomingIds.has(l.id) && l.isDefault !== (l.id === defaultId)).map((l) => ({ ...l, isDefault: l.id === defaultId })),
   ];
-  await repo.mergeAll({ sessions, routines, exercises, locations: merged, exerciseMedia });
+  await repo.mergeAll({ sessions, routines, exercises, locations: merged, exerciseMedia, bodyweightLog });
 }

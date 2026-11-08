@@ -9,6 +9,7 @@ import { useExerciseStore } from "./useExerciseStore";
 import { useSettingsStore, type SettingsState } from "./useSettingsStore";
 import { useLocationStore } from "./useLocationStore";
 import { useHydration } from "./hydration";
+import { useBodyStore } from "./useBodyStore";
 
 export interface PersistenceHandle {
   /** Resolves when every queued write (including ones queued meanwhile) has settled. */
@@ -40,6 +41,7 @@ function pickSettings(s: SettingsState): StoredSettings {
     profileName: s.profileName,
     bodyweightKg: s.bodyweightKg,
     heightCm: s.heightCm,
+    profilePhoto: s.profilePhoto,
   };
 }
 
@@ -66,6 +68,7 @@ export async function hydrateStores(repo: Repository): Promise<void> {
     // A repository without settings means defaults, not "keep whatever was in memory".
     // Defaults first: rows saved before a field existed must not keep a stale in-memory value.
     useSettingsStore.setState({ ...DEFAULT_STORED_SETTINGS, ...snap.settings });
+    useBodyStore.setState({ entries: snap.bodyweightLog });
   } finally {
     loadingFromRepo = false;
   }
@@ -82,6 +85,7 @@ export function snapshotFromStores(): RepoSnapshot {
     settings: pickSettings(useSettingsStore.getState()),
     activeWorkout: w.active,
     exerciseMedia: useExerciseStore.getState().mediaOverrides,
+    bodyweightLog: useBodyStore.getState().entries,
   };
 }
 
@@ -97,6 +101,7 @@ type WriteKey =
   | "kv:restTimer"
   | "kv:settings"
   | "kv:exerciseMedia"
+  | "kv:bodyweightLog"
   | `finish:${string}`;
 
 function currentRows(table: TableName): { id: string }[] {
@@ -117,6 +122,7 @@ async function writeKey(repo: Repository, key: WriteKey): Promise<void> {
   if (key === "kv:restTimer") return repo.kv.set("restTimer", useWorkoutStore.getState().restTimer);
   if (key === "kv:settings") return repo.kv.set("settings", pickSettings(useSettingsStore.getState()));
   if (key === "kv:exerciseMedia") return repo.kv.set("exerciseMedia", useExerciseStore.getState().mediaOverrides);
+  if (key === "kv:bodyweightLog") return repo.kv.set("bodyweightLog", useBodyStore.getState().entries);
   const sep = key.indexOf(":");
   const kind = key.slice(0, sep);
   const id = key.slice(sep + 1);
@@ -218,6 +224,9 @@ export function attachPersistence(repo: Repository): PersistenceHandle {
       if (loadingFromRepo) return;
       for (const id of changedIds(prev.custom, next.custom)) enqueue(`exercises:${id}`);
       if (next.mediaOverrides !== prev.mediaOverrides) enqueue("kv:exerciseMedia");
+    }),
+    useBodyStore.subscribe((next, prev) => {
+      if (!loadingFromRepo && next.entries !== prev.entries) enqueue("kv:bodyweightLog");
     }),
     useLocationStore.subscribe((next, prev) => {
       if (!loadingFromRepo) for (const id of changedIds(prev.locations, next.locations)) enqueue(`locations:${id}`);

@@ -7,6 +7,7 @@ import { useExerciseStore } from "./useExerciseStore";
 import { useSettingsStore } from "./useSettingsStore";
 import { useLocationStore } from "./useLocationStore";
 import { useHydration } from "./hydration";
+import { useBodyStore } from "./useBodyStore";
 import type { WorkoutSession } from "@/types/workout";
 import type { StoredSettings } from "@/data/repo/types";
 
@@ -17,6 +18,7 @@ const initial = {
   settings: useSettingsStore.getState(),
   locations: useLocationStore.getState(),
   hydration: useHydration.getState(),
+  body: useBodyStore.getState(),
 };
 
 let detach: (() => void) | null = null;
@@ -28,6 +30,7 @@ beforeEach(() => {
   useSettingsStore.setState(initial.settings, true);
   useLocationStore.setState(initial.locations, true);
   useHydration.setState(initial.hydration, true);
+  useBodyStore.setState(initial.body, true);
 });
 afterEach(() => {
   detach?.();
@@ -354,5 +357,28 @@ describe("custom exercise videos", () => {
     useExerciseStore.getState().setCustomVideo("bench-press-barbell", null);
     await p2.flush();
     expect(await repo.kv.get("exerciseMedia")).toEqual({});
+  });
+});
+
+describe("bodyweight log", () => {
+  it("a weigh-in is saved, sets the current bodyweight, and hydrates back", async () => {
+    const repo = createMemoryRepository();
+    const p = await attach(repo);
+    const day = new Date(2026, 10, 8, 9).getTime();
+    useBodyStore.getState().logWeight(80, day - 86_400_000);
+    useBodyStore.getState().logWeight(79.5, day);
+    expect(useSettingsStore.getState().bodyweightKg).toBe(79.5);
+    await p.flush();
+    expect((await repo.kv.get("bodyweightLog"))?.map((e) => e.weightKg)).toEqual([80, 79.5]);
+
+    useBodyStore.getState().remove("2026-11-08");
+    expect(useSettingsStore.getState().bodyweightKg).toBe(80);
+    await p.flush();
+    p.detach();
+    detach = null;
+
+    useBodyStore.setState({ entries: [] });
+    await hydrateStores(repo);
+    expect(useBodyStore.getState().entries.map((e) => e.id)).toEqual(["2026-11-07"]);
   });
 });

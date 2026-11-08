@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, CloudOff, Settings, Trophy } from "lucide-react";
+import { Camera, ChevronRight, CloudOff, Settings, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -10,9 +10,11 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { NumberField } from "@/components/ui/NumberField";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { BodyweightSection } from "@/components/profile/BodyweightSection";
 import { profileStats } from "@/lib/profile";
+import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
-import { formatVolume, formatWeight, fromDisplay, toDisplay } from "@/lib/units";
+import { cmToFtIn, formatVolume, formatWeight, ftInToCm } from "@/lib/units";
 import { PROFILE_LIMITS } from "@/types/workout";
 
 export default function ProfilePage() {
@@ -30,9 +32,6 @@ function ProfileScreen() {
   const now = useNow(60_000);
   const stats = useMemo(() => profileStats(sessions, byId, now, s.firstDayOfWeek), [sessions, byId, now, s.firstDayOfWeek]);
   const unit = s.weightUnit;
-  const outside = (v: number | null, [min, max]: readonly [number, number]) => v !== null && (v < min || v > max);
-  const bwOff = outside(s.bodyweightKg, PROFILE_LIMITS.bodyweightKg);
-  const heightOff = outside(s.heightCm, PROFILE_LIMITS.heightCm);
 
   const since = stats.firstWorkoutAt
     ? `Training since ${new Date(stats.firstWorkoutAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })}`
@@ -46,10 +45,11 @@ function ProfileScreen() {
       <div className="flex flex-col gap-4 px-4 pb-8 pt-4">
         {/* Identity: who this device belongs to. Everything below is about them. */}
         <section className="flex items-center gap-4">
-          <ProfileAvatar name={s.profileName} />
+          <ProfileAvatar name={s.profileName} photo={s.profilePhoto} size={80} />
           <div className="min-w-0">
             <h2 className="truncate text-2xl font-bold tracking-tight">{s.profileName.trim() || "Your profile"}</h2>
             <p className="text-sm text-text-muted">{since}</p>
+            <PhotoControls photo={s.profilePhoto} onChange={(profilePhoto) => s.update({ profilePhoto })} />
           </div>
         </section>
 
@@ -110,6 +110,8 @@ function ProfileScreen() {
           </section>
         )}
 
+        <BodyweightSection now={now} />
+
         <section aria-labelledby="body-heading" className="panel flex flex-col gap-3 p-3">
           <div>
             <h2 id="body-heading" className="label-caps">
@@ -131,51 +133,7 @@ function ProfileScreen() {
               className="h-11 w-full rounded-ctl border border-zinc-800 bg-well px-3 text-base text-text placeholder:text-text-muted hover:border-zinc-700 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label htmlFor="profile-bw" className="mb-1 block text-sm font-semibold">
-                Bodyweight <span className="font-normal text-text-muted">({unit})</span>
-              </label>
-              <NumberField
-                id="profile-bw"
-                aria-label={`Bodyweight in ${unit}`}
-                value={s.bodyweightKg === null ? null : Math.round(toDisplay(s.bodyweightKg, unit) * 10) / 10}
-                // Stored as typed: a range check per keystroke would wipe "7" on the way to "72.5".
-                onCommit={(n) => s.update({ bodyweightKg: n === null ? null : fromDisplay(n, unit) })}
-                max={unit === "kg" ? PROFILE_LIMITS.bodyweightKg[1] : 882}
-                placeholder="–"
-                aria-invalid={bwOff || undefined}
-                aria-describedby={bwOff ? "profile-bw-error" : undefined}
-                className="!px-3 !text-left !text-base"
-              />
-              {bwOff && (
-                <p id="profile-bw-error" className="mt-1 text-xs text-failure">
-                  Enter {formatWeight(PROFILE_LIMITS.bodyweightKg[0], unit)} to {formatWeight(PROFILE_LIMITS.bodyweightKg[1], unit)}
-                </p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="profile-height" className="mb-1 block text-sm font-semibold">
-                Height <span className="font-normal text-text-muted">(cm)</span>
-              </label>
-              <NumberField
-                id="profile-height"
-                aria-label="Height in cm"
-                value={s.heightCm}
-                onCommit={(n) => s.update({ heightCm: n })}
-                max={PROFILE_LIMITS.heightCm[1]}
-                placeholder="–"
-                aria-invalid={heightOff || undefined}
-                aria-describedby={heightOff ? "profile-height-error" : undefined}
-                className="!px-3 !text-left !text-base"
-              />
-              {heightOff && (
-                <p id="profile-height-error" className="mt-1 text-xs text-failure">
-                  Enter {PROFILE_LIMITS.heightCm[0]} to {PROFILE_LIMITS.heightCm[1]} cm
-                </p>
-              )}
-            </div>
-          </div>
+          <HeightField imperial={unit === "lbs"} heightCm={s.heightCm} onChange={(heightCm) => s.update({ heightCm })} />
         </section>
 
         <section aria-labelledby="account-heading" className="panel p-3">
@@ -217,6 +175,156 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="min-w-0 rounded-xl bg-bg px-3 py-2.5">
       <dt className="label-caps">{label}</dt>
       <dd className="num truncate text-xl font-bold tracking-tight">{value}</dd>
+    </div>
+  );
+}
+
+const FIELD = "!px-3 !text-left !text-base";
+
+/** Height in cm, or feet and inches for lbs users. Always stored in cm. */
+function HeightField({
+  imperial,
+  heightCm,
+  onChange,
+}: {
+  imperial: boolean;
+  heightCm: number | null;
+  onChange: (cm: number | null) => void;
+}) {
+  const [min, max] = PROFILE_LIMITS.heightCm;
+  // Stored as typed and flagged when out of range: a check per keystroke would wipe "1" on the way to "170".
+  const off = heightCm !== null && (heightCm < min || heightCm > max);
+  const range = imperial
+    ? `${cmToFtIn(min).ft} ft ${cmToFtIn(min).inch} in to ${cmToFtIn(max).ft} ft ${cmToFtIn(max).inch} in`
+    : `${min} to ${max} cm`;
+  const errorProps = { "aria-invalid": off || undefined, "aria-describedby": off ? "profile-height-error" : undefined };
+
+  if (!imperial) {
+    return (
+      <div>
+        <label htmlFor="profile-height" className="mb-1 block text-sm font-semibold">
+          Height <span className="font-normal text-text-muted">(cm)</span>
+        </label>
+        <NumberField
+          id="profile-height"
+          aria-label="Height in cm"
+          value={heightCm}
+          onCommit={onChange}
+          max={max}
+          placeholder="–"
+          className={FIELD}
+          {...errorProps}
+        />
+        {off && <HeightError range={range} />}
+      </div>
+    );
+  }
+
+  const parts = heightCm === null ? null : cmToFtIn(heightCm);
+  const set = (ft: number | null, inch: number | null) =>
+    onChange(ft === null && inch === null ? null : ftInToCm(ft ?? 0, Math.min(11, inch ?? 0)));
+  return (
+    <fieldset>
+      <legend className="mb-1 text-sm font-semibold">Height</legend>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="relative">
+          <NumberField
+            aria-label="Height, feet"
+            value={parts?.ft ?? null}
+            onCommit={(ft) => set(ft, parts?.inch ?? null)}
+            max={8}
+            placeholder="–"
+            className={`${FIELD} !pr-9`}
+            {...errorProps}
+          />
+          <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-muted">
+            ft
+          </span>
+        </div>
+        <div className="relative">
+          <NumberField
+            aria-label="Height, inches"
+            value={parts?.inch ?? null}
+            onCommit={(inch) => set(parts?.ft ?? null, inch)}
+            max={11}
+            placeholder="–"
+            className={`${FIELD} !pr-9`}
+            {...errorProps}
+          />
+          <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-muted">
+            in
+          </span>
+        </div>
+      </div>
+      {off && <HeightError range={range} />}
+    </fieldset>
+  );
+}
+
+function HeightError({ range }: { range: string }) {
+  return (
+    <p id="profile-height-error" className="mt-1 text-xs text-failure">
+      Enter {range}
+    </p>
+  );
+}
+
+/** Pick, replace or remove the profile photo. The file never leaves the phone. */
+function PhotoControls({ photo, onChange }: { photo: string | null; onChange: (url: string | null) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      onChange(await squareJpeg(file));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "This photo could not be used.");
+    } finally {
+      setBusy(false);
+      if (input.current) input.current.value = "";
+    }
+  }
+
+  return (
+    <div className="mt-2">
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        aria-label="Profile photo file"
+        className="sr-only"
+        tabIndex={-1}
+        onChange={(e) => pick(e.target.files?.[0])}
+      />
+      <div className="flex flex-wrap gap-1">
+        <button
+          type="button"
+          onClick={() => input.current?.click()}
+          disabled={busy}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/[0.12] px-3 text-sm font-semibold transition-colors hover:border-white/25 disabled:opacity-50"
+        >
+          <Camera aria-hidden="true" size={16} />
+          {busy ? "Preparing photo" : photo ? "Change photo" : "Add photo"}
+        </button>
+        {photo && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="min-h-11 rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-white/[0.05] hover:text-text"
+          >
+            Remove photo
+          </button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="mt-1 text-xs text-failure">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

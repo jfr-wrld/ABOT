@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
 import type { Exercise, GymLocation, Routine, WorkoutSession } from "@/types/workout";
-import type { KvKey, KvValues, Repository, Table } from "./types";
+import { mergeLog, type KvKey, type KvValues, type Repository, type Table } from "./types";
 
 interface KvRow {
   key: KvKey;
@@ -79,6 +79,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         await db.kv.put({ key: "activeWorkout", value: data.activeWorkout });
         await db.kv.put({ key: "restTimer", value: null });
         await db.kv.put({ key: "exerciseMedia", value: data.exerciseMedia });
+        await db.kv.put({ key: "bodyweightLog", value: data.bodyweightLog });
       });
     },
     async commitFinishedWorkout(session) {
@@ -96,6 +97,8 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         await db.locations.bulkPut(data.locations);
         const current = ((await db.kv.get("exerciseMedia"))?.value as KvValues["exerciseMedia"] | undefined) ?? {};
         await db.kv.put({ key: "exerciseMedia", value: { ...current, ...data.exerciseMedia } });
+        const log = ((await db.kv.get("bodyweightLog"))?.value as KvValues["bodyweightLog"] | undefined) ?? [];
+        await db.kv.put({ key: "bodyweightLog", value: mergeLog(log, data.bodyweightLog) });
       });
     },
     async snapshot() {
@@ -107,6 +110,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         settings: ((await db.kv.get("settings"))?.value as KvValues["settings"] | undefined) ?? null,
         activeWorkout: ((await db.kv.get("activeWorkout"))?.value as KvValues["activeWorkout"] | undefined) ?? null,
         exerciseMedia: ((await db.kv.get("exerciseMedia"))?.value as KvValues["exerciseMedia"] | undefined) ?? {},
+        bodyweightLog: ((await db.kv.get("bodyweightLog"))?.value as KvValues["bodyweightLog"] | undefined) ?? [],
       }));
     },
   };

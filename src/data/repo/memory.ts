@@ -1,4 +1,4 @@
-import type { KvKey, KvValues, Repository, RepoSnapshot, Table } from "./types";
+import { mergeLog, type KvKey, type KvValues, type Repository, type RepoSnapshot, type Table } from "./types";
 
 /** Copies on the way in and out, like IndexedDB, so callers never share references with storage. */
 const clone = <T>(v: T): T => structuredClone(v);
@@ -70,6 +70,7 @@ export function createMemoryRepository(): Repository {
       kv.set("activeWorkout", clone(data.activeWorkout));
       kv.set("restTimer", null);
       kv.set("exerciseMedia", clone(data.exerciseMedia));
+      kv.set("bodyweightLog", clone(data.bodyweightLog));
     },
     async commitFinishedWorkout(session) {
       sessions.map.set(session.id, clone(session));
@@ -82,6 +83,7 @@ export function createMemoryRepository(): Repository {
       for (const e of data.exercises) exercises.map.set(e.id, clone(e));
       for (const l of data.locations) locations.map.set(l.id, clone(l));
       kv.set("exerciseMedia", { ...((kv.get("exerciseMedia") as object) ?? {}), ...clone(data.exerciseMedia) });
+      kv.set("bodyweightLog", mergeLog((kv.get("bodyweightLog") as KvValues["bodyweightLog"]) ?? [], clone(data.bodyweightLog)));
     },
     async snapshot() {
       return {
@@ -92,6 +94,7 @@ export function createMemoryRepository(): Repository {
         settings: (await repo.kv.get("settings")) ?? null,
         activeWorkout: (await repo.kv.get("activeWorkout")) ?? null,
         exerciseMedia: (await repo.kv.get("exerciseMedia")) ?? {},
+        bodyweightLog: (await repo.kv.get("bodyweightLog")) ?? [],
       };
     },
   };

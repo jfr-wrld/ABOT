@@ -228,11 +228,27 @@ export interface UserSettings {
   activeLocationId: string | null;
   /** Profile, all optional: "" / null mean not filled in. Bodyweight in kg like every weight. */
   profileName: string;
+  /** Current bodyweight: the latest log entry, or a value typed before the log existed. */
   bodyweightKg: number | null;
   heightCm: number | null;
+  /** Square JPEG data URL (256px), made on the device from a picked photo. */
+  profilePhoto: string | null;
 }
 
-export const PROFILE_LIMITS = { nameMax: 40, bodyweightKg: [20, 400], heightCm: [100, 250] } as const;
+/** One weigh-in per local calendar day; `id` is that day as "YYYY-MM-DD". */
+export interface BodyweightEntry {
+  id: string;
+  date: number;
+  weightKg: number;
+}
+
+export const PROFILE_LIMITS = {
+  nameMax: 40,
+  bodyweightKg: [20, 400],
+  heightCm: [100, 250],
+  /** Characters in the photo data URL; a 256px JPEG is about 20-40k. */
+  photoMax: 300_000,
+} as const;
 
 export const DEFAULT_SETTINGS: UserSettings = {
   weightUnit: "kg",
@@ -243,6 +259,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   profileName: "",
   bodyweightKg: null,
   heightCm: null,
+  profilePhoto: null,
 };
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {

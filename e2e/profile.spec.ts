@@ -1,38 +1,114 @@
-import { expect, test } from "@playwright/test";
+import path from "node:path";
+import { expect, test, type Page } from "@playwright/test";
 import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+
+async function logWeighIn(page: Page, value: string) {
+  await page.getByLabel(/^Weight to log in /).fill(value);
+  await page.getByRole("button", { name: /^(Log weight|Update)$/ }).click();
+}
 
 test("profile opens from Home and starts honestly empty", async ({ page }) => {
   await freshStart(page);
   await page.getByRole("link", { name: "Profile" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Profile" })).toBeVisible();
   await expect(page.getByText("No finished workouts yet.")).toBeVisible();
+  await expect(page.getByText("Log your weight to start a history.")).toBeVisible();
   await expect(page.getByText("Guest on this device")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
-test("name, bodyweight and height are saved on the device", async ({ page }) => {
+test("name and height are saved on the device", async ({ page }) => {
   await freshStart(page);
   await page.goto("/profile");
   await page.getByLabel("Name", { exact: true }).fill("Jafar Shodiq");
-  await page.getByLabel("Bodyweight in kg").fill("72.5");
   await page.getByLabel("Height in cm").fill("170");
   await expect(page.getByRole("img", { name: "JS" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: "Jafar Shodiq" })).toBeVisible();
 
   await page.reload();
   await expect(page.getByLabel("Name", { exact: true })).toHaveValue("Jafar Shodiq");
-  await expect(page.getByLabel("Bodyweight in kg")).toHaveValue("72.5");
   await expect(page.getByLabel("Height in cm")).toHaveValue("170");
 });
 
-test("bodyweight follows the weight unit", async ({ page }) => {
+test("height switches to feet and inches with lbs, and back", async ({ page }) => {
   await freshStart(page);
   await page.goto("/profile");
-  await page.getByLabel("Bodyweight in kg").fill("100");
+  await page.getByLabel("Height in cm").fill("170");
   await page.goto("/settings");
   await page.getByText("lbs", { exact: true }).click();
   await page.goto("/profile");
-  await expect(page.getByLabel("Bodyweight in lbs")).toHaveValue("220.5");
+  await expect(page.getByLabel("Height, feet")).toHaveValue("5");
+  await expect(page.getByLabel("Height, inches")).toHaveValue("7");
+  await page.getByLabel("Height, inches").fill("11");
+  await page.goto("/settings");
+  await page.getByText("kg", { exact: true }).click();
+  await page.goto("/profile");
+  await expect(page.getByLabel("Height in cm")).toHaveValue("180.3");
+});
+
+test("weigh-ins build a history; the same day updates, a mistake can be deleted", async ({ page }) => {
+  await freshStart(page);
+  // Yesterday's weigh-in, as if logged then.
+  await page.evaluate(async () => {
+    const day = new Date(Date.now() - 86_400_000);
+    const id = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+    await new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open("abot");
+      open.onsuccess = () => {
+        const tx = open.result.transaction("kv", "readwrite");
+        tx.objectStore("kv").put({ key: "bodyweightLog", value: [{ id, date: day.getTime(), weightKg: 81 }] });
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      };
+    });
+  });
+  await page.goto("/profile");
+  const recent = page.getByRole("list", { name: "Recent weigh-ins" });
+  await expect(recent.getByRole("listitem")).toHaveCount(1);
+  await expect(page.getByText("One weigh-in so far.")).toBeVisible();
+
+  await logWeighIn(page, "80");
+  await expect(recent.getByRole("listitem")).toHaveCount(2);
+  await expect(page.getByText("Bodyweight over time in kg")).toBeAttached();
+  await expect(page.getByText("−1 kg in 30 days")).toBeVisible();
+
+  await logWeighIn(page, "79.5");
+  await expect(recent.getByRole("listitem")).toHaveCount(2);
+  await expect(recent.getByRole("listitem").first()).toContainText("79.5 kg");
+
+  await recent.getByRole("button", { name: /^Delete weigh-in on/ }).first().click();
+  await expect(recent.getByRole("listitem")).toHaveCount(1);
+  await page.reload();
+  await expect(recent.getByRole("listitem")).toHaveCount(1);
+  await expect(recent).toContainText("81 kg");
+});
+
+test("an impossible weigh-in is refused with the range", async ({ page }) => {
+  await freshStart(page);
+  await page.goto("/profile");
+  await logWeighIn(page, "7");
+  await expect(page.locator("#bw-log-error")).toHaveText("Enter 20 kg to 400 kg");
+  await expect(page.getByLabel("Weight to log in kg")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByText("Log your weight to start a history.")).toBeVisible();
+});
+
+test("a profile photo is resized on the device, shown, and removable", async ({ page }) => {
+  await freshStart(page);
+  await page.goto("/profile");
+  await page.getByLabel("Name", { exact: true }).fill("Jafar");
+  await page.getByLabel("Profile photo file").setInputFiles(path.join(__dirname, "fixtures", "frame0.jpg"));
+  const avatar = page.getByRole("img", { name: "Photo of Jafar" });
+  await expect(avatar).toBeVisible();
+  const stored = await avatar.locator("image").getAttribute("href");
+  expect(stored).toMatch(/^data:image\/jpeg;base64,/);
+  expect(stored!.length).toBeLessThan(300_000);
+
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Profile" }).locator("image")).toBeAttached();
+
+  await page.goto("/profile");
+  await page.getByRole("button", { name: "Remove photo" }).click();
+  await expect(page.getByRole("img", { name: "J", exact: true })).toBeVisible();
 });
 
 test("lifetime stats and top lifts come from finished workouts", async ({ page }) => {
@@ -60,15 +136,4 @@ test("account and settings links lead somewhere real", async ({ page }) => {
   await page.goto("/profile");
   await page.getByRole("link", { name: "All settings" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
-});
-
-test("an impossible bodyweight is flagged, not silently kept", async ({ page }) => {
-  await freshStart(page);
-  await page.goto("/profile");
-  const bw = page.getByLabel("Bodyweight in kg");
-  await bw.fill("7");
-  await expect(page.getByText("Enter 20 kg to 400 kg")).toBeVisible();
-  await expect(bw).toHaveAttribute("aria-invalid", "true");
-  await bw.fill("72");
-  await expect(page.getByText("Enter 20 kg to 400 kg")).toHaveCount(0);
 });

@@ -31,7 +31,7 @@ function HomeScreen() {
   const sessions = useWorkoutStore((s) => s.sessions);
   const { startEmpty, startFromRoutine } = useWorkoutStore();
   const routines = useRoutineStore((s) => s.routines);
-  const { weightUnit, defaultRestSeconds, profileName } = useSettingsStore();
+  const { weightUnit, defaultRestSeconds, profileName, profilePhoto } = useSettingsStore();
   const now = useNow(1000, active !== null);
   const { byId } = useAllExercises();
   // First open on a device with nothing logged: show the intro once. Anyone with data skips it.
@@ -65,7 +65,7 @@ function HomeScreen() {
             className="flex size-11 items-center justify-center rounded-ctl transition-opacity hover:opacity-80"
           >
             <span aria-hidden="true">
-              <ProfileAvatar name={profileName} size={32} />
+              <ProfileAvatar name={profileName} photo={profilePhoto} size={32} />
             </span>
           </Link>
         </div>

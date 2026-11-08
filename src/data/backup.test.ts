@@ -78,6 +78,7 @@ describe("importBackup", () => {
     settings: null,
     activeWorkout: live("from-file"),
     exerciseMedia: {},
+    bodyweightLog: [],
   });
   const backupOf = (data: RepoSnapshot) => ({ app: "ABOT" as const, schemaVersion: 1 as const, exportedAt: "x", data });
 
@@ -112,7 +113,7 @@ describe("merge keeps a single default gym (final review #5)", () => {
     app: "ABOT" as const,
     schemaVersion: 1 as const,
     exportedAt: "x",
-    data: { sessions: [], routines: [], exercises: [], locations, settings: null, activeWorkout: null, exerciseMedia: {} },
+    data: { sessions: [], routines: [], exercises: [], locations, settings: null, activeWorkout: null, exerciseMedia: {}, bodyweightLog: [] },
   });
 
   it("re-merging your own backup keeps the local default gym", async () => {
@@ -185,5 +186,48 @@ describe("profile fields in backups", () => {
     const parsed = parseBackup(withSettings({ profileName: 5, bodyweightKg: -3, heightCm: 900 }));
     if (!parsed.ok) throw new Error(parsed.error);
     expect(parsed.backup.data.settings).toMatchObject({ profileName: "", bodyweightKg: null, heightCm: null });
+  });
+});
+
+describe("bodyweight log and photo in backups", () => {
+  const file = (data: Record<string, unknown>) =>
+    JSON.stringify({
+      app: "ABOT",
+      schemaVersion: 1,
+      exportedAt: "2026-11-08T00:00:00.000Z",
+      data: { sessions: [], routines: [], exercises: [], locations: [], settings: null, activeWorkout: null, ...data },
+    });
+
+  it("keeps valid entries and drops broken ones", () => {
+    const parsed = parseBackup(
+      file({
+        bodyweightLog: [
+          { id: "2026-11-01", date: 1, weightKg: 80 },
+          { id: "2026-11-02", date: 2, weightKg: -5 },
+          { id: "not a day", date: 3, weightKg: 80 },
+          "junk",
+        ],
+      }),
+    );
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.data.bodyweightLog).toEqual([{ id: "2026-11-01", date: 1, weightKg: 80 }]);
+  });
+
+  it("an older backup without a log gets an empty one", () => {
+    const parsed = parseBackup(file({}));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.data.bodyweightLog).toEqual([]);
+  });
+
+  it("keeps a small image photo and drops anything that is not one", () => {
+    const jpeg = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
+    const ok = parseBackup(file({ settings: { profilePhoto: jpeg } }));
+    if (!ok.ok) throw new Error(ok.error);
+    expect(ok.backup.data.settings?.profilePhoto).toBe(jpeg);
+    for (const bad of ["javascript:alert(1)", "data:text/html;base64,PGI+", "https://x.test/a.jpg", `data:image/jpeg;base64,${"A".repeat(500_000)}`]) {
+      const p = parseBackup(file({ settings: { profilePhoto: bad } }));
+      if (!p.ok) throw new Error(p.error);
+      expect(p.backup.data.settings?.profilePhoto).toBeNull();
+    }
   });
 });
