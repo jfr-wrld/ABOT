@@ -47,7 +47,8 @@ describe("Android live notification", () => {
     expect(nativeLiveContent(session, byId, null, start + 60_000)).toEqual({
       title: "Overhead Press (Barbell), set 2/3",
       text: "Push A",
-      startedAt: start,
+      clockStart: start,
+      pausedTitle: "Paused · Overhead Press (Barbell), set 2/3",
     });
   });
 
@@ -60,6 +61,14 @@ describe("Android live notification", () => {
       overTitle: "Rest over · Overhead Press (Barbell), set 2/3",
       overText: "Push A",
     });
+  });
+
+  it("freezes the clock while paused, moved on by earlier pauses", () => {
+    const paused = { ...session, pausedMs: 60_000, pausedAt: start + 10 * 60_000 };
+    const c = nativeLiveContent(paused, byId, null, start + 20 * 60_000);
+    expect(c.clockStart).toBe(start + 60_000);
+    expect(c.pausedElapsed).toBe(9 * 60_000);
+    expect(c.restEndsAt).toBeUndefined();
   });
 
   it("drops a rest that already ended", () => {

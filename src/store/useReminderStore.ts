@@ -71,3 +71,14 @@ export async function initReminders(): Promise<void> {
   useReminderStore.setState({ schedule, permission: await refreshPermission() });
   startReminderLoop(repo, routineInfo);
 }
+
+/**
+ * Re-reads notification access (it can change in Android settings while ABOT is in the
+ * background); newly granted access hands the saved week to the system.
+ */
+export async function syncPermission(): Promise<void> {
+  const before = useReminderStore.getState().permission;
+  const permission = await refreshPermission();
+  useReminderStore.setState({ permission });
+  if (permission === "granted" && before !== "granted") persist(useReminderStore.getState().schedule);
+}

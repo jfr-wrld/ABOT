@@ -47,11 +47,14 @@ export function liveContent(
 
 /** What the Android app's live notification shows; Android draws and ticks the clock itself. */
 export interface NativeLive {
-  /** Shown while no rest runs; the clock counts up from startedAt. */
   title: string;
   text: string;
-  startedAt: number;
-  /** A running rest: countdown to restEndsAt under restTitle, then overTitle with the workout clock. */
+  /** The workout clock's zero: the start, moved later by the time spent paused. */
+  clockStart: number;
+  /** Set while paused: workout time so far, shown frozen under pausedTitle. */
+  pausedElapsed?: number;
+  pausedTitle: string;
+  /** A running rest: countdown to restEndsAt under restTitle, then overTitle and overText. */
   restEndsAt?: number;
   restTitle?: string;
   overTitle?: string;
@@ -61,11 +64,14 @@ export interface NativeLive {
 export function nativeLiveContent(session: WorkoutSession, byId: Record<string, Exercise>, rest: LiveRest | null, now: number): NativeLive {
   const next = nextUp(session, byId);
   const lift = next ? `${next.name}, set ${next.set}/${next.of}` : null;
-  const base = {
+  const clockStart = session.startedAt + (session.pausedMs ?? 0);
+  const base: NativeLive = {
     title: lift ?? "All sets done",
     text: lift ? session.name : `${session.name} · tap to finish`,
-    startedAt: session.startedAt,
+    clockStart,
+    pausedTitle: lift ? `Paused · ${lift}` : "Paused",
   };
+  if (session.pausedAt !== undefined) return { ...base, pausedElapsed: Math.max(0, session.pausedAt - clockStart) };
   if (!rest || rest.endsAt <= now || !lift) return base;
   return {
     ...base,

@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { InfoTip } from "@/components/ui/InfoTip";
-import { askPermission, notificationPermission, type PermissionState } from "@/lib/notifications/reminder-service";
+import { useReminderStore } from "@/store/useReminderStore";
 import { liveStatusEnabled, setLiveStatusEnabled } from "@/lib/notifications/useLiveWorkoutNotification";
 import { isNativeApp } from "@/lib/native/files";
-import { exactAlarmsAllowed, openExactAlarmSettings } from "@/lib/native/notify";
+import { exactAlarmsAllowed, openExactAlarmSettings, testRestAlert } from "@/lib/native/notify";
 import { Button } from "@/components/ui/Button";
 
 /** Settings row: the workout status notification shown while ABOT is in the background. */
 export function LiveStatusSetting() {
-  // Settings renders behind the hydration gate, so the browser state is readable on first render.
-  const [permission, setPermission] = useState<PermissionState>(notificationPermission);
+  const permission = useReminderStore((s) => s.permission);
+  const requestPermission = useReminderStore((s) => s.requestPermission);
   const [enabled, setEnabled] = useState(liveStatusEnabled);
+  const [tested, setTested] = useState<string | null>(null);
 
   const unsupported = permission === "unsupported";
   const blocked = permission === "denied";
@@ -35,9 +36,8 @@ export function LiveStatusSetting() {
       setEnabled(false);
       return;
     }
-    const p = permission === "granted" ? "granted" : await askPermission();
-    setPermission(p);
-    if (p === "granted") {
+    if (permission !== "granted") await requestPermission();
+    if (useReminderStore.getState().permission === "granted") {
       setLiveStatusEnabled(true);
       setEnabled(true);
     }
@@ -78,6 +78,25 @@ export function LiveStatusSetting() {
           <span className="sr-only">{on ? "On" : "Off"}</span>
         </button>
       </div>
+      {app && on && (
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p role="status" className="text-xs text-text-muted">
+            {tested ?? "Check the sound of the rest-over alert."}
+          </p>
+          <Button
+            variant="ghost"
+            className="shrink-0"
+            onClick={() =>
+              void testRestAlert().then(
+                (shown) => setTested(shown ? "Alert sent. Check the sound and the notification." : "Android blocked it. Turn on notifications for ABOT."),
+                () => setTested("The alert could not be sent."),
+              )
+            }
+          >
+            Test alert
+          </Button>
+        </div>
+      )}
       {app && on && !exact && (
         <div className="mt-2 rounded-ctl border border-line bg-surface-2 p-3">
           <p className="text-xs text-text-muted">Android may ring the rest alarm a few minutes late. Allow alarms for ABOT to ring on the second.</p>

@@ -13,8 +13,9 @@ const plugin = () => import("@capacitor/local-notifications").then((m) => m.Loca
 
 export type NativePermission = "granted" | "denied" | "default";
 
-/** Fixed ids: one rest alarm, one snooze, two per weekday (prep, session). */
-const ID = { rest: 2, snooze: 3 } as const;
+/** Fixed ids: one snooze, two per weekday (prep, session). The live notification and the rest
+ * alarm belong to LiveWorkout. */
+const ID = { snooze: 3 } as const;
 const sessionId = (wd: Weekday) => 100 + wd;
 const prepId = (wd: Weekday) => 110 + wd;
 const REMINDER_IDS = [0, 1, 2, 3, 4, 5, 6].flatMap((wd) => [sessionId(wd as Weekday), prepId(wd as Weekday)]);
@@ -84,39 +85,45 @@ export async function setupNativeNotifications(open: (url: string) => void): Pro
 /* Live workout                                                        */
 /* ------------------------------------------------------------------ */
 
+export type LiveAction = "pause" | "resume" | "skip";
+
 interface LiveWorkoutPlugin {
   show(opts: NativeLive): Promise<void>;
   clear(): Promise<void>;
+  testAlert(): Promise<{ shown: boolean }>;
+  takePendingAction(): Promise<{ id?: LiveAction }>;
+  addListener(event: "action", fn: (e: { id: LiveAction }) => void): Promise<{ remove: () => Promise<void> }>;
 }
-
-/** App-local plugin: android/app/src/main/java/app/abot/gym/LiveWorkoutPlugin.java. */
-const LiveWorkout = registerPlugin<LiveWorkoutPlugin>("LiveWorkout");
 
 /**
- * The ongoing workout notification with a clock Android ticks itself (LiveWorkout), and when a
- * rest is running, a ringing "rest over" alarm at the moment it ends.
+ * App-local plugin (android/app/src/main/java/app/abot/gym/LiveWorkoutPlugin.java): the ongoing
+ * workout notification with a clock Android ticks itself, its Pause / Resume / Skip rest buttons,
+ * and the ringing "rest over" alarm, all of which work while the app is frozen.
  */
-export async function showNativeLive(live: NativeLive, restOver: { title: string; body: string } | null) {
-  await LiveWorkout.show(live);
-  if (!restOver || !live.restEndsAt || live.restEndsAt <= Date.now()) return;
-  await (await plugin()).schedule({
-    notifications: [
-      {
-        id: ID.rest,
-        title: restOver.title,
-        body: restOver.body,
-        channelId: CHANNEL.rest,
-        smallIcon: ICON,
-        schedule: { at: new Date(live.restEndsAt), allowWhileIdle: true },
-        extra: { url: "/workout" },
-      },
-    ],
-  });
+const LiveWorkout = registerPlugin<LiveWorkoutPlugin>("LiveWorkout");
+
+export function showNativeLive(live: NativeLive): Promise<void> {
+  return LiveWorkout.show(live);
 }
 
-export async function clearNativeLive() {
-  const ln = await plugin();
-  await Promise.all([LiveWorkout.clear(), ln.cancel({ notifications: [{ id: ID.rest }] })]);
+export function clearNativeLive(): Promise<void> {
+  return LiveWorkout.clear();
+}
+
+/** Rings the rest-over alert now; false when notifications are not allowed. */
+export async function testRestAlert(): Promise<boolean> {
+  return (await LiveWorkout.testAlert()).shown;
+}
+
+/**
+ * Notification buttons reach `handle`, including one tapped while ABOT was not running.
+ * Returns a cleanup.
+ */
+export async function onLiveAction(handle: (id: LiveAction) => void): Promise<() => void> {
+  const h = await LiveWorkout.addListener("action", ({ id }) => handle(id));
+  const { id } = await LiveWorkout.takePendingAction();
+  if (id) handle(id);
+  return () => void h.remove();
 }
 
 /* ------------------------------------------------------------------ */

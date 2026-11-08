@@ -4,13 +4,13 @@ import { useEffect, useRef } from "react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { LIVE_TAG, liveContent, nativeLiveContent } from "./live-workout";
-import { askPermission, notificationPermission, refreshPermission, registerReminderWorker } from "./reminder-service";
+import { notificationPermission, registerReminderWorker } from "./reminder-service";
+import { useReminderStore } from "@/store/useReminderStore";
 import { isNativeApp } from "@/lib/native/files";
 import { clearNativeLive, showNativeLive } from "@/lib/native/notify";
 
 /** Per-device choice, like the intro flag: a convenience, not training data. */
 const PREF = "abot.liveStatus";
-const ASKED = "abot.notificationsAsked";
 
 export function liveStatusEnabled(): boolean {
   try {
@@ -29,40 +29,50 @@ export function setLiveStatusEnabled(on: boolean): void {
 }
 
 async function clearLive(): Promise<void> {
-  if (isNativeApp()) return clearNativeLive().catch(() => {});
   const reg = await registerReminderWorker();
   const shown = (await reg?.getNotifications({ tag: LIVE_TAG })) ?? [];
   for (const n of shown) n.close();
 }
 
 /**
- * While a workout runs, leaving ABOT (home screen, another app, screen off) posts one status
- * notification; coming back removes it. If the page is still allowed to run when rest ends it
- * swaps the text to "rest over" with a buzz; browsers often pause background pages, so the first
- * notification already says when rest ends. The Android app schedules the "rest over" alarm with
- * the system when ABOT is left, so it rings on time even with the app frozen.
+ * Browser: while a workout runs, leaving ABOT (home screen, another app, screen off) posts one
+ * status notification; coming back removes it. If the page is still allowed to run when rest
+ * ends it swaps the text to "rest over" with a buzz; browsers often pause background pages, so
+ * the first notification already says when rest ends.
+ *
+ * Android app: the notification stays up for the whole workout and follows every change (next
+ * set, rest, pause). Android ticks its clock and rings the end of a rest itself, so nothing
+ * depends on the app still running once it is left.
  */
 export function useLiveWorkoutNotification(): void {
   const active = useWorkoutStore((s) => s.active);
   const timer = useWorkoutStore((s) => s.restTimer);
   const { byId } = useAllExercises();
+  const permission = useReminderStore((s) => s.permission);
   const latest = useRef({ active, timer, byId });
   useEffect(() => {
     latest.current = { active, timer, byId };
   });
 
+  // Android app: mirror the workout into the notification, a moment after it settles (typing a
+  // weight changes the session on every key).
   useEffect(() => {
+    if (!isNativeApp()) return;
+    if (!active || !liveStatusEnabled() || permission !== "granted") {
+      void clearNativeLive().catch(() => {});
+      return;
+    }
+    const t = setTimeout(() => void showNativeLive(nativeLiveContent(active, byId, timer, Date.now())).catch(() => {}), 300);
+    return () => clearTimeout(t);
+  }, [active, timer, byId, permission]);
+
+  // Browser only.
+  useEffect(() => {
+    if (isNativeApp()) return;
     let restOver: ReturnType<typeof setTimeout> | undefined;
 
     async function show(over: boolean) {
       const { active: a, timer: t, byId: ids } = latest.current;
-      if (isNativeApp()) {
-        // Permission may have changed in Android settings since the app started.
-        if (!a || !liveStatusEnabled() || (await refreshPermission()) !== "granted") return;
-        const ring = t ? liveContent(a, ids, t, t.endsAt) : null;
-        await showNativeLive(nativeLiveContent(a, ids, t, Date.now()), ring && { title: ring.title, body: ring.body }).catch(() => {});
-        return;
-      }
       if (!a || !liveStatusEnabled() || notificationPermission() !== "granted") return;
       const reg = await registerReminderWorker();
       if (!reg) return;
@@ -89,21 +99,6 @@ export function useLiveWorkoutNotification(): void {
       }
     }
 
-    // The app's WebView keeps reporting "visible" in the background, so Android's own
-    // pause/resume decide there.
-    if (isNativeApp()) {
-      let remove: (() => void) | undefined;
-      let cancelled = false;
-      void import("@capacitor/app").then(async ({ App }) => {
-        const h = await App.addListener("appStateChange", ({ isActive }) => void (isActive ? clearLive() : show(false)));
-        if (cancelled) void h.remove();
-        else remove = () => void h.remove();
-      });
-      return () => {
-        cancelled = true;
-        remove?.();
-      };
-    }
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       clearTimeout(restOver);
@@ -111,22 +106,8 @@ export function useLiveWorkoutNotification(): void {
     };
   }, []);
 
-  // In the app, the first workout is when ABOT asks to post notifications: that is when the
-  // status and the rest alarm start to matter. Asked once; Settings can ask again later.
-  const activeId = active?.id ?? null;
+  // Browser: finishing or discarding the workout takes the status away.
   useEffect(() => {
-    if (!activeId || !isNativeApp() || notificationPermission() !== "default") return;
-    try {
-      if (localStorage.getItem(ASKED) === "1") return;
-      localStorage.setItem(ASKED, "1");
-    } catch {
-      return;
-    }
-    void askPermission();
-  }, [activeId]);
-
-  // Finishing or discarding the workout takes the status away.
-  useEffect(() => {
-    if (!active && notificationPermission() === "granted") void clearLive();
+    if (!active && !isNativeApp() && notificationPermission() === "granted") void clearLive();
   }, [active]);
 }

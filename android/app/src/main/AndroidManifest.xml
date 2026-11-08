@@ -32,7 +32,7 @@
 
         </activity>
 
-        <!-- Swaps the live workout notification from the rest countdown to "rest over". -->
+        <!-- The end of a rest and the live notification's buttons (Pause, Resume, Skip rest). -->
         <receiver android:name=".LiveWorkoutReceiver" android:exported="false" />
 
         <provider
@@ -53,4 +53,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <!-- Android 16 Live Update: the workout clock as a status bar chip. -->
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!-- The rest alarm rings on the second without asking (Android 13+). A Play release must
+         justify it as a timer; otherwise drop it and keep the Settings switch for exact alarms. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 </manifest>

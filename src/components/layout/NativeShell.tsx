@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { isNativeApp } from "@/lib/native/files";
-import { setupNativeNotifications } from "@/lib/native/notify";
+import { onLiveAction, setupNativeNotifications } from "@/lib/native/notify";
+import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { syncPermission } from "@/store/useReminderStore";
 import { finishNativeSignIn } from "@/store/useSyncStore";
 import { startApp } from "@/store/appSession";
 
@@ -49,6 +51,20 @@ export function NativeShell() {
     void setupNativeNotifications((url) => router.push(url))
       .then(keep)
       .catch(() => {});
+    // Pause / Resume / Skip rest tapped on the workout notification.
+    void onLiveAction((id) => {
+      const w = useWorkoutStore.getState();
+      if (id === "pause") w.pauseActive();
+      else if (id === "resume") w.resumeActive();
+      else w.skipRest();
+    })
+      .then(keep)
+      .catch(() => {});
+    // Back in the app: notification access may have changed in Android settings.
+    void import("@capacitor/app").then(async ({ App }) => {
+      const h = await App.addListener("resume", () => void syncPermission());
+      keep(() => void h.remove());
+    });
 
     return () => {
       cancelled = true;

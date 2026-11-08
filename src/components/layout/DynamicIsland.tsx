@@ -13,6 +13,8 @@ import { useLiveWorkoutNotification } from "@/lib/notifications/useLiveWorkoutNo
 import type { WorkoutSession } from "@/types/workout";
 import { usePagePath } from "@/components/layout/usePagePath";
 import { buzz } from "@/lib/native/haptics";
+import { isNativeApp } from "@/lib/native/files";
+import { notificationPermission } from "@/lib/notifications/reminder-service";
 
 /** Fast to settle, a little overshoot: the capsule should feel like hardware snapping open. */
 const ISLAND_SPRING = { type: "spring", stiffness: 520, damping: 38, mass: 0.9 } as const;
@@ -128,7 +130,9 @@ function RestCapsule() {
     }
     if (remainingMs > 0 || firedFor.current === timer.endsAt) return;
     firedFor.current = timer.endsAt;
-    if (alert) {
+    // In the app with notifications on, Android's rest-over alert already rings and buzzes.
+    const systemRings = isNativeApp() && notificationPermission() === "granted";
+    if (alert && !systemRings) {
       buzz([200, 100, 200]);
       beep();
     }
