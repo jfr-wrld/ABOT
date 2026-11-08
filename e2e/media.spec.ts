@@ -93,5 +93,5 @@ test("anatomy tab highlights primary and secondary muscles; tabs work with arrow
   await expect(media.getByRole("img", { name: "Primary: Chest. Secondary: Triceps, Shoulders." })).toBeVisible();
   await expect(media.locator('[data-region="chest"]').first()).toHaveAttribute("data-level", "primary");
   await expect(media.locator('[data-region="triceps"]').first()).toHaveAttribute("data-level", "secondary");
-  await expect(media.locator('[data-region="quads"]').first()).toHaveAttribute("data-level", "none");
+  await expect(media.locator('[data-region="quadriceps"]').first()).toHaveAttribute("data-level", "none");
 });

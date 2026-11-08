@@ -1,34 +1,34 @@
 import type { MuscleGroup } from "@/types/workout";
 
-/** The 16 drawable regions of the front/back body map. */
+/** Muscle regions of the vendored anatomical body (react-muscle-highlighter slugs). */
 export const REGIONS = [
-  "chest", "front_delts", "side_delts", "rear_delts", "biceps", "triceps", "forearms", "abs",
-  "obliques", "lats", "traps", "lower_back", "glutes", "quads", "hamstrings", "calves",
+  "chest", "deltoids", "biceps", "triceps", "forearm", "abs", "obliques", "trapezius", "upper-back",
+  "lower-back", "gluteal", "quadriceps", "hamstring", "adductors", "calves", "tibialis", "neck",
 ] as const;
 export type Region = (typeof REGIONS)[number];
 
 /**
- * Muscle groups in the data model are coarser or different from what is drawn: "back" (mid
- * back) has no own region and lights traps and lats; inner/outer thigh map to quads/glutes.
+ * The drawing has one deltoid per side and no separate lats (they are part of upper-back),
+ * so shoulders and lats light those shapes. Abductors have no own shape and use the glutes.
  */
 const MAP: Record<MuscleGroup, readonly Region[]> = {
   chest: ["chest"],
-  back: ["traps", "lats"],
-  lats: ["lats"],
-  traps: ["traps"],
-  shoulders: ["front_delts", "side_delts", "rear_delts"],
+  back: ["upper-back"],
+  lats: ["upper-back"],
+  traps: ["trapezius"],
+  shoulders: ["deltoids"],
   biceps: ["biceps"],
   triceps: ["triceps"],
-  forearms: ["forearms"],
+  forearms: ["forearm"],
   abs: ["abs", "obliques"],
-  quads: ["quads"],
-  hamstrings: ["hamstrings"],
-  glutes: ["glutes"],
-  calves: ["calves"],
-  lower_back: ["lower_back"],
-  adductors: ["quads"],
-  abductors: ["glutes"],
-  neck: ["traps"],
+  quads: ["quadriceps"],
+  hamstrings: ["hamstring"],
+  glutes: ["gluteal"],
+  calves: ["calves", "tibialis"],
+  lower_back: ["lower-back"],
+  adductors: ["adductors"],
+  abductors: ["gluteal"],
+  neck: ["neck"],
   full_body: REGIONS,
   cardio: [],
 };
