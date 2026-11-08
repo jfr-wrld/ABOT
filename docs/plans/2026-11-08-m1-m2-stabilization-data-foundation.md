@@ -335,3 +335,71 @@ Additional Review Focus:
 - [ ] **Step 3: Implement**; the sign-in button calls `supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + "/settings" } })`; sign out keeps local data.
 - [ ] **Step 4: Verify** `npm run lint && npm test && npm run e2e && npm run build` Expected: green. A real round trip needs the owner's Supabase project; record that as not verified.
 - [ ] **Step 5: Commit** `feat: Supabase cloud sync with Google sign-in`
+
+---
+
+## M2c addendum: Exercise database and media engine (owner request 2026-11-08)
+
+Spec: owner message of 2026-11-08 (exercise schema v2, 70+ seed exercises from free-exercise-db,
+on-demand 800+ catalog, SmartExerciseMedia with Motion / Video / Anatomy tabs, quick how-to sheet
+in the logger). Facts checked before planning: `free-exercise-db` (Unlicense, public domain, 876
+exercises, images at `exercises/<id>/0.jpg` and `1.jpg`) is reachable; YouTube and TikTok are
+blocked from the build sandbox, so no video id can be verified here.
+
+Additional Global Constraints:
+- No hard-coded YouTube or TikTok ids (none can be verified; a wrong id is fabricated content,
+  antislop R-38). Every exercise without a user-set video shows "Search YouTube" and "Search
+  TikTok" links (`https://www.youtube.com/results?search_query=` + name + " proper form shorts").
+- Media needs the network; the logger must work offline. Images and iframes show a text fallback
+  ("Media needs a connection") instead of a broken box.
+- YouTube embeds always `mute=1` and use `www.youtube-nocookie.com`.
+- Seed exercise ids stay unchanged (history references them).
+- Emoji in UI stay out until owner answers Q9; icons + text labels instead.
+
+### Task 18: Exercise model v2
+Files: `src/types/workout.ts`, `src/data/normalize.ts` (+test), every consumer of `primaryMuscle`.
+Produces: `Exercise.primaryMuscles: MuscleGroup[]` (replaces `primaryMuscle`), `category:
+"compound" | "isolation" | "cardio" | "mobility"`, `media?: { motionUrls?: string[]; youtubeId?:
+string; youtubeStart?: number; youtubeEnd?: number; tiktokUrl?: string; customVideoUrl?: string }`,
+`instructions: string[]`, `formCues: string[]`, `sourceId?: string` (free-exercise-db id);
+`Equipment` adds `smith_machine`; `MuscleGroup` adds `lats`, `adductors`, `abductors`, `neck`.
+Tests: legacy `primaryMuscle: "chest"` normalizes to `primaryMuscles: ["chest"]`; muscleSplit
+credits every primary muscle 1 set; filters match any primary.
+
+### Task 19: 70+ seed exercises from free-exercise-db
+Files: `scripts/seed-map.json` (ABOT id, name, sourceId, equipment, muscles, loadMode, formCues),
+`scripts/generate-seed.mjs` (reads the map + downloaded `exercises.json`, writes
+`src/data/seed-exercises.generated.ts` with instructions copied from the dataset and image URLs),
+`src/data/exercises.ts` re-exports. Tests: at least 70 seeds, ids unique, the 44 original ids
+present, every seed has 2 motion URLs, at least 3 instructions and 2 form cues, every muscle group
+covered by at least one primary.
+
+### Task 20: On-demand full catalog
+Files: `src/data/catalog.ts` (+test), Dexie schema v2 `catalog` table, Exercise Library button.
+Produces: `mapCatalogEntry(raw): Exercise | null` (id `fedb:<sourceId>`, equipment/muscle/category
+mapping, skips entries already covered by a seed `sourceId`), `loadCatalog(fetchFn, repo)`.
+Library button "Load full exercise catalog (about 1 MB)" with loading, error ("Could not download
+the catalog. Check your connection and try again."), and done states; catalog entries are
+searchable and loggable but marked "catalog".
+
+### Task 21: SmartExerciseMedia
+Files: `src/lib/videoUrl.ts` (+test), `src/components/exercise/SmartExerciseMedia.tsx`,
+`src/components/anatomy/MuscleMap.tsx` (+ `paths.ts`), exercise media overrides persisted (kv
+`exerciseMedia`: `Record<exerciseId, { customVideoUrl: string }>`).
+Produces: `parseVideoUrl(url): { kind: "youtube"; id: string; start?: number } | { kind: "tiktok";
+id: string } | { kind: "file"; url: string } | null` (youtube.com/watch, youtu.be, /shorts/,
+/embed/, `t=`/`start=`; tiktok.com/@user/video/<id>; .mp4/.webm/.gif). Tabs `Motion` (crossfade
+0.jpg/1.jpg every 900 ms with phase label, or looping video/gif; static under reduced motion),
+`Video` (nocookie iframe or TikTok player or `<video>`; "Set custom video" form with validation),
+`Anatomy` (MuscleMap highlight: primary solid, secondary 35%).
+
+### Task 22: Quick how-to sheet in the logger and richer exercise detail
+Exercise name in the logger card opens a sheet with SmartExerciseMedia, form cues, and records
+(this gym and all gyms) plus a link to the full detail; the detail page shows media, instructions,
+form cues. e2e: open the sheet mid-workout, the workout timer keeps running, close returns to the
+same scroll position.
+
+### Task 23: Audit and Supabase schema file
+`npx tsc --noEmit`, `npm run build`, zero-env production smoke (all routes 200, e2e against
+`next start`), and `supabase/schema.sql` from master plan section 3.1 (table, RLS, trigger,
+`upsert_if_newer`). The SQL is not executed here (no Supabase access).
