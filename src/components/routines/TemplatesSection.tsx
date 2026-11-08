@@ -9,6 +9,7 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { EquipmentNeeded } from "./EquipmentNeeded";
 import {
   ROUTINE_TEMPLATES,
   TEMPLATE_PROGRAMS,
@@ -91,6 +92,7 @@ export function TemplatesSection() {
                       ) : null,
                     )}
                   </ul>
+                  <EquipmentNeeded equipment={t.exercises.flatMap((e) => (byId[e.exerciseId] ? [byId[e.exerciseId].equipment] : []))} />
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <Button onClick={() => setPreview(t)} aria-label={`See exercises: ${t.name}`}>
                       See exercises

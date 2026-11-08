@@ -83,6 +83,12 @@ test("a template is added to the routines and can be started from its preview", 
   await expect(page.getByRole("status")).toHaveText("Push added to your routines, in Push / Pull / Legs.");
   await expect(page.getByRole("button", { name: "Start Push" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Add again: Push" })).toBeVisible();
+  // The saved routine lists the gear it needs, with icons.
+  const saved = page.getByRole("listitem").filter({ has: page.getByRole("button", { name: "Start Push" }) });
+  const gear = saved.getByRole("list", { name: "Equipment" });
+  await expect(gear.getByText("Barbell")).toBeVisible();
+  await expect(gear.getByText("×2").first()).toBeVisible();
+  await expect(gear.locator("svg")).toHaveCount(3);
 
   await page.getByRole("button", { name: "See exercises: Legs" }).click();
   const sheet = page.getByRole("dialog", { name: "Push / Pull / Legs: Legs" });

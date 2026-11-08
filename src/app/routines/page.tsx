@@ -12,6 +12,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { TemplatesSection } from "@/components/routines/TemplatesSection";
+import { EquipmentNeeded } from "@/components/routines/EquipmentNeeded";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import type { Routine } from "@/types/workout";
 
 export default function RoutinesPage() {
@@ -135,6 +137,23 @@ function RoutinesScreen() {
                     {names.length > 0 && (
                       <p className="mt-2 line-clamp-2 text-sm text-text-muted">{names.join(", ")}</p>
                     )}
+                    {r.exercises.length > 0 && (
+                      <ul aria-hidden="true" className="mt-3 flex gap-1.5 overflow-hidden">
+                        {r.exercises.slice(0, 6).map((e) =>
+                          byId[e.exerciseId] ? (
+                            <li key={e.id}>
+                              <ExerciseThumb exercise={byId[e.exerciseId]} size={40} />
+                            </li>
+                          ) : null,
+                        )}
+                        {r.exercises.length > 6 && (
+                          <li className="num flex size-10 items-center justify-center rounded-xl bg-surface-2 text-xs text-text-muted">
+                            +{r.exercises.length - 6}
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                    <EquipmentNeeded equipment={r.exercises.flatMap((e) => (byId[e.exerciseId] ? [byId[e.exerciseId].equipment] : []))} />
                     <Button
                       variant="primary"
                       onClick={() => start(r)}

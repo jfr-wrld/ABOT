@@ -19,6 +19,9 @@ import { SetTypeMenu } from "@/components/workout/SetTypeMenu";
 import { formatClock } from "@/lib/calc";
 import { fromDisplay, toDisplay } from "@/lib/units";
 import type { RoutineExercise, RoutineSet } from "@/types/workout";
+import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
+import { EQUIPMENT_LABELS, primaryMusclesLabel } from "@/types/workout";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -113,9 +116,20 @@ function Editor() {
           return (
             <section key={ex.id} aria-labelledby={`rex-${ex.id}`} className="panel p-3">
               <div className="flex items-start justify-between gap-2">
-                <h2 id={`rex-${ex.id}`} className="min-w-0 truncate text-base font-semibold text-accent">
-                  {def?.name ?? "Removed exercise"}
-                </h2>
+                <div className="flex min-w-0 items-center gap-3">
+                  {def && <ExerciseThumb exercise={def} size={44} />}
+                  <div className="min-w-0">
+                    <h2 id={`rex-${ex.id}`} className="line-clamp-2 text-base leading-snug font-semibold text-accent">
+                      {def?.name ?? "Removed exercise"}
+                    </h2>
+                    {def && (
+                      <p className="flex items-center gap-1.5 text-xs text-text-muted">
+                        <EquipmentIcon equipment={def.equipment} size={14} />
+                        {EQUIPMENT_LABELS[def.equipment]} · {primaryMusclesLabel(def)}
+                      </p>
+                    )}
+                  </div>
+                </div>
                 <div className="flex shrink-0">
                   <button
                     type="button"
