@@ -8,11 +8,11 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { cleanSteps } from "../src/data/cleanSteps.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DATA_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
 const IMAGE_BASE = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
-const MAX_STEPS = 5;
 
 const map = JSON.parse(await readFile(path.join(root, "scripts/seed-map.json"), "utf8"));
 const datasetPath = process.argv[2];
@@ -21,21 +21,6 @@ const dataset = datasetPath
   : await (await fetch(DATA_URL)).json();
 const byId = new Map(dataset.map((x) => [x.id, x]));
 
-/** Plain punctuation, no filler lines, at most MAX_STEPS steps. */
-function cleanSteps(steps) {
-  return steps
-    .map((s) =>
-      s
-        .replace(/[‘’]/g, "'")
-        .replace(/[“”]/g, '"')
-        .replace(/—|–/g, ", ")
-        .replace(/¾/g, "3/4")
-        .replace(/\s+/g, " ")
-        .trim(),
-    )
-    .filter((s) => s && !/^repeat\b.*\b(repetitions|reps|times)\b/i.test(s) && !/^repeat for the/i.test(s))
-    .slice(0, MAX_STEPS);
-}
 
 const out = [];
 const problems = [];

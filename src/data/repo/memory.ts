@@ -26,12 +26,24 @@ export function createMemoryRepository(): Repository {
   const exercises = memoryTable<RepoSnapshot["exercises"][number]>();
   const locations = memoryTable<RepoSnapshot["locations"][number]>();
   const kv = new Map<KvKey, unknown>();
+  let catalog: RepoSnapshot["exercises"] = [];
 
   const repo: Repository = {
     sessions,
     routines,
     exercises,
     locations,
+    catalog: {
+      async all() {
+        return clone(catalog);
+      },
+      async replaceAll(rows) {
+        catalog = clone(rows);
+      },
+      async clear() {
+        catalog = [];
+      },
+    },
     kv: {
       async get<K extends KvKey>(key: K) {
         return kv.has(key) ? clone(kv.get(key) as KvValues[K]) : undefined;

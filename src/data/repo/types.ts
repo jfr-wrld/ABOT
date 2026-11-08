@@ -42,6 +42,15 @@ export interface Repository {
   routines: Table<Routine>;
   exercises: Table<Exercise>;
   locations: Table<GymLocation>;
+  /**
+   * The optional full exercise catalog (free-exercise-db). Re-downloadable, so it is not part
+   * of snapshots, backups or sync.
+   */
+  catalog: {
+    all(): Promise<Exercise[]>;
+    replaceAll(rows: Exercise[]): Promise<void>;
+    clear(): Promise<void>;
+  };
   kv: {
     get<K extends KvKey>(key: K): Promise<KvValues[K] | undefined>;
     set<K extends KvKey>(key: K, value: KvValues[K]): Promise<void>;

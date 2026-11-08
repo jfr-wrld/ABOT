@@ -227,6 +227,7 @@ export function normalizeStoredExercise(raw: unknown): Exercise | null {
     media: normalizeMedia(raw.media),
     sourceId: str(raw.sourceId),
     notes: str(raw.notes),
-    isCustom: true,
+    // Catalog exercises the user has logged are stored with the owned ones but stay "catalog".
+    ...(raw.isCatalog === true ? { isCatalog: true } : { isCustom: true }),
   });
 }

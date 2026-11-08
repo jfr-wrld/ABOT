@@ -12,6 +12,7 @@ export class AbotDB extends Dexie {
   routines!: EntityTable<Routine, "id">;
   exercises!: EntityTable<Exercise, "id">;
   locations!: EntityTable<GymLocation, "id">;
+  catalog!: EntityTable<Exercise, "id">;
   kv!: EntityTable<KvRow, "key">;
 
   constructor(name: string) {
@@ -23,6 +24,8 @@ export class AbotDB extends Dexie {
       locations: "id",
       kv: "key",
     });
+    // v2: on-demand exercise catalog. Existing tables are untouched by the upgrade.
+    this.version(2).stores({ catalog: "id" });
   }
 }
 
@@ -42,6 +45,16 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
     routines: dexieTable(db.routines),
     exercises: dexieTable(db.exercises),
     locations: dexieTable(db.locations),
+    catalog: {
+      all: () => db.catalog.toArray(),
+      replaceAll: async (rows) => {
+        await db.transaction("rw", db.catalog, async () => {
+          await db.catalog.clear();
+          await db.catalog.bulkPut(rows);
+        });
+      },
+      clear: () => db.catalog.clear(),
+    },
     kv: {
       async get<K extends KvKey>(key: K) {
         const row = await db.kv.get(key);

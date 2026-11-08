@@ -49,11 +49,12 @@ let loadingFromRepo = false;
 export async function hydrateStores(repo: Repository): Promise<void> {
   const snap = await repo.snapshot();
   const restTimer = (await repo.kv.get("restTimer")) ?? null;
+  const catalog = await repo.catalog.all();
   loadingFromRepo = true;
   try {
     useWorkoutStore.setState({ sessions: snap.sessions, active: snap.activeWorkout, restTimer });
     useRoutineStore.setState({ routines: snap.routines });
-    useExerciseStore.setState({ custom: snap.exercises.map((e: Exercise) => normalizeExercise(e)) });
+    useExerciseStore.setState({ custom: snap.exercises.map((e: Exercise) => normalizeExercise(e)), catalog });
     useLocationStore.setState({ locations: snap.locations });
     // A repository without settings means defaults, not "keep whatever was in memory".
     useSettingsStore.setState(snap.settings ?? DEFAULT_STORED_SETTINGS);

@@ -11,6 +11,7 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ExerciseForm } from "@/components/exercises/ExerciseForm";
+import { CatalogSection } from "@/components/exercises/CatalogSection";
 import { buildPRTable } from "@/lib/calc";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
@@ -26,6 +27,7 @@ export default function ExercisesPage() {
 
 function LibraryScreen() {
   const { list, byId } = useAllExercises();
+  const catalogCount = list.filter((e) => e.isCatalog).length;
   const addCustom = useExerciseStore((s) => s.addCustom);
   const sessions = useWorkoutStore((s) => s.sessions);
   const [query, setQuery] = useState("");
@@ -51,7 +53,11 @@ function LibraryScreen() {
     <main className="flex flex-1 flex-col">
       <PageHeader
         title="Exercises"
-        subtitle={`${list.length} in your library`}
+        subtitle={
+          catalogCount > 0
+            ? `${list.length - catalogCount} in your library, ${catalogCount} from the catalog`
+            : `${list.length} in your library`
+        }
         action={
           <Button variant="primary" onClick={() => setFormOpen(true)}>
             <Plus aria-hidden="true" size={18} /> New
@@ -103,6 +109,8 @@ function LibraryScreen() {
         </div>
       </div>
 
+      <CatalogSection />
+
       {filtered.length === 0 ? (
         <p className="mx-4 mt-4 rounded-card bg-surface px-4 py-8 text-center text-sm text-text-muted">
           No exercise matches these filters. Clear a filter, or add it as a new exercise with the button above.
@@ -121,6 +129,7 @@ function LibraryScreen() {
                     <span className="block truncate text-sm font-semibold">
                       {e.name}
                       {e.isCustom && <span className="ml-2 text-xs font-normal text-text-muted">custom</span>}
+                      {e.isCatalog && <span className="ml-2 text-xs font-normal text-text-muted">catalog</span>}
                     </span>
                     <span className="block text-xs text-text-muted">
                       {primaryMusclesLabel(e)} · {EQUIPMENT_LABELS[e.equipment]}

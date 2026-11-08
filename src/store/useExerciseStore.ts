@@ -6,7 +6,13 @@ import { buildExerciseIndex } from "@/lib/sets";
 import { newId } from "@/lib/id";
 
 interface ExerciseState {
+  /** Custom exercises plus catalog exercises the user has logged (persisted, backed up). */
   custom: Exercise[];
+  /** The optional downloaded catalog (stored separately, not backed up). */
+  catalog: Exercise[];
+  setCatalog: (rows: Exercise[]) => void;
+  /** Keeps a copy of a catalog exercise once it is used, so history and backups keep its name. */
+  adopt: (e: Exercise) => void;
   addCustom: (ex: ExerciseDraft) => Exercise;
   updateCustom: (id: string, patch: Partial<ExerciseDraft>) => void;
   removeCustom: (id: string) => void;
@@ -15,6 +21,12 @@ interface ExerciseState {
 export const useExerciseStore = create<ExerciseState>()(
     (set) => ({
       custom: [],
+      catalog: [],
+      setCatalog: (catalog) => set({ catalog }),
+      adopt: (e) => {
+        if (!e.isCatalog) return;
+        set((s) => (s.custom.some((c) => c.id === e.id) ? s : { custom: [...s.custom, e] }));
+      },
       addCustom: (ex) => {
         const created = normalizeExercise({ ...ex, id: `custom-${newId()}`, isCustom: true });
         set((s) => ({ custom: [...s.custom, created] }));
@@ -29,5 +41,6 @@ export const useExerciseStore = create<ExerciseState>()(
 /** Seed + custom, as a sorted list and an id lookup. Stable while `custom` is unchanged. */
 export function useAllExercises() {
   const custom = useExerciseStore((s) => s.custom);
-  return useMemo(() => buildExerciseIndex(custom), [custom]);
+  const catalog = useExerciseStore((s) => s.catalog);
+  return useMemo(() => buildExerciseIndex(custom, catalog), [custom, catalog]);
 }

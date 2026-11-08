@@ -46,3 +46,22 @@ describe("buildExerciseIndex", () => {
     expect(byId["custom-1"]).toBe(custom);
   });
 });
+
+describe("buildExerciseIndex with the catalog", () => {
+  const cat = (id: string, name: string): Exercise => ({
+    ...SEED_EXERCISES[0]!,
+    id,
+    name,
+    sourceId: id.replace("fedb-", ""),
+    isCatalog: true,
+  });
+  it("adds catalog entries after seeds and owned ones, owned copies win", () => {
+    const a = cat("fedb-Zercher_Squats", "Zercher Squats");
+    const b = cat("fedb-Bicycling", "Bicycling");
+    const ownedB = { ...b, name: "Bicycling (mine)" };
+    const { list, byId } = buildExerciseIndex([ownedB], [a, b]);
+    expect(list).toHaveLength(SEED_EXERCISES.length + 2);
+    expect(byId["fedb-Bicycling"]!.name).toBe("Bicycling (mine)");
+    expect(byId["fedb-Zercher_Squats"]).toBe(a);
+  });
+});

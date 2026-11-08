@@ -163,3 +163,11 @@ describe("exercise model v2 (Task 18)", () => {
     }
   });
 });
+
+describe("adopted catalog exercises", () => {
+  it("keep their catalog flag instead of becoming custom", () => {
+    const e = normalizeStoredExercise({ id: "fedb-X", name: "X", primaryMuscles: ["chest"], equipment: "barbell", isCatalog: true })!;
+    expect(e.isCatalog).toBe(true);
+    expect(e.isCustom).toBeUndefined();
+  });
+});

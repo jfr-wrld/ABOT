@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { Exercise, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
-import { useAllExercises } from "@/store/useExerciseStore";
+import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 
 const MUSCLES: MuscleGroup[] = [
   "chest", "back", "lats", "shoulders", "biceps", "triceps", "quads", "hamstrings", "glutes", "calves", "abs", "traps", "forearms", "lower_back",
@@ -74,7 +74,10 @@ export function ExercisePicker({
             <li key={e.id}>
               <button
                 type="button"
-                onClick={() => onPick(e)}
+                onClick={() => {
+                  useExerciseStore.getState().adopt(e);
+                  onPick(e);
+                }}
                 className="flex min-h-12 w-full items-center justify-between gap-3 rounded-ctl px-2 text-left hover:bg-surface-2 active:bg-[#303035]"
               >
                 <span className="min-w-0">
