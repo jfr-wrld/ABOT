@@ -52,9 +52,12 @@ test("creates a routine with targets and starts it", async ({ page }) => {
 test("duplicates and deletes a routine", async ({ page }) => {
   await createRoutine(page, "Legs");
   await page.goto("/routines");
-  await page.getByRole("button", { name: "Duplicate Legs" }).click();
+  await page.getByRole("button", { name: "Options for Legs" }).click();
+  await expect(page.getByRole("link", { name: "Edit routine" })).toHaveAttribute("href", /\/routines\/.+\/edit$/);
+  await page.getByRole("button", { name: "Duplicate routine" }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toBeVisible();
-  await page.getByRole("button", { name: "Delete Legs (copy)" }).click();
+  await page.getByRole("button", { name: "Options for Legs (copy)" }).click();
+  await page.getByRole("button", { name: "Delete routine" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Legs", exact: true })).toBeVisible();

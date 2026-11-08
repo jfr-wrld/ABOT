@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -40,6 +40,7 @@ function RoutinesScreen() {
   const [newFolder, setNewFolder] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<Routine | null>(null);
+  const [menuFor, setMenuFor] = useState<Routine | null>(null);
   const [startBlocked, setStartBlocked] = useState<Routine | null>(null);
   // Someone with no routines yet lands on the templates.
   const [tab, setTab] = useState<"mine" | "vault">(() => (routines.length > 0 ? "mine" : "vault"));
@@ -130,31 +131,15 @@ function RoutinesScreen() {
                                 }`}
                           </p>
                         </div>
-                        <div className="flex shrink-0">
-                          <Link
-                            href={`/routines/${r.id}/edit`}
-                            aria-label={`Edit ${r.name}`}
-                            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
-                          >
-                            <Pencil aria-hidden="true" size={18} />
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => duplicate(r.id)}
-                            aria-label={`Duplicate ${r.name}`}
-                            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
-                          >
-                            <Copy aria-hidden="true" size={18} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setToDelete(r)}
-                            aria-label={`Delete ${r.name}`}
-                            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
-                          >
-                            <Trash2 aria-hidden="true" size={18} />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setMenuFor(r)}
+                          aria-label={`Options for ${r.name}`}
+                          aria-haspopup="dialog"
+                          className="-mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
+                        >
+                          <MoreHorizontal aria-hidden="true" size={20} />
+                        </button>
                       </div>
                       {shown.length > 0 && (
                         <ol aria-label={`Exercises in ${r.name}`} className="mt-2 flex flex-col gap-0.5">
@@ -274,6 +259,36 @@ function RoutinesScreen() {
             Create
           </button>
         </form>
+      </Sheet>
+
+      <Sheet open={menuFor !== null} onClose={() => setMenuFor(null)} title={menuFor?.name ?? "Routine"}>
+        {menuFor && (
+          <div className="flex flex-col gap-1">
+            <Link href={`/routines/${menuFor.id}/edit`} className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold hover:bg-surface-2">
+              <Pencil aria-hidden="true" size={18} className="text-text-muted" /> Edit routine
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                duplicate(menuFor.id);
+                setMenuFor(null);
+              }}
+              className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold hover:bg-surface-2"
+            >
+              <Copy aria-hidden="true" size={18} className="text-text-muted" /> Duplicate routine
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setToDelete(menuFor);
+                setMenuFor(null);
+              }}
+              className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold text-failure hover:bg-failure/10"
+            >
+              <Trash2 aria-hidden="true" size={18} /> Delete routine
+            </button>
+          </div>
+        )}
       </Sheet>
 
       <Sheet
