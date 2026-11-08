@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ABOT</string>
+    <string name="title_activity_main">ABOT</string>
+    <string name="package_name">app.abot.gym</string>
+    <string name="custom_url_scheme">app.abot.gym</string>
+</resources>

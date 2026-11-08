@@ -1,0 +1,50 @@
+name: Android APK
+
+# Builds a debug APK on every push to a claude/* branch or main, and on demand.
+# Download it from the run's "Artifacts" section and install it on a phone.
+on:
+  push:
+    branches: [main, "claude/**"]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - run: npm ci
+
+      - name: Check the cloud sync settings
+        if: ${{ vars.NEXT_PUBLIC_SUPABASE_URL == '' || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY == '' }}
+        run: echo "::warning::NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set in the repository's Actions variables. This APK runs local-only (no Google sign-in)."
+
+      - name: Export the web app and copy it into the Android project
+        run: npm run build:android
+        # Cloud sync: the project URL and anon key (public by design), from the repository's
+        # Actions variables. Without them the APK runs local-only. See docs/cloud-sync-setup.md.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Build the debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: abot-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
