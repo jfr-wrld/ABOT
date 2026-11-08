@@ -56,12 +56,17 @@ test("photos view crossfades the start and end frames", async ({ page }) => {
   await expect(phase).toHaveText("End position", { timeout: 3000 });
 });
 
-test("an exercise a side view cannot show uses photos only", async ({ page }) => {
+test("sideways and rotating movements animate from the front, photos still one tap away", async ({ page }) => {
   await serveFrames(page);
   await openHowTo(page, "/exercises/hip-abduction-machine");
   const media = page.getByRole("region", { name: "Exercise media" });
-  await expect(media.getByRole("button", { name: "Animation" })).toHaveCount(0);
+  await expect(media.getByRole("img", { name: "Hip Abduction (Machine) animation" })).toBeVisible();
+  await expect(media.getByTestId("motion-phase")).toHaveText(/Concentric|Eccentric/);
+  await media.getByRole("button", { name: "Photos" }).click();
   await expect(media.getByTestId("motion-phase")).toHaveText(/position/);
+
+  await openHowTo(page, "/exercises/russian-twist");
+  await expect(page.getByRole("region", { name: "Exercise media" }).getByTestId("motion-phase")).toHaveText("Alternate");
 });
 
 test("missing images show a text fallback instead of a broken box", async ({ page }) => {

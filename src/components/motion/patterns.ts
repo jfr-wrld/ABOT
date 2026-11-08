@@ -1,5 +1,6 @@
 import type { Exercise } from "@/types/workout";
 import { solveTwoBone, type Vec } from "./ik";
+import { FRONT_KEYWORDS, FRONT_PATTERNS, FRONT_SEED, type FrontPattern } from "./front";
 
 /**
  * Side-view lifter rig. Coordinates are SVG units (y down) in a 240 x 220 box whose ground
@@ -138,7 +139,7 @@ const ease = (x: number) => 0.5 - 0.5 * Math.cos(Math.PI * x);
 export type PhaseLabel = "Concentric" | "Eccentric" | "Hold" | "Carry" | "Alternate";
 
 /** Where in the rep the animation is at cycle position `u` (0..1), and how far from A to B. */
-export function phaseAt(p: Pattern, u: number): { label: PhaseLabel; progress: number } {
+export function phaseAt(p: Pick<Pattern | FrontPattern, "concentric">, u: number): { label: PhaseLabel; progress: number } {
   const x = (((u % 1) + 1) % 1) * CYCLE_SECONDS;
   if (p.concentric === "hold") return { label: "Hold", progress: 0 };
   if (p.concentric === "loop" || p.concentric === "alternate") {
@@ -685,13 +686,18 @@ const KEYWORDS: [RegExp, PatternId][] = [
   [/farmer|carry/, "farmer_walk"],
 ];
 
-export function patternFor(e: Pick<Exercise, "id" | "name" | "category">): Pattern | null {
+/** A side-view pattern, or a front-view one for sideways and rotating movements. */
+export type MotionPattern = Pattern | FrontPattern;
+
+export function patternFor(e: Pick<Exercise, "id" | "name" | "category">): MotionPattern | null {
+  if (e.id in FRONT_SEED) return FRONT_PATTERNS[FRONT_SEED[e.id]!];
   if (e.id in SEED) {
     const id = SEED[e.id];
     return id ? PATTERNS[id] : null;
   }
   if (e.category === "mobility" || e.category === "cardio") return null;
   const name = e.name.toLowerCase();
+  for (const [re, id] of FRONT_KEYWORDS) if (re.test(name)) return FRONT_PATTERNS[id];
   for (const [re, id] of KEYWORDS) if (re.test(name)) return PATTERNS[id];
   return null;
 }
