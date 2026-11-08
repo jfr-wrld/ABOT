@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { DEFAULT_SCHEDULE, type Weekday, type WorkoutSchedule } from "@/lib/notifications/schedule";
 import {
   askPermission,
-  notificationPermission,
+  refreshPermission,
   saveSchedule,
   startReminderLoop,
   type PermissionState,
@@ -25,7 +25,7 @@ interface ReminderState {
 /** Saves to IndexedDB in the background; the panel never waits on storage. */
 function persist(s: WorkoutSchedule) {
   const repo = getActiveRepository();
-  if (repo) void saveSchedule(repo, s);
+  if (repo) void saveSchedule(repo, s, routineInfo);
 }
 
 export const useReminderStore = create<ReminderState>()((set, get) => ({
@@ -42,7 +42,12 @@ export const useReminderStore = create<ReminderState>()((set, get) => ({
     set({ schedule });
     persist(schedule);
   },
-  requestPermission: async () => set({ permission: await askPermission() }),
+  requestPermission: async () => {
+    const permission = await askPermission();
+    set({ permission });
+    // Granting in the app is what lets the saved week be handed to the system.
+    if (permission === "granted") persist(get().schedule);
+  },
 }));
 
 /** The routine a reminder names, with up to three primary muscles across its exercises. */
@@ -63,6 +68,6 @@ export async function initReminders(): Promise<void> {
   const repo = getActiveRepository();
   if (!repo) return;
   const schedule = (await repo.kv.get("reminders")) ?? DEFAULT_SCHEDULE;
-  useReminderStore.setState({ schedule, permission: notificationPermission() });
+  useReminderStore.setState({ schedule, permission: await refreshPermission() });
   startReminderLoop(repo, routineInfo);
 }

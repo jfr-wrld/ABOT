@@ -12,6 +12,7 @@ import { formatClock, formatDuration, sessionDurationSec } from "@/lib/calc";
 import { useLiveWorkoutNotification } from "@/lib/notifications/useLiveWorkoutNotification";
 import type { WorkoutSession } from "@/types/workout";
 import { usePagePath } from "@/components/layout/usePagePath";
+import { buzz } from "@/lib/native/haptics";
 
 /** Fast to settle, a little overshoot: the capsule should feel like hardware snapping open. */
 const ISLAND_SPRING = { type: "spring", stiffness: 520, damping: 38, mass: 0.9 } as const;
@@ -128,7 +129,7 @@ function RestCapsule() {
     if (remainingMs > 0 || firedFor.current === timer.endsAt) return;
     firedFor.current = timer.endsAt;
     if (alert) {
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate([200, 100, 200]);
+      buzz([200, 100, 200]);
       beep();
     }
     // Hold "Go" for a moment so the lifter sees rest is over, then fold back to compact.

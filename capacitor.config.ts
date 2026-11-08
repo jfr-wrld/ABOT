@@ -13,6 +13,10 @@ const config: CapacitorConfig = {
       style: "DARK",
       initialViewportFitValueHint: "cover",
     },
+    LocalNotifications: {
+      smallIcon: "ic_stat_abot",
+      iconColor: "#CCFF00",
+    },
   },
   android: {
     // Bundled assets only: the app runs with no network, like the web build.

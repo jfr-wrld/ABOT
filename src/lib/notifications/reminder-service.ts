@@ -1,19 +1,35 @@
 import type { Repository } from "@/data/repo/types";
+import { isNativeApp } from "@/lib/native/files";
+import { askNativePermission, nativePermission, showNativeReminderNow, syncNativeReminders } from "@/lib/native/notify";
 import { DEFAULT_SCHEDULE, dueReminders, reminderContent, type DueReminder, type ReminderContent, type WorkoutSchedule } from "./schedule";
 
 /**
  * Shows workout reminders through the service worker (so they carry Start and Snooze buttons)
  * while ABOT is open, even in a background tab. A website cannot wake itself at a set time once
- * it is closed; the calendar export (buildIcs) covers that case.
+ * it is closed; the calendar export (buildIcs) covers that case. The Android app schedules them
+ * with the system instead (src/lib/native/notify.ts), so they arrive while it is closed.
  */
 
 export type PermissionState = NotificationPermission | "unsupported";
 
+/** The Android app's permission, read once at start (refreshPermission) so this stays synchronous. */
+let nativeState: PermissionState = "default";
+
+export async function refreshPermission(): Promise<PermissionState> {
+  if (isNativeApp()) nativeState = await nativePermission().catch(() => "default" as const);
+  return notificationPermission();
+}
+
 export function notificationPermission(): PermissionState {
+  if (isNativeApp()) return nativeState;
   return typeof Notification === "undefined" ? "unsupported" : Notification.permission;
 }
 
 export async function askPermission(): Promise<PermissionState> {
+  if (isNativeApp()) {
+    nativeState = await askNativePermission().catch(() => nativeState);
+    return nativeState;
+  }
   if (typeof Notification === "undefined") return "unsupported";
   try {
     return await Notification.requestPermission();
@@ -35,6 +51,7 @@ export async function registerReminderWorker(): Promise<ServiceWorkerRegistratio
 
 /** Shows one notification; without a service worker it falls back to a plain one (no buttons). */
 export async function showReminder(c: ReminderContent): Promise<boolean> {
+  if (isNativeApp()) return showNativeReminderNow(c).catch(() => false);
   if (notificationPermission() !== "granted") return false;
   const reg = await registerReminderWorker();
   const options = { body: c.body, tag: c.tag, data: c.data, icon: "/icon.svg", badge: "/icon.svg", requireInteraction: false };
@@ -68,6 +85,11 @@ let timer: ReturnType<typeof setInterval> | null = null;
  */
 export function startReminderLoop(repo: Repository, routine: (id: string | null) => RoutineInfo | null): () => void {
   stopReminderLoop();
+  // The app hands the whole week to Android's scheduler instead, which fires while ABOT is closed.
+  if (isNativeApp()) {
+    void repo.kv.get("reminders").then((s) => syncNativeReminders(s ?? DEFAULT_SCHEDULE, routine)).catch(() => {});
+    return stopReminderLoop;
+  }
   const tick = async () => {
     const now = Date.now();
     const schedule = (await repo.kv.get("reminders")) ?? DEFAULT_SCHEDULE;
@@ -98,7 +120,8 @@ export function stopReminderLoop(): void {
   timer = null;
 }
 
-export async function saveSchedule(repo: Repository, s: WorkoutSchedule): Promise<void> {
+export async function saveSchedule(repo: Repository, s: WorkoutSchedule, routine: (id: string | null) => RoutineInfo | null): Promise<void> {
   await repo.kv.set("reminders", s);
-  if (s.enabled) await registerReminderWorker();
+  if (isNativeApp()) await syncNativeReminders(s, routine).catch(() => {});
+  else if (s.enabled) await registerReminderWorker();
 }

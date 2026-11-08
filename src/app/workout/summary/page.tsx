@@ -20,6 +20,7 @@ import { PR_KIND_LABEL } from "@/lib/story-data";
 import { previousComparable, sessionRecords, workedMuscles } from "@/lib/session-insights";
 import { MUSCLE_GROUP_LABELS, type Exercise, type PersonalRecord, type WeightUnit } from "@/types/workout";
 import { historyPath } from "@/lib/routes";
+import { buzz } from "@/lib/native/haptics";
 
 export default function WorkoutSummaryPage() {
   return (
@@ -58,10 +59,8 @@ function Summary() {
 
   // One short buzz to mark the finish, on phones that vibrate and only if the lifter keeps alerts on.
   useEffect(() => {
-    if (!session || !restTimerAlert || typeof navigator === "undefined" || !("vibrate" in navigator)) return;
-    // Browsers only allow vibration after a tap on the page (here, Finish workout).
-    if ((navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive === false) return;
-    navigator.vibrate(recordLifts > 0 ? [30, 60, 30, 60, 60] : [30]);
+    if (!session || !restTimerAlert) return;
+    buzz(recordLifts > 0 ? [30, 60, 30, 60, 60] : [30]);
     // Once per opening of the page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -10,7 +10,7 @@ import { showReminder } from "@/lib/notifications/reminder-service";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { InfoTip } from "@/components/ui/InfoTip";
-import { saveFile } from "@/lib/native/files";
+import { isNativeApp, saveFile } from "@/lib/native/files";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
@@ -57,7 +57,7 @@ export function WorkoutReminderSettings() {
     const ok = await showReminder(
       reminderContent({ kind: "session", at: now, weekday: 1, routineId, key: `test:${now}` }, routineInfo(routineId), schedule.time),
     );
-    setTested(ok ? "Test reminder sent." : "The browser did not show it. Check the notification settings for ABOT.");
+    setTested(ok ? "Test reminder sent." : `${isNativeApp() ? "Android" : "The browser"} did not show it. Check the notification settings for ABOT.`);
   }
 
   return (
@@ -205,7 +205,9 @@ export function WorkoutReminderSettings() {
               </>
             ) : permission === "denied" ? (
               <p className="text-sm text-text-muted">
-                Notifications are blocked for ABOT. Allow them in this site&apos;s browser settings, or use the calendar below.
+                {isNativeApp()
+                  ? "Notifications are off for ABOT. Turn them on in Android settings, under Apps, ABOT, Notifications."
+                  : "Notifications are blocked for ABOT. Allow them in this site's browser settings, or use the calendar below."}
               </p>
             ) : (
               <p className="text-sm text-text-muted">This browser cannot show notifications. Use the calendar below.</p>
@@ -219,8 +221,9 @@ export function WorkoutReminderSettings() {
 
           <div>
             <p className="text-xs text-text-muted">
-              Reminders appear while ABOT is open, even in a background tab. For alerts when it is closed, add the schedule to
-              your phone&apos;s calendar.
+              {isNativeApp()
+                ? "Reminders arrive even when ABOT is closed. You can also add the schedule to your calendar."
+                : "Reminders appear while ABOT is open, even in a background tab. For alerts when it is closed, add the schedule to your phone's calendar."}
             </p>
             <Button onClick={exportCalendar} disabled={!anyDay} className="mt-2 w-full">
               <CalendarPlus aria-hidden="true" size={16} /> Add to calendar (.ics)
