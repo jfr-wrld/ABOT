@@ -12,6 +12,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Routine } from "@/types/workout";
+import { SUPERSET_COLORS, supersetLabels } from "@/lib/superset";
+
+/** Exercises listed on a routine card before "+N more". */
+const CARD_PREVIEW = 5;
 import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
 import { TemplateVault } from "@/components/routines/TemplateVault";
 
@@ -108,8 +112,11 @@ function RoutinesScreen() {
               </h2>
               <ul className="mt-2 flex flex-col gap-2">
                 {folders.get(folder)!.map((r) => {
-                  const names = r.exercises.map((e) => byId[e.exerciseId]?.name ?? "Removed exercise");
                   const setCount = r.exercises.reduce((n, e) => n + e.sets.length, 0);
+                  const ss = supersetLabels(r.exercises);
+                  const ssCount = new Set(Object.values(ss).map((x) => x.letter)).size;
+                  const shown = r.exercises.slice(0, CARD_PREVIEW);
+                  const more = r.exercises.length - shown.length;
                   return (
                     <li key={r.id} className="panel p-4">
                       <div className="flex items-start justify-between gap-2">
@@ -118,7 +125,9 @@ function RoutinesScreen() {
                           <p className="mt-0.5 text-xs text-text-muted">
                             {r.exercises.length === 0
                               ? "No exercises yet"
-                              : `${r.exercises.length} ${r.exercises.length === 1 ? "exercise" : "exercises"} · ${setCount} sets`}
+                              : `${r.exercises.length} ${r.exercises.length === 1 ? "exercise" : "exercises"} · ${setCount} sets${
+                                  ssCount ? ` · ${ssCount} ${ssCount === 1 ? "superset" : "supersets"}` : ""
+                                }`}
                           </p>
                         </div>
                         <div className="flex shrink-0">
@@ -147,8 +156,33 @@ function RoutinesScreen() {
                           </button>
                         </div>
                       </div>
-                      {names.length > 0 && (
-                        <p className="mt-2 line-clamp-2 text-sm text-text-muted">{names.join(", ")}</p>
+                      {shown.length > 0 && (
+                        <ol aria-label={`Exercises in ${r.name}`} className="mt-2 flex flex-col gap-0.5">
+                          {shown.map((e) => {
+                            const label = ss[e.id];
+                            const color = label ? SUPERSET_COLORS[label.color] : undefined;
+                            return (
+                              <li
+                                key={e.id}
+                                // Superset members carry the same coloured edge and letter as in the workout.
+                                style={color ? { borderLeftColor: color } : undefined}
+                                className={`flex items-center gap-2 text-sm text-text-muted ${label ? "border-l-2 pl-2" : ""}`}
+                              >
+                                <span className="min-w-0 truncate">{byId[e.exerciseId]?.name ?? "Removed exercise"}</span>
+                                {label && (
+                                  <span className="num shrink-0 text-[10px] font-semibold" style={{ color }}>
+                                    Superset {label.letter}
+                                  </span>
+                                )}
+                              </li>
+                            );
+                          })}
+                          {more > 0 && (
+                            <li className="num text-xs text-text-muted">
+                              +{more} more {more === 1 ? "exercise" : "exercises"}
+                            </li>
+                          )}
+                        </ol>
                       )}
                       <Button
                         variant="primary"

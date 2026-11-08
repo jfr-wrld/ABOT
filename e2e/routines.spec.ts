@@ -95,6 +95,12 @@ test("the routine editor builds a superset that carries into the workout", async
 
   await page.goto("/routines");
   await page.getByRole("tab", { name: "My Routines" }).click();
+  // The card names the superset and marks its two exercises.
+  const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Arms" }) });
+  await expect(card).toContainText("3 exercises · 9 sets · 1 superset");
+  const list = card.getByRole("list", { name: "Exercises in Arms" });
+  await expect(list.getByRole("listitem")).toHaveCount(3);
+  await expect(list.getByRole("listitem").filter({ hasText: "Superset A" })).toHaveCount(2);
   await page.getByRole("button", { name: "Start Arms" }).click();
   await page.waitForURL("**/workout");
   await expect(page.getByText("Superset A")).toHaveCount(2);
