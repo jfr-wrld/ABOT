@@ -21,24 +21,47 @@ test.beforeEach(async ({ page }) => {
   await freshStart(page);
 });
 
-test("motion tab crossfades start and end frames and can be paused", async ({ page }) => {
-  await serveFrames(page);
+test("motion tab animates the rep with accurate phases and can be paused", async ({ page }) => {
   await page.goto("/exercises/bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
   await expect(media.getByRole("tab", { name: "Motion" })).toHaveAttribute("aria-selected", "true");
+  await expect(media.getByRole("img", { name: "Bench Press (Barbell) animation" })).toBeVisible();
+  const phase = media.getByTestId("motion-phase");
+  // Bench press starts at lockout: lowering first (eccentric), then pressing (concentric).
+  await expect(phase).toHaveText("Eccentric");
+  await expect(phase).toHaveText("Concentric", { timeout: 4000 });
+  await media.getByRole("button", { name: "Pause motion" }).click();
+  const frozen = await phase.textContent();
+  const pose = await media.locator("svg line").nth(5).getAttribute("x2");
+  await page.waitForTimeout(1500);
+  await expect(phase).toHaveText(frozen ?? "");
+  expect(await media.locator("svg line").nth(5).getAttribute("x2")).toBe(pose);
+  await media.getByRole("button", { name: "Play motion" }).click();
+});
+
+test("photos view crossfades the start and end frames", async ({ page }) => {
+  await serveFrames(page);
+  await page.goto("/exercises/bench-press-barbell");
+  const media = page.getByRole("region", { name: "Exercise media" });
+  await media.getByRole("button", { name: "Photos" }).click();
+  await expect(media.getByRole("button", { name: "Photos" })).toHaveAttribute("aria-pressed", "true");
   const phase = media.getByTestId("motion-phase");
   await expect(phase).toHaveText("Start position");
   await expect(phase).toHaveText("End position", { timeout: 3000 });
-  await media.getByRole("button", { name: "Pause motion" }).click();
-  const frozen = await phase.textContent();
-  await page.waitForTimeout(1500);
-  await expect(phase).toHaveText(frozen ?? "");
-  await expect(media.getByRole("button", { name: "Play motion" })).toBeVisible();
+});
+
+test("an exercise a side view cannot show uses photos only", async ({ page }) => {
+  await serveFrames(page);
+  await page.goto("/exercises/hip-abduction-machine");
+  const media = page.getByRole("region", { name: "Exercise media" });
+  await expect(media.getByRole("button", { name: "Animation" })).toHaveCount(0);
+  await expect(media.getByTestId("motion-phase")).toHaveText(/position/);
 });
 
 test("missing images show a text fallback instead of a broken box", async ({ page }) => {
   await page.route(FRAMES, (route) => route.abort("internetdisconnected"));
   await page.goto("/exercises/bench-press-barbell");
+  await page.getByRole("region", { name: "Exercise media" }).getByRole("button", { name: "Photos" }).click();
   await expect(page.getByText("Images need a connection.")).toBeVisible();
 });
 
