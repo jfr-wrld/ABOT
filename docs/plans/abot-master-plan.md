@@ -640,11 +640,152 @@ diverifikasi; **Not Started** = belum ada kode.
 | Fondasi | Sync metadata + queue | Not Started | | `updatedAt`, `deletedAt`, `syncStatus`, `syncState` |
 | Fondasi | Two-way merge engine | Not Started | | Pull/merge/push + tes konflik |
 | Fondasi | Supabase adapter + Google login | Not Started | | Butuh project Supabase dan OAuth client dari owner |
+| 7.3 | Token Tactile Industrial + motion + haptics | Not Started | token lama di `globals.css` | Palet baru, `motion`, `haptics.ts` |
+| 7.4.1 | Spring set completion + sweep + PR pop-in | Not Started | badge PR statis di `SetRow` | Animasi + haptic |
+| 7.4.2 | Dynamic Island Tier 1 / 2 / 3 | Not Started | `RestTimerBar` sticky (akan digantikan) | Kapsul, MediaSession bridge, IslandAdapter |
+| 7.4.3 | Animated IPF plate calculator | Not Started | | Termasuk 4.2 |
+| 7.4.4 | Sparkline + post-exercise feedback | Not Started | `exerciseHistory()` sudah ada | `SessionExercise.feedback`, UI pills |
+| 7.4.5 | Thermal glow muscle map | Not Started | | Termasuk 6.3A |
+| 7.4.6 | EMA trendline charts | Not Started | grafik 1RM garis biasa | `ema()` + titik mentah |
 | Fondasi | PWA (manifest, SW, ikon) | Not Started | | Ikon butuh arahan owner (R-23) |
 | Fondasi | E2E test di repo | Not Started | skrip di scratchpad | `e2e/` Playwright |
 | Fondasi | Settings | Needs Upgrade | `settings/page.tsx` (WIP) | Verifikasi, lokasi gym, bar/plates |
 
 Ringkasan: 7 Done, 8 Needs Upgrade, 24 Not Started.
+
+### 7.3 Aesthetic Direction: "Tactile Industrial Luxury" (owner direction 2026-11-08)
+
+Arah ini menggantikan tabel 7.1 untuk palet, motion, dan haptics; aturan antislop tetap berlaku
+(tanpa gradien dekoratif, tanpa teks basa-basi, `tabular-nums` wajib). Referensi rasa: Teenage
+Engineering, Liftin', Linear (sebagai acuan kualitas, bukan untuk ditiru, R-30).
+
+Dial baru: **ENERGY 2 / RHYTHM 2 / MOTION 2** (naik dari MOTION 1 karena owner meminta spring
+physics di semua interaksi; tetap tidak ada animasi dekoratif yang berjalan tanpa pemicu).
+
+**Palet (diperiksa dengan `contrast-check.py`, 2026-11-08)**
+
+| Token | Nilai | Pemakaian | Kontras |
+|---|---|---|---|
+| `bg` Matte Obsidian | `#09090b` | Latar halaman | teks `#fafafa` 19.1:1 |
+| `surface` Carbon | `#121215` | Kartu, sheet (menggantikan `#18181b`) | teks muted `#a1a1aa` 7.3:1 |
+| `line` Hairline Steel | `#27272a` | Divider dekoratif saja | 1.26:1 di Carbon, tidak boleh jadi batas kontrol |
+| `line-strong` | `#71717a` | Batas input dan tombol outline | 3.87:1 di Carbon (non-text 3:1 lulus) |
+| `accent` | Volt `#ccff00` **atau** Blue `#3b82f6` (Q8) | Centang set, aksi utama | Volt 15.9:1, Blue 5.1:1 di Carbon; teks di atas Volt harus `#09090b` (16.9:1) |
+| `pr-cyan` / `pr-gold` | `#22d3ee` / `#fbbf24` | Badge dan momen PR saja | 10.4:1 / 11.2:1 |
+| `island` | `#000000` | Kapsul Dynamic Island (OLED) | teks `#fafafa` 20.1:1 |
+| `warn` / `crit` | `#f59e0b` / `#ef4444` | Rest timer < 10 dtk di kapsul hitam | 9.8:1 / 5.6:1 |
+
+Aturan aksen: satu aksen per layar. Jika Volt dipilih, Blue tidak dipakai sama sekali (dan
+sebaliknya); Cyan/Gold khusus PR.
+
+**Animation engine**
+
+- Paket `motion` (framer-motion) di-pin versi exact; satu preset di `src/lib/motion.ts`:
+  `spring = { type: "spring", stiffness: 400, damping: 28 }`, `islandSpring = { stiffness: 420,
+  damping: 30 }`. Semua transisi interaktif memakai preset ini, bukan CSS linear.
+- `MotionConfig reducedMotion="user"` di root: di bawah `prefers-reduced-motion` animasi berubah
+  menjadi fade instan, informasi tetap sama (R-39).
+- Tidak ada loop tanpa akhir kecuali indikator "live" di kapsul selama workout aktif (menandai
+  status nyata, R-13/R-31); berhenti di reduced-motion.
+
+**Haptics** `src/lib/haptics.ts`
+
+```ts
+type Haptic = "setComplete" | "stepper" | "pr" | "restDone";
+const PATTERNS = { setComplete: 15, stepper: 8, pr: [30, 50, 80], restDone: [200, 100, 200] };
+export function haptic(kind: Haptic): boolean // false bila tidak didukung atau dimatikan di Settings
+```
+
+Catatan platform: `navigator.vibrate` didukung Chrome/Android (termasuk OPPO, Xiaomi, Vivo,
+Realme), **tidak didukung di Safari iOS sama sekali**. Di iPhone haptics tidak bekerja dari web;
+UI tidak boleh bergantung padanya. Toggle "Vibration" di Settings.
+
+### 7.4 Enam fitur dan micro-interaction unggulan
+
+**1. Spring Set Completion + Sweep Highlight** (M3)
+Tombol centang: scale spring 1 -> 0.9 -> 1 saat ditekan, ikon centang digambar (pathLength).
+Baris set: satu light sweep horizontal 450 ms (gradient transparan -> 12% putih -> transparan,
+dipakai sebagai feedback gerak satu kali, bukan latar, R-01 tercatat). PR: badge "PR" pop-in
+spring warna PR Cyan + `haptic("pr")`. Lihat Q9 tentang emoji.
+
+**2. Universal Dynamic Island & Camera Capsule Engine** (Tier 1 di M4, Tier 2 di M4/M7, Tier 3 di M7)
+
+Satu sumber state: `useIslandState()` diturunkan dari workout store (active, restTimer, PR
+terbaru, set berikutnya). Ketiga tier hanya renderer dari state ini.
+
+*Tier 1, kapsul in-app* `src/components/workout/DynamicIslandBar.tsx`
+- `fixed left-1/2 -translate-x-1/2 z-50`, `top: calc(env(safe-area-inset-top) + 6px)`, latar
+  `#000000`, satu `motion.div layoutId="island"` dengan `islandSpring`.
+- Mode: `compact` (titik live + durasi kiri, sets/volume kanan), `rest` (melebar, progress fill,
+  countdown besar `01:30`, preview set berikutnya, warn < 10 dtk, crit < 3 dtk), `expanded` (tap:
+  nama exercise, target set berikutnya, `-15s` `+15s` `Skip`, `Log next set`), `pr` (3 dtk, lalu
+  kembali ke mode sebelumnya).
+- Semua tombol 44 px, `aria-live="polite"` hanya pada perubahan mode, bukan setiap detik.
+- **Batas platform (jujur):** halaman web tidak bisa menggambar di area status bar/kamera. Di tab
+  browser biasa dan PWA `standalone` Android, kapsul tampil tepat di bawah status bar, sejajar
+  tengah dengan kamera punch-hole tetapi tidak "menyatu" dengannya. Efek menyatu hanya mungkin
+  pada PWA iOS dengan `apple-mobile-web-app-status-bar-style: black-translucent` +
+  `viewport-fit=cover` (konten boleh di bawah status bar) atau Android `display: fullscreen`
+  (status bar disembunyikan). Posisi kamera berbeda tiap HP; kapsul tidak menebak posisi lubang
+  kamera, ia di tengah.
+
+*Tier 2, jembatan ke sistem untuk PWA* `src/lib/system-island-bridge.ts`
+- MediaSession: metadata `title` = sisa waktu, `artist` = set berikutnya, artwork dari canvas
+  512x512 (angka countdown, latar ABOT); `setActionHandler`: `previoustrack` = -15 dtk,
+  `nexttrack` = skip rest, `play`/`pause` = jeda/lanjut timer.
+- **Batas platform (jujur):** kontrol media sistem (Android media notification, kapsul OPPO
+  Fluid Cloud/HyperOS untuk media, iOS Now Playing/Dynamic Island) hanya muncul bila halaman
+  **benar-benar memutar audio**. Metadata saja tidak cukup. Membuatnya muncul butuh elemen audio
+  yang terus diputar (mis. audio hening berulang) selama rest; ini menguras baterai, bisa
+  dihentikan OS, dan di iOS tetap tidak dijamin tampil di Dynamic Island. Usulan: opsi Settings
+  "Show rest timer in system media controls (plays silent audio during rest)" default **off**,
+  diuji pada perangkat nyata owner sebelum dinyatakan berfungsi.
+- Notifikasi: Service Worker `showNotification` dengan `tag: "abot-rest-timer"`, `silent: true`
+  saat mulai rest, dan notifikasi bersuara + getar saat 00:00. **Batas:** Notification API web
+  tidak punya progress bar; memperbarui notifikasi tiap detik dibatasi/diabaikan browser; saat
+  aplikasi di background, timer JS diperlambat sehingga notifikasi 00:00 bisa terlambat (Chrome
+  Android biasanya beberapa detik, kadang lebih). Notification Triggers API sudah dihentikan,
+  dan push dari server ditolak oleh constraint Zero External Paid API. Jadi notifikasi akhir rest
+  adalah best-effort, ditulis begitu di UI. iOS hanya mengizinkan notifikasi web untuk PWA yang
+  ditambahkan ke Home Screen (iOS 16.4+) dan setelah izin.
+
+*Tier 3, adapter native* `src/lib/native-island-adapter.ts`
+```ts
+interface IslandAdapter {
+  isAvailable(): boolean;
+  start(s: IslandSnapshot): Promise<void>;   // Live Activity / promoted ongoing notification
+  update(s: IslandSnapshot): Promise<void>;
+  end(): Promise<void>;
+}
+```
+Implementasi web = no-op (`isAvailable() === false`). Implementasi Capacitor (iOS ActivityKit
+Live Activities, Android 16 promoted ongoing notifications / Live Updates, OPPO Fluid Cloud) di
+luar scope web dan baru dikerjakan bila owner memutuskan membungkus aplikasi dengan Capacitor.
+
+**3. Animated IPF Plate Calculator** (M3)
+Visual pada 4.2 dianimasikan: plate masuk/keluar batang dengan spring (`AnimatePresence`, offset
+x dari ujung sleeve), warna IPF (25 merah, 20 biru, 15 kuning, 10 hijau, 5 putih, 2.5 hitam, 1.25
+krom), selalu berlabel angka.
+
+**4. Inline Sparkline + 1-tap Post-Exercise Feedback** (M3 UI, M5 coach)
+- Sparkline e1RM 5 sesi terakhir (per `variantKey`) di header kartu exercise: SVG 64x20, satu
+  hue, titik terakhir ditandai; `<title>` berisi angka. Tanpa 2 sesi: tidak dirender.
+- Setelah semua set kerja exercise dicentang: tiga pill opsional `Good pump`, `Too easy`,
+  `Joint pain` (satu pilihan, bisa dibatalkan). Disimpan di `SessionExercise.feedback?:
+  "pump" | "easy" | "joint"`. Coach (6.1): `easy` -> naikkan step lebih cepat; `joint` -> tahan
+  beban dan tampilkan catatan; `pump` tidak mengubah beban. Lihat Q9 tentang emoji.
+
+**5. Thermal Glow SVG Muscle Map** (M6)
+`MuscleMap` mode heatmap memakai skala sequential hangat (5 step, divalidasi validator `dataviz`
+di surface gelap) + SVG `feGaussianBlur` glow hanya pada region dengan nilai tertinggi (R-13:
+glow sebagai fokus, bukan di semua region). Scrubber `Last workout` / `7 days` / `30 days`
+(segmented control, bukan slider tersembunyi). Nilai berasal dari sets (dan recovery 6.2), dengan
+daftar angka di bawah peta.
+
+**6. EMA Trendline Charts** (M3 analytics)
+Data mentah sebagai titik transparan (opacity 35%), garis EMA tebal 2.5 px (`alpha = 2/(n+1)`,
+n = 7 sesi untuk e1RM, 4 minggu untuk volume). Satu sumbu, satu metrik per grafik (dataviz
+non-negotiable). Fungsi murni `ema(values, n)` diuji unit.
 
 ---
 
@@ -659,11 +800,11 @@ ditulis dengan skill `writing-plans` setelah dokumen ini disetujui.
 | **M1 Stabilisasi dan identitas** | Perbaiki D1..D6, D9; rename ke ABOT; e2e Playwright di repo (`e2e/logger.spec.ts`, `e2e/routines.spec.ts`, ...); verifikasi semua halaman WIP; export/import JSON (D7); weighted bodyweight (D8) | `npm run lint`, `npm test`, `npm run e2e` hijau; Delivery Gate PASS untuk 7 halaman |
 | **M2 Fondasi data** | Repository layer + Dexie/IndexedDB + migrasi dari localStorage; `GymLocation`; `variantKey` di calc; `loadMode`; `logType` + durasi; `supersetId`; Export/Import JSON; `navigator.storage.persist()`; skema `sync_status` (`updatedAt`, `deletedAt`, tabel `syncStatus`, kv `syncState`) + sync queue; mesin Two-Way Merge dengan remote palsu | Tes migrasi; data lama tetap terbaca; PR per lokasi; tes merge untuk setiap aturan konflik |
 | **M2b Cloud Sync** | Adapter Supabase (`abot_records`, RLS, `upsert_if_newer`), Google Sign-in, UI "Backup & Sync", sync otomatis (open, online, finish, manual) | Unit test adapter dengan client tiruan; uji nyata end-to-end butuh project Supabase owner |
-| **M3 Core parity** | Myo-reps; RPE picker; superset UI + rest; warm-up generator; plate calculator; Rep PR; routine post-session sync; radar + heatmap (siluet setelah konfirmasi owner); penanda PR di kalender | Tabel tes untuk setiap fungsi murni; click-through |
-| **M4 Ultra-fast logging dan body** | Quick-step toolbar + numpad opsional; auto-advance; instrumentasi waktu per set; body check-in 3 pose + ghost overlay + compare; export ZIP foto | Median waktu per set diukur dan dilaporkan apa adanya |
-| **M5 Coach dan recovery** | Double progression coach; recovery estimator; halaman "Readiness" | Tabel nilai uji untuk kedua model |
-| **M6 Local Visual, Voice & Canvas Engine** | `MuscleMap` SVG parametrik (highlight di exercise/picker/kartu, heatmap di Progress); voice logger Web Speech + `parseSetUtterance`; Canvas PR card dan session card dengan Web Share/unduh | Semua offline; 30 kasus parser lulus; screenshot MuscleMap 16 region; PNG card terbuka |
-| **M7 PWA dan rilis** | Manifest, ikon (setelah arahan owner), service worker, halaman "About / data on your device", audit akhir Delivery Gate + dataviz + human | Lighthouse dijalankan dan angkanya dilaporkan apa adanya |
+| **M3 Core parity + Tactile foundation** | Token Tactile Industrial (7.3) + `motion` + preset spring + `MotionConfig reducedMotion`; `haptics.ts` + toggle; Spring Set Completion + sweep + PR pop-in (7.4.1); Myo-reps; RPE picker; superset UI + rest; warm-up generator; Animated IPF plate calculator (7.4.3); Rep PR; routine post-session sync; radar; penanda PR di kalender; sparkline di kartu exercise + post-exercise feedback pills (7.4.4); EMA trendline untuk e1RM dan volume (7.4.6) | Tabel tes untuk setiap fungsi murni (`ema`, plate, warm-up); click-through; screenshot spring di reduced-motion juga |
+| **M4 Ultra-fast logging, Island, body** | Quick-step toolbar + numpad opsional; auto-advance; instrumentasi waktu per set; **Dynamic Island Tier 1** (`DynamicIslandBar`, 4 mode, `layoutId`, `islandSpring`); **Tier 2 MediaSession bridge** (opsi default off) + notifikasi rest via Service Worker (best-effort); body check-in 3 pose + ghost overlay + compare; export ZIP foto | Median waktu per set diukur; Tier 2 diuji di HP nyata owner (Android OPPO/Xiaomi, iPhone) dan hasilnya dilaporkan per perangkat |
+| **M5 Coach dan recovery** | Double progression coach (memakai feedback `easy`/`joint` dari 7.4.4); recovery estimator; halaman "Readiness" | Tabel nilai uji untuk kedua model |
+| **M6 Local Visual, Voice & Canvas Engine** | `MuscleMap` SVG parametrik (highlight di exercise/picker/kartu) + **Thermal Glow heatmap** dengan scrubber Last workout / 7 days / 30 days (7.4.5); voice logger Web Speech + `parseSetUtterance`; Canvas PR card dan session card dengan Web Share/unduh | Semua offline; 30 kasus parser lulus; screenshot MuscleMap 16 region; PNG card terbuka |
+| **M7 PWA dan rilis** | Manifest (`display: standalone`, opsi fullscreen dievaluasi untuk efek kapsul menyatu), meta iOS `black-translucent`, ikon hexagon plate, service worker (offline shell + notifikasi rest), **Island Tier 3** `IslandAdapter` interface + no-op web; halaman "About / data on your device"; audit akhir Delivery Gate + dataviz + human | Lighthouse dijalankan dan angkanya dilaporkan apa adanya; instal PWA di Android dan iOS diuji manual |
 
 Urutan ini sengaja menaruh fondasi data (M2) sebelum fitur yang menambah data (M3, M4), dan
 menaruh AI (M6) setelah semua jalur non-AI selesai sehingga AI benar-benar enhancement.
@@ -707,6 +848,9 @@ Ini perkiraan, bukan komitmen; akan direvisi di setiap implementation plan.
 | Q4 | Anatomi | **Parametric SVG Muscle Map** di dalam kode, front dan back, satu `<path>` per grup otot (16 region), primary solid, secondary 35% |
 | Q5 | API eksternal | **Zero External Paid API.** Tidak ada Replicate, tidak ada token. Milestone 6 menjadi Local Visual, Voice & Canvas Engine |
 | Q6 | Voice | **Web Speech API** + parser regex deterministik lokal, Inggris dan Indonesia ("80 kilo 8 repetisi RPE 8.5" -> `{ weight: 80, reps: 8, rpe: 8.5 }`) |
+| Q8 | Aksen | **Terbuka**: Volt `#ccff00` atau Blue `#3b82f6`? Keduanya lulus kontras; antislop membatasi satu aksen per layar. Rekomendasi agen: Volt, karena lebih khas ABOT dan tidak bertabrakan dengan biru superset/PR |
+| Q9 | Emoji di UI | **Terbuka**: brief memakai emoji (`🏆 PR`, `🔥 Good pump`, `⚡ Too easy`, `⚠️ Joint pain`, `🏆 NEW PR`). antislop menandai emoji dekoratif sebagai slop (R-04, "Emoji as Decoration"). Usulan: ikon SVG yang relevan (trofi, api, petir, segitiga peringatan) dengan label teks; tetap pakai emoji bila owner memilih, dicatat sebagai override |
+| Q10 | Batas Dynamic Island di web | **Perlu diketahui owner**: kapsul tidak bisa benar-benar menyatu dengan lubang kamera kecuali mode fullscreen / iOS black-translucent; kapsul sistem (OPPO Fluid Cloud, HyperOS, iOS Dynamic Island) hanya muncul untuk audio yang sedang diputar; notifikasi 00:00 di background best-effort. Tier 3 native butuh Capacitor |
 | Q7 | Perlindungan data | **Hybrid offline-first + Cloud Sync**: IndexedDB tetap utama (0 ms, offline); `navigator.storage.persist()` saat pertama dimuat; Supabase (Google OAuth + Postgres RLS) sebagai adapter sync opsional dengan Two-Way Merge; Guest mode default dengan tombol "Sign in with Google to Backup & Sync"; Export/Import JSON tetap ada |
 
 Keputusan yang diambil agen dan bisa dikoreksi owner: unit penyimpanan kg; Epley untuk 1RM;
