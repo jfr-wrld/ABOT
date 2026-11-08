@@ -80,7 +80,7 @@ test("the muscle filter counts groups drawn as one shape together", async ({ pag
   await page.goto("/exercises");
   await choose(page, page.getByLabel("Muscle group"), "Quads");
   // Each option carries a picture: the muscle lit on the figure, the equipment drawn.
-  await expect(page.getByLabel("Muscle group").locator("svg g[fill='#ccff00']").first()).toBeVisible();
+  await expect(page.getByLabel("Muscle group").locator("svg g[fill='var(--color-accent)']").first()).toBeVisible();
   await page.getByLabel("Equipment").click();
   await expect(page.getByRole("option", { name: "Barbell", exact: true }).locator("svg:not(.lucide)")).toBeVisible();
   await page.keyboard.press("Escape");

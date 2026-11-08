@@ -75,5 +75,5 @@ test("the exercise page shows the muscle and equipment with their icons", async 
   const header = page.locator("header").filter({ has: page.getByRole("heading", { level: 1, name: "Bench Press (Barbell)" }) });
   await expect(header.getByText("Chest", { exact: true })).toBeVisible();
   await expect(header.getByText("Barbell", { exact: true })).toBeVisible();
-  await expect(header.locator("svg g[fill='#ccff00']").first()).toBeAttached();
+  await expect(header.locator("svg g[fill='var(--color-accent)']").first()).toBeAttached();
 });
