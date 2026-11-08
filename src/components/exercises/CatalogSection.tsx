@@ -47,7 +47,7 @@ export function CatalogSection() {
   }
 
   return (
-    <section aria-labelledby="catalog-heading" className="mx-4 mt-4 rounded-card bg-surface p-3">
+    <section aria-labelledby="catalog-heading" className="mx-4 mt-4 panel p-3">
       <h2 id="catalog-heading" className="text-sm font-semibold">
         Full exercise catalog
       </h2>

@@ -101,7 +101,7 @@ function Editor() {
         </div>
 
         {routine.exercises.length === 0 && (
-          <p className="rounded-card bg-surface px-4 py-6 text-center text-sm text-text-muted">
+          <p className="panel px-4 py-6 text-center text-sm text-text-muted">
             No exercises in this routine yet. Add the first one below; each starts with three planned sets.
           </p>
         )}
@@ -110,7 +110,7 @@ function Editor() {
           const def = byId[ex.exerciseId];
           const nums = setNumbers(ex.sets);
           return (
-            <section key={ex.id} aria-labelledby={`rex-${ex.id}`} className="rounded-card bg-surface p-3">
+            <section key={ex.id} aria-labelledby={`rex-${ex.id}`} className="panel p-3">
               <div className="flex items-start justify-between gap-2">
                 <h2 id={`rex-${ex.id}`} className="min-w-0 truncate text-base font-semibold text-accent">
                   {def?.name ?? "Removed exercise"}
@@ -162,7 +162,7 @@ function Editor() {
               </div>
 
               <div
-                className="mt-3 grid gap-1.5 px-1 text-[11px] font-semibold uppercase text-text-muted"
+                className="mt-3 grid gap-1.5 px-1 label-caps"
                 style={{ gridTemplateColumns: "44px minmax(0,1fr) 72px 64px" }}
                 aria-hidden="true"
               >

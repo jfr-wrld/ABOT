@@ -35,8 +35,8 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
     if (!r) return null;
     return (
       <div key={kind} className="rounded-ctl bg-bg px-2 py-2">
-        <dt className="text-[11px] font-semibold uppercase text-text-muted">{label}</dt>
-        <dd className="text-base font-bold tabular-nums">{value(r)}</dd>
+        <dt className="label-caps">{label}</dt>
+        <dd className="text-base font-bold num">{value(r)}</dd>
         <dd className="text-xs text-text-muted">
           {sub(r)} · {new Date(r.achievedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
         </dd>
@@ -45,9 +45,9 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
   };
 
   return (
-    <section aria-labelledby={`pr-${exercise.id}`} className="rounded-card bg-surface p-3">
+    <section aria-labelledby={`pr-${exercise.id}`} className="panel p-3">
       <h2 id={`pr-${exercise.id}`} className="flex items-center gap-2 text-sm font-semibold">
-        <Trophy aria-hidden="true" size={16} className="text-accent" />
+        <Trophy aria-hidden="true" size={16} className="text-pr" />
         Personal records
         {perGym && gymName && <span className="font-normal text-text-muted">at {gymName}</span>}
       </h2>

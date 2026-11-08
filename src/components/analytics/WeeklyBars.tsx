@@ -1,7 +1,7 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CHART, tooltipStyle } from "./chartTheme";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CHART, numTick, tooltipStyle } from "./chartTheme";
 
 export interface WeekPoint {
   label: string;
@@ -24,7 +24,7 @@ export function WeeklyBars({
 }) {
   const hasData = points.some((p) => p.value > 0);
   return (
-    <figure className="rounded-card bg-surface p-3">
+    <figure className="panel p-3">
       <figcaption className="text-sm font-semibold">{title}</figcaption>
       {!hasData ? (
         <p className="py-8 text-center text-sm text-text-muted">
@@ -36,9 +36,9 @@ export function WeeklyBars({
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={points} margin={{ top: 16, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
                 <CartesianGrid vertical={false} stroke={CHART.grid} />
-                <XAxis dataKey="label" tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" tick={numTick} axisLine={false} tickLine={false} />
                 <YAxis
-                  tick={{ fill: CHART.axis, fontSize: 11 }}
+                  tick={numTick}
                   axisLine={false}
                   tickLine={false}
                   width={40}
@@ -49,7 +49,11 @@ export function WeeklyBars({
                   {...tooltipStyle}
                   formatter={(_v, _n, item) => [(item.payload as WeekPoint).display, unitLabel]}
                 />
-                <Bar dataKey="value" fill={CHART.series} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                {/* Past weeks in muted olive, this week in Volt: the eye lands on now. */}
+                <Bar dataKey="value" fill={CHART.seriesMuted} radius={[4, 4, 0, 0]} isAnimationActive={false}>
+                  {points.map((p, i) => (
+                    <Cell key={p.label} fill={i === points.length - 1 ? CHART.series : CHART.seriesMuted} />
+                  ))}
                   <LabelList
                     dataKey="display"
                     position="top"
@@ -59,7 +63,7 @@ export function WeeklyBars({
                       };
                       if (index !== points.length - 1 || points[index]!.value === 0) return null;
                       return (
-                        <text x={x + width / 2} y={y - 4} textAnchor="middle" fill={CHART.text} fontSize={11} fontWeight={600}>
+                        <text x={x + width / 2} y={y - 4} textAnchor="middle" fill={CHART.text} fontSize={11} fontWeight={600} fontFamily="var(--font-mono)">
                           {value}
                         </text>
                       );
@@ -82,7 +86,7 @@ export function WeeklyBars({
                 {points.map((p) => (
                   <tr key={p.label} className="border-t border-line">
                     <td className="py-1">{p.label}</td>
-                    <td className="py-1 text-right tabular-nums">{p.display}</td>
+                    <td className="py-1 text-right num">{p.display}</td>
                   </tr>
                 ))}
               </tbody>

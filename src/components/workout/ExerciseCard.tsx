@@ -54,10 +54,10 @@ export function ExerciseCard({
     : "This exercise was removed from the library";
 
   return (
-    <section aria-labelledby={`ex-${item.id}`} className="rounded-card bg-surface px-2 py-3">
+    <section aria-labelledby={`ex-${item.id}`} className="rounded-card border border-white/[0.08] bg-surface px-2 py-3">
       <header className="flex items-start justify-between gap-2 px-1">
         <div className="min-w-0">
-          <h2 id={`ex-${item.id}`} className="text-base font-semibold text-accent">
+          <h2 id={`ex-${item.id}`} className="text-base font-semibold tracking-tight text-zinc-100">
             {exercise ? (
               <button
                 type="button"
@@ -71,7 +71,7 @@ export function ExerciseCard({
               <span className="block truncate">{name}</span>
             )}
           </h2>
-          <p className="text-xs text-text-muted">{subtitle}</p>
+          <p className="text-xs text-zinc-400">{subtitle}</p>
         </div>
         {exercise && (
           <button
@@ -97,11 +97,13 @@ export function ExerciseCard({
 
       <div className="mt-2 flex items-center gap-1 px-1 text-xs text-text-muted">
         <Timer aria-hidden="true" size={14} />
-        <span>Rest {item.restSeconds === 0 ? "off" : formatClock(item.restSeconds)}</span>
+        <span>
+          Rest <span className="num">{item.restSeconds === 0 ? "off" : formatClock(item.restSeconds)}</span>
+        </span>
       </div>
 
       <div
-        className="mt-3 grid gap-1 px-1 text-[11px] font-semibold uppercase text-text-muted"
+        className="label-caps mt-3 grid gap-1 px-[5px]"
         style={{ gridTemplateColumns: setGridColumns(showRpe) }}
         aria-hidden="true"
       >
@@ -132,10 +134,14 @@ export function ExerciseCard({
         ))}
       </ol>
 
-      <Button variant="ghost" onClick={() => store.addSet(item.id)} className="mt-2 w-full">
-        <Plus aria-hidden="true" size={18} />
+      <button
+        type="button"
+        onClick={() => store.addSet(item.id)}
+        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.14] text-sm font-semibold text-text-muted transition-colors duration-200 hover:border-white/30 hover:bg-white/[0.03] hover:text-text active:bg-white/[0.06]"
+      >
+        <Plus aria-hidden="true" size={16} />
         Add set
-      </Button>
+      </button>
 
       {exercise && (
         <ExerciseHowToSheet exercise={exercise} locationId={locationId} open={howToOpen} onClose={() => setHowToOpen(false)} />

@@ -63,7 +63,7 @@ function SessionDetail() {
       </dl>
 
       {prs.length > 0 && (
-        <p className="mx-4 mt-3 flex items-center gap-2 text-sm text-accent">
+        <p className="mx-4 mt-3 flex items-center gap-2 text-sm text-pr">
           <Trophy aria-hidden="true" size={16} />
           {prs.length} personal {prs.length === 1 ? "record" : "records"} in this workout
         </p>
@@ -74,10 +74,10 @@ function SessionDetail() {
           const def = byId[ex.exerciseId];
           const nums = setNumbers(ex.sets);
           return (
-            <section key={ex.id} className="rounded-card bg-surface p-3">
+            <section key={ex.id} className="panel p-3">
               <h2 className="text-base font-semibold">
                 {def ? (
-                  <Link href={`/exercises/${def.id}`} className="text-accent hover:underline">
+                  <Link href={`/exercises/${def.id}`} className="text-text underline-offset-4 hover:underline">
                     {def.name}
                   </Link>
                 ) : (
@@ -91,14 +91,14 @@ function SessionDetail() {
                   return (
                     <li key={s.id} className="flex items-center gap-3 text-sm">
                       <SetTypeChip type={s.type} number={num} />
-                      <span className="tabular-nums">
+                      <span className="num">
                         {def?.isBodyweight || s.weightKg === null
                           ? `${s.reps} reps`
                           : `${formatWeight(s.weightKg, weightUnit)} × ${s.reps}`}
                       </span>
-                      {s.rpe !== null && <span className="text-xs text-text-muted">RPE {s.rpe}</span>}
+                      {s.rpe !== null && <span className="text-xs text-text-muted">RPE <span className="num">{s.rpe}</span></span>}
                       {prSetIds.has(s.id) && (
-                        <span className="ml-auto flex items-center gap-1 text-xs font-semibold text-accent">
+                        <span className="ml-auto flex items-center gap-1 text-xs font-bold text-pr">
                           <Trophy aria-hidden="true" size={12} /> PR
                         </span>
                       )}
@@ -145,8 +145,8 @@ function SessionDetail() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-ctl bg-surface px-3 py-2">
-      <dt className="text-[11px] font-semibold uppercase text-text-muted">{label}</dt>
-      <dd className="text-lg font-bold tabular-nums">{value}</dd>
+      <dt className="label-caps">{label}</dt>
+      <dd className="text-lg font-bold num">{value}</dd>
     </div>
   );
 }

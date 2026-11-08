@@ -112,7 +112,7 @@ function LibraryScreen() {
       <CatalogSection />
 
       {filtered.length === 0 ? (
-        <p className="mx-4 mt-4 rounded-card bg-surface px-4 py-8 text-center text-sm text-text-muted">
+        <p className="mx-4 mt-4 panel px-4 py-8 text-center text-sm text-text-muted">
           No exercise matches these filters. Clear a filter, or add it as a new exercise with the button above.
         </p>
       ) : (

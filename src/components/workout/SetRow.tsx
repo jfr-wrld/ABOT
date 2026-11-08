@@ -2,12 +2,16 @@
 
 import { useRef, useState } from "react";
 import { setGridColumns } from "./setGrid";
-import { Check, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
 import { NumberField } from "@/components/ui/NumberField";
 import { SetTypeChip, setTypeA11yName } from "./SetTypeChip";
 import { SetTypeMenu } from "./SetTypeMenu";
 import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
+
+/** Stiff with a little give: a physical switch clicking into place, settled in about 200ms. */
+const CHECK_SPRING = { type: "spring", stiffness: 700, damping: 22 } as const;
 
 const PR_LABEL: Record<PRKind, string> = {
   heaviest_weight: "heaviest weight",
@@ -42,7 +46,10 @@ export function SetRow({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bumped only by the lifter's own tap, so a restored or bulk-completed set does not flash.
+  const [sweep, setSweep] = useState(0);
   const repsRef = useRef<HTMLInputElement>(null);
+  const reduceMotion = useReducedMotion();
 
   const prevLabel =
     previous && previous.reps !== null
@@ -80,6 +87,7 @@ export function SetRow({
       return;
     }
     setError(null);
+    setSweep((n) => n + 1);
     onComplete(true);
   }
 
@@ -87,11 +95,16 @@ export function SetRow({
 
   return (
     <li
-      className={`grid items-center gap-1 rounded-ctl px-1 py-1 transition-colors ${
-        set.completed ? "bg-accent-tint" : ""
+      className={`relative grid items-center gap-1 overflow-hidden rounded-xl border px-1 py-1 transition-colors duration-200 ${
+        set.completed ? "border-accent/20 bg-accent-tint" : "border-white/[0.04] bg-black/30"
       }`}
       style={{ gridTemplateColumns: setGridColumns(showRpe) }}
     >
+      {sweep > 0 && (
+        <span key={sweep} aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <span className="absolute inset-y-0 left-0 w-full animate-[sweep_650ms_cubic-bezier(0.2,0.7,0.2,1)_forwards] bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+        </span>
+      )}
       <button
         type="button"
         onClick={() => setMenuOpen(true)}
@@ -102,14 +115,14 @@ export function SetRow({
         <SetTypeChip type={set.type} number={number} completed={set.completed} />
       </button>
 
-      <div className="min-w-0 text-xs leading-tight text-text-muted">
+      <div className="num min-w-0 text-[11px] leading-tight text-text-muted">
         {prevLabel ? (
           <button
             type="button"
             onClick={fillFromPrevious}
             disabled={set.completed}
             aria-label={`Previous ${prevLabel}. Use these values`}
-            className="block h-11 w-full truncate rounded-ctl text-left hover:bg-surface-2 hover:text-text disabled:hover:bg-transparent"
+            className="block h-11 w-full truncate rounded-ctl px-0.5 text-left hover:bg-white/[0.05] hover:text-text disabled:hover:bg-transparent"
           >
             {prevLabel}
           </button>
@@ -119,10 +132,10 @@ export function SetRow({
           </span>
         )}
         {prKinds.length > 0 && (
-          <span className="flex items-center gap-1 text-accent" role="status">
+          <span className="flex items-center gap-1 text-pr" role="status">
             <Trophy aria-hidden="true" size={12} />
             <span className="sr-only">New record: {prKinds.map((k) => PR_LABEL[k]).join(", ")}</span>
-            <span aria-hidden="true" className="text-[11px] font-semibold">
+            <span aria-hidden="true" className="text-[11px] font-bold tracking-wider">
               PR
             </span>
           </span>
@@ -162,24 +175,36 @@ export function SetRow({
           value={set.rpe}
           onCommit={(n) => onUpdate({ rpe: n === null ? null : Math.min(10, Math.max(6, Math.round(n * 2) / 2)) })}
           disabled={set.completed}
-          className={`text-sm ${set.completed ? "border-transparent bg-transparent" : ""}`}
+          className={`!text-sm ${set.completed ? "border-transparent bg-transparent" : ""}`}
           max={10}
         />
       )}
 
-      <button
+      <motion.button
         type="button"
         onClick={toggleComplete}
         aria-pressed={set.completed}
         aria-label={set.completed ? `${a11yName} done. Mark as not done` : `Mark ${a11yName} done`}
-        className={`flex size-11 items-center justify-center rounded-ctl transition-colors ${
+        // Pressed in, then the under-damped spring overshoots slightly on release.
+        whileTap={reduceMotion ? undefined : { scale: 0.86 }}
+        transition={CHECK_SPRING}
+        className={`relative z-[1] flex size-11 items-center justify-center rounded-xl border transition-colors duration-150 ${
           set.completed
-            ? "bg-accent-solid text-white hover:bg-[#1d4ed8]"
-            : "border border-line-strong bg-surface-2 text-text-muted hover:border-text-muted hover:text-text active:bg-[#303035]"
+            ? "border-accent bg-accent text-on-accent hover:brightness-110"
+            : "border-white/15 bg-transparent text-text-muted hover:border-white/30 hover:text-text"
         }`}
       >
-        <Check aria-hidden="true" size={20} strokeWidth={2.5} />
-      </button>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+          {/* The tick draws itself once when the set is done; the remount restarts it. */}
+          <motion.path
+            key={set.completed ? "on" : "off"}
+            d="M20 6 9 17l-5-5"
+            initial={set.completed && !reduceMotion && sweep > 0 ? { pathLength: 0 } : false}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          />
+        </svg>
+      </motion.button>
 
       {error && (
         <p role="alert" className="col-span-full px-1 pb-1 text-xs text-failure">

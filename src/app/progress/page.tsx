@@ -81,8 +81,8 @@ function ProgressScreen() {
           }))}
         />
 
-        <div className="rounded-card bg-surface">
-          <div className="flex items-center justify-end gap-1 px-3 pt-3" role="group" aria-label="Muscle split range">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-end gap-1" role="group" aria-label="Muscle split range">
             {(["week", "month"] as const).map((r) => (
               <button
                 key={r}
@@ -92,7 +92,7 @@ function ProgressScreen() {
                 className={`h-9 rounded-ctl border px-3 text-xs font-semibold ${
                   splitRange === r
                     ? "border-accent bg-accent-tint text-text"
-                    : "border-line-strong bg-surface-2 text-text-muted hover:text-text"
+                    : "border-white/[0.12] bg-surface text-text-muted hover:border-white/25 hover:text-text"
                 }`}
               >
                 {r === "week" ? "This week" : "Last 4 weeks"}

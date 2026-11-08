@@ -50,7 +50,8 @@ export function NumberField({
         onCommit(next);
       }}
       onBlur={() => setDraft(value === null ? "" : String(value))}
-      className={`h-11 w-full min-w-0 rounded-ctl border border-line-strong bg-surface-2 px-1 text-center text-base text-text placeholder:text-text-muted/70 ${className}`}
+      // Focus: the Volt edge plus a soft Volt ring replaces the default outline.
+      className={`num h-11 w-full min-w-0 rounded-ctl border border-zinc-800 bg-well px-0.5 text-center text-lg font-bold tracking-tight text-text transition-colors placeholder:font-medium placeholder:text-text-muted hover:border-zinc-700 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 ${className}`}
       {...rest}
     />
   );

@@ -22,8 +22,8 @@ export function SetTypeChip({
   const label = type === "normal" ? String(number ?? "") : meta.short;
   return (
     <span
-      className={`flex size-9 items-center justify-center rounded-ctl text-sm font-bold ${
-        completed ? "bg-accent-tint" : "bg-surface-2"
+      className={`num flex size-9 items-center justify-center rounded-lg border text-sm font-bold ${
+        completed ? "border-accent/25 bg-black/40" : "border-white/[0.06] bg-surface-2"
       } ${bg[type]}`}
       aria-hidden="true"
     >

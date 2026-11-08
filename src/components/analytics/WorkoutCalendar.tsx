@@ -30,7 +30,7 @@ export function WorkoutCalendar({
   const shift = (d: number) => setYm(({ y, m }) => ({ y: new Date(y, m + d, 1).getFullYear(), m: new Date(y, m + d, 1).getMonth() }));
 
   return (
-    <section aria-labelledby="cal-heading" className="rounded-card bg-surface p-3">
+    <section aria-labelledby="cal-heading" className="panel p-3">
       <div className="flex items-center justify-between">
         <h2 id="cal-heading" className="text-sm font-semibold">
           {monthLabel}
@@ -80,7 +80,7 @@ export function WorkoutCalendar({
                 n ? `, ${n} ${n === 1 ? "workout" : "workouts"}` : ""
               }`}
               onClick={() => setSelected(c.date)}
-              className={`mx-auto flex h-11 w-11 flex-col items-center justify-center rounded-ctl text-sm tabular-nums hover:bg-surface-2 ${
+              className={`mx-auto flex h-11 w-11 flex-col items-center justify-center rounded-ctl text-sm num hover:bg-surface-2 ${
                 c.inMonth ? "text-text" : "text-text-muted/60"
               } ${isSel ? "border border-accent" : ""} ${n ? "bg-accent-tint font-semibold" : ""}`}
             >

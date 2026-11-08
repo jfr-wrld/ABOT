@@ -121,12 +121,12 @@ function Toggle({ id, label, checked, onChange }: { id: string; label: string; c
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative h-8 w-14 shrink-0 rounded-full border transition-colors ${
-          checked ? "border-accent bg-accent-solid" : "border-line-strong bg-surface-2"
+          checked ? "border-accent bg-accent" : "border-line-strong bg-surface-2"
         }`}
       >
         <span
           aria-hidden="true"
-          className={`absolute top-0.5 size-6 rounded-full bg-white transition-[left] ${checked ? "left-7" : "left-0.5"}`}
+          className={`absolute top-0.5 size-6 rounded-full transition-[left] ${checked ? "left-7 bg-black" : "left-0.5 bg-white"}`}
         />
         <span className="sr-only">{checked ? "On" : "Off"}</span>
       </button>

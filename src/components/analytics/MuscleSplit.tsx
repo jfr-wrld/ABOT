@@ -17,7 +17,7 @@ export function MuscleSplit({ title, split }: { title: string; split: Partial<Re
     .map(([m, v]) => ({ label: MUSCLE_GROUP_LABELS[m], sets: Math.round(v * 2) / 2, display: formatSets(v) }));
 
   return (
-    <figure className="rounded-card bg-surface p-3">
+    <figure className="panel p-3">
       <figcaption className="text-sm font-semibold">{title}</figcaption>
       <p className="text-xs text-text-muted">Working sets; secondary muscles count half.</p>
       {rows.length === 0 ? (
@@ -42,7 +42,7 @@ export function MuscleSplit({ title, split }: { title: string; split: Partial<Re
                 <LabelList
                   dataKey="display"
                   position="right"
-                  style={{ fill: CHART.text, fontSize: 11, fontWeight: 600 }}
+                  style={{ fill: CHART.text, fontSize: 11, fontWeight: 600, fontFamily: "var(--font-mono)" }}
                 />
               </Bar>
             </BarChart>

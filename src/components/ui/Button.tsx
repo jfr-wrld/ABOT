@@ -3,14 +3,14 @@ import type { ButtonHTMLAttributes } from "react";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const base =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-ctl px-4 text-sm font-semibold transition-colors disabled:opacity-50";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-[background-color,border-color,color,filter] duration-150 disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent-solid text-white hover:bg-[#1d4ed8] active:bg-[#1e40af]",
+  primary: "bg-accent font-bold text-on-accent hover:brightness-110 active:brightness-95",
   secondary:
-    "border border-line-strong bg-surface-2 text-text hover:bg-[#303035] active:bg-[#3a3a40]",
-  ghost: "text-text-muted hover:bg-surface hover:text-text active:bg-surface-2",
-  danger: "border border-failure/60 text-failure hover:bg-failure/10 active:bg-failure/20",
+    "border border-white/[0.12] bg-surface-2 text-text hover:border-white/25 hover:bg-[#24242a] active:bg-[#2c2c33]",
+  ghost: "text-text-muted hover:bg-white/[0.05] hover:text-text active:bg-white/[0.08]",
+  danger: "border border-failure/50 text-failure hover:bg-failure/10 active:bg-failure/20",
 };
 
 export function Button({

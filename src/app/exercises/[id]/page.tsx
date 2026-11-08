@@ -18,7 +18,7 @@ import { SmartExerciseMedia } from "@/components/exercise/SmartExerciseMedia";
 import { ExerciseGuide } from "@/components/exercise/ExerciseGuide";
 import { RecordsSummary } from "@/components/exercise/RecordsSummary";
 import { SetTypeChip } from "@/components/workout/SetTypeChip";
-import { CHART, tooltipStyle } from "@/components/analytics/chartTheme";
+import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme";
 import { exerciseHistory } from "@/lib/calc";
 import { formatWeight, toDisplay } from "@/lib/units";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
@@ -106,7 +106,7 @@ function Detail() {
         <RecordsSummary exercise={exercise} />
 
         {!exercise.isBodyweight && (
-          <figure className="rounded-card bg-surface p-3">
+          <figure className="panel p-3">
             <figcaption className="text-sm font-semibold">Estimated 1RM over time ({weightUnit}, Epley)</figcaption>
             {chartData.length < 2 ? (
               <p className="py-6 text-center text-sm text-text-muted">
@@ -119,8 +119,8 @@ function Detail() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <CartesianGrid vertical={false} stroke={CHART.grid} />
-                    <XAxis dataKey="date" tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: CHART.axis, fontSize: 11 }} axisLine={false} tickLine={false} width={40} domain={["auto", "auto"]} />
+                    <XAxis dataKey="date" tick={numTick} axisLine={false} tickLine={false} />
+                    <YAxis tick={numTick} axisLine={false} tickLine={false} width={40} domain={["auto", "auto"]} />
                     <Tooltip
                       {...tooltipStyle}
                       cursor={{ stroke: CHART.axis }}
@@ -131,7 +131,7 @@ function Detail() {
                       dataKey="e1rm"
                       stroke={CHART.series}
                       strokeWidth={2}
-                      dot={{ r: 4, fill: CHART.series, stroke: "#18181b", strokeWidth: 2 }}
+                      dot={{ r: 4, fill: CHART.series, stroke: CHART.surface, strokeWidth: 2 }}
                       activeDot={{ r: 6 }}
                       isAnimationActive={false}
                     />
@@ -147,7 +147,7 @@ function Detail() {
             History
           </h2>
           {recent.length === 0 ? (
-            <p className="mt-2 rounded-card bg-surface px-4 py-6 text-center text-sm text-text-muted">
+            <p className="mt-2 panel px-4 py-6 text-center text-sm text-text-muted">
               Not logged yet. Add it to a workout and finish the workout to see sets here.
             </p>
           ) : (
@@ -156,7 +156,7 @@ function Detail() {
                 const ex = s.exercises.find((e) => e.exerciseId === id)!;
                 const nums = setNumbers(ex.sets);
                 return (
-                  <li key={s.id} className="rounded-card bg-surface p-3">
+                  <li key={s.id} className="panel p-3">
                     <Link href={`/history/${s.id}`} className="flex items-baseline justify-between gap-2 hover:underline">
                       <span className="text-sm font-semibold">{s.name}</span>
                       <time dateTime={new Date(s.startedAt).toISOString()} className="text-xs text-text-muted">
@@ -167,7 +167,7 @@ function Detail() {
                       {ex.sets.map((st, i) => {
                         const num = nums[i] ?? null;
                         return (
-                          <li key={st.id} className="flex items-center gap-3 text-sm tabular-nums">
+                          <li key={st.id} className="flex items-center gap-3 text-sm num">
                             <SetTypeChip type={st.type} number={num} />
                             {exercise.isBodyweight || st.weightKg === null
                               ? `${st.reps} reps`

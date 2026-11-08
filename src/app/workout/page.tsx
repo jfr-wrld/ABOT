@@ -9,7 +9,6 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
 import { ActiveWorkoutHeader } from "@/components/workout/ActiveWorkoutHeader";
-import { RestTimerBar } from "@/components/workout/RestTimerBar";
 import { ExerciseCard } from "@/components/workout/ExerciseCard";
 import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { FinishDialog } from "@/components/workout/FinishDialog";
@@ -65,15 +64,12 @@ function WorkoutScreen() {
   return (
     <main className="flex flex-1 flex-col">
       <ActiveWorkoutHeader session={active} unit={weightUnit} onFinish={() => setFinishOpen(true)} />
-      <div className="mt-3">
-        <RestTimerBar />
-      </div>
 
       <h1 className="sr-only">Active workout: {active.name}</h1>
 
-      <div className="flex flex-col gap-3 px-3 pt-3">
+      <div className="flex flex-col gap-3 px-3 pt-4">
         {active.exercises.length === 0 && (
-          <p className="rounded-card bg-surface px-4 py-6 text-center text-sm text-text-muted">
+          <p className="panel px-4 py-6 text-center text-sm text-text-muted">
             This workout has no exercises yet. Add one below to start logging sets.
           </p>
         )}
@@ -91,14 +87,23 @@ function WorkoutScreen() {
           />
         ))}
 
-        <Button onClick={() => setPickerOpen(true)} className="w-full">
-          <Plus aria-hidden="true" size={18} />
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          className="flex min-h-14 w-full items-center justify-center gap-2 rounded-card border border-white/[0.12] bg-surface text-sm font-semibold text-text transition-colors duration-200 hover:border-white/25 hover:bg-surface-2 active:bg-white/[0.08]"
+        >
+          <Plus aria-hidden="true" size={18} className="text-accent" />
           Add exercise
-        </Button>
+        </button>
 
-        <Button variant="danger" onClick={() => setDiscardOpen(true)} className="mt-6 w-full">
+        {/* Kept quiet on purpose: Finish is the one action this screen should pull the eye to. */}
+        <button
+          type="button"
+          onClick={() => setDiscardOpen(true)}
+          className="mx-auto mt-6 min-h-11 rounded-ctl px-4 text-xs font-medium text-failure/80 transition-colors hover:bg-failure/10 hover:text-failure"
+        >
           Discard workout
-        </Button>
+        </button>
       </div>
 
       <ExercisePicker

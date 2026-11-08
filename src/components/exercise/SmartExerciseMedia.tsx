@@ -30,7 +30,7 @@ export function SmartExerciseMedia({ exercise }: { exercise: Exercise }) {
   }
 
   return (
-    <section aria-label="Exercise media" className="rounded-card bg-surface p-2">
+    <section aria-label="Exercise media" className="panel p-2">
       <div role="tablist" aria-label="Media type" className="grid grid-cols-3 gap-1" onKeyDown={onKeyDown}>
         {TABS.map((t, i) => (
           <button

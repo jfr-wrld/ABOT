@@ -5,7 +5,7 @@ export function ExerciseGuide({ exercise, showInstructions }: { exercise: Exerci
   const fromDataset = Boolean(exercise.sourceId);
   return (
     <>
-      <section aria-labelledby={`cues-${exercise.id}`} className="rounded-card bg-surface p-3">
+      <section aria-labelledby={`cues-${exercise.id}`} className="panel p-3">
         <h2 id={`cues-${exercise.id}`} className="text-sm font-semibold">
           Form cues
         </h2>
@@ -23,7 +23,7 @@ export function ExerciseGuide({ exercise, showInstructions }: { exercise: Exerci
         )}
       </section>
       {showInstructions && (
-        <section aria-labelledby={`steps-${exercise.id}`} className="rounded-card bg-surface p-3">
+        <section aria-labelledby={`steps-${exercise.id}`} className="panel p-3">
           <h2 id={`steps-${exercise.id}`} className="text-sm font-semibold">
             Instructions
           </h2>
@@ -34,7 +34,7 @@ export function ExerciseGuide({ exercise, showInstructions }: { exercise: Exerci
               <ol aria-label="Instructions" className="mt-2 flex flex-col gap-2">
                 {exercise.instructions.map((step, i) => (
                   <li key={i} className="flex gap-3 text-sm leading-relaxed">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-ctl bg-surface-2 text-xs font-bold tabular-nums">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-ctl bg-surface-2 text-xs font-bold num">
                       {i + 1}
                     </span>
                     <span>{step}</span>

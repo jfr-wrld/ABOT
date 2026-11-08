@@ -53,13 +53,13 @@ function HomeScreen() {
       {active ? (
         <Link
           href="/workout"
-          className="mt-4 block rounded-card border border-accent bg-accent-tint p-4 hover:bg-accent/25"
+          className="mt-4 block rounded-card border border-accent/40 bg-accent-tint p-4 transition-colors hover:border-accent/70"
         >
-          <span className="text-[11px] font-semibold uppercase text-accent">Workout in progress</span>
-          <span className="mt-1 block text-lg font-bold">{active.name}</span>
+          <span className="label-caps !text-accent">Workout in progress</span>
+          <span className="mt-1 block text-lg font-bold tracking-tight">{active.name}</span>
           <span className="block text-sm text-text-muted">
-            {formatDuration(sessionDurationSec(active, now))} · {countSets(active).completed} sets done. Tap to
-            continue.
+            <span className="num">{formatDuration(sessionDurationSec(active, now))}</span> ·{" "}
+            <span className="num">{countSets(active).completed}</span> sets done. Tap to continue.
           </span>
         </Link>
       ) : (
@@ -84,7 +84,7 @@ function HomeScreen() {
                       startFromRoutine(r);
                       router.push("/workout");
                     }}
-                    className="flex min-h-14 w-full flex-col items-start justify-center rounded-card bg-surface px-3 text-left hover:bg-surface-2"
+                    className="panel flex min-h-14 w-full flex-col items-start justify-center px-3 text-left transition-colors hover:bg-surface-2"
                   >
                     <span className="w-full truncate text-sm font-semibold">{r.name}</span>
                     <span className="text-xs text-text-muted">
@@ -103,7 +103,7 @@ function HomeScreen() {
           Recent workouts
         </h2>
         {recent.length === 0 ? (
-          <p className="mt-3 rounded-card bg-surface px-4 py-6 text-center text-sm text-text-muted">
+          <p className="mt-3 panel px-4 py-6 text-center text-sm text-text-muted">
             Nothing logged yet. Finish a workout and it will show up here with its volume and duration.
           </p>
         ) : (
@@ -112,14 +112,15 @@ function HomeScreen() {
               const { completed } = countSets(s);
               return (
                 <li key={s.id}>
-                  <Link href={`/history/${s.id}`} className="block rounded-card bg-surface p-4 hover:bg-surface-2">
+                  <Link href={`/history/${s.id}`} className="panel block p-4 transition-colors hover:bg-surface-2">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="truncate text-base font-semibold">{s.name}</span>
-                      <time dateTime={new Date(s.startedAt).toISOString()} className="shrink-0 text-xs text-text-muted">
+                      <time dateTime={new Date(s.startedAt).toISOString()} className="num shrink-0 text-xs text-text-muted">
                         {new Date(s.startedAt).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}
                       </time>
                     </div>
-                    <p className="mt-1 flex items-center justify-between text-sm text-text-muted">
+                    {/* The stats line is all figures, so it is set in mono as one unit. */}
+                    <p className="num mt-1 flex items-center justify-between text-[13px] text-text-muted">
                       <span>
                         {formatDuration(sessionDurationSec(s))} · {formatVolume(sessionVolume(s, byId), weightUnit)} · {completed}{" "}
                         {completed === 1 ? "set" : "sets"} · {s.exercises.length} {s.exercises.length === 1 ? "exercise" : "exercises"}

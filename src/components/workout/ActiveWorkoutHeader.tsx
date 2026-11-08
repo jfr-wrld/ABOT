@@ -41,12 +41,17 @@ export function ActiveWorkoutHeader({
             id="workout-name"
             value={session.name}
             onChange={(e) => rename(e.target.value)}
-            className="h-11 w-full rounded-ctl bg-transparent px-1 text-xl font-bold text-text hover:bg-surface focus:bg-surface"
+            className="h-11 w-full rounded-ctl bg-transparent px-1 text-xl font-bold tracking-tight text-text hover:bg-surface focus:bg-surface"
           />
         </div>
-        <Button variant="primary" onClick={onFinish} className="shrink-0">
+        {/* The screen's single glow: Finish is the one action that ends the session. */}
+        <button
+          type="button"
+          onClick={onFinish}
+          className="min-h-11 shrink-0 rounded-xl bg-accent px-5 text-sm font-extrabold text-on-accent shadow-volt transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.97]"
+        >
           Finish
-        </Button>
+        </button>
       </div>
 
       {locations.length > 0 && (
@@ -58,7 +63,7 @@ export function ActiveWorkoutHeader({
             id="workout-gym"
             value={session.locationId ?? ""}
             onChange={(e) => setLocation(e.target.value || undefined)}
-            className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-2 text-sm text-text"
+            className="h-11 min-w-0 flex-1 rounded-ctl border border-zinc-800 bg-well px-2 text-sm text-text focus:border-accent"
           >
             <option value="">No gym</option>
             {locations.map((l) => (
@@ -71,15 +76,15 @@ export function ActiveWorkoutHeader({
       )}
 
       <dl className="mt-3 grid grid-cols-3 gap-2">
-        <div className="rounded-ctl bg-surface px-3 py-2">
-          <dt className="text-[11px] font-semibold uppercase text-text-muted">Duration</dt>
+        <div className="rounded-xl border border-white/10 bg-surface px-3 py-2.5">
+          <dt className="label-caps">Duration</dt>
           <dd>
             <button
               type="button"
               onClick={() => setStartOpen(true)}
               aria-haspopup="dialog"
               aria-label={`Duration ${formatDuration(duration)}. Adjust start time`}
-              className="-mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-lg font-bold tabular-nums underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
+              className="num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-xl font-bold tracking-tight text-text underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
             >
               {formatDuration(duration)}
             </button>
@@ -95,9 +100,9 @@ export function ActiveWorkoutHeader({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-ctl bg-surface px-3 py-2">
-      <dt className="text-[11px] font-semibold uppercase text-text-muted">{label}</dt>
-      <dd className="flex min-h-11 items-center text-lg font-bold tabular-nums">{value}</dd>
+    <div className="min-w-0 rounded-xl border border-white/10 bg-surface px-3 py-2.5">
+      <dt className="label-caps">{label}</dt>
+      <dd className="num flex min-h-11 items-center truncate text-xl font-bold tracking-tight text-text">{value}</dd>
     </div>
   );
 }

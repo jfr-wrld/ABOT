@@ -79,7 +79,7 @@ function RoutinesScreen() {
 
       <div className="flex flex-col gap-6 px-4 pt-4">
         {routines.length === 0 && (
-          <p className="rounded-card bg-surface px-4 py-8 text-center text-sm text-text-muted">
+          <p className="panel px-4 py-8 text-center text-sm text-text-muted">
             No routines saved. Create one, add its exercises and target sets, and you can start the same
             workout in one tap next time.
           </p>
@@ -95,7 +95,7 @@ function RoutinesScreen() {
                 const names = r.exercises.map((e) => byId[e.exerciseId]?.name ?? "Removed exercise");
                 const setCount = r.exercises.reduce((n, e) => n + e.sets.length, 0);
                 return (
-                  <li key={r.id} className="rounded-card bg-surface p-4">
+                  <li key={r.id} className="panel p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h3 className="truncate text-base font-semibold">{r.name}</h3>
