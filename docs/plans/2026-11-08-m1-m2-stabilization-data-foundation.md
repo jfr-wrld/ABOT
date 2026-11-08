@@ -403,3 +403,19 @@ same scroll position.
 `npx tsc --noEmit`, `npm run build`, zero-env production smoke (all routes 200, e2e against
 `next start`), and `supabase/schema.sql` from master plan section 3.1 (table, RLS, trigger,
 `upsert_if_newer`). The SQL is not executed here (no Supabase access).
+
+### Task 21b: Animated movement figures (owner choice 2026-11-08)
+
+Owner chose original vector animations over paid ExerciseDB GIFs or video-only motion.
+Files: `src/components/motion/ik.ts` (+test), `src/components/motion/patterns.ts` (+test),
+`src/components/motion/MotionFigure.tsx`, Motion tab toggle "Animation / Photos".
+Produces: `solveTwoBone(root, target, a, b, bend): { mid, end }` (lengths preserved, target
+clamped to reach); `interface Pose { pelvis; torso; torsoLen?; hand; handRel?; farHand?; foot;
+farFoot?; elbow; knee; heel? }`; `interface Pattern { id; a: Pose; b: Pose; concentric: "AtoB" |
+"BtoA" | "hold"; props: Prop[]; tool }`; `patternFor(exercise): Pattern | null` (seed id table,
+catalog name keywords); `poseAt(pattern, t)`.
+Tests: IK keeps segment lengths and reaches reachable targets; every pose of every pattern yields
+finite joints with segment lengths preserved; every seed exercise has a pattern except hip
+abduction, hip adduction and russian twist (side view cannot show them; photos instead); keyword
+mapping for catalog names; e2e: animation with phase label switching Concentric/Eccentric,
+pause, and the Photos toggle.
