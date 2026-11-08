@@ -24,7 +24,10 @@ export type StoryPresetId =
   | "monochrome-steel"
   | "pr-trophy-vault"
   | "photo-backdrop"
-  | "split-spec-sheet";
+  | "split-spec-sheet"
+  | "loaded-bar"
+  | "plate-grid"
+  | "volt-poster";
 
 export const STORY_PRESETS: { id: StoryPresetId; name: string; blurb: string }[] = [
   { id: "obsidian-raw", name: "Obsidian Raw", blurb: "Black plate, steel hairlines, one Volt point" },
@@ -35,6 +38,9 @@ export const STORY_PRESETS: { id: StoryPresetId; name: string; blurb: string }[]
   { id: "pr-trophy-vault", name: "PR Trophy Vault", blurb: "Records first, with top tonnage" },
   { id: "photo-backdrop", name: "Photo Backdrop", blurb: "Your photo behind a glass card" },
   { id: "split-spec-sheet", name: "Split Spec Sheet", blurb: "Stats above, progress line below" },
+  { id: "loaded-bar", name: "Loaded Bar", blurb: "Each lift a plate on the bar, sized by its volume" },
+  { id: "plate-grid", name: "Plate Grid", blurb: "A honeycomb of plates, one per lift" },
+  { id: "volt-poster", name: "Volt Poster", blurb: "Swiss poster in black on Volt" },
 ];
 
 export interface StoryFonts {
@@ -1304,6 +1310,276 @@ function splitSpecSheet(s: Scene) {
   mark(ctx, W - x - 56, H - 130, 56, VOLT, CARBON);
 }
 
+/* ------------------------------------------------------------------ */
+/* Loaded Bar                                                          */
+/* ------------------------------------------------------------------ */
+
+/** Names of lifts that set a record in this story, to colour their plates Cyan. */
+function recordLifts(data: StoryData): Set<string> {
+  return new Set(data.prs.map((p) => p.exerciseName));
+}
+
+/**
+ * Loaded Bar: the workout as a loaded barbell seen from the side. Each lift is a plate, heaviest
+ * volume nearest the collar, its height set by its share of the volume, mirrored on both sleeves;
+ * lifts that set a record are Cyan. A legend names the plates; totals sit below.
+ */
+function loadedBar(s: Scene) {
+  const { ctx, data, unit } = s;
+  paintBackground(s, OBSIDIAN);
+  const m = 72;
+  const records = recordLifts(data);
+
+  wordmark(s, m, SAFE_TOP - 40, 56, VOLT);
+  caps(s, dateLabel(data), W - m, SAFE_TOP - 30, { align: "right", color: MUTED });
+  const titleSize = fitSize(s, data.title, W - 2 * m, 92, 52, 800, "sans");
+  text(s, data.title, m, SAFE_TOP + 90, { size: titleSize, weight: 800, maxWidth: W - 2 * m });
+
+  // The bar.
+  const cy = 760;
+  const plates = [...data.exercises].sort((a, b) => b.volumeKg - a.volumeKg).slice(0, 4);
+  const max = Math.max(...plates.map((p) => p.volumeKg), 1);
+  ctx.fillStyle = "#3f3f46";
+  rrect(ctx, 24, cy - 11, W - 48, 22, 11);
+  ctx.fill();
+  // Knurled grip between the collars.
+  ctx.save();
+  ctx.strokeStyle = "#52525b";
+  ctx.lineWidth = 2;
+  for (let x = 380; x < W - 380; x += 14) {
+    ctx.beginPath();
+    ctx.moveTo(x, cy - 9);
+    ctx.lineTo(x + 8, cy + 9);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  const shade = (i: number) => withAlpha(VOLT, 1 - i * 0.2);
+  for (const side of [-1, 1] as const) {
+    // Collar against which the plates load.
+    const collar = side === 1 ? W - 360 : 360;
+    ctx.fillStyle = STEEL_LINE;
+    rrect(ctx, collar - 14, cy - 46, 28, 92, 6);
+    ctx.fill();
+    let x = collar + side * 22;
+    plates.forEach((p, i) => {
+      const h = 200 + 420 * Math.sqrt(p.volumeKg / max);
+      const w = 64 - i * 6;
+      const left = side === 1 ? x : x - w;
+      ctx.fillStyle = shade(i);
+      rrect(ctx, left, cy - h / 2, w, h, 10);
+      ctx.fill();
+      // The plate's rim, so neighbours read apart.
+      ctx.strokeStyle = OBSIDIAN;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      // A record-setting lift wears a Cyan cap.
+      if (records.has(p.name)) {
+        ctx.fillStyle = CYAN;
+        rrect(ctx, left + 4, cy - h / 2 + 4, w - 8, 18, 6);
+        ctx.fill();
+      }
+      x += side * (w + 6);
+    });
+    // Outer collar clamps the stack.
+    ctx.fillStyle = TEXT;
+    rrect(ctx, side === 1 ? x : x - 22, cy - 30, 22, 60, 5);
+    ctx.fill();
+  }
+
+  // Legend: which plate is which.
+  let y = cy + 400;
+  hline(ctx, m, W - m, y - 56, STEEL);
+  plates.forEach((p, i) => {
+    ctx.fillStyle = shade(i);
+    rrect(ctx, m, y - 30, 20, 40, 5);
+    ctx.fill();
+    if (records.has(p.name)) {
+      ctx.fillStyle = CYAN;
+      rrect(ctx, m, y - 30, 20, 10, 4);
+      ctx.fill();
+    }
+    const right = formatVolume(p.volumeKg, unit);
+    const rw = text(s, right, W - m, y, { size: 34, weight: 700, family: "mono", align: "right" });
+    text(s, p.name, m + 44, y, { size: 36, weight: 600, maxWidth: W - 2 * m - rw - 80 });
+    y += 64;
+  });
+  if (data.exercises.length > plates.length) {
+    caps(s, `+${data.exercises.length - plates.length} more on the rack`, m + 44, y);
+    y += 50;
+  }
+
+  // Totals.
+  const by = SAFE_BOTTOM - 40;
+  hline(ctx, m, W - m, by - 150, STEEL);
+  const [vol, u] = volumeParts(data.volumeKg, unit);
+  caps(s, "Total volume", m, by - 92);
+  const vw = text(s, vol, m, by, { size: 96, weight: 800, family: "mono", tracking: -2 });
+  text(s, u, m + vw + 10, by, { size: 40, weight: 700, family: "mono", color: MUTED });
+  caps(s, "Time", W - m - 300, by - 92);
+  text(s, formatDuration(data.durationSec), W - m - 300, by, { size: 56, weight: 800, family: "mono" });
+  caps(s, "Sets", W - m, by - 92, { align: "right" });
+  text(s, String(data.setsDone), W - m, by, { size: 56, weight: 800, family: "mono", align: "right" });
+}
+
+/* ------------------------------------------------------------------ */
+/* Plate Grid                                                          */
+/* ------------------------------------------------------------------ */
+
+function hexPath(ctx: Ctx, cx: number, cy: number, r: number) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i;
+    const x = cx + r * Math.cos(a);
+    const y = cy + r * Math.sin(a);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+/**
+ * Plate Grid: a honeycomb of flat-top plates, the ABOT shape. The centre plate holds the total;
+ * each plate around it is one lift with its best set, Cyan-edged when it set a record.
+ */
+function plateGrid(s: Scene) {
+  const { ctx, data, unit } = s;
+  paintBackground(s, OBSIDIAN);
+  const m = 72;
+  const records = recordLifts(data);
+
+  wordmark(s, m, SAFE_TOP - 40, 56, VOLT);
+  caps(s, dateLabel(data), W - m, SAFE_TOP - 30, { align: "right" });
+  const titleSize = fitSize(s, data.title, W - 2 * m, 88, 52, 800, "sans");
+  text(s, data.title, m, SAFE_TOP + 86, { size: titleSize, weight: 800, maxWidth: W - 2 * m });
+
+  const R = 150;
+  const gap = 14;
+  const d = Math.sqrt(3) * R + gap;
+  const cx = W / 2;
+  const cy = 900;
+  const lifts = data.exercises.slice(0, 6);
+
+  // Centre: the total.
+  hexPath(ctx, cx, cy, R);
+  ctx.fillStyle = VOLT;
+  ctx.fill();
+  const [vol, u] = volumeParts(data.volumeKg, unit);
+  const vs = fitSize(s, vol, R * 1.5, 92, 44, 800, "mono");
+  text(s, vol, cx, cy + 14, { size: vs, weight: 800, family: "mono", color: INK, align: "center" });
+  caps(s, `${u} lifted`, cx, cy + 66, { align: "center", color: INK, size: 24 });
+
+  // Ring: the lifts spread evenly around the centre (3 lifts take every other plate), clockwise
+  // from the top; the plates between stay empty.
+  const slot = new Map<number, (typeof lifts)[number]>();
+  lifts.forEach((l, i) => slot.set(Math.floor((i * 6) / lifts.length), l));
+  for (let i = 0; i < 6; i++) {
+    const a = -Math.PI / 2 + (Math.PI / 3) * i;
+    const x = cx + d * Math.cos(a);
+    const y = cy + d * Math.sin(a);
+    const lift = slot.get(i);
+    hexPath(ctx, x, y, R);
+    ctx.fillStyle = lift ? CARBON : withAlpha(CARBON, 0.45);
+    ctx.fill();
+    ctx.lineWidth = lift && records.has(lift.name) ? 5 : 2;
+    ctx.strokeStyle = lift && records.has(lift.name) ? CYAN : STEEL;
+    ctx.stroke();
+    if (!lift) continue;
+    const lines = wrap(s, lift.name, R * 1.45, 30, 600, 2);
+    const top = y - (lines.length === 2 ? 46 : 26);
+    lines.forEach((l, k) => text(s, l, x, top + k * 36, { size: 30, weight: 600, align: "center" }));
+    text(s, bestLabel(s, lift), x, y + 52, {
+      size: 30,
+      weight: 700,
+      family: "mono",
+      align: "center",
+      color: records.has(lift.name) ? CYAN : VOLT,
+      maxWidth: R * 1.5,
+    });
+  }
+
+  // Totals under the honeycomb.
+  const by = SAFE_BOTTOM - 30;
+  hline(ctx, m, W - m, by - 140, STEEL);
+  const stats: [string, string][] = [
+    ["Time", formatDuration(data.durationSec)],
+    ["Sets", String(data.setsDone)],
+    ["Records", String(records.size)],
+  ];
+  const col = (W - 2 * m) / 3;
+  stats.forEach(([label, value], i) => {
+    const x = m + col * i;
+    caps(s, label, x, by - 80);
+    text(s, value, x, by, { size: 56, weight: 800, family: "mono", color: label === "Records" && records.size ? CYAN : TEXT });
+  });
+  if (data.exercises.length > 6) caps(s, `+${data.exercises.length - 6} more lifts`, W - m, by - 170, { align: "right" });
+}
+
+/* ------------------------------------------------------------------ */
+/* Volt Poster                                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Volt Poster: a Swiss-style poster, black on Volt. The volume figure fills the width, then the
+ * sets, time and records each on a full-width line between heavy rules, then the lifts small.
+ */
+function voltPoster(s: Scene) {
+  const { ctx, data, unit } = s;
+  paintBackground(s, VOLT);
+  const m = 64;
+  const inner = W - 2 * m;
+  const ink = (str: string, x: number, y: number, o: Partial<TextOpts> & { size: number }) =>
+    text(s, str, x, y, { color: INK, shadow: false, ...o });
+
+  // Header.
+  mark(ctx, m, SAFE_TOP - 80, 60, INK, VOLT);
+  ink("ABOT", m + 78, SAFE_TOP - 34, { size: 46, weight: 900 });
+  ink(dateLabel(data).toUpperCase(), W - m, SAFE_TOP - 34, { size: 30, weight: 700, family: "mono", align: "right", tracking: 2 });
+  hline(ctx, m, W - m, SAFE_TOP + 8, INK, 8);
+
+  // The figure.
+  const [vol, u] = volumeParts(data.volumeKg, unit);
+  const vs = fitSize(s, vol, inner, 330, 140, 900, "mono");
+  ink(vol, m - 8, SAFE_TOP + 40 + vs * 0.86, { size: vs, weight: 900, family: "mono", tracking: -8 });
+  // The figure's comma and digits hang below the baseline; leave them room.
+  let y = SAFE_TOP + 40 + vs * 0.86 + 110;
+  ink(`${u.toUpperCase()} LIFTED`, m, y, { size: 58, weight: 900, tracking: 2 });
+  y += 46;
+  hline(ctx, m, W - m, y, INK, 8);
+
+  // Full-width lines.
+  const rows: [string, string][] = [
+    [String(data.setsDone), "SETS"],
+    [formatDuration(data.durationSec).toUpperCase(), "TIME"],
+    [String(recordLifts(data).size), recordLifts(data).size === 1 ? "RECORD" : "RECORDS"],
+  ];
+  for (const [value, label] of rows) {
+    y += 140;
+    ink(value, m, y, { size: 128, weight: 900, family: "mono", tracking: -4 });
+    ink(label, W - m, y, { size: 44, weight: 900, align: "right", tracking: 4 });
+    y += 34;
+    hline(ctx, m, W - m, y, INK, 4);
+  }
+
+  // Title and lifts.
+  y += 86;
+  const lines = wrap(s, data.title.toUpperCase(), inner, 64, 900, 2);
+  for (const l of lines) {
+    ink(l, m, y, { size: 64, weight: 900 });
+    y += 72;
+  }
+  y += 6;
+  const room = Math.max(0, Math.floor((SAFE_BOTTOM + 40 - y) / 46));
+  const shown = data.exercises.slice(0, room);
+  for (const ex of shown) {
+    const right = bestLabel(s, ex);
+    const rw = ink(right, W - m, y, { size: 32, weight: 700, family: "mono", align: "right" });
+    ink(ex.name, m, y, { size: 32, weight: 600, maxWidth: inner - rw - 30 });
+    y += 46;
+  }
+  if (shown.length < data.exercises.length) ink(`+${data.exercises.length - shown.length} MORE`, m, y, { size: 26, weight: 700, family: "mono" });
+}
+
 const PAINTERS: Record<StoryPresetId, (s: Scene) => void> = {
   "obsidian-raw": obsidianRaw,
   "thermal-matrix": thermalMatrix,
@@ -1313,6 +1589,9 @@ const PAINTERS: Record<StoryPresetId, (s: Scene) => void> = {
   "pr-trophy-vault": prTrophyVault,
   "photo-backdrop": photoBackdrop,
   "split-spec-sheet": splitSpecSheet,
+  "loaded-bar": loadedBar,
+  "plate-grid": plateGrid,
+  "volt-poster": voltPoster,
 };
 
 /**

@@ -35,7 +35,7 @@ type Status =
   | { kind: "error"; text: string };
 
 /**
- * ABOT Story Studio: a 9:16 preview of the workout in one of eight layouts, an optional
+ * ABOT Story Studio: a 9:16 preview of the workout in one of eleven layouts, an optional
  * background photo from the device, and the two ways out (system share sheet, PNG download).
  */
 export function StoryCardStudio({

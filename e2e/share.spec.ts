@@ -11,6 +11,9 @@ const LAYOUTS = [
   "PR Trophy Vault",
   "Photo Backdrop",
   "Split Spec Sheet",
+  "Loaded Bar",
+  "Plate Grid",
+  "Volt Poster",
 ];
 
 /** Logs one bench set and finishes; the app lands on the new summary page. */
@@ -51,7 +54,7 @@ test("finishing shows the summary with a way to share and a way home", async ({ 
   await expect(page.getByRole("button", { name: "Share story" })).toBeVisible();
 });
 
-test("the studio switches between eight layouts and downloads a 1080 x 1920 PNG", async ({ page }) => {
+test("the studio switches between every layout and downloads a 1080 x 1920 PNG", async ({ page }) => {
   await finishOneSet(page);
   const dialog = await openStudio(page);
   await expectNoHorizontalOverflow(page);
@@ -72,7 +75,7 @@ test("the studio switches between eight layouts and downloads a 1080 x 1920 PNG"
     page.waitForEvent("download"),
     dialog.getByRole("button", { name: "Download High-Res PNG" }).click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-split-spec-sheet\.png$/);
+  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-volt-poster\.png$/);
   const file = await download.path();
   const { readFileSync } = await import("node:fs");
   const head = readFileSync(file).subarray(16, 24);
