@@ -404,6 +404,16 @@ same scroll position.
 `next start`), and `supabase/schema.sql` from master plan section 3.1 (table, RLS, trigger,
 `upsert_if_newer`). The SQL is not executed here (no Supabase access).
 
+Result (2026-11-08): `npm run audit` (`scripts/audit-local-first.sh`) runs every step in one
+command and passed: zero-env build, no Supabase string or JWT in `.next/static`, all routes 200
+on `next start`, 47/47 browser tests against production. New `e2e/local-first.spec.ts` asserts
+no request leaves the origin during a full training day, and that logging and finishing work
+offline (production only: the dev server compiles routes on request). The schema is checked on a
+throwaway local Postgres by `supabase/tests/schema-check.sql` (stubbed `auth` schema): rerun
+safety, newer-wins, tombstones, RLS read and write isolation, unknown kinds rejected. The check
+was shown to fail when newer-wins or RLS is removed.
+Known gap: opening the app cold while offline needs the service worker, planned in M7.
+
 ### Task 21b: Animated movement figures (owner choice 2026-11-08)
 
 Owner chose original vector animations over paid ExerciseDB GIFs or video-only motion.

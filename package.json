@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "e2e": "playwright test --trace off"
+    "e2e": "playwright test --trace off",
+    "audit": "scripts/audit-local-first.sh",
+    "check:schema": "scripts/check-supabase-schema.sh"
   },
   "dependencies": {
     "date-fns": "^4.4.0",

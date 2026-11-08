@@ -53,7 +53,7 @@ test("the info icon opens the same sheet", async ({ page }) => {
 test("exercise detail shows full instructions and form cues", async ({ page }) => {
   await page.goto("/exercises/squat-barbell");
   const steps = page.getByRole("list", { name: "Instructions" }).getByRole("listitem");
-  expect(await steps.count()).toBeGreaterThanOrEqual(3);
+  await expect(steps.nth(2)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Form cues" })).toBeVisible();
   await expect(page.getByText("Knees track over the toes")).toBeVisible();
   await expect(page.getByText("Instructions from free-exercise-db (public domain).")).toBeVisible();
