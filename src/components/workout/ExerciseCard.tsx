@@ -3,7 +3,7 @@
 import { setNumbers } from "@/lib/sets";
 import { useState } from "react";
 import { setGridColumns } from "./setGrid";
-import { ArrowDown, ArrowUp, MoreHorizontal, Plus, Timer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Info, MoreHorizontal, Plus, Timer, Trash2 } from "lucide-react";
 import type {
   Exercise,
   PRKind,
@@ -15,6 +15,7 @@ import { EQUIPMENT_LABELS, primaryMusclesLabel } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { SetRow } from "./SetRow";
 import { Sheet } from "@/components/ui/Sheet";
+import { ExerciseHowToSheet } from "./ExerciseHowToSheet";
 import { Button } from "@/components/ui/Button";
 import { formatClock } from "@/lib/calc";
 
@@ -42,6 +43,8 @@ export function ExerciseCard({
   const store = useWorkoutStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [howToOpen, setHowToOpen] = useState(false);
+  const locationId = useWorkoutStore((s) => s.active?.locationId);
 
   const numbers = setNumbers(item.sets);
 
@@ -54,17 +57,39 @@ export function ExerciseCard({
     <section aria-labelledby={`ex-${item.id}`} className="rounded-card bg-surface px-2 py-3">
       <header className="flex items-start justify-between gap-2 px-1">
         <div className="min-w-0">
-          <h2 id={`ex-${item.id}`} className="truncate text-base font-semibold text-accent">
-            {name}
+          <h2 id={`ex-${item.id}`} className="text-base font-semibold text-accent">
+            {exercise ? (
+              <button
+                type="button"
+                onClick={() => setHowToOpen(true)}
+                aria-haspopup="dialog"
+                className="block max-w-full truncate text-left underline-offset-4 hover:underline"
+              >
+                {name}
+              </button>
+            ) : (
+              <span className="block truncate">{name}</span>
+            )}
           </h2>
           <p className="text-xs text-text-muted">{subtitle}</p>
         </div>
+        {exercise && (
+          <button
+            type="button"
+            onClick={() => setHowToOpen(true)}
+            aria-label={`How to do ${name}`}
+            aria-haspopup="dialog"
+            className="-mt-1 ml-auto flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
+          >
+            <Info aria-hidden="true" size={20} />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
           aria-label={`Options for ${name}`}
           aria-haspopup="dialog"
-          className="-mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
+          className="-ml-2 -mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
         >
           <MoreHorizontal aria-hidden="true" size={20} />
         </button>
@@ -111,6 +136,10 @@ export function ExerciseCard({
         <Plus aria-hidden="true" size={18} />
         Add set
       </Button>
+
+      {exercise && (
+        <ExerciseHowToSheet exercise={exercise} locationId={locationId} open={howToOpen} onClose={() => setHowToOpen(false)} />
+      )}
 
       <Sheet open={menuOpen} onClose={() => setMenuOpen(false)} title={name}>
         <div className="flex flex-col gap-4">

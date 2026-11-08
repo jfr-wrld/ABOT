@@ -4,7 +4,7 @@ import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Pencil, Trash2, Trophy } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
@@ -15,9 +15,11 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseForm } from "@/components/exercises/ExerciseForm";
 import { SmartExerciseMedia } from "@/components/exercise/SmartExerciseMedia";
+import { ExerciseGuide } from "@/components/exercise/ExerciseGuide";
+import { RecordsSummary } from "@/components/exercise/RecordsSummary";
 import { SetTypeChip } from "@/components/workout/SetTypeChip";
 import { CHART, tooltipStyle } from "@/components/analytics/chartTheme";
-import { buildPRTable, exerciseHistory } from "@/lib/calc";
+import { exerciseHistory } from "@/lib/calc";
 import { formatWeight, toDisplay } from "@/lib/units";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, primaryMusclesLabel } from "@/types/workout";
 
@@ -41,7 +43,6 @@ function Detail() {
 
   const exercise = byId[id];
   const history = useMemo(() => exerciseHistory(id, sessions, { byId, allGyms: true }), [id, sessions, byId]);
-  const prs = useMemo(() => buildPRTable(sessions, byId, { allGyms: true })[id], [id, sessions, byId]);
 
   if (!exercise) {
     return (
@@ -100,37 +101,9 @@ function Detail() {
       <div className="flex flex-col gap-3 px-4 pt-4">
         <SmartExerciseMedia exercise={exercise} />
 
-        <section aria-labelledby="pr-heading" className="rounded-card bg-surface p-3">
-          <h2 id="pr-heading" className="flex items-center gap-2 text-sm font-semibold">
-            <Trophy aria-hidden="true" size={16} className="text-accent" /> Personal records
-          </h2>
-          {!prs ? (
-            <p className="mt-2 text-sm text-text-muted">
-              No completed working sets yet. Records appear after you log this exercise in a finished workout.
-            </p>
-          ) : (
-            <dl className="mt-2 grid grid-cols-3 gap-2">
-              <PR
-                label="Heaviest weight"
-                value={exercise.isBodyweight ? `${prs.heaviest_weight!.reps} reps` : formatWeight(prs.heaviest_weight!.weightKg, weightUnit)}
-                sub={`× ${prs.heaviest_weight!.reps}`}
-                date={prs.heaviest_weight!.achievedAt}
-              />
-              <PR
-                label="Best 1RM (est.)"
-                value={formatWeight(prs.best_1rm!.value, weightUnit)}
-                sub={`${formatWeight(prs.best_1rm!.weightKg, weightUnit, false)} × ${prs.best_1rm!.reps}`}
-                date={prs.best_1rm!.achievedAt}
-              />
-              <PR
-                label="Best set volume"
-                value={formatWeight(prs.best_set_volume!.value, weightUnit)}
-                sub={`${formatWeight(prs.best_set_volume!.weightKg, weightUnit, false)} × ${prs.best_set_volume!.reps}`}
-                date={prs.best_set_volume!.achievedAt}
-              />
-            </dl>
-          )}
-        </section>
+        <ExerciseGuide exercise={exercise} showInstructions />
+
+        <RecordsSummary exercise={exercise} />
 
         {!exercise.isBodyweight && (
           <figure className="rounded-card bg-surface p-3">
@@ -249,17 +222,5 @@ function Detail() {
         </p>
       </Sheet>
     </main>
-  );
-}
-
-function PR({ label, value, sub, date }: { label: string; value: string; sub: string; date: number }) {
-  return (
-    <div className="rounded-ctl bg-bg px-2 py-2">
-      <dt className="text-[11px] font-semibold uppercase text-text-muted">{label}</dt>
-      <dd className="text-base font-bold tabular-nums">{value}</dd>
-      <dd className="text-xs text-text-muted">
-        {sub} · {new Date(date).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-      </dd>
-    </div>
   );
 }

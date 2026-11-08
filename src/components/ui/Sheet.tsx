@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 
 /**
@@ -21,6 +21,7 @@ export function Sheet({
   footer?: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const el = ref.current;
@@ -32,16 +33,17 @@ export function Sheet({
   return (
     <dialog
       ref={ref}
+      aria-labelledby={titleId}
       onClose={onClose}
       onClick={(e) => {
         // Click on the backdrop (outside the panel) closes.
         if (e.target === e.currentTarget) onClose();
       }}
-      className="m-0 h-dvh max-h-dvh w-full max-w-none bg-transparent p-0 open:flex open:flex-col open:justify-end sm:open:justify-center"
+      className="m-0 h-dvh max-h-dvh w-full max-w-none bg-transparent p-0 text-text open:flex open:flex-col open:justify-end sm:open:justify-center"
     >
       <div className="mx-auto flex max-h-[88dvh] w-full max-w-[640px] flex-col rounded-t-card bg-surface sm:max-h-[80dvh] sm:rounded-card">
         <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-          <h2 className="text-base font-semibold">{title}</h2>
+          <h2 id={titleId} className="text-base font-semibold">{title}</h2>
           <button
             type="button"
             onClick={onClose}
