@@ -2511,6 +2511,7 @@ export const SEED_INPUTS: ExerciseInput[] = [
   {
     "id": "single-leg-calf-raise",
     "name": "Single Leg Calf Raise",
+    "sourceId": "Calf_Raise_On_A_Dumbbell",
     "equipment": "bodyweight",
     "primaryMuscles": [
       "calves"
@@ -2529,7 +2530,12 @@ export const SEED_INPUTS: ExerciseInput[] = [
       "Pause at the top instead of bouncing",
       "Hold on only for balance, not to pull yourself up"
     ],
-    "media": {}
+    "media": {
+      "motionUrls": [
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Raise_On_A_Dumbbell/0.jpg",
+        "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Calf_Raise_On_A_Dumbbell/1.jpg"
+      ]
+    }
   },
   {
     "id": "mountain-climber",

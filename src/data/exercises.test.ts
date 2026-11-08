@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { SEED_EXERCISES } from "./exercises";
 import type { MuscleGroup } from "@/types/workout";
+import { BUNDLED_THUMBS } from "./exercise-thumbs.generated";
 
 const ORIGINAL_IDS = [
   "bench-press-barbell", "bench-press-dumbbell", "incline-bench-press-barbell", "incline-bench-press-dumbbell",
@@ -30,12 +31,16 @@ describe("seed exercise library", () => {
 
   it("links every exercise to its free-exercise-db start and end frames (except ABOT's own entries)", () => {
     // Not in the dataset: written by ABOT, so no photos (scripts/seed-map.json, no sourceId).
-    const own = new Set(["pike-push-up", "single-leg-calf-raise"]);
+    const own = new Set(["pike-push-up"]);
     for (const e of SEED_EXERCISES.filter((x) => own.has(x.id))) expect(e.sourceId, e.id).toBeUndefined();
     for (const e of SEED_EXERCISES.filter((x) => !own.has(x.id))) {
       expect(e.sourceId, e.id).toBeTruthy();
       expect(e.media.motionUrls, e.id).toEqual([`${IMAGE_BASE}${e.sourceId}/0.jpg`, `${IMAGE_BASE}${e.sourceId}/1.jpg`]);
     }
+  });
+
+  it("bundles a thumbnail for every exercise with photos, so the list never falls back to the figure", () => {
+    for (const e of SEED_EXERCISES.filter((x) => x.sourceId)) expect(BUNDLED_THUMBS.has(e.id), e.id).toBe(true);
   });
 
   it("gives every exercise at least 3 instruction steps and 2 form cues", () => {
