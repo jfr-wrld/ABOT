@@ -7,6 +7,7 @@ import type {
   ExerciseHistoryPoint,
   MuscleGroup,
   Exercise,
+  LoadMode,
 } from "@/types/workout";
 
 const KG_PER_LB = 0.45359237;
@@ -39,16 +40,46 @@ export function isWorkingSet(set: WorkoutSet): boolean {
   );
 }
 
-export function setVolume(set: WorkoutSet): number {
-  if (!isWorkingSet(set)) return 0;
-  return (set.weightKg as number) * (set.reps as number);
+/** Per-hand dumbbell numbers are one hand's load; the lifter moved twice that. */
+export function volumeFactor(mode: LoadMode): 1 | 2 {
+  return mode === "per_hand" ? 2 : 1;
 }
 
-export function sessionVolume(session: WorkoutSession): number {
-  return session.exercises.reduce(
-    (sum, ex) => sum + ex.sets.reduce((s, set) => s + setVolume(set), 0),
-    0,
-  );
+export function setVolume(set: WorkoutSet, mode: LoadMode = "total"): number {
+  if (!isWorkingSet(set)) return 0;
+  return (set.weightKg as number) * (set.reps as number) * volumeFactor(mode);
+}
+
+/** With `byId`, each exercise's load mode applies; without it every load counts once. */
+export function sessionVolume(session: WorkoutSession, byId?: Record<string, Exercise>): number {
+  return session.exercises.reduce((sum, ex) => {
+    const mode = byId?.[ex.exerciseId]?.loadMode ?? "total";
+    return sum + ex.sets.reduce((s, set) => s + setVolume(set, mode), 0);
+  }, 0);
+}
+
+/**
+ * Records and "previous" are compared within a variant: machine and cable exercises are
+ * split per gym (a 60 kg stack differs between buildings), free weights are shared.
+ */
+export function variantKey(exerciseId: string, exercise: Exercise | undefined, locationId: string | undefined): string {
+  return exercise?.isMachineDependent && locationId ? `${exerciseId}@${locationId}` : exerciseId;
+}
+
+function keyFor(exerciseId: string, session: WorkoutSession, byId?: Record<string, Exercise>): string {
+  return byId ? variantKey(exerciseId, byId[exerciseId], session.locationId) : exerciseId;
+}
+
+export interface VariantOptions {
+  byId?: Record<string, Exercise>;
+  /** Gym to compare within; machine exercises only match sessions at this gym. */
+  locationId?: string;
+}
+
+function matchesVariant(exerciseId: string, session: WorkoutSession, opts?: VariantOptions): boolean {
+  if (!opts?.byId) return true;
+  const target = variantKey(exerciseId, opts.byId[exerciseId], opts.locationId);
+  return keyFor(exerciseId, session, opts.byId) === target;
 }
 
 export function sessionDurationSec(session: WorkoutSession, now = Date.now()): number {
@@ -91,7 +122,11 @@ const PR_KINDS: PRKind[] = ["heaviest_weight", "best_1rm", "best_set_volume"];
  * Build the all-time PR table from completed sessions, ordered by time.
  * Ties do NOT create a new PR (first achiever keeps it).
  */
-export function buildPRTable(sessions: WorkoutSession[]): PRTable {
+/**
+ * Keys are exercise ids, or variant keys ("id@location") when `byId` is given and the
+ * exercise is machine dependent. Use `variantKey` to look a record up.
+ */
+export function buildPRTable(sessions: WorkoutSession[], byId?: Record<string, Exercise>): PRTable {
   const table: PRTable = {};
   const ordered = [...sessions]
     .filter((s) => s.status === "completed")
@@ -103,7 +138,7 @@ export function buildPRTable(sessions: WorkoutSession[]): PRTable {
         if (!isWorkingSet(set)) continue;
         const w = set.weightKg as number;
         const r = set.reps as number;
-        const bucket = (table[ex.exerciseId] ??= {});
+        const bucket = (table[keyFor(ex.exerciseId, session, byId)] ??= {});
         for (const kind of PR_KINDS) {
           const value = prValue(kind, w, r);
           const current = bucket[kind];
@@ -134,25 +169,27 @@ export function buildPRTable(sessions: WorkoutSession[]): PRTable {
 export function detectSessionPRs(
   session: WorkoutSession,
   allSessions: WorkoutSession[],
+  byId?: Record<string, Exercise>,
 ): PersonalRecord[] {
   const prior = allSessions.filter(
     (s) => s.id !== session.id && s.status === "completed" && s.startedAt < session.startedAt,
   );
-  const baseline = buildPRTable(prior);
+  const baseline = buildPRTable(prior, byId);
   const found: PersonalRecord[] = [];
   // Track best within this session so only the single best set per kind gets the badge.
   const best: PRTable = {};
 
   for (const ex of session.exercises) {
+    const key = keyFor(ex.exerciseId, session, byId);
     for (const set of ex.sets) {
       if (!isWorkingSet(set)) continue;
       const w = set.weightKg as number;
       const r = set.reps as number;
       for (const kind of PR_KINDS) {
         const value = prValue(kind, w, r);
-        const prev = baseline[ex.exerciseId]?.[kind]?.value ?? 0;
+        const prev = baseline[key]?.[kind]?.value ?? 0;
         if (value <= prev) continue;
-        const bucket = (best[ex.exerciseId] ??= {});
+        const bucket = (best[key] ??= {});
         if (!bucket[kind] || value > bucket[kind]!.value) {
           bucket[kind] = {
             kind,
@@ -178,14 +215,15 @@ export function summarizeSession(
   session: WorkoutSession,
   allSessions: WorkoutSession[],
   now = Date.now(),
+  byId?: Record<string, Exercise>,
 ): SessionSummary {
   const { total, completed } = countSets(session);
   return {
-    totalVolumeKg: sessionVolume(session),
+    totalVolumeKg: sessionVolume(session, byId),
     totalSets: total,
     completedSets: completed,
     durationSec: sessionDurationSec(session, now),
-    prs: detectSessionPRs(session, allSessions),
+    prs: detectSessionPRs(session, allSessions, byId),
   };
 }
 
@@ -198,9 +236,10 @@ export function previousSets(
   exerciseId: string,
   sessions: WorkoutSession[],
   excludeSessionId?: string,
+  opts?: VariantOptions,
 ): WorkoutSet[] | null {
   const ordered = [...sessions]
-    .filter((s) => s.status === "completed" && s.id !== excludeSessionId)
+    .filter((s) => s.status === "completed" && s.id !== excludeSessionId && matchesVariant(exerciseId, s, opts))
     .sort((a, b) => b.startedAt - a.startedAt);
   for (const s of ordered) {
     const ex = s.exercises.find((e) => e.exerciseId === exerciseId);
@@ -215,10 +254,11 @@ export function previousSets(
 export function exerciseHistory(
   exerciseId: string,
   sessions: WorkoutSession[],
+  opts?: VariantOptions,
 ): ExerciseHistoryPoint[] {
   const points: ExerciseHistoryPoint[] = [];
   for (const s of sessions) {
-    if (s.status !== "completed") continue;
+    if (s.status !== "completed" || !matchesVariant(exerciseId, s, opts)) continue;
     let bestW = 0,
       bestR = 0,
       best1rm = 0,

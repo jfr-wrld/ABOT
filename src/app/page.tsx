@@ -6,6 +6,7 @@ import { ChevronRight, Settings } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useAllExercises } from "@/store/useExerciseStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
 import { AbotWordmark } from "@/components/brand/AbotMark";
@@ -29,6 +30,7 @@ function HomeScreen() {
   const routines = useRoutineStore((s) => s.routines);
   const { weightUnit, defaultRestSeconds } = useSettingsStore();
   const now = useNow(1000, active !== null);
+  const { byId } = useAllExercises();
 
   const recent = [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 10);
   const startable = routines.filter((r) => r.exercises.length > 0).slice(0, 4);
@@ -119,7 +121,7 @@ function HomeScreen() {
                     </div>
                     <p className="mt-1 flex items-center justify-between text-sm text-text-muted">
                       <span>
-                        {formatDuration(sessionDurationSec(s))} · {formatVolume(sessionVolume(s), weightUnit)} · {completed}{" "}
+                        {formatDuration(sessionDurationSec(s))} · {formatVolume(sessionVolume(s, byId), weightUnit)} · {completed}{" "}
                         {completed === 1 ? "set" : "sets"} · {s.exercises.length} {s.exercises.length === 1 ? "exercise" : "exercises"}
                       </span>
                       <ChevronRight aria-hidden="true" size={16} />

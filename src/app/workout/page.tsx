@@ -37,7 +37,7 @@ function WorkoutScreen() {
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
 
-  const prs = useMemo(() => (active ? detectSessionPRs(active, sessions) : []), [active, sessions]);
+  const prs = useMemo(() => (active ? detectSessionPRs(active, sessions, byId) : []), [active, sessions, byId]);
   const prBySet = useMemo(() => {
     const m: Record<string, PRKind[]> = {};
     for (const pr of prs) (m[pr.setId] ??= []).push(pr.kind);
@@ -82,7 +82,7 @@ function WorkoutScreen() {
             key={item.id}
             item={item}
             exercise={byId[item.exerciseId]}
-            previous={previousSets(item.exerciseId, sessions, active.id)}
+            previous={previousSets(item.exerciseId, sessions, active.id, { byId, locationId: active.locationId })}
             unit={weightUnit}
             showRpe={showRpe}
             prBySet={prBySet}

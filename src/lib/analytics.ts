@@ -1,4 +1,4 @@
-import type { WorkoutSession } from "@/types/workout";
+import type { Exercise, WorkoutSession } from "@/types/workout";
 import { countSets, sessionDurationSec, sessionVolume } from "./calc";
 
 const DAY = 86_400_000;
@@ -32,6 +32,7 @@ export function weeklyBuckets(
   n: number,
   now = Date.now(),
   firstDay: 0 | 1 = 1,
+  byId?: Record<string, Exercise>,
 ): WeekBucket[] {
   const thisWeek = startOfWeek(now, firstDay);
   const buckets: WeekBucket[] = [];
@@ -46,7 +47,7 @@ export function weeklyBuckets(
     const b = byStart.get(startOfWeek(s.startedAt, firstDay));
     if (!b) continue;
     b.workouts++;
-    b.volumeKg += sessionVolume(s);
+    b.volumeKg += sessionVolume(s, byId);
     b.durationSec += sessionDurationSec(s);
     b.sets += countSets(s).completed;
   }

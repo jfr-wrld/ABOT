@@ -31,7 +31,7 @@ function ProgressScreen() {
   const [splitRange, setSplitRange] = useState<"week" | "month">("week");
   const now = useNow(60_000);
 
-  const buckets = useMemo(() => weeklyBuckets(sessions, WEEKS, now, firstDayOfWeek), [sessions, now, firstDayOfWeek]);
+  const buckets = useMemo(() => weeklyBuckets(sessions, WEEKS, now, firstDayOfWeek, byId), [sessions, now, firstDayOfWeek, byId]);
   const streak = weekStreak(sessions, now, firstDayOfWeek);
   const completed = useMemo(() => sessions.filter((s) => s.status === "completed"), [sessions]);
 

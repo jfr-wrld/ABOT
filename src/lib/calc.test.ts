@@ -119,3 +119,73 @@ describe("muscleSplit", () => {
     expect(split.shoulders).toBe(1);
   });
 });
+
+import { variantKey, volumeFactor, setVolume, exerciseHistory } from "./calc";
+import type { Exercise } from "@/types/workout";
+
+const ex = (id: string, sets: WorkoutSet[], locationId?: string, startedAt = 1): WorkoutSession => ({
+  ...session(`${id}-${startedAt}-${locationId ?? "none"}`, startedAt, sets, id),
+  locationId,
+});
+
+describe("load mode volume", () => {
+  it("doubles per-hand dumbbell volume and counts unilateral once", () => {
+    expect(volumeFactor("per_hand")).toBe(2);
+    expect(volumeFactor("unilateral")).toBe(1);
+    expect(volumeFactor("total")).toBe(1);
+    const s = set({ id: "x", weightKg: 30, reps: 10 });
+    expect(setVolume(s, "per_hand")).toBe(600);
+    expect(setVolume(s, "unilateral")).toBe(300);
+    expect(setVolume(s)).toBe(300);
+  });
+  it("sessionVolume uses the exercise's load mode when given the lookup", () => {
+    const s = ex("bench-press-dumbbell", [set({ id: "d", weightKg: 30, reps: 10 })]);
+    expect(sessionVolume(s)).toBe(300);
+    expect(sessionVolume(s, SEED_EXERCISES_BY_ID)).toBe(600);
+  });
+});
+
+describe("variantKey", () => {
+  const pulldown = SEED_EXERCISES_BY_ID["lat-pulldown-cable"]!;
+  const bench = SEED_EXERCISES_BY_ID["bench-press-barbell"]!;
+  it("splits machine exercises by location", () => {
+    expect(variantKey(pulldown.id, pulldown, "A")).toBe("lat-pulldown-cable@A");
+    expect(variantKey(pulldown.id, pulldown, undefined)).toBe("lat-pulldown-cable");
+  });
+  it("shares free-weight exercises across locations", () => {
+    expect(variantKey(bench.id, bench, "A")).toBe("bench-press-barbell");
+  });
+  it("falls back to the id for an unknown exercise", () => {
+    expect(variantKey("gone", undefined as unknown as Exercise, "A")).toBe("gone");
+  });
+});
+
+describe("per-location records", () => {
+  const day = 86_400_000;
+  it("keeps machine records apart per gym", () => {
+    const a = ex("lat-pulldown-cable", [set({ id: "a1", weightKg: 60, reps: 10 })], "A", day);
+    const b = ex("lat-pulldown-cable", [set({ id: "b1", weightKg: 50, reps: 10 })], "B", 2 * day);
+    const prs = detectSessionPRs(b, [a, b], SEED_EXERCISES_BY_ID);
+    expect(prs.find((p) => p.kind === "heaviest_weight")?.weightKg).toBe(50);
+    const table = buildPRTable([a, b], SEED_EXERCISES_BY_ID);
+    expect(table["lat-pulldown-cable@A"]?.heaviest_weight?.value).toBe(60);
+    expect(table["lat-pulldown-cable@B"]?.heaviest_weight?.value).toBe(50);
+  });
+  it("shares barbell records across gyms", () => {
+    const a = ex("bench-press-barbell", [set({ id: "a1", weightKg: 100, reps: 5 })], "A", day);
+    const b = ex("bench-press-barbell", [set({ id: "b1", weightKg: 90, reps: 5 })], "B", 2 * day);
+    expect(detectSessionPRs(b, [a, b], SEED_EXERCISES_BY_ID)).toHaveLength(0);
+  });
+  it("previousSets for a machine at gym B ignores gym A", () => {
+    const a = ex("lat-pulldown-cable", [set({ id: "a1", weightKg: 60, reps: 10 })], "A", day);
+    const opts = { byId: SEED_EXERCISES_BY_ID, locationId: "B" };
+    expect(previousSets("lat-pulldown-cable", [a], undefined, opts)).toBeNull();
+    expect(previousSets("lat-pulldown-cable", [a], undefined, { ...opts, locationId: "A" })?.[0]?.weightKg).toBe(60);
+  });
+  it("exerciseHistory can be filtered to one gym", () => {
+    const a = ex("lat-pulldown-cable", [set({ id: "a1", weightKg: 60, reps: 10 })], "A", day);
+    const b = ex("lat-pulldown-cable", [set({ id: "b1", weightKg: 50, reps: 10 })], "B", 2 * day);
+    expect(exerciseHistory("lat-pulldown-cable", [a, b])).toHaveLength(2);
+    expect(exerciseHistory("lat-pulldown-cable", [a, b], { byId: SEED_EXERCISES_BY_ID, locationId: "B" })).toHaveLength(1);
+  });
+});

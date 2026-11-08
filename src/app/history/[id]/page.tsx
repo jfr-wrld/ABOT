@@ -34,7 +34,7 @@ function SessionDetail() {
   const [confirm, setConfirm] = useState(false);
 
   const session = sessions.find((s) => s.id === id);
-  const prs = useMemo(() => (session ? detectSessionPRs(session, sessions) : []), [session, sessions]);
+  const prs = useMemo(() => (session ? detectSessionPRs(session, sessions, byId) : []), [session, sessions, byId]);
   const prSetIds = new Set(prs.map((p) => p.setId));
 
   if (!session) {
@@ -58,7 +58,7 @@ function SessionDetail() {
 
       <dl className="mx-4 mt-4 grid grid-cols-3 gap-2">
         <Stat label="Duration" value={formatDuration(sessionDurationSec(session))} />
-        <Stat label="Volume" value={formatVolume(sessionVolume(session), weightUnit)} />
+        <Stat label="Volume" value={formatVolume(sessionVolume(session, byId), weightUnit)} />
         <Stat label="Sets" value={String(countSets(session).completed)} />
       </dl>
 

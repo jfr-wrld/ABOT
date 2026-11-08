@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { WeightUnit, WorkoutSession } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useAllExercises } from "@/store/useExerciseStore";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
@@ -21,7 +22,8 @@ export function ActiveWorkoutHeader({
   const rename = useWorkoutStore((s) => s.renameActive);
   const now = useNow(1000);
   const duration = sessionDurationSec(session, now);
-  const volume = sessionVolume(session);
+  const { byId } = useAllExercises();
+  const volume = sessionVolume(session, byId);
   const { total, completed } = countSets(session);
   const [startOpen, setStartOpen] = useState(false);
 

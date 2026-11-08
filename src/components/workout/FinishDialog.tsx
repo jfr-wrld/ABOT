@@ -55,7 +55,7 @@ export function FinishDialog({
     >
       <dl className="grid grid-cols-3 gap-2">
         <Stat label="Duration" value={formatDuration(duration)} />
-        <Stat label="Volume" value={formatVolume(sessionVolume(session), unit)} />
+        <Stat label="Volume" value={formatVolume(sessionVolume(session, exercisesById), unit)} />
         <Stat label="Sets done" value={String(completed)} />
       </dl>
 
