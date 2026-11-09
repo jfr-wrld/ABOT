@@ -115,6 +115,27 @@ export const SIMULATOR: { mode: DevOverride; label: string }[] = [
   { mode: "FORCE_PRO", label: "Pro active" },
 ];
 
+/**
+ * A redeemed code or a manual grant: lifetime beats everything; pro days add onto pro time not
+ * used yet; a founder grant stamps the pass if there is none. A simulator stuck on "Free locked"
+ * is released, so the lifter sees what they just unlocked.
+ */
+export function applyGrant(
+  e: EntitlementState,
+  grant: { tier: "pro" | "lifetime"; days: number | null; founder: boolean },
+  seed: string,
+  now = Date.now(),
+): EntitlementState {
+  let next: EntitlementState = { ...e, devOverrideMode: e.devOverrideMode === "FORCE_FREE" ? "AUTO" : e.devOverrideMode };
+  if (grant.tier === "lifetime" || e.tier === "lifetime") {
+    next = { ...next, tier: "lifetime", proExpiresAt: null };
+  } else {
+    const from = e.tier === "pro" && e.proExpiresAt && Date.parse(e.proExpiresAt) > now ? Date.parse(e.proExpiresAt) : now;
+    next = { ...next, tier: "pro", proExpiresAt: new Date(from + (grant.days ?? 30) * 86_400_000).toISOString() };
+  }
+  return grant.founder ? claimFounder(next, seed, new Date(now)) : next;
+}
+
 /* ---------------------------------------------------------------- plans */
 
 export type PlanId = "monthly" | "annual" | "lifetime";
@@ -135,6 +156,25 @@ export const PLANS: Plan[] = [
   { id: "lifetime", name: "Founders lifetime license", idr: 798_000, usd: 79.98, per: "once", note: "Pay once, keep it for life" },
 ];
 
+export interface PlanPrices {
+  monthlyIdr: number;
+  annualIdr: number;
+  lifetimeIdr: number;
+  monthlyUsd: number;
+  annualUsd: number;
+  lifetimeUsd: number;
+}
+
+/** The plans at the prices Mission Control set (remote config), names and notes unchanged. */
+export function plansFor(p: PlanPrices): Plan[] {
+  const by: Record<PlanId, [number, number]> = {
+    monthly: [p.monthlyIdr, p.monthlyUsd],
+    annual: [p.annualIdr, p.annualUsd],
+    lifetime: [p.lifetimeIdr, p.lifetimeUsd],
+  };
+  return PLANS.map((plan) => ({ ...plan, idr: by[plan.id][0], usd: by[plan.id][1] }));
+}
+
 /** Founders pay half for the lifetime license. */
 export const FOUNDER_LIFETIME_DISCOUNT = 0.5;
 
@@ -151,9 +191,9 @@ export function planPrice(plan: Plan, isFounder: boolean): { idr: number; usd: n
 }
 
 /** Annual against twelve months: 43% for Rp 199.000 against 12 x Rp 29.000. */
-export function annualSaving(): number {
-  const m = PLANS.find((p) => p.id === "monthly")!;
-  const y = PLANS.find((p) => p.id === "annual")!;
+export function annualSaving(plans: Plan[] = PLANS): number {
+  const m = plans.find((p) => p.id === "monthly")!;
+  const y = plans.find((p) => p.id === "annual")!;
   return Math.round((1 - y.idr / (m.idr * 12)) * 100);
 }
 
