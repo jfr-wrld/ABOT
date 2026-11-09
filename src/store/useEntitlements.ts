@@ -71,5 +71,6 @@ export function useEntitlements() {
     isFounder: e.isFounder,
     founderUnitCode: e.founderUnitCode,
     founderJoinedAt: e.founderJoinedAt,
+    proExpiresAt: e.proExpiresAt,
   };
 }

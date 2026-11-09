@@ -17,14 +17,16 @@ test("every beta install gets a founder unit, and the paywall shows plans and th
   await page.goto("/settings");
   const card = page.getByRole("region", { name: /^FOUNDER UNIT \/\/ #\d{4}$/ });
   await expect(card).toBeVisible();
-  await expect(card).toContainText("All telemetry unlocked");
+  const plan = page.getByRole("region", { name: "Plan & billing" });
+  await expect(plan).toContainText("FOUNDERS BETA");
+  await expect(plan).toContainText("Every PRO feature is open while the founders beta runs.");
   const code = (await card.getByRole("heading").textContent())!;
   await page.reload();
   // The unit number is permanent.
   await expect(page.getByRole("region", { name: /FOUNDER UNIT/ }).getByRole("heading")).toHaveText(code);
   await expectNoHorizontalOverflow(page);
 
-  await card.getByRole("button", { name: "View ABOT // BLACK PRO specs" }).click();
+  await plan.getByRole("button", { name: "Upgrade to Black Pro" }).click();
   const pay = page.getByRole("dialog", { name: "Precision engineered for serious lifters." });
   await expect(pay).toBeVisible();
   await expect(pay.getByRole("table")).toContainText("Auto-overload coach");
@@ -57,7 +59,7 @@ test("Free locked: the Coach Pill, the radar and PRO story layouts open the payw
   await finishWorkout(page);
 
   await simulate(page, "Free locked");
-  await expect(page.getByRole("region", { name: /FOUNDER UNIT/ })).toContainText("Core: PRO locked");
+  await expect(page.getByRole("region", { name: "Plan & billing" })).toContainText("CORE");
 
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");
