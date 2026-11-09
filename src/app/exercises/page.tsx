@@ -21,6 +21,7 @@ import { buildPRTable } from "@/lib/calc";
 import { exercisePath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { muscleLabel, muscleNames } from "@/components/exercise/MuscleTags";
+import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -57,6 +58,7 @@ function LibraryScreen() {
   }, [list, query, muscle, equipment]);
 
   // One section per muscle, in the dropdown's order; an exercise sits under its first primary muscle.
+  const [view, setView] = useViewMode("exercises");
   const groups = useMemo(() => {
     const by = new Map<MuscleGroup, typeof filtered>();
     for (const e of filtered) {
@@ -86,15 +88,18 @@ function LibraryScreen() {
         <label htmlFor="lib-search" className="sr-only">
           {t("Search exercises")}
         </label>
-        <input
-          id="lib-search"
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("Search by name")}
-          autoComplete="off"
-          className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            id="lib-search"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("Search by name")}
+            autoComplete="off"
+            className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
+          />
+          <ViewToggle value={view} onChange={setView} />
+        </div>
         <div className="mt-2 flex gap-2">
           <label htmlFor="lib-muscle" className="sr-only">
             {t("Muscle group")}
@@ -143,9 +148,29 @@ function LibraryScreen() {
                 <span className="text-sm font-bold">{muscleLabel(m, t)}</span>
                 <span className="num text-xs text-text-muted">{items.length}</span>
               </h2>
-              <ul className="flex flex-col px-2">
+              <ul className={view === "grid" ? "grid grid-cols-2 gap-2 px-4 sm:grid-cols-3" : "flex flex-col px-2"}>
                 {items.map((e) => {
                   const pr = prTable[e.id]?.heaviest_weight;
+                  if (view === "grid") {
+                    return (
+                      <li key={e.id}>
+                        <Link
+                          href={exercisePath(e.id)}
+                          className="flex h-full flex-col gap-2 rounded-card border border-line bg-surface p-2 hover:border-line-hover active:bg-surface-2"
+                        >
+                          {/* The photo fills the card's width. */}
+                          <span className="block aspect-square overflow-hidden rounded-lg [&>span]:!size-full [&>span]:!rounded-none [&>span]:!border-0">
+                            <ExerciseThumb exercise={e} size={44} />
+                          </span>
+                          <span className="line-clamp-2 px-0.5 text-sm font-semibold leading-snug">{e.name}</span>
+                          <span className="mt-auto px-0.5 text-xs text-text-muted">
+                            {t(EQUIPMENT_LABELS[e.equipment])}
+                            {pr && ` · ${pr.weightKg} kg`}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  }
                   return (
                     <li key={e.id}>
                       <Link

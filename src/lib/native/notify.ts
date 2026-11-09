@@ -9,7 +9,13 @@ import { DEFAULT_SCHEDULE, reminderContent, type ReminderContent, type Weekday, 
  * the weekly session call) is handed to Android's alarm scheduler up front.
  */
 
-const plugin = () => import("@capacitor/local-notifications").then((m) => m.LocalNotifications);
+/**
+ * The plugin, wrapped in an object. Never let a Promise resolve to a Capacitor plugin itself:
+ * its Proxy answers every property, `then` included, so `await` treats it as a thenable, calls
+ * a native "then" that does not exist, and hangs for ever. That silently stopped every
+ * notification call (no permission dialog, no live status) until it was caught on an emulator.
+ */
+const plugin = () => import("@capacitor/local-notifications").then((m) => ({ ln: m.LocalNotifications }));
 
 export type NativePermission = "granted" | "denied" | "default";
 
@@ -26,26 +32,26 @@ const SNOOZE_MS = 30 * 60_000;
 const ICON = "ic_stat_abot";
 
 export async function nativePermission(): Promise<NativePermission> {
-  const { display } = await (await plugin()).checkPermissions();
+  const { display } = await (await plugin()).ln.checkPermissions();
   return display === "granted" ? "granted" : display === "denied" ? "denied" : "default";
 }
 
 export async function askNativePermission(): Promise<NativePermission> {
-  const { display } = await (await plugin()).requestPermissions();
+  const { display } = await (await plugin()).ln.requestPermissions();
   return display === "granted" ? "granted" : display === "denied" ? "denied" : "default";
 }
 
 /** Android 12+ may run alarms late unless the lifter allows exact alarms for ABOT. */
 export async function exactAlarmsAllowed(): Promise<boolean> {
   try {
-    return (await (await plugin()).checkExactNotificationSetting()).exact_alarm === "granted";
+    return (await (await plugin()).ln.checkExactNotificationSetting()).exact_alarm === "granted";
   } catch {
     return true;
   }
 }
 
 export async function openExactAlarmSettings(): Promise<void> {
-  await (await plugin()).changeExactNotificationSetting();
+  await (await plugin()).ln.changeExactNotificationSetting();
 }
 
 /**
@@ -53,7 +59,7 @@ export async function openExactAlarmSettings(): Promise<void> {
  * Returns a cleanup for the listener.
  */
 export async function setupNativeNotifications(open: (url: string) => void): Promise<() => void> {
-  const ln = await plugin();
+  const { ln } = await plugin();
   await Promise.all([
     ln.createChannel({ id: CHANNEL.live, name: "Workout in progress", description: "The workout and your next set while ABOT is in the background.", importance: 2, vibration: false }),
     ln.createChannel({ id: CHANNEL.rest, name: "Rest over", description: "Rings when a rest timer ends.", importance: 5, vibration: true }),
@@ -145,7 +151,7 @@ function reminderNotification(id: number, c: ReminderContent, schedule: LocalNot
 
 export async function showNativeReminderNow(c: ReminderContent): Promise<boolean> {
   if ((await nativePermission()) !== "granted") return false;
-  await (await plugin()).schedule({ notifications: [reminderNotification(ID.snooze, c, undefined)] });
+  await (await plugin()).ln.schedule({ notifications: [reminderNotification(ID.snooze, c, undefined)] });
   return true;
 }
 
@@ -165,7 +171,7 @@ export async function syncNativeReminders(
   schedule: WorkoutSchedule = DEFAULT_SCHEDULE,
   routine: (id: string | null) => { id: string; name: string; muscles: string[] } | null,
 ): Promise<void> {
-  const ln = await plugin();
+  const { ln } = await plugin();
   await ln.cancel({ notifications: REMINDER_IDS.map((id) => ({ id })) });
   if (!schedule.enabled || (await nativePermission()) !== "granted") return;
   const [h, m] = schedule.time.split(":").map(Number);

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { isNativeApp, saveFile } from "@/lib/native/files";
 import { useT } from "@/i18n";
+import { openNotificationSettings } from "@/lib/native/permissions";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
@@ -215,11 +216,18 @@ export function WorkoutReminderSettings() {
                 </Button>
               </>
             ) : permission === "denied" ? (
-              <p className="text-sm text-text-muted">
-                {isNativeApp()
-                  ? t("Notifications are off for ABOT. Turn them on in Android settings, under Apps, ABOT, Notifications.")
-                  : t("Notifications are blocked for ABOT. Allow them in this site's browser settings, or use the calendar below.")}
-              </p>
+              <>
+                <p className="text-sm text-text-muted">
+                  {isNativeApp()
+                    ? t("Notifications are off for ABOT. Turn them on in Android settings, under Apps, ABOT, Notifications.")
+                    : t("Notifications are blocked for ABOT. Allow them in this site's browser settings, or use the calendar below.")}
+                </p>
+                {isNativeApp() && (
+                  <Button onClick={() => void openNotificationSettings().catch((e: unknown) => setTested(e instanceof Error ? e.message : String(e)))} className="mt-2 w-full">
+                    {t("Turn on in Android settings")}
+                  </Button>
+                )}
+              </>
             ) : (
               <p className="text-sm text-text-muted">{t("This browser cannot show notifications. Use the calendar below.")}</p>
             )}

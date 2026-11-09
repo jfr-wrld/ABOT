@@ -75,7 +75,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="force-dark relative isolate flex min-h-[calc(100dvh-var(--dock-h,96px))] flex-1 flex-col overflow-hidden px-5 pt-4">
+    <main className="force-dark fixed inset-0 isolate z-30 flex h-dvh flex-col overflow-hidden overscroll-none bg-bg px-5 pt-[calc(16px+env(safe-area-inset-top))]">
       <div className="flex items-center justify-between">
         <span className="text-accent">
           <AbotMark size={28} title="ABOT" />

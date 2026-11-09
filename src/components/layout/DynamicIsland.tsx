@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { LayoutGroup, MotionConfig, motion } from "framer-motion";
-import { Minus, Pause, Plus, X } from "lucide-react";
+import { Pause, X } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useHydration } from "@/store/hydration";
@@ -161,11 +161,16 @@ function RestCapsule() {
           <span className="label-caps">{done ? t("Rest over") : t("Rest")}</span>
           <span className="num text-xl font-extrabold text-accent">{done ? t("Go") : formatClock(remainingSec)}</span>
         </div>
-        <IslandButton label={t("Shorten rest by 15 seconds")} onClick={() => adjust(-15)} disabled={done}>
-          <Minus aria-hidden="true" size={18} />
+        {/* The step is written on the buttons, so it is clear how much each tap changes. */}
+        <IslandButton label={t("Shorten rest by 15 seconds")} onClick={() => adjust(-15)} disabled={done} wide>
+          <span aria-hidden="true" className="num text-sm font-semibold">
+            −15s
+          </span>
         </IslandButton>
-        <IslandButton label={t("Extend rest by 15 seconds")} onClick={() => adjust(15)} disabled={done}>
-          <Plus aria-hidden="true" size={18} />
+        <IslandButton label={t("Extend rest by 15 seconds")} onClick={() => adjust(15)} disabled={done} wide>
+          <span aria-hidden="true" className="num text-sm font-semibold">
+            +15s
+          </span>
         </IslandButton>
         <IslandButton label={t("Skip rest")} onClick={skip}>
           <X aria-hidden="true" size={18} />
@@ -186,11 +191,14 @@ function IslandButton({
   label,
   onClick,
   disabled,
+  wide,
   children,
 }: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  /** Room for a short text label instead of an icon. */
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -199,7 +207,9 @@ function IslandButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-ink/10 hover:text-text active:bg-ink/15 disabled:opacity-40"
+      className={`flex h-11 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-ink/10 hover:text-text active:bg-ink/15 disabled:opacity-40 ${
+        wide ? "min-w-11 px-2" : "w-11"
+      }`}
     >
       {children}
     </button>
