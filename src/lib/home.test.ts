@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { muscleRecovery, nextProtocol, prCounts, relativeDay, restingMuscles, weekDayVolumes, weekStrip, weeklyFrequency, weeklyVolume } from "./home";
+import { nextProtocol, prCounts, relativeDay, weekDayVolumes, weekStrip, weeklyFrequency, weeklyVolume } from "./home";
 import { DEFAULT_SCHEDULE, type WorkoutSchedule } from "@/lib/notifications/schedule";
 import type { Exercise, Routine, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES } from "@/data/exercises";
@@ -94,15 +94,6 @@ describe("nextProtocol", () => {
   });
 });
 
-describe("muscleRecovery", () => {
-  it("counts down 48 hours from the last session that worked a group", () => {
-    const sessions = [session("chest", now - 21 * HOUR, [["bench-press-barbell", [set(60, 5)]]])];
-    const r = Object.fromEntries(muscleRecovery(sessions, byId, now).map((x) => [x.group, x.hoursLeft]));
-    expect(r.Chest).toBe(28); // finished 20 h ago (started 21 h ago, one hour long), so 48 - 20
-    expect(r.Legs).toBe(0);
-  });
-});
-
 describe("recent workout tags", () => {
   it("counts one record per lift, and none for a first attempt", () => {
     const first = session("a", now - 2 * DAY, [["bench-press-barbell", [set(60, 5)]]]);
@@ -115,15 +106,6 @@ describe("home visuals", () => {
   it("splits this week's volume by day", () => {
     const v = weekDayVolumes([session("x", now - 2 * DAY, [["bench-press-barbell", [set(100, 5)]]])], now, 1, byId);
     expect(v).toEqual([500, 0, 0, 0, 0, 0, 0]);
-  });
-
-  it("lists muscles worked in the last 48 hours", () => {
-    const s = [
-      session("recent", now - 10 * HOUR, [["bench-press-barbell", [set(60, 5)]]]),
-      session("old", now - 5 * DAY, [["squat-barbell", [set(100, 5)]]]),
-    ];
-    expect(restingMuscles(s, byId, now)).toContain("chest");
-    expect(restingMuscles(s, byId, now)).not.toContain("quads");
   });
 
   it("names nearby days in words", () => {

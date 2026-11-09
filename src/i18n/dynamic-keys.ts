@@ -7,6 +7,11 @@ import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
  * coverage test can see them too. Add each such constant's values here.
  */
 export const DYNAMIC_KEYS: string[] = [
+  // RecoveryMap REGION_NAMES and STAGE_LABELS
+  "Pectoralis major", "Deltoids", "Biceps brachii", "Triceps brachii", "Forearms", "Rectus abdominis", "Obliques",
+  "Trapezius", "Lats and upper back", "Erector spinae", "Gluteus maximus", "Quadriceps", "Hamstrings", "Adductors",
+  "Calves", "Tibialis anterior", "Neck",
+  "Fresh", "Recovering", "High load", "Exhausted",
   // BottomNav TABS labels
   "Home",
   "Workout",

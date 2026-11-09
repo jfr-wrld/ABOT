@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
@@ -14,17 +14,17 @@ import { Button, PRESS_SPRING } from "@/components/ui/Button";
 import { AbotWordmark } from "@/components/brand/AbotMark";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
-import { MuscleMap } from "@/components/anatomy/MuscleMap";
+import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
+import { REGIONS, type Region } from "@/components/anatomy/regions";
+import { Sheet } from "@/components/ui/Sheet";
+import { regionTelemetry, type RegionTelemetry } from "@/lib/muscle-recovery";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume, toDisplay } from "@/lib/units";
 import {
-  RECOVERY_GROUPS,
-  muscleRecovery,
   nextProtocol,
   prCounts,
   relativeDay,
-  restingMuscles,
   weekDayVolumes,
   weekStrip,
   weeklyFrequency,
@@ -315,8 +315,9 @@ function ThisWeek({ now }: { now: number }) {
   const days = useMemo(() => weekDayVolumes(sessions, now, firstDayOfWeek, byId), [sessions, now, firstDayOfWeek, byId]);
   const strip = weekStrip(sessions, now, firstDayOfWeek);
   const freq = weeklyFrequency(sessions, schedule, now, firstDayOfWeek);
-  const ready = muscleRecovery(sessions, byId, now).filter((r) => r.hoursLeft === 0).length;
-  const resting = useMemo(() => restingMuscles(sessions, byId, now), [sessions, byId, now]);
+  const active = useWorkoutStore((s) => s.active);
+  // Sets ticked in a workout still running tire the muscles too.
+  const recovery = useMemo(() => regionTelemetry(active ? [...sessions, active] : sessions, byId, now), [sessions, active, byId, now]);
 
   return (
     <section aria-label={t("This week")} className="grid grid-cols-2 gap-2">
@@ -329,7 +330,7 @@ function ThisWeek({ now }: { now: number }) {
         unit={weightUnit}
       />
       <SessionsRing done={freq.done} target={freq.target ?? 7} perWeek={freq.target !== null} />
-      <RecoveryCard ready={ready} resting={resting} />
+      <RecoveryCard data={recovery} now={now} />
     </section>
   );
 }
@@ -431,25 +432,40 @@ function SessionsRing({ done, target, perWeek }: { done: number; target: number;
   );
 }
 
-/** The body, front and back, with muscles worked in the last 48 hours lit: they are resting. */
-function RecoveryCard({ ready, resting }: { ready: number; resting: Parameters<typeof MuscleMap>[0]["primary"] }) {
+/**
+ * The body, front and back, coloured by how tired each muscle is. Tapping opens the full map:
+ * one side at a time, each muscle with its recovery and time to ready.
+ */
+function RecoveryCard({ data, now }: { data: Record<Region, RegionTelemetry>; now: number }) {
   const t = useT();
+  const [open, setOpen] = useState(false);
+  const ready = REGIONS.filter((r) => data[r].stage === "fresh").length;
   return (
-    <div className={`${TILE} flex flex-col items-center justify-center gap-0.5 !pb-2`}>
-      <div className="w-full [&_figcaption]:hidden">
-        <MuscleMap primary={resting} width={140} />
-      </div>
-      <p className="num text-sm font-bold tabular-nums">
-        {ready}/{RECOVERY_GROUPS.length}
-        <span className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">{t("ready")}</span>
-      </p>
-      {resting.length > 0 && (
-        <p className="flex items-center gap-1 text-[10px] text-text-muted">
-          <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
-          {t("resting")}
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-label={t("Muscle recovery: {ready} of {total} muscles ready. Open the map.", { ready, total: REGIONS.length })}
+        className={`${TILE} force-dark flex flex-col items-center justify-center gap-1 !bg-black !pb-2 text-left transition-colors hover:!border-line-strong`}
+      >
+        <div className="w-full px-1" aria-hidden="true">
+          <RecoveryMap data={data} now={now} compact />
+        </div>
+        <p className="num text-sm font-bold tabular-nums text-text" aria-hidden="true">
+          {ready}/{REGIONS.length}
+          <span className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">{t("ready")}</span>
         </p>
-      )}
-    </div>
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t("Muscle recovery")}>
+        <RecoveryMap data={data} now={now} />
+        <p className="mt-3 text-xs text-text-muted">
+          {t(
+            "Each working set adds fatigue: 15% to the main muscles, 7.5% to the helpers, more at a high RPE. It fades by itself: big muscles are fresh again in 72 hours, small ones in 48.",
+          )}
+        </p>
+      </Sheet>
+    </>
   );
 }
 
