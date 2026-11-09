@@ -81,7 +81,7 @@ function PinGate({ onUnlock }: { onUnlock: () => void }) {
       }}
     >
       <p className={cls.label}>ABOT // MISSION CONTROL</p>
-      <h1 className="flex items-center gap-2 text-lg font-black">
+      <h1 className="flex items-center gap-2 text-lg font-extrabold">
         <Lock aria-hidden="true" size={18} className="text-[#ccff00]" /> Founder passkey
       </h1>
       <label htmlFor="admin-pin" className="text-sm text-zinc-300">
@@ -197,7 +197,7 @@ function Console() {
       </aside>
 
       <section aria-label={MODULES.find((m) => m.id === current)!.label} className="min-w-0 px-4 pb-16 pt-4 lg:px-8 lg:pt-8">
-        <h1 className="mb-4 text-2xl font-black tracking-tight">{MODULES.find((m) => m.id === current)!.label}</h1>
+        <h1 className="mb-4 text-2xl font-extrabold tracking-tight">{MODULES.find((m) => m.id === current)!.label}</h1>
         {error && (
           <p role="alert" className="mb-4 rounded-ctl border border-[#ef4444]/60 px-3 py-2 text-sm text-[#ef4444]">
             {error}

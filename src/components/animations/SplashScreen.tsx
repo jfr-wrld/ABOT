@@ -59,7 +59,7 @@ export function SplashScreen() {
           >
             <AnimatedAbotMark size={84} />
           </motion.span>
-          <AnimatedWordmark delay={0.55} className="mt-5 text-3xl font-black tracking-tight text-text" />
+          <AnimatedWordmark delay={0.55} className="mt-5 text-3xl font-extrabold tracking-tight text-text" />
           {/* A hairline that creeps across while the device storage is read. */}
           <span aria-hidden="true" className="mt-8 block h-px w-40 overflow-hidden bg-ink/10">
             <motion.span

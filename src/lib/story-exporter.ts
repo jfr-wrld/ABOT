@@ -100,23 +100,24 @@ const SAFE_BOTTOM = H - 250;
 /* ------------------------------------------------------------------ */
 
 /**
- * Inter and JetBrains Mono are served by next/font under the family names published as CSS
+ * Plus Jakarta Sans and JetBrains Mono are served by next/font under the family names published as CSS
  * variables on <html>. Canvas cannot use a font the page has not loaded yet, so every weight
  * the cards use is loaded first. Only the real family is loaded: next/font's "Fallback" face
  * points at the system Arial, which phones without Arial reject. A weight that fails to load
- * falls back to the next family in the stack instead of blocking the card.
+ * falls back to the next family in the stack instead of blocking the card. Both families stop at
+ * 800, so the cards use no heavier weight.
  */
 export async function loadStoryFonts(): Promise<StoryFonts> {
   const root = getComputedStyle(document.documentElement);
-  const sansVar = root.getPropertyValue("--font-inter").trim();
+  const sansVar = root.getPropertyValue("--font-sans-face").trim();
   const monoVar = root.getPropertyValue("--font-jetbrains-mono").trim();
-  const sans = `${sansVar ? `${sansVar}, ` : ""}Inter, system-ui, sans-serif`;
+  const sans = `${sansVar ? `${sansVar}, ` : ""}"Plus Jakarta Sans", system-ui, sans-serif`;
   const mono = `${monoVar ? `${monoVar}, ` : ""}"JetBrains Mono", ui-monospace, monospace`;
   const first = (stack: string, fallback: string) => stack.split(",")[0]?.trim() || fallback;
-  const sansFace = first(sansVar, "Inter");
+  const sansFace = first(sansVar, '"Plus Jakarta Sans"');
   const monoFace = first(monoVar, '"JetBrains Mono"');
   await Promise.allSettled([
-    ...[400, 600, 700, 800, 900].map((w) => document.fonts.load(`${w} 48px ${sansFace}`, "ABOT abot")),
+    ...[400, 600, 700, 800].map((w) => document.fonts.load(`${w} 48px ${sansFace}`, "ABOT abot")),
     ...[400, 700, 800].map((w) => document.fonts.load(`${w} 48px ${monoFace}`, "0123456789")),
   ]);
   return { sans, mono };
@@ -404,7 +405,7 @@ function wordmark(s: Scene, x: number, y: number, size: number, color: string, w
   mark(s.ctx, x, y - size / 2, size, color, ring);
   const w = text(s, "ABOT", x + size + size * 0.28, y, {
     size: size * 0.82,
-    weight: 900,
+    weight: 800,
     color: wordColor,
     baseline: "middle",
     tracking: -size * 0.02,
@@ -741,15 +742,15 @@ function brutalistReceipt(s: Scene) {
   const dashed = (y: number) => hline(ctx, x, r, y, INK, 3, [12, 10]);
 
   let y = py + 130;
-  if (s.opts.hideWatermark) text(s, "LIFT LOG", W / 2, y, { size: 84, weight: 900, color: INK, align: "center", tracking: -2 });
+  if (s.opts.hideWatermark) text(s, "LIFT LOG", W / 2, y, { size: 84, weight: 800, color: INK, align: "center", tracking: -2 });
   else {
     // Mark and name centred together, like a shop logo at the head of a till slip.
     const size = 76;
-    setFont(s, 84, 900);
+    setFont(s, 84, 800);
     const nameW = ctx.measureText("ABOT").width - 2 * 4;
     const left = W / 2 - (size + 20 + nameW) / 2;
     mark(ctx, left, y - 66, size, INK, PAPER);
-    text(s, "ABOT", left + size + 20, y, { size: 84, weight: 900, color: INK, tracking: -2 });
+    text(s, "ABOT", left + size + 20, y, { size: 84, weight: 800, color: INK, tracking: -2 });
   }
   y += 52;
   text(s, "STRENGTH RECEIPT", W / 2, y, { ...ink, size: 26, align: "center", tracking: 6 });
@@ -961,10 +962,10 @@ function monochromeSteel(s: Scene) {
 
   const head = data.title.toUpperCase();
   let size = 190;
-  let lines = wrap(s, head, inner, size, 900, 3);
+  let lines = wrap(s, head, inner, size, 800, 3);
   while (size > 96 && lines.some((l) => l.endsWith("…"))) {
     size -= 10;
-    lines = wrap(s, head, inner, size, 900, 3);
+    lines = wrap(s, head, inner, size, 800, 3);
   }
   let y = SAFE_TOP + 40 + size * 0.85;
   for (const l of lines) {
@@ -1082,7 +1083,7 @@ function prTrophyVault(s: Scene) {
 
   let y = SAFE_TOP + 330;
   const heading = prs.length > 0 ? `${prs.length} new ${prs.length === 1 ? "record" : "records"}` : "Vault unchanged";
-  text(s, heading, x, y, { size: fitSize(s, heading, inner, 104, 60, 900, "sans"), weight: 900, tracking: -2 });
+  text(s, heading, x, y, { size: fitSize(s, heading, inner, 104, 60, 800, "sans"), weight: 800, tracking: -2 });
   y += 56;
   const sub = prs.length > 0 ? `on ${lifts.length} ${lifts.length === 1 ? "lift" : "lifts"}, ${data.title}` : data.title;
   text(s, sub, x, y, { size: 36, weight: 600, color: MUTED, maxWidth: inner });

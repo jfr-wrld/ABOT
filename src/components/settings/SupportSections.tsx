@@ -51,7 +51,7 @@ export function AboutSection() {
         <span className="text-accent">
           <AbotMark size={56} />
         </span>
-        <p className="text-xl font-black tracking-tight">ABOT</p>
+        <p className="text-xl font-extrabold tracking-tight">ABOT</p>
         <p className="text-sm text-text-muted">{t("A strength training log that works offline.")}</p>
         {version && <p className="num text-xs text-text-muted">{t("Version {version}", { version })}</p>}
       </div>
@@ -74,7 +74,7 @@ export function AboutSection() {
         <ul className="mt-1 flex flex-col gap-1 text-sm text-text-muted">
           <li>{t("Exercise data and photos: free-exercise-db (public domain).")}</li>
           <li>{t("Muscle map shapes: react-muscle-highlighter (MIT License).")}</li>
-          <li>{t("Type: Inter and JetBrains Mono (SIL Open Font License).")}</li>
+          <li>{t("Type: Plus Jakarta Sans and JetBrains Mono (SIL Open Font License).")}</li>
         </ul>
       </section>
 

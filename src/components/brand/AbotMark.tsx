@@ -30,7 +30,7 @@ export function AbotWordmark({ size = 28 }: { size?: number }) {
       <span className="text-accent">
         <AbotMark size={size} />
       </span>
-      <span className="text-2xl font-black leading-none tracking-tight">ABOT</span>
+      <span className="text-2xl font-extrabold leading-none tracking-tight">ABOT</span>
     </span>
   );
 }

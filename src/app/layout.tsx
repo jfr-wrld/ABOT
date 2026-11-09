@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -21,7 +21,7 @@ import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
+const sans = Plus_Jakarta_Sans({ variable: "--font-sans-face", subsets: ["latin"], display: "swap" });
 const mono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${inter.variable} ${mono.variable} h-full antialiased`}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${sans.variable} ${mono.variable} h-full antialiased`}>
       <head>
         {/* Theme before the first paint, so a light page never flashes dark. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />

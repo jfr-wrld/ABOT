@@ -93,7 +93,7 @@ export function AbotProModal() {
         </div>
 
         <header className="relative">
-          <h2 id={titleId} className="text-3xl font-black uppercase leading-[1.05] tracking-tight">
+          <h2 id={titleId} className="text-3xl font-extrabold uppercase leading-[1.05] tracking-tight">
             {t("Precision engineered for serious lifters.")}
           </h2>
           <p className="mt-2 font-mono text-xs uppercase tracking-[0.12em] text-zinc-400">ABOT // BLACK PRO</p>

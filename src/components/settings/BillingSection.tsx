@@ -59,7 +59,7 @@ export function BillingSection() {
           <h2 id="billing-heading" className="label-caps text-zinc-400">
             {t("Plan & billing")}
           </h2>
-          <p className="text-xl font-black leading-tight tracking-tight text-white">{PLAN_NAME[s.plan]}</p>
+          <p className="text-xl font-extrabold leading-tight tracking-tight text-white">{PLAN_NAME[s.plan]}</p>
         </div>
         <span className={`mt-0.5 shrink-0 rounded-[4px] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${BADGE[s.plan]}`}>{badge}</span>
       </div>

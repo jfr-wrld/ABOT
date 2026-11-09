@@ -268,7 +268,7 @@ Contact us in the app (it fills in your app version). Social accounts are coming
 - Body and muscle shapes: react-muscle-highlighter (MIT License).
 - Food values: typical figures from [USDA FoodData Central](https://fdc.nal.usda.gov/) (public
   domain).
-- Fonts: Inter and JetBrains Mono (SIL Open Font License).
+- Fonts: Plus Jakarta Sans and JetBrains Mono (SIL Open Font License).
 
 Full notices: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). No license has been chosen for
 ABOT's own code yet, so all rights are reserved by its author.

@@ -258,7 +258,7 @@ export const settings: Record<string, string> = {
   Credits: "Kredit",
   "Exercise data and photos: free-exercise-db (public domain).": "Data dan foto gerakan: free-exercise-db (domain publik).",
   "Muscle map shapes: react-muscle-highlighter (MIT License).": "Bentuk peta otot: react-muscle-highlighter (MIT License).",
-  "Type: Inter and JetBrains Mono (SIL Open Font License).": "Huruf: Inter dan JetBrains Mono (SIL Open Font License).",
+  "Type: Plus Jakarta Sans and JetBrains Mono (SIL Open Font License).": "Huruf: Plus Jakarta Sans dan JetBrains Mono (SIL Open Font License).",
 
   // Backup & Sync
   "Backup & Sync": "Backup & Sinkronisasi",

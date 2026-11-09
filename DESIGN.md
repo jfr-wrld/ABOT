@@ -118,8 +118,9 @@ running rest timer, and the current tab icon. Cyan appears only where a record w
 
 ## Typography
 
-- **Inter** for words: labels, names, instructions. Neutral and legible at 12px on a phone held at
-  arm's length, so the figures carry the character.
+- **Plus Jakarta Sans** for words: labels, names, instructions, buttons. The owner asked for a more
+  modern face (2026-11-09); its open, geometric shapes and tall x-height keep 12px labels legible
+  at arm's length, and it tops out at weight 800, so `font-extrabold` is the heaviest used.
 - **JetBrains Mono** for every figure: weight, reps, RPE, timers, volume, 1RM, dates, chart ticks.
   It has fixed-width digits with a slashed zero, so `102.5` and `62.5` line up in the 60px column
   and a running timer never shifts sideways as it ticks. The `num` utility applies it.
