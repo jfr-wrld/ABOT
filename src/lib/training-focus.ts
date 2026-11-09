@@ -39,22 +39,35 @@ export interface Focus {
 
 /** The focus of a set of workouts (usually one day's); null when nothing was done. */
 export function trainingFocus(sessions: WorkoutSession[], byId: Record<string, Exercise>): Focus | null {
+  const work: SetsOn[] = [];
+  for (const s of sessions) {
+    for (const e of s.exercises) {
+      work.push({ muscles: byId[e.exerciseId]?.primaryMuscles ?? [], sets: e.sets.filter((st) => st.completed && isWorkingSet(st)).length });
+    }
+  }
+  return focusOf(work);
+}
+
+/** Sets planned or done on one exercise, with that exercise's primary muscles. */
+export interface SetsOn {
+  muscles: MuscleGroup[];
+  sets: number;
+}
+
+/** The focus of any list of sets: a day's workouts, a routine or a template. */
+export function focusOf(work: SetsOn[]): Focus | null {
   const perMuscle = new Map<MuscleGroup, number>();
   const perBucket: Record<Bucket, number> = { push: 0, pull: 0, legs: 0, core: 0 };
   let cardio = 0;
   let sets = 0;
-  for (const s of sessions) {
-    for (const e of s.exercises) {
-      const muscles = byId[e.exerciseId]?.primaryMuscles ?? [];
-      const done = e.sets.filter((st) => st.completed && isWorkingSet(st)).length;
-      if (done === 0 || muscles.length === 0) continue;
-      sets += done;
-      for (const m of muscles) {
-        perMuscle.set(m, (perMuscle.get(m) ?? 0) + done / muscles.length);
-        const b = BUCKET_OF[m];
-        if (b) perBucket[b] += done / muscles.length;
-        if (m === "cardio") cardio += done / muscles.length;
-      }
+  for (const { muscles, sets: n } of work) {
+    if (n === 0 || muscles.length === 0) continue;
+    sets += n;
+    for (const m of muscles) {
+      perMuscle.set(m, (perMuscle.get(m) ?? 0) + n / muscles.length);
+      const b = BUCKET_OF[m];
+      if (b) perBucket[b] += n / muscles.length;
+      if (m === "cardio") cardio += n / muscles.length;
     }
   }
   if (sets === 0) return null;

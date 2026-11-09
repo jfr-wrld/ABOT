@@ -27,6 +27,10 @@ import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { EQUIPMENT_LABELS } from "@/types/workout";
 import { useT } from "@/i18n";
 import { muscleNames } from "@/components/exercise/MuscleTags";
+import { SPLITS } from "@/lib/seed-routines";
+import { routineSummary } from "@/lib/routine-summary";
+import { MusclesWorked, SummaryMeta } from "@/components/routines/RoutineCard";
+import type { Exercise, Routine } from "@/types/workout";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -98,7 +102,7 @@ function Editor() {
               className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label htmlFor="r-folder" className="mb-1 block text-sm font-semibold">
               {t("Folder")} <span className="font-normal text-text-muted">{t("(optional)")}</span>
             </label>
@@ -109,8 +113,26 @@ function Editor() {
               placeholder="Push / Pull / Legs"
               className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
             />
+            {/* The Template Vault's splits, one tap each, so saved routines group the same way. */}
+            <div role="group" aria-label={t("Folder by split")} className="-mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
+              {SPLITS.map((sp) => (
+                <button
+                  key={sp.value}
+                  type="button"
+                  aria-pressed={routine.folder === sp.folder}
+                  onClick={() => update(routine.id, { folder: routine.folder === sp.folder ? "" : sp.folder })}
+                  className={`h-8 shrink-0 rounded-full border px-3 text-xs font-semibold ${
+                    routine.folder === sp.folder ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
+                  }`}
+                >
+                  {t(sp.label)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
+        {routine.exercises.length > 0 && <RoutineOverview routine={routine} byId={byId} />}
 
         {routine.exercises.length === 0 && (
           <p className="panel px-4 py-6 text-center text-sm text-text-muted">
@@ -356,5 +378,20 @@ function Editor() {
         onClose={() => setMenu(null)}
       />
     </main>
+  );
+}
+
+/** What the routine adds up to as it is built: the numbers a Template Vault card shows. */
+function RoutineOverview({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
+  const t = useT();
+  const sum = routineSummary(routine, byId);
+  return (
+    <section aria-label={t("Routine overview")} className="flex items-center justify-between gap-3 rounded-card border border-ink/[0.07] bg-surface p-3">
+      <div className="min-w-0">
+        <SummaryMeta sum={sum} count={routine.exercises.length} />
+        <p className="num mt-1.5 text-xs text-text-muted">{t("{n} sets", { n: sum.sets })}</p>
+      </div>
+      <MusclesWorked sum={sum} />
+    </section>
   );
 }

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -12,14 +11,9 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Routine } from "@/types/workout";
-import { supersetLabels } from "@/lib/superset";
-
-/** Exercise photos on a routine card before "+N". */
-const THUMBS = 6;
 import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
 import { TemplateVault } from "@/components/routines/TemplateVault";
-import { EquipmentNeeded } from "@/components/routines/EquipmentNeeded";
-import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { RoutineCard } from "@/components/routines/RoutineCard";
 import { routineEditPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 
@@ -124,81 +118,12 @@ export function RoutineLibrary() {
               <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold uppercase text-text-muted">
                 {folder || (folderNames.length > 1 ? t("No folder") : t("All routines"))}
               </h2>
-              <ul className="mt-2 flex flex-col gap-2">
-                {folders.get(folder)!.map((r) => {
-                  const setCount = r.exercises.reduce((n, e) => n + e.sets.length, 0);
-                  const ss = supersetLabels(r.exercises);
-                  const ssCount = new Set(Object.values(ss).map((x) => x.letter)).size;
-                  return (
-                    <li key={r.id} className="panel p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <h3 className="truncate text-base font-semibold">{r.name}</h3>
-                          <p className="mt-0.5 text-xs text-text-muted">
-                            {r.exercises.length === 0
-                              ? t("No exercises yet")
-                              : [
-                                  t.n(r.exercises.length, "{n} exercise", "{n} exercises"),
-                                  t("{n} sets", { n: setCount }),
-                                  ...(ssCount ? [t.n(ssCount, "{n} superset", "{n} supersets")] : []),
-                                ].join(" · ")}
-                          </p>
-                        </div>
-                        <div className="-mr-2 -mt-2 flex shrink-0">
-                          <Link href={routineEditPath(r.id)} aria-label={t("Edit {name}", { name: r.name })} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
-                            <Pencil aria-hidden="true" size={18} />
-                          </Link>
-                          <button type="button" onClick={() => duplicate(r.id)} aria-label={t("Duplicate {name}", { name: r.name })} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text">
-                            <Copy aria-hidden="true" size={18} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setToDelete(r)}
-                            aria-label={t("Delete {name}", { name: r.name })}
-                            className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-failure/10 hover:text-failure"
-                          >
-                            <Trash2 aria-hidden="true" size={18} />
-                          </button>
-                        </div>
-                      </div>
-                      {r.exercises.length > 0 && (
-                        <p className="mt-2 line-clamp-2 text-sm text-text-muted">
-                          {r.exercises.map((e) => byId[e.exerciseId]?.name ?? t("Removed exercise")).join(", ")}
-                        </p>
-                      )}
-                      {r.exercises.length > 0 && (
-                        <ul aria-hidden="true" className="mt-3 flex gap-1.5 overflow-hidden">
-                          {r.exercises.slice(0, THUMBS).map((e) =>
-                            byId[e.exerciseId] ? (
-                              <li key={e.id}>
-                                <ExerciseThumb exercise={byId[e.exerciseId]} size={40} />
-                              </li>
-                            ) : null,
-                          )}
-                          {r.exercises.length > THUMBS && (
-                            <li className="num flex size-10 items-center justify-center rounded-xl bg-surface-2 text-xs text-text-muted">
-                              +{r.exercises.length - THUMBS}
-                            </li>
-                          )}
-                        </ul>
-                      )}
-                      <EquipmentNeeded
-                        equipment={r.exercises.flatMap((e) => (byId[e.exerciseId] ? [byId[e.exerciseId].equipment] : []))}
-                      />
-                      <Button
-                        variant="primary"
-                        onClick={() => start(r)}
-                        disabled={r.exercises.length === 0}
-                        className="mt-3 w-full"
-                      >
-                        {t("Start {name}", { name: r.name })}
-                      </Button>
-                      {r.exercises.length === 0 && (
-                        <p className="mt-1 text-center text-xs text-text-muted">{t("Add an exercise before starting.")}</p>
-                      )}
-                    </li>
-                  );
-                })}
+              <ul className="mt-2 flex flex-col gap-3">
+                {folders.get(folder)!.map((r) => (
+                  <li key={r.id}>
+                    <RoutineCard routine={r} byId={byId} onStart={() => start(r)} onDuplicate={() => duplicate(r.id)} onDelete={() => setToDelete(r)} />
+                  </li>
+                ))}
               </ul>
             </section>
           ))}

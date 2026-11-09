@@ -96,12 +96,14 @@ test("the routine editor builds a superset that carries into the workout", async
 
   await page.goto("/routines");
   await page.getByRole("tab", { name: "My Routines" }).click();
-  // The card counts the superset, lists the lifts and shows their photos and gear.
+  // The card counts the superset, shows each lift as a photo with sets x reps, and the muscles.
   const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Arms" }) });
   await expect(card).toContainText("3 exercises · 9 sets · 1 superset");
-  await expect(card).toContainText("Bicep Curl (Barbell), Triceps Pushdown (Cable), Lateral Raise (Dumbbell)");
+  const lifts = card.getByRole("list", { name: "Exercises" });
+  for (const name of ["Bicep Curl (Barbell)", "Triceps Pushdown (Cable)", "Lateral Raise (Dumbbell)"]) await expect(lifts).toContainText(name);
+  await expect(lifts).toContainText("3 setsSS");
   await expect(card.locator("[data-thumb]")).toHaveCount(3);
-  await expect(card.getByRole("list", { name: "Equipment" })).toBeVisible();
+  await expect(card.getByRole("list", { name: "Muscles worked" })).toBeVisible();
   await page.getByRole("button", { name: "Start Arms" }).click();
   await page.waitForURL("**/workout");
   await expect(page.getByText(/^Superset \/\/ A[12]$/)).toHaveCount(2);
