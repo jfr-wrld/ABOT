@@ -155,8 +155,8 @@ test.describe("gyms from the map", () => {
 
   async function answerMap(page: Page) {
     const queries: string[] = [];
-    await page.route("https://overpass-api.de/api/interpreter", async (route) => {
-      queries.push(decodeURIComponent(route.request().postData() ?? ""));
+    await page.route("https://overpass-api.de/api/interpreter?**", async (route) => {
+      queries.push(decodeURIComponent(new URL(route.request().url()).searchParams.get("data") ?? ""));
       await route.fulfill({
         contentType: "application/json",
         body: JSON.stringify({
@@ -179,7 +179,7 @@ test.describe("gyms from the map", () => {
     await expect(list.getByRole("button").first()).toContainText("Iron Temple Kemang");
     await expect(list.getByRole("button").first()).toContainText("Jl. Kemang Raya 12");
     await expect(page.getByText("Map data © OpenStreetMap contributors")).toBeVisible();
-    expect(queries[0]).toContain("around:2000,-6.260700,106.813700");
+    expect(queries[0]).toContain("around:3000,-6.260700,106.813700");
     await expectNoHorizontalOverflow(page);
 
     await list.getByRole("button", { name: "Add Iron Temple Kemang" }).click();
@@ -199,8 +199,33 @@ test.describe("gyms from the map", () => {
     await expect(page.getByRole("button", { name: "Gym: Iron Temple Kemang. Change" })).toBeVisible();
   });
 
+  test("when Overpass does not answer, OSM's search fills the list", async ({ page }) => {
+    await page.route("https://overpass-api.de/api/interpreter?**", (route) => route.abort());
+    const searches: string[] = [];
+    await page.route("https://nominatim.openstreetmap.org/search?**", async (route) => {
+      const q = new URL(route.request().url()).searchParams.get("q") ?? "";
+      searches.push(q);
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(
+          q === "gym"
+            ? [{ osm_type: "node", osm_id: 1, name: "Precision Gym", type: "fitness_centre", lat: "-6.2364", lon: "106.7981", address: { road: "Jalan Hang Tuah VII" } }]
+            : [{ osm_type: "node", osm_id: 2, name: "Celebrity Fitness", type: "fitness_centre", lat: "-6.2654", lon: "106.7829", address: {} }],
+        ),
+      });
+    });
+    await page.goto("/settings?section=workout");
+    await page.getByRole("button", { name: "Find gyms near me" }).click();
+    const list = page.getByRole("list", { name: "Gyms near you" });
+    await expect(list.getByRole("button")).toHaveCount(2);
+    await expect(list.getByRole("button").first()).toContainText("Precision Gym");
+    await expect(list.getByRole("button").first()).toContainText("Jalan Hang Tuah VII");
+    expect(searches).toEqual(["gym", "fitness"]);
+  });
+
   test("an unreachable map service says so", async ({ page }) => {
-    await page.route("https://overpass-api.de/api/interpreter", (route) => route.abort());
+    await page.route("https://overpass-api.de/api/interpreter?**", (route) => route.abort());
+    await page.route("https://nominatim.openstreetmap.org/search?**", (route) => route.abort());
     await page.goto("/settings?section=workout");
     await page.getByRole("button", { name: "Find gyms near me" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Could not reach the map service." })).toBeVisible();

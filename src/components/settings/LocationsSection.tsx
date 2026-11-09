@@ -221,7 +221,7 @@ export function NearbyGymFinder({ taken, onPick }: { taken: GymLocation[]; onPic
       setPhase("searching");
       const found = await findNearbyGyms(fix);
       setResults(found);
-      if (found.length === 0) setMessage({ text: t("No gyms on the map within 2 km. Add yours by name below.") });
+      if (found.length === 0) setMessage({ text: t("No gyms on the map within 5 km. Add yours by name below.") });
       setPhase("done");
     } catch (e) {
       setMessage({ text: e instanceof Error ? t(e.message) : t("Could not reach the map service. Check your connection and try again.") });
