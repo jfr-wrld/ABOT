@@ -4,4 +4,6 @@
     <string name="title_activity_main">ABOT</string>
     <string name="package_name">app.abot.gym</string>
     <string name="custom_url_scheme">app.abot.gym</string>
+    <string name="health_rationale_title">ABOT and Health Connect</string>
+    <string name="health_rationale">ABOT uses Health Connect only when you connect it in Settings, Health apps.\n\nWrite exercise and active calories: each workout you finish is saved as a weightlifting session with its start, end and estimated calories, so Google Fit, Samsung Health, Huawei Health and other apps can show it.\n\nRead exercise: to check which workouts are already there.\n\nRead weight: your latest weigh-in fills in your body weight for the calorie estimate.\n\nRead sleep: last night\'s sleep adjusts how fast the recovery map counts your muscles as rested.\n\nNothing leaves your phone. ABOT has no server for health data and never sells or shares it. You can remove access at any time in Health Connect.</string>
 </resources>

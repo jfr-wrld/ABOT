@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { SEED_EXERCISES } from "@/data/exercises";
 import type { Exercise, WorkoutSession, WorkoutSet } from "@/types/workout";
-import { fatigueStage, muscleFatigue, regionTelemetry } from "./muscle-recovery";
+import { fatigueStage, muscleFatigue, regionTelemetry, sleepFactor } from "./muscle-recovery";
 
 const byId: Record<string, Exercise> = Object.fromEntries(SEED_EXERCISES.map((e) => [e.id, e]));
 const HOUR = 3_600_000;
@@ -82,6 +82,28 @@ describe("muscleFatigue", () => {
     );
     // 60% decays for 35 hours to 11.39, plus 30%, then one more hour of decay.
     expect(round(f.quads)).toBe(round(60 - 35 * (100 / 72) + 30 - 100 / 72));
+  });
+});
+
+describe("sleep", () => {
+  it("scales recovery speed by last night's sleep against 8 hours, within 0.7x and 1.1x", () => {
+    expect(sleepFactor({ minutes: 480, endAt: now - HOUR }, now)).toBe(1);
+    expect(sleepFactor({ minutes: 360, endAt: now - HOUR }, now)).toBe(0.75);
+    expect(sleepFactor({ minutes: 200, endAt: now - HOUR }, now)).toBe(0.7);
+    expect(sleepFactor({ minutes: 600, endAt: now - HOUR }, now)).toBe(1.1);
+    // Sleep that ended over a day ago says nothing about tonight's recovery.
+    expect(sleepFactor({ minutes: 300, endAt: now - 30 * HOUR }, now)).toBe(1);
+    expect(sleepFactor(null, now)).toBe(1);
+  });
+
+  it("a short night leaves more fatigue and a later ready time", () => {
+    const sessions = [session("bench-press-barbell", sets(4, now - 24 * HOUR))];
+    const rested = muscleFatigue(sessions, byId, now, { minutes: 480, endAt: now - 2 * HOUR }).chest!;
+    const short = muscleFatigue(sessions, byId, now, { minutes: 360, endAt: now - 2 * HOUR }).chest!;
+    expect(round(short)).toBe(round(60 - 24 * (100 / 72) * 0.75));
+    expect(short).toBeGreaterThan(rested);
+    const t = regionTelemetry(sessions, byId, now, { minutes: 360, endAt: now - 2 * HOUR });
+    expect(t.chest.readyInHours).toBe(Math.ceil((short - 20) / ((100 / 72) * 0.75)));
   });
 });
 

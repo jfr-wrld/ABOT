@@ -7,6 +7,10 @@ import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
  * coverage test can see them too. Add each such constant's values here.
  */
 export const DYNAMIC_KEYS: string[] = [
+  // HealthSyncCard STATUS_LINE and HealthSyncService reasons
+  "Health Connect // Active", "Health Connect // Partial access", "Disconnected", "Health Connect not installed",
+  "Health Connect needs an update", "Android app only",
+  "Health Connect is only in the Android app", "Only finished workouts are synced",
   // RecoveryMap REGION_NAMES and STAGE_LABELS
   "Pectoralis major", "Deltoids", "Biceps brachii", "Triceps brachii", "Forearms", "Rectus abdominis", "Obliques",
   "Trapezius", "Lats and upper back", "Erector spinae", "Gluteus maximus", "Quadriceps", "Hamstrings", "Adductors",

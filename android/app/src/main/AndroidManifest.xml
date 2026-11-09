@@ -32,6 +32,27 @@
 
         </activity>
 
+        <!-- Health Connect shows ABOT's permission dialog only when an activity explains the
+             request (its "privacy policy" link); Android 14+ opens the alias from its usage view. -->
+        <activity
+            android:name=".HealthPermissionsRationaleActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.DeviceDefault.Light">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+        <activity-alias
+            android:name=".ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".HealthPermissionsRationaleActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
+
         <!-- The end of a rest and the live notification's buttons (Pause, Resume, Skip rest). -->
         <receiver android:name=".LiveWorkoutReceiver" android:exported="false" />
 
@@ -63,4 +84,18 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <!-- Health Connect (Settings, Health apps): finished workouts and their calories out,
+         body weight and last night's sleep in. Asked for only when the user connects. -->
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.WRITE_ACTIVE_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+
+    <!-- Android 11+ hides other apps unless named: Health Connect (to check it is installed and
+         open it) and Huawei Health (to offer its own sharing settings). -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+        <package android:name="com.huawei.health" />
+    </queries>
 </manifest>

@@ -69,10 +69,18 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     language: raw.language === "en" || raw.language === "id" ? raw.language : "auto",
     theme: raw.theme === "dark" || raw.theme === "light" ? raw.theme : "system",
     tapFeedback: raw.tapFeedback !== false,
+    healthAutoSync: raw.healthAutoSync === true,
+    lastSleep: normalizeSleep(raw.lastSleep),
     bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
     profilePhoto: normalizePhoto(raw.profilePhoto),
   };
+}
+
+function normalizeSleep(v: unknown): StoredSettings["lastSleep"] {
+  if (!isObj(v) || typeof v.minutes !== "number" || typeof v.endAt !== "number") return null;
+  if (!Number.isFinite(v.minutes) || v.minutes <= 0 || v.minutes > 24 * 60 || !Number.isFinite(v.endAt)) return null;
+  return { minutes: v.minutes, endAt: v.endAt };
 }
 
 /** Only a base64 JPEG/PNG/WebP data URL of photo size; never a link or another media type. */

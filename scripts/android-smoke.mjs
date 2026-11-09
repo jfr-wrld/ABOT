@@ -167,6 +167,46 @@ async function main() {
   await sleep(1500);
   screenshot("notification-shade");
 
+  // 7. Health Connect, built into Android 14: availability, its permission screen, a workout
+  //    written twice (the second time must update, not fail), weight and sleep reads.
+  shell("cmd statusbar collapse");
+  await openApp();
+  page = await attach();
+  const hc = (method, args) =>
+    page.evaluate(
+      async ([m, a]) => {
+        try {
+          return { ok: true, v: await window.Capacitor.Plugins.HealthConnect[m](a) };
+        } catch (e) {
+          return { ok: false, e: String(e?.message ?? e) };
+        }
+      },
+      [method, args],
+    );
+  const avail = await hc("availability");
+  check("Health Connect is available", avail.ok && avail.v.status === "available", JSON.stringify(avail));
+  const asked = hc("requestHealthPermissions");
+  await sleep(3000);
+  screenshot("health-connect-permissions");
+  await tapSystem([/text="Get started"/], 3000);
+  const allowAll = await tapSystem([/text="Allow all"/]);
+  await sleep(800);
+  const allowed = await tapSystem([/text="Allow"/]);
+  const answer = await asked;
+  check("Health Connect permission screen shown and allowed", allowAll && allowed && answer.ok && answer.v.all === true, JSON.stringify(answer));
+  check("health WRITE_EXERCISE granted", granted("android.permission.health.WRITE_EXERCISE"));
+  check("health READ_SLEEP granted", granted("android.permission.health.READ_SLEEP"));
+  const now = Date.now();
+  const workout = { id: "smoke", startMs: now - 3_600_000, endMs: now - 60_000, title: "Smoke test", kcal: 321, version: 1 };
+  const first = await hc("writeWorkout", workout);
+  check("workout and calories written to Health Connect", first.ok && first.v.written === 2, JSON.stringify(first));
+  const second = await hc("writeWorkout", { ...workout, kcal: 330, version: 2 });
+  check("writing the same workout again updates it", second.ok, JSON.stringify(second));
+  const weight = await hc("readLatestWeight");
+  check("weight read answers", weight.ok, JSON.stringify(weight));
+  const night = await hc("readLastSleep");
+  check("sleep read answers", night.ok, JSON.stringify(night));
+
   await device.close();
 }
 
