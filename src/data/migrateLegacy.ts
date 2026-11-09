@@ -68,6 +68,7 @@ export async function migrateFromLocalStorage(
       profileHandle: DEFAULT_SETTINGS.profileHandle,
       language: DEFAULT_SETTINGS.language,
       theme: DEFAULT_SETTINGS.theme,
+      tapFeedback: DEFAULT_SETTINGS.tapFeedback,
       bodyweightKg: DEFAULT_SETTINGS.bodyweightKg,
       heightCm: DEFAULT_SETTINGS.heightCm,
       profilePhoto: DEFAULT_SETTINGS.profilePhoto,

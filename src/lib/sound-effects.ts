@@ -1,0 +1,100 @@
+/**
+ * Hardware-feel sounds, synthesised with the Web Audio API: no audio files, nothing to load,
+ * nothing that needs the network. One AudioContext is made on the first sound and resumed on
+ * each tap (browsers and the Android WebView start it suspended until a gesture).
+ *
+ * Web Audio plays alongside other apps' music instead of pausing it.
+ * Each profile follows the Phase 2 spec:
+ * - tick: 12 ms triangle burst, 1400 Hz falling to 300 Hz (steppers, chips, presets)
+ * - set complete: dual-tone lock, 600 Hz then 900 Hz, 90 ms in all
+ * - rest timer zero: three 1000 Hz pulses
+ * - PR unlocked: A major arpeggio 440, 554, 659, 880 Hz
+ */
+
+type Wave = OscillatorType;
+
+let ctx: AudioContext | null = null;
+
+function audio(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return null;
+    ctx ??= new Ctor();
+    if (ctx.state === "suspended") void ctx.resume().catch(() => {});
+    return ctx;
+  } catch {
+    return null;
+  }
+}
+
+/** Call from a tap so the context is allowed to run before the first timed sound. */
+export function unlockAudio(): void {
+  audio();
+}
+
+interface Tone {
+  wave: Wave;
+  /** Start frequency (Hz). */
+  from: number;
+  /** End frequency (Hz); an exponential glide when it differs from `from`. */
+  to?: number;
+  /** Start, seconds after now. */
+  at: number;
+  /** Length in seconds. */
+  dur: number;
+  /** Peak gain, 0..1. */
+  peak: number;
+}
+
+/** One oscillator with a fast attack and an exponential release, so no tone clicks. */
+function tone(ac: AudioContext, { wave, from, to, at, dur, peak }: Tone): void {
+  const t0 = ac.currentTime + at;
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.type = wave;
+  osc.frequency.setValueAtTime(from, t0);
+  if (to !== undefined && to !== from) osc.frequency.exponentialRampToValueAtTime(to, t0 + dur);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(peak, t0 + Math.min(0.002, dur / 4));
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(gain).connect(ac.destination);
+  osc.start(t0);
+  osc.stop(t0 + dur + 0.01);
+}
+
+function play(tones: Tone[]): boolean {
+  const ac = audio();
+  if (!ac) return false;
+  try {
+    for (const t of tones) tone(ac, t);
+    return true;
+  } catch {
+    // Sound is a convenience; a blocked context is not an error worth surfacing.
+    return false;
+  }
+}
+
+/** Stepper, chip, preset: a dry mechanical tick. */
+export function playMechanicalTick(): boolean {
+  return play([{ wave: "triangle", from: 1400, to: 300, at: 0, dur: 0.012, peak: 0.18 }]);
+}
+
+/** A set ticked off: two tones like a latch closing. */
+export function playSetComplete(): boolean {
+  return play([
+    { wave: "triangle", from: 600, at: 0, dur: 0.04, peak: 0.22 },
+    { wave: "triangle", from: 900, at: 0.045, dur: 0.045, peak: 0.22 },
+  ]);
+}
+
+/** Rest is over: three telemetry pulses. */
+export function playRestTimerZero(): boolean {
+  return play([0, 0.15, 0.3].map((at) => ({ wave: "square" as Wave, from: 1000, at, dur: 0.09, peak: 0.16 })));
+}
+
+/** A personal record: a rising A major arpeggio. */
+export function playPRUnlocked(): boolean {
+  const notes = [440, 554.37, 659.25, 880];
+  return play(notes.map((f, i) => ({ wave: "sine" as Wave, from: f, at: i * 0.09, dur: i === notes.length - 1 ? 0.45 : 0.16, peak: 0.24 })));
+}

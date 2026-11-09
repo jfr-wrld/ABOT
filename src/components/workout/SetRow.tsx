@@ -11,6 +11,7 @@ import { SetTypeChip, setTypeA11yName } from "./SetTypeChip";
 import { SetTypeMenu } from "./SetTypeMenu";
 import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
 import { useT } from "@/i18n";
+import { feedback } from "@/lib/feedback";
 
 const PR_LABEL: Record<PRKind, string> = {
   heaviest_weight: "heaviest weight",
@@ -88,6 +89,7 @@ export function SetRow({
     }
     setError(null);
     setSweep((n) => n + 1);
+    feedback.setComplete();
     onComplete(true);
   }
 

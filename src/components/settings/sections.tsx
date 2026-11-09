@@ -15,6 +15,8 @@ import { AppPermissionsSection } from "./AppPermissions";
 import { Choice, Toggle } from "./controls";
 import { useT } from "@/i18n";
 import { LANGUAGE_LABEL, THEME_LABEL } from "./labels";
+import { playSetComplete } from "@/lib/sound-effects";
+import { hapticLock } from "@/lib/haptics";
 
 const REST_OPTIONS = [30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -114,6 +116,20 @@ export function WorkoutSection() {
         info={t("Rate of perceived exertion, 1 to 10: how hard each set felt. Shown in the logger next to weight and reps.")}
         checked={s.showRpe}
         onChange={(v) => s.update({ showRpe: v })}
+      />
+      <Toggle
+        id="tap-feedback"
+        label={t("Sounds & vibration")}
+        info={t("A tick on steppers and chips, a latch when a set is done, a chord for a new record, each with a short vibration. Synthesised on the phone; music keeps playing.")}
+        checked={s.tapFeedback}
+        onChange={(v) => {
+          s.update({ tapFeedback: v });
+          // Let the lifter hear what was switched on.
+          if (v) {
+            playSetComplete();
+            hapticLock();
+          }
+        }}
       />
       <div className="border-t border-line pt-5">
         <LocationsSection />

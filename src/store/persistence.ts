@@ -42,6 +42,7 @@ function pickSettings(s: SettingsState): StoredSettings {
     profileHandle: s.profileHandle,
     language: s.language,
     theme: s.theme,
+    tapFeedback: s.tapFeedback,
     bodyweightKg: s.bodyweightKg,
     heightCm: s.heightCm,
     profilePhoto: s.profilePhoto,

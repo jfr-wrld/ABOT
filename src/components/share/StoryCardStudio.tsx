@@ -28,6 +28,7 @@ import {
 import { openSaved, type SaveResult } from "@/lib/native/files";
 import { openPhotoInput } from "@/lib/native/photo-input";
 import { useT } from "@/i18n";
+import { feedback } from "@/lib/feedback";
 
 const THUMB_W = 120;
 const THUMB_H = (THUMB_W * STORY_HEIGHT) / STORY_WIDTH;
@@ -366,7 +367,10 @@ function Studio({
                     aria-pressed={selected}
                     aria-label={p.name}
                     title={t(p.blurb)}
-                    onClick={() => setPreset(p.id)}
+                    onClick={() => {
+                      if (p.id !== preset) feedback.tick();
+                      setPreset(p.id);
+                    }}
                     className={`h-full rounded-ctl border-2 p-0.5 transition-colors ${selected ? "border-accent" : "border-transparent hover:border-line-hover"}`}
                   >
                     <canvas

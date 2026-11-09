@@ -68,6 +68,7 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     profileHandle: typeof raw.profileHandle === "string" ? normalizeHandle(raw.profileHandle) : "",
     language: raw.language === "en" || raw.language === "id" ? raw.language : "auto",
     theme: raw.theme === "dark" || raw.theme === "light" ? raw.theme : "system",
+    tapFeedback: raw.tapFeedback !== false,
     bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
     profilePhoto: normalizePhoto(raw.profilePhoto),

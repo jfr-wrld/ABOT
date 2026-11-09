@@ -90,6 +90,7 @@ describe.each([
         profileHandle: "jafar.lifts",
         language: "id",
         theme: "light",
+        tapFeedback: false,
         bodyweightKg: 72.5,
         heightCm: 170,
         profilePhoto: null,
