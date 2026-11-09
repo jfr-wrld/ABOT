@@ -81,8 +81,9 @@ async function main() {
   await openApp();
 
   const [device] = await android.devices({ omitDriverInstall: true });
-  const webview = await device.webView({ pkg: PKG }, { timeout: 60000 });
-  const page = await webview.page();
+  // Revoking a permission makes Android kill the app, so every relaunch attaches to a new WebView.
+  const attach = async () => (await device.webView({ pkg: PKG }, { timeout: 60000 })).page();
+  let page = await attach();
   const fits = () => page.evaluate(() => document.scrollingElement.scrollHeight <= window.innerHeight + 1);
 
   // 1. Intro: one screen, no scrolling.
@@ -136,8 +137,10 @@ async function main() {
   shell("input keyevent KEYCODE_HOME");
   await sleep(1200);
   await openApp();
+  page = await attach();
   const settingsButton = page.getByRole("button", { name: /Notifications is off\. Open Android settings/ });
-  check("denied notifications show a Settings button after coming back", await settingsButton.isVisible({ timeout: 10000 }).catch(() => false));
+  const shown = await settingsButton.waitFor({ timeout: 20000 }).then(() => true, () => false);
+  check("denied notifications show a Settings button after coming back", shown, page.url());
   screenshot("notifications-denied");
   await settingsButton.click().catch(() => {});
   await sleep(2500);
@@ -148,7 +151,9 @@ async function main() {
   // 6. Live workout notification while a workout runs.
   shell(`pm clear-permission-flags ${PKG} android.permission.POST_NOTIFICATIONS user-set user-fixed`);
   shell(`pm grant ${PKG} android.permission.POST_NOTIFICATIONS`);
+  shell(`am force-stop ${PKG}`);
   await openApp();
+  page = await attach();
   await page.getByRole("button", { name: "Not now" }).click().catch(() => {});
   await page.getByRole("button", { name: "Start an empty workout" }).first().click({ timeout: 15000 });
   await sleep(2500);
