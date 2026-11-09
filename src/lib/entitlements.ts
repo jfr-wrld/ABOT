@@ -218,18 +218,4 @@ export function rupiah(n: number): string {
   return `Rp ${Math.round(n).toLocaleString("id-ID")}`;
 }
 
-/* ---------------------------------------------------------------- checkout */
-
-export const CHECKOUT_NOT_CONNECTED = "Payments are not connected yet. During the beta every PRO feature is free.";
-
-export type CheckoutResult = { ok: true } | { ok: false; reason: string };
-
-/**
- * Where a real purchase plugs in: RevenueCat (Google Play Billing) in the app, or a QRIS /
- * LemonSqueezy checkout URL on the web. Nothing is connected yet, and ABOT makes no network
- * calls, so this answers honestly instead of pretending to charge.
- */
-export async function startCheckout(plan: PlanId): Promise<CheckoutResult> {
-  void plan; // The provider will take the plan id; none is wired yet.
-  return { ok: false, reason: CHECKOUT_NOT_CONNECTED };
-}
+/* Checkout (Midtrans through Supabase Edge Functions) lives in lib/checkout.ts. */

@@ -1,0 +1,138 @@
+import { isCloudSyncConfigured } from "@/data/sync/supabase";
+import { getSupabase, maySignedIn } from "@/data/sync/client";
+import { isNativeApp } from "@/lib/native/files";
+import { useRemoteConfig } from "./remote-config";
+
+/**
+ * Buying PRO through Midtrans (QRIS, e-wallets, virtual accounts, cards). The app asks the
+ * midtrans-checkout Edge Function for a payment page, opens it, and afterwards reads the order
+ * back until Midtrans has settled it; the licence itself arrives through the account
+ * (user_entitlements), like a redeemed code. This is ABOT's one deliberate network exception
+ * besides cloud sync (CLAUDE.md).
+ */
+
+export type WebPlan = "annual" | "lifetime" | "founders";
+
+export type CheckoutFailure =
+  | "not_connected"
+  | "sign_in"
+  | "checkout_off"
+  | "not_founder"
+  | "seats_gone"
+  | "already_lifetime"
+  | "gateway"
+  | "network";
+
+export const CHECKOUT_MESSAGE: Record<CheckoutFailure, string> = {
+  not_connected: "Payments are not connected yet. During the beta every PRO feature is free.",
+  sign_in: "Sign in first, so the purchase is saved to your account and restores on any phone.",
+  checkout_off: "Payments are paused right now. Try again later.",
+  not_founder: "The founder price is for founders only. Choose lifetime or annual.",
+  seats_gone: "The founder seats are all taken. Lifetime and annual are still open.",
+  already_lifetime: "You already hold a lifetime license.",
+  gateway: "The payment page could not be opened. Try again in a moment.",
+  network: "Could not reach the payment service. Check the connection and try again.",
+};
+
+/** Payments are offered on this device: set up, switched on, and allowed on this platform. */
+export function checkoutAvailable(): boolean {
+  if (!isCloudSyncConfigured()) return false;
+  const c = useRemoteConfig.getState().config;
+  return c.checkoutEnabled && (!isNativeApp() || c.checkoutOnAndroid);
+}
+
+const PENDING_KEY = "abot.pending-order";
+
+export function rememberPendingOrder(orderId: string | null): void {
+  try {
+    if (orderId) localStorage.setItem(PENDING_KEY, orderId);
+    else localStorage.removeItem(PENDING_KEY);
+  } catch {
+    // Storage blocked: the return URL still carries the order id on the web.
+  }
+}
+
+export function pendingOrder(): string | null {
+  try {
+    return localStorage.getItem(PENDING_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Creates the order and opens Midtrans' payment page (same tab on the web, browser on Android). */
+export async function startMidtransCheckout(plan: WebPlan): Promise<{ ok: true; orderId: string } | { ok: false; reason: CheckoutFailure }> {
+  if (!checkoutAvailable()) return { ok: false, reason: "not_connected" };
+  if (!maySignedIn()) return { ok: false, reason: "sign_in" };
+  try {
+    const supabase = await getSupabase();
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session) return { ok: false, reason: "sign_in" };
+    const { data, error } = await supabase.functions.invoke("midtrans-checkout", {
+      body: { plan, platform: isNativeApp() ? "android" : "web" },
+    });
+    if (error) {
+      // FunctionsHttpError carries the function's JSON answer in `context`.
+      const answer = await (error as { context?: Response }).context?.json?.().catch(() => null);
+      const code = answer?.error as CheckoutFailure | undefined;
+      return { ok: false, reason: code && code in CHECKOUT_MESSAGE ? code : "gateway" };
+    }
+    const url = (data as { redirect_url?: string; order_id?: string } | null)?.redirect_url;
+    const orderId = (data as { order_id?: string } | null)?.order_id;
+    if (!url || !orderId) return { ok: false, reason: "gateway" };
+    rememberPendingOrder(orderId);
+    if (isNativeApp()) {
+      const { Browser } = await import("@capacitor/browser");
+      await Browser.open({ url });
+    } else {
+      window.location.assign(url);
+    }
+    return { ok: true, orderId };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
+export type OrderStatus = "pending" | "paid" | "failed" | "expired" | "refunded";
+
+/** The order as the account sees it (its own row through RLS); null when it cannot be read. */
+export async function readOrderStatus(orderId: string): Promise<OrderStatus | null> {
+  if (!isCloudSyncConfigured() || !maySignedIn()) return null;
+  try {
+    const supabase = await getSupabase();
+    const { data } = await supabase.from("payment_orders").select("status").eq("order_id", orderId).maybeSingle();
+    return (data?.status as OrderStatus | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Reads the order until Midtrans has settled it or `tries` run out. QRIS and e-wallets settle in
+ * seconds; a bank transfer can take until the buyer pays, so pending is a normal answer.
+ */
+export async function waitForOrder(
+  orderId: string,
+  { tries = 10, everyMs = 3000, read = readOrderStatus, sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms)) } = {},
+): Promise<OrderStatus | null> {
+  let last: OrderStatus | null = null;
+  for (let i = 0; i < tries; i++) {
+    last = await read(orderId);
+    if (last && last !== "pending") return last;
+    if (i < tries - 1) await sleep(everyMs);
+  }
+  return last;
+}
+
+/** What the payment banner can say after a checkout. */
+export type PaymentShown = OrderStatus | "checking" | "unknown";
+
+export const PAYMENT_STATUS_MESSAGE: Record<PaymentShown, string> = {
+  checking: "Checking your payment...",
+  paid: "Payment received. ABOT // BLACK PRO is active on your account.",
+  pending: "Waiting for your payment. Finish it in the payment app or bank; PRO turns on by itself once it settles.",
+  failed: "The payment did not go through. Nothing was charged; you can try again.",
+  expired: "The payment window closed before it was paid. You can start a new one.",
+  refunded: "This payment was refunded, so its license was removed.",
+  unknown: "Could not check the payment yet. Open ABOT again in a moment.",
+};

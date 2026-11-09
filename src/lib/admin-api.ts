@@ -59,6 +59,8 @@ export async function saveConfig(mode: AdminMode, c: RemoteConfig): Promise<void
       lifetime_price_usd: c.prices.lifetimeUsd,
       announcement_banner: c.announcement,
       offline_codes_enabled: c.offlineCodesEnabled,
+      checkout_enabled: c.checkoutEnabled,
+      checkout_on_android: c.checkoutOnAndroid,
       tunables: c.tunables,
     })
     .eq("id", "global")

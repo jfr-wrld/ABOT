@@ -5,6 +5,8 @@ Weights are stored in kg everywhere; convert at the UI edge. See `src/types/work
 
 Commands: `npm run dev`, `npm test` (vitest), `npm run e2e` (Playwright), `npm run lint`, `npm run build`.
 Zero External Paid API: no runtime network calls, no tokens. Plans live in `docs/plans/`.
+Exceptions, both optional and owner-approved: Supabase cloud sync, and payments (Midtrans checkout and
+webhook through Supabase Edge Functions, web and Android, 2026-11-11; see `docs/payments-setup.md`).
 
 <!-- antislop:start -->
 ## antislop

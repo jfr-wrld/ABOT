@@ -1,0 +1,92 @@
+// ABOT // midtrans-checkout: a signed-in lifter asks to buy a plan; this creates the order and a
+// Midtrans Snap payment page, and returns its URL. Prices come from app_remote_config, never from
+// the app, so a modified client cannot pay less.
+//
+// Secrets (supabase secrets set ...):
+//   MIDTRANS_SERVER_KEY      the Server Key from the Midtrans dashboard (Sandbox: SB-Mid-server-...)
+//   MIDTRANS_IS_PRODUCTION   "true" for real money; anything else uses the Sandbox
+//   ABOT_RETURN_URL          where Midtrans sends the buyer after paying, e.g. https://<site>/settings/
+//   ABOT_ALLOWED_ORIGINS     comma-separated web origins allowed to call this (the site, and
+//                            https://localhost for the Android app)
+// SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
+
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { PLAN_LABEL, allowedOrigin, basicAuth, isWebPlan, makeOrderId, priceIdr, snapUrl } from "../_shared/midtrans.ts";
+
+const SERVER_KEY = Deno.env.get("MIDTRANS_SERVER_KEY") ?? "";
+const PRODUCTION = Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true";
+const RETURN_URL = Deno.env.get("ABOT_RETURN_URL") ?? "";
+const ORIGINS = (Deno.env.get("ABOT_ALLOWED_ORIGINS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+
+function respond(req: Request, status: number, body: unknown): Response {
+  const origin = allowedOrigin(req.headers.get("origin"), ORIGINS);
+  const headers: Record<string, string> = { "content-type": "application/json", vary: "origin" };
+  if (origin) {
+    headers["access-control-allow-origin"] = origin;
+    headers["access-control-allow-headers"] = "authorization, apikey, content-type, x-client-info";
+    headers["access-control-allow-methods"] = "POST, OPTIONS";
+  }
+  return new Response(status === 204 ? null : JSON.stringify(body), { status, headers });
+}
+
+/** A refusal the app shows as is. `code` lets it pick a translated message. */
+const refuse = (req: Request, status: number, code: string) => respond(req, status, { error: code });
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return respond(req, 204, null);
+  if (req.method !== "POST") return refuse(req, 405, "method");
+  if (!SERVER_KEY) return refuse(req, 503, "not_configured");
+
+  const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const { data: auth } = await db.auth.getUser(jwt);
+  const user = auth?.user;
+  if (!user) return refuse(req, 401, "sign_in");
+
+  let body: { plan?: unknown; platform?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return refuse(req, 400, "bad_request");
+  }
+  if (!isWebPlan(body.plan)) return refuse(req, 400, "bad_plan");
+  const plan = body.plan;
+  const android = body.platform === "android";
+
+  const { data: config } = await db
+    .from("app_remote_config")
+    .select("annual_price_idr, lifetime_price_idr, checkout_enabled, checkout_on_android")
+    .eq("id", "global")
+    .single();
+  if (!config?.checkout_enabled || (android && !config.checkout_on_android)) return refuse(req, 403, "checkout_off");
+
+  const { data: ent } = await db.from("user_entitlements").select("tier, is_founder").eq("user_id", user.id).maybeSingle();
+  if (plan !== "annual" && ent?.tier === "lifetime") return refuse(req, 409, "already_lifetime");
+  if (plan === "founders") {
+    if (!ent?.is_founder) return refuse(req, 403, "not_founder");
+    const { data: left } = await db.rpc("founder_seats_left");
+    if (typeof left !== "number" || left <= 0) return refuse(req, 409, "seats_gone");
+  }
+
+  const amount = priceIdr(plan, config);
+  const orderId = makeOrderId(plan, Date.now());
+  const { error: insertError } = await db.from("payment_orders").insert({ order_id: orderId, user_id: user.id, plan, amount_idr: amount });
+  if (insertError) return refuse(req, 500, "order_failed");
+
+  const snap = await fetch(snapUrl(PRODUCTION), {
+    method: "POST",
+    headers: { accept: "application/json", "content-type": "application/json", authorization: basicAuth(SERVER_KEY) },
+    body: JSON.stringify({
+      transaction_details: { order_id: orderId, gross_amount: amount },
+      item_details: [{ id: plan, price: amount, quantity: 1, name: PLAN_LABEL[plan] }],
+      customer_details: { email: user.email },
+      ...(RETURN_URL ? { callbacks: { finish: RETURN_URL } } : {}),
+    }),
+  }).catch(() => null);
+  const answer = snap ? await snap.json().catch(() => null) : null;
+  if (!snap?.ok || !answer?.redirect_url) {
+    await db.rpc("abot_order_closed", { p_order_id: orderId, p_status: "failed" });
+    return refuse(req, 502, "gateway");
+  }
+  return respond(req, 200, { order_id: orderId, redirect_url: answer.redirect_url, amount_idr: amount });
+});

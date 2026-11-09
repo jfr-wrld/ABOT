@@ -8,6 +8,7 @@ import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
 import { syncEntitlementWithAccount } from "@/lib/entitlement-sync";
 import { AbotProModal } from "./AbotProModal";
 import { RedeemCodeModal } from "./RedeemCodeModal";
+import { PaymentReturn } from "./PaymentReturn";
 
 /**
  * Once saved settings have loaded: stamps the Founder pass on installs made during the beta,
@@ -28,6 +29,7 @@ export function EntitlementsProvider() {
     <>
       {open && <AbotProModal />}
       <RedeemCodeModal />
+      {hydrated && <PaymentReturn />}
     </>
   );
 }

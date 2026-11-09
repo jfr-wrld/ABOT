@@ -19,6 +19,10 @@ export interface RemoteConfig {
   prices: { monthlyIdr: number; annualIdr: number; lifetimeIdr: number; monthlyUsd: number; annualUsd: number; lifetimeUsd: number };
   announcement: string | null;
   offlineCodesEnabled: boolean;
+  /** Midtrans checkout is open (payments set up and switched on in Mission Control). */
+  checkoutEnabled: boolean;
+  /** The Android app also offers the Midtrans checkout (off: web only). */
+  checkoutOnAndroid: boolean;
   /** Algorithm constants (lib/tunables). */
   tunables: Tunables;
   /** ISO time of the server row, or null for the defaults. */
@@ -30,6 +34,8 @@ export const DEFAULT_REMOTE_CONFIG: RemoteConfig = {
   prices: { monthlyIdr: 29_000, annualIdr: 199_000, lifetimeIdr: 798_000, monthlyUsd: 2.99, annualUsd: 19.99, lifetimeUsd: 79.98 },
   announcement: null,
   offlineCodesEnabled: true,
+  checkoutEnabled: false,
+  checkoutOnAndroid: true,
   tunables: DEFAULT_TUNABLES,
   updatedAt: null,
 };
@@ -61,6 +67,8 @@ export function normalizeRemoteConfig(raw: unknown): RemoteConfig {
     },
     announcement: typeof banner === "string" && banner.trim() ? banner.trim().slice(0, 280) : null,
     offlineCodesEnabled: (r.offline_codes_enabled ?? r.offlineCodesEnabled) !== false,
+    checkoutEnabled: (r.checkout_enabled ?? r.checkoutEnabled) === true,
+    checkoutOnAndroid: (r.checkout_on_android ?? r.checkoutOnAndroid) !== false,
     tunables: normalizeTunables(r.tunables),
     updatedAt: typeof (r.updated_at ?? r.updatedAt) === "string" ? ((r.updated_at ?? r.updatedAt) as string) : null,
   };

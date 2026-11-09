@@ -3,7 +3,11 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Check, Minus, X, Zap } from "lucide-react";
 import { useEntitlements, usePaywallStore, updateEntitlement, autoClaimFounder } from "@/store/useEntitlements";
-import { PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, plansFor, rupiah, startCheckout, type PlanId } from "@/lib/entitlements";
+import Link from "next/link";
+import { PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, plansFor, rupiah, type PlanId } from "@/lib/entitlements";
+import { CHECKOUT_MESSAGE, startMidtransCheckout } from "@/lib/checkout";
+import { isCloudSyncConfigured } from "@/data/sync/supabase";
+import { isNativeApp } from "@/lib/native/files";
 import { useRemoteConfig } from "@/lib/remote-config";
 import { useRedeemStore } from "./RedeemCodeModal";
 import { feedback } from "@/lib/feedback";
@@ -12,7 +16,9 @@ import { useT } from "@/i18n";
 /**
  * ABOT // BLACK PRO: the upgrade screen, full height, always dark. During the founders beta it
  * says PRO is already open and lets the lifter simulate a plan; in commercial mode the button
- * goes to startCheckout(), which a payment provider plugs into.
+ * opens the Midtrans checkout (lib/checkout) when payments are switched on. Midtrans sells one-off
+ * payments, so the monthly plan is hidden while it is the checkout, and founders get lifetime at
+ * the founder price.
  */
 /** What "Simulate activating this plan" writes: the plan's tier and term from now, simulator on Pro. */
 function simulatePlan(plan: PlanId) {
@@ -32,7 +38,11 @@ export function AbotProModal() {
   const [plan, setPlan] = useState<PlanId>("annual");
   // Prices from Mission Control (remote config), the built-in ones until it answers.
   const prices = useRemoteConfig((s) => s.config.prices);
-  const PLANS = plansFor(prices);
+  const checkoutOn = useRemoteConfig((s) => s.config.checkoutEnabled && (!isNativeApp() || s.config.checkoutOnAndroid)) && isCloudSyncConfigured();
+  const ALL_PLANS = plansFor(prices);
+  const PLANS = ALL_PLANS.filter((p) => !checkoutOn || p.id !== "monthly");
+  const [needsSignIn, setNeedsSignIn] = useState(false);
+  const [busy, setBusy] = useState(false);
   const showRedeem = useRedeemStore((s) => s.show);
   const [note, setNote] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -52,8 +62,19 @@ export function AbotProModal() {
 
   async function checkout() {
     feedback.tick();
-    const r = await startCheckout(plan);
-    setNote(r.ok ? t("Purchase complete.") : t(r.reason));
+    setNeedsSignIn(false);
+    if (!checkoutOn || plan === "monthly") {
+      setNote(t(CHECKOUT_MESSAGE.not_connected));
+      return;
+    }
+    setBusy(true);
+    const r = await startMidtransCheckout(plan === "lifetime" && isFounder ? "founders" : plan);
+    setBusy(false);
+    if (r.ok) setNote(t("Payment page opened. PRO turns on here once Midtrans confirms the payment."));
+    else {
+      setNeedsSignIn(r.reason === "sign_in");
+      setNote(t(CHECKOUT_MESSAGE[r.reason]));
+    }
   }
 
   function simulate() {
@@ -62,7 +83,8 @@ export function AbotProModal() {
     setNote(t("Simulated: {plan} active on this device. Switch back in Settings, Founder pass.", { plan: t(PLANS.find((p) => p.id === plan)!.name) }));
   }
 
-  const saving = annualSaving(PLANS);
+  // Against twelve months of the monthly price, even while monthly is not on sale here.
+  const saving = annualSaving(ALL_PLANS);
 
   return (
     <dialog
@@ -208,6 +230,7 @@ export function AbotProModal() {
               >
                 {isFounder ? t("Verify Founder Pass") : t("Claim Founder Pass")}
               </button>
+              {checkoutOn && plan !== "monthly" && <BuyButton busy={busy} onClick={() => void checkout()} label={t("Buy {plan}", { plan: t(PLANS.find((p) => p.id === plan)?.name ?? "") })} />}
               <button type="button" onClick={simulate} className="min-h-11 rounded-ctl text-sm font-semibold text-zinc-400 underline-offset-4 hover:text-white hover:underline">
                 {t("Simulate activating this plan")}
               </button>
@@ -218,13 +241,7 @@ export function AbotProModal() {
             </p>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={() => void checkout()}
-                className="min-h-14 rounded-ctl bg-[#ccff00] font-mono text-sm font-black uppercase tracking-[0.1em] text-black hover:brightness-95"
-              >
-                {t("Activate {plan}", { plan: t(PLANS.find((p) => p.id === plan)!.name) })}
-              </button>
+              <BuyButton busy={busy} onClick={() => void checkout()} label={t("Activate {plan}", { plan: t(PLANS.find((p) => p.id === plan)?.name ?? "") })} />
               <button type="button" onClick={simulate} className="min-h-11 rounded-ctl text-sm font-semibold text-zinc-400 underline-offset-4 hover:text-white hover:underline">
                 {t("Simulate activating this plan")}
               </button>
@@ -234,6 +251,11 @@ export function AbotProModal() {
             <p role="status" className="text-center text-xs text-zinc-300">
               {note}
             </p>
+          )}
+          {needsSignIn && (
+            <Link href="/login?from=/settings" onClick={done} className="min-h-11 rounded-ctl border border-[#27272a] px-4 py-3 text-center text-sm font-semibold text-white hover:border-zinc-500">
+              {t("Sign in to buy")}
+            </Link>
           )}
           <button
             type="button"
@@ -248,5 +270,21 @@ export function AbotProModal() {
         </div>
       </div>
     </dialog>
+  );
+}
+
+/** The one Volt action: opens the payment page, or says what is missing. */
+function BuyButton({ busy, onClick, label }: { busy: boolean; onClick: () => void; label: string }) {
+  const t = useT();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      aria-busy={busy}
+      className="min-h-14 rounded-ctl bg-[#ccff00] font-mono text-sm font-black uppercase tracking-[0.1em] text-black hover:brightness-95 disabled:opacity-60"
+    >
+      {busy ? t("Opening payment...") : label}
+    </button>
   );
 }

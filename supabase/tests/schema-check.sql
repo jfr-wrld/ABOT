@@ -13,6 +13,7 @@ create or replace function auth.jwt() returns jsonb language sql stable as
 do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated; end if;
   if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon; end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role bypassrls; end if;
 end $$;
 grant usage on schema auth, public to authenticated, anon;
 grant execute on function auth.uid(), auth.jwt() to authenticated, anon;
@@ -24,11 +25,13 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/0002_bodyweight_and_media.sql
 \i supabase/migrations/20261109_admin_and_redeem.sql
 \i supabase/migrations/20261110_lock_down_grants.sql
+\i supabase/migrations/20261111_midtrans_payments.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
 \i supabase/migrations/20261109_admin_and_redeem.sql
 \i supabase/migrations/20261110_lock_down_grants.sql
+\i supabase/migrations/20261111_midtrans_payments.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
 insert into auth.users values
@@ -236,6 +239,69 @@ do $$ begin
   if not public.admin_grant('boss@example.com', 'pro', 365) then raise exception 'admin_grant did not find the user'; end if;
   if public.admin_grant('nobody@example.com', 'pro', 30) then raise exception 'admin_grant invented a user'; end if;
   if (select tier from public.user_entitlements where user_id = '00000000-0000-0000-0000-00000000000b') <> 'pro' then raise exception 'manual grant missing'; end if;
+end $$;
+
+reset role;
+
+/* ---------------------------------------------------------------- payments */
+-- C has no licence yet. Orders are inserted the way midtrans-checkout does (service role).
+update public.app_remote_config set founder_seats = 2 where id = 'global';
+grant usage on schema public to service_role;
+-- A Supabase project gives service_role every table; the test reads this one directly.
+grant select on public.user_entitlements to service_role;
+set role service_role;
+insert into public.payment_orders (order_id, user_id, plan, amount_idr) values
+  ('ABOT-LIFETIME-AAA-111', '00000000-0000-0000-0000-00000000000c', 'founders', 399000),
+  ('ABOT-ANNUAL-BBB-222', '00000000-0000-0000-0000-00000000000c', 'annual', 199000),
+  ('ABOT-ANNUAL-CCC-333', '00000000-0000-0000-0000-00000000000a', 'annual', 199000);
+do $$
+declare u uuid := '00000000-0000-0000-0000-00000000000c';
+begin
+  if public.founder_seats_left() <> 1 then raise exception 'pending founder order should hold a seat'; end if;
+  -- Annual first: a year of pro.
+  if not public.abot_order_paid('ABOT-ANNUAL-BBB-222', 'qris', 't1') then raise exception 'annual not granted'; end if;
+  if public.abot_order_paid('ABOT-ANNUAL-BBB-222', 'qris', 't1') then raise exception 'annual granted twice'; end if;
+  if (select tier from public.user_entitlements where user_id = u) <> 'pro'
+     or (select pro_expires_at from public.user_entitlements where user_id = u) < now() + interval '364 days'
+  then raise exception 'annual should give a year of pro'; end if;
+  -- Refund of the year: back to free.
+  if not public.abot_order_reversed('ABOT-ANNUAL-BBB-222') then raise exception 'refund not applied'; end if;
+  if public.abot_order_reversed('ABOT-ANNUAL-BBB-222') then raise exception 'refund applied twice'; end if;
+  if (select tier from public.user_entitlements where user_id = u) <> 'free' then raise exception 'refund left pro on'; end if;
+  if public.abot_order_paid('ABOT-ANNUAL-BBB-222', 'qris', 't1') then raise exception 'refunded order granted again'; end if;
+  -- Founders lifetime, then a chargeback.
+  if not public.abot_order_paid('ABOT-LIFETIME-AAA-111', 'gopay', 't2') then raise exception 'lifetime not granted'; end if;
+  if (select tier from public.user_entitlements where user_id = u) <> 'lifetime' then raise exception 'lifetime missing'; end if;
+  if public.founder_seats_left() <> 1 then raise exception 'paid founder order should hold a seat'; end if;
+  if not public.abot_order_reversed('ABOT-LIFETIME-AAA-111') then raise exception 'chargeback not applied'; end if;
+  if (select tier from public.user_entitlements where user_id = u) <> 'free' then raise exception 'chargeback left lifetime on'; end if;
+  if public.founder_seats_left() <> 2 then raise exception 'refunded founder order should free its seat'; end if;
+  -- A pending order that expires.
+  if not public.abot_order_closed('ABOT-ANNUAL-CCC-333', 'expired') then raise exception 'expire not applied'; end if;
+  if public.abot_order_closed('ABOT-ANNUAL-CCC-333', 'expired') then raise exception 'closed twice'; end if;
+  -- Money that settles after all still buys the plan: Midtrans' settlement is what counts.
+  if not public.abot_order_paid('ABOT-ANNUAL-CCC-333', 'qris', 't3') then raise exception 'late settlement not granted'; end if;
+end $$;
+
+-- A signed-in user sees their own orders only and cannot mark anything paid.
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+set request.jwt.claim.email = 'a@example.com';
+do $$ begin
+  if (select count(*) from public.payment_orders) <> 1 then raise exception 'user sees other users orders'; end if;
+  if (select tier from public.user_entitlements) <> 'lifetime' then raise exception 'a paid year must not downgrade a lifetime licence'; end if;
+  if public.founder_seats_left() <> 2 then raise exception 'seats not readable'; end if;
+  begin
+    perform public.abot_order_paid('ABOT-ANNUAL-CCC-333', 'qris', 'x');
+    raise exception 'client called abot_order_paid';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.payment_orders set status = 'paid';
+    raise exception 'client updated an order';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 
 reset role;

@@ -6,7 +6,8 @@ import { ACTIVITY_LEVELS, PHASE_BLURB, PHASE_CALIBRATION, PHASE_LABEL, RISK_LABE
 import { CATEGORY_LABEL, DIGEST_LABEL, FOODS, LEVEL_LABEL } from "@/lib/nutrition-guide";
 import { FILTER_LABEL } from "@/lib/exercise-swapper";
 import { REDEEM_REASONS } from "@/lib/redeem-service";
-import { CHECKOUT_NOT_CONNECTED, PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
+import { PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
+import { CHECKOUT_MESSAGE, PAYMENT_STATUS_MESSAGE } from "@/lib/checkout";
 import { AXIS_LABEL, DIAGNOSTIC_KEYS } from "@/lib/symmetry-analyzer";
 
 /**
@@ -116,7 +117,8 @@ export const DYNAMIC_KEYS: string[] = [
   ...PLANS.flatMap((p) => [p.name, p.note]),
   ...PRO_MATRIX.flatMap((r) => [r.feature, ...[r.core, r.pro].filter((v): v is string => typeof v === "string")]),
   ...SIMULATOR.map((s) => s.label),
-  CHECKOUT_NOT_CONNECTED,
+  ...Object.values(CHECKOUT_MESSAGE),
+  ...Object.values(PAYMENT_STATUS_MESSAGE),
   // Body phases: names, blurbs, activity levels, calibration lines, coach labels, retention risk
   ...Object.values(PHASE_LABEL),
   ...Object.values(PHASE_BLURB),

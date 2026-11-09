@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_ENTITLEMENT, PLANS, annualSaving, claimFounder, founderNumber, planPrice, resolveEntitlement, rupiah, startCheckout } from "./entitlements";
+import { DEFAULT_ENTITLEMENT, PLANS, annualSaving, claimFounder, founderNumber, planPrice, resolveEntitlement, rupiah } from "./entitlements";
 
 const now = Date.parse("2026-11-09T00:00:00Z");
 
@@ -45,9 +45,5 @@ describe("plans", () => {
     const life = PLANS.find((p) => p.id === "lifetime")!;
     expect(planPrice(life, true)).toEqual({ idr: 399_000, usd: 39.99, was: { idr: 798_000, usd: 79.98 } });
     expect(planPrice(life, false).was).toBeNull();
-  });
-
-  it("checkout is honest while no payment provider is connected", async () => {
-    expect(await startCheckout("annual")).toMatchObject({ ok: false });
   });
 });

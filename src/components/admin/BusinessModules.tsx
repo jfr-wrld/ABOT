@@ -72,6 +72,14 @@ export function MonetizationModule({ mode }: { mode: AdminMode }) {
           Built-in offline codes work (ABOT-FOUNDER-2026, ...)
           <input type="checkbox" checked={draft.offlineCodesEnabled} onChange={(e) => setDraft((d) => ({ ...d, offlineCodesEnabled: e.target.checked }))} className="size-6 accent-[#ccff00]" />
         </label>
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300">
+          Midtrans checkout open (needs the Edge Functions deployed)
+          <input type="checkbox" checked={draft.checkoutEnabled} onChange={(e) => setDraft((d) => ({ ...d, checkoutEnabled: e.target.checked }))} className="size-6 accent-[#ccff00]" />
+        </label>
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300">
+          Also in the Android app (off: web only, Google Play billing rules)
+          <input type="checkbox" checked={draft.checkoutOnAndroid} onChange={(e) => setDraft((d) => ({ ...d, checkoutOnAndroid: e.target.checked }))} className="size-6 accent-[#ccff00]" />
+        </label>
         <label className="flex flex-col gap-1 text-xs text-zinc-400">
           Broadcast banner on Home (empty: none)
           <textarea
