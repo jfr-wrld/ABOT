@@ -5,7 +5,8 @@
 // Secrets (supabase secrets set ...):
 //   MIDTRANS_SERVER_KEY      the Server Key from the Midtrans dashboard (Sandbox: SB-Mid-server-...)
 //   MIDTRANS_IS_PRODUCTION   "true" for real money; anything else uses the Sandbox
-//   ABOT_RETURN_URL          where Midtrans sends the buyer after paying, e.g. https://<site>/settings/
+//   ABOT_RETURN_URL          the site ABOT runs on, e.g. https://<site>/settings/; the buyer lands on
+//                            https://<site>/payment-done.html after paying
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -82,7 +83,10 @@ Deno.serve(async (req) => {
       transaction_details: { order_id: orderId, gross_amount: amount },
       item_details: [{ id: plan, price: amount, quantity: 1, name: PLAN_LABEL[plan] }],
       customer_details: { email: user.email },
-      ...(RETURN_URL ? { callbacks: { finish: RETURN_URL } } : {}),
+      // After paying, Midtrans opens a small static page on ABOT's site, not the app itself:
+      // the app stays open in the tab the buyer came from (see public/payment-done.html).
+      // "app=1" tells that page the Android app is waiting, so its button reopens the app.
+      ...(RETURN_URL ? { callbacks: { finish: new URL(android ? "/payment-done.html?app=1" : "/payment-done.html", RETURN_URL).toString() } } : {}),
     }),
   }).catch(() => null);
   const answer = snap ? await snap.json().catch(() => null) : null;

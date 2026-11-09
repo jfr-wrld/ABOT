@@ -69,8 +69,37 @@ export function pendingOrder(): string | null {
 }
 
 /** Creates the order and opens Midtrans' payment page (same tab on the web, browser on Android). */
+/** Fired when a payment page opened in another tab, so the app can wait for the order. */
+export const CHECKOUT_OPENED = "abot:checkout-opened";
+
+/**
+ * On the web, open the tab for the payment page straight from the tap (browsers block pop-ups
+ * opened later, after the network round trip). Null in the Android app, or when blocked.
+ */
+export function openPaymentTab(): Window | null {
+  if (isNativeApp() || typeof window === "undefined") return null;
+  try {
+    const w = window.open("", "_blank");
+    if (w) w.document.title = "ABOT · Payment";
+    return w;
+  } catch {
+    return null;
+  }
+}
+
 export async function startMidtransCheckout(
   plan: WebPlan,
+  tab: Window | null = null,
+): Promise<{ ok: true; orderId: string } | { ok: false; reason: CheckoutFailure; detail?: string }> {
+  const result = await createCheckout(plan, tab);
+  // A pre-opened tab with nothing to show is closed again.
+  if (!result.ok) tab?.close();
+  return result;
+}
+
+async function createCheckout(
+  plan: WebPlan,
+  tab: Window | null,
 ): Promise<{ ok: true; orderId: string } | { ok: false; reason: CheckoutFailure; detail?: string }> {
   const blocked = checkoutBlock();
   if (blocked) return { ok: false, reason: blocked };
@@ -98,7 +127,13 @@ export async function startMidtransCheckout(
     if (isNativeApp()) {
       const { Browser } = await import("@capacitor/browser");
       await Browser.open({ url });
+      window.dispatchEvent(new CustomEvent(CHECKOUT_OPENED, { detail: orderId }));
+    } else if (tab && !tab.closed) {
+      // ABOT stays open (and signed in) here, waiting for the order; Midtrans runs in the other tab.
+      tab.location.href = url;
+      window.dispatchEvent(new CustomEvent(CHECKOUT_OPENED, { detail: orderId }));
     } else {
+      // Pop-ups blocked: leave for the payment page and come back through the return URL.
       window.location.assign(url);
     }
     return { ok: true, orderId };

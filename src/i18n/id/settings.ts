@@ -504,7 +504,6 @@ export const settings: Record<string, string> = {
     "Apple Health butuh aplikasi iPhone, yang belum dimiliki ABOT. Strava dan Garmin bisa menerima file .tcx dari ringkasan workout.",
   "Your account no longer holds this license (refunded or revoked), so it was removed from this phone.":
     "Akunmu tidak lagi memegang lisensi ini (dikembalikan dananya atau dicabut), jadi lisensi dihapus dari HP ini.",
-  "Payment page opened. PRO turns on here once Midtrans confirms the payment.": "Halaman pembayaran dibuka. PRO aktif di sini setelah Midtrans mengonfirmasi pembayaran.",
   "Buy {plan}": "Beli {plan}",
   "Sign in to buy": "Masuk untuk membeli",
   "Opening payment...": "Membuka pembayaran...",

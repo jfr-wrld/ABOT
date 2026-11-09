@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>ABOT · Payment</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body { margin: 0; height: 100%; background: #09090b; color: #fafafa; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+      main { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; box-sizing: border-box; }
+      svg { color: #ccff00; filter: drop-shadow(0 0 18px rgb(204 255 0 / 0.5)); }
+      h1 { margin: 6px 0 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+      p { margin: 0; max-width: 320px; color: #a1a1aa; font-size: 14px; line-height: 1.5; }
+      a { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 24px; margin-top: 8px; border-radius: 12px; background: #ccff00; color: #000; font: 800 13px ui-monospace, monospace; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <!--
+      Where Midtrans sends the buyer after paying. It does not load ABOT: on the web, ABOT is
+      still open in the tab the buyer came from, signed in and waiting for the order, so this page
+      only tells that tab and closes itself if it can. In the Android app the button returns to
+      ABOT, which checks the order when it comes to the front.
+    -->
+    <main>
+      <svg width="72" height="72" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z M50 28 A22 22 0 1 0 50.01 28 Z" fill="currentColor" fill-rule="evenodd" />
+      </svg>
+      <h1 id="title">Payment finished</h1>
+      <p id="body">Go back to ABOT. It checks the payment and turns PRO on by itself. / Kembali ke ABOT; PRO aktif otomatis setelah pembayaran dicek.</p>
+      <a id="back" href="/settings">Back to ABOT</a>
+    </main>
+    <script>
+      (function () {
+        var q = new URLSearchParams(location.search);
+        var order = q.get("order_id") || "";
+        var status = q.get("transaction_status") || "";
+        if (!/^ABOT-[A-Z0-9-]+$/.test(order)) order = "";
+        if (status === "deny" || status === "cancel" || status === "expire" || status === "failure") {
+          document.getElementById("title").textContent = "Payment not completed";
+          document.getElementById("body").textContent = "Nothing was charged. Go back to ABOT to try again. / Tidak ada yang ditagih; kembali ke ABOT untuk mencoba lagi.";
+        }
+        // midtrans-checkout adds app=1 when the Android app started the payment.
+        var app = q.get("app") === "1";
+        var back = document.getElementById("back");
+        // Tell the waiting ABOT tab (same origin) to check the order now.
+        try { localStorage.setItem("abot.payment-done", JSON.stringify({ order: order, at: Date.now() })); } catch (e) {}
+        if (app) {
+          // Opened from the Android app's browser: this link brings the app back to the front.
+          back.href = "app.abot.gym://auth/payment" + (order ? "?order_id=" + encodeURIComponent(order) : "");
+          return;
+        }
+        // On the web this tab was opened by ABOT for the payment, so it may close itself; the
+        // ABOT tab behind it is already checking. If it cannot close, the button still works.
+        back.href = "/settings/" + (order ? "?order_id=" + encodeURIComponent(order) : "");
+        back.addEventListener("click", function (e) {
+          if (window.opener && !window.opener.closed) {
+            e.preventDefault();
+            try { window.opener.focus(); } catch (err) {}
+            window.close();
+          }
+        });
+        setTimeout(function () { window.close(); }, 1500);
+      })();
+    </script>
+  </body>
+</html>

@@ -22,7 +22,7 @@ Monthly is not sold through Midtrans, because a one-off payment cannot renew.
    - logs it in `payment_events`;
    - then grants the plan (`abot_order_paid`), takes it back on a refund or chargeback (`abot_order_reversed`), or closes a failed or expired order.
 3. The grant lands in `user_entitlements`. The app already syncs that table, so PRO turns on, and turns off again after a refund, on every phone signed in to the account.
-4. After paying, the buyer comes back to ABOT, either through the web return URL or by closing the browser on Android. The app reads the order until it settles and shows one line saying what happened.
+4. On the web, the payment page opens in a new tab and ABOT stays open, signed in, in the tab the buyer came from. ABOT shows "Waiting for your payment" and reads the order until it settles. After paying, Midtrans opens `/payment-done.html`, a small static page that tells the ABOT tab and closes itself. In the Android app, the page's button reopens ABOT, which checks the order when it comes to the front. If the browser blocks the new tab, the payment opens in the same tab and comes back through the same page.
 
 The Server Key only lives in Supabase secrets. It is never in the app, this repository or a chat.
 
@@ -50,7 +50,7 @@ You need the Supabase CLI logged in and linked to the project (`supabase link --
    `--no-verify-jwt` is required on `midtrans-notify` because Midtrans sends no Supabase token. The signature check protects it instead.
 4. **Midtrans Dashboard (Sandbox) → Settings → Payment:**
    - Payment Notification URL: `https://<ref>.supabase.co/functions/v1/midtrans-notify`
-   - Finish, Unfinish and Error Redirect URL: `https://<site>/settings/`
+   - Finish, Unfinish and Error Redirect URL: `https://<site>/payment-done.html`. The checkout also sends this per payment.
 5. **Mission Control** (`/admin` → Monetization):
    - Tick **Midtrans checkout open** and push.
    - **Also in the Android app** is on by default. Read the Google Play note below.

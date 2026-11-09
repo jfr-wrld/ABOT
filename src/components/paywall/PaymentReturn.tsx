@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
 import { syncEntitlementWithAccount } from "@/lib/entitlement-sync";
-import { PAYMENT_STATUS_MESSAGE as MESSAGE, pendingOrder, rememberPendingOrder, waitForOrder, type PaymentShown as Shown } from "@/lib/checkout";
+import { CHECKOUT_OPENED, PAYMENT_STATUS_MESSAGE as MESSAGE, pendingOrder, rememberPendingOrder, waitForOrder, type PaymentShown as Shown } from "@/lib/checkout";
 import { useAppResumed } from "@/lib/native/useAppResumed";
 import { updateEntitlement } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -21,13 +21,14 @@ export function PaymentReturn() {
   const [shown, setShown] = useState<Shown | null>(null);
   const busy = useRef(false);
 
-  const check = useCallback(async () => {
+  /** `waiting`: the payment page just opened in another tab, so keep reading for a few minutes. */
+  const check = useCallback(async (waiting = false) => {
     const fromUrl = new URLSearchParams(window.location.search).get("order_id");
     const orderId = fromUrl && /^ABOT-[A-Z0-9-]+$/.test(fromUrl) ? fromUrl : pendingOrder();
     if (!orderId || busy.current) return;
     busy.current = true;
-    setShown("checking");
-    const status = await waitForOrder(orderId);
+    setShown(waiting ? "pending" : "checking");
+    const status = await waitForOrder(orderId, waiting ? { tries: 100, everyMs: 3000 } : undefined);
     if (status && status !== "pending") rememberPendingOrder(null);
     if (status === "paid" || status === "refunded") {
       const next = await syncEntitlementWithAccount(useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT);
@@ -54,6 +55,18 @@ export function PaymentReturn() {
     return () => window.clearTimeout(id);
   }, [check]);
   useAppResumed(() => void check());
+
+  useEffect(() => {
+    const opened = () => void check(true);
+    // payment-done.html (same site, other tab) says the buyer finished: look now.
+    const done = (e: StorageEvent) => e.key === "abot.payment-done" && void check();
+    window.addEventListener(CHECKOUT_OPENED, opened);
+    window.addEventListener("storage", done);
+    return () => {
+      window.removeEventListener(CHECKOUT_OPENED, opened);
+      window.removeEventListener("storage", done);
+    };
+  }, [check]);
 
   if (!shown) return null;
   const good = shown === "paid";

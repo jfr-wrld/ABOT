@@ -50,6 +50,12 @@ export function NativeShell() {
     );
     const signInReturn = async (url: string | undefined) => {
       if (!url) return;
+      // Back from the payment page (payment-done.html): close the browser; PaymentReturn checks
+      // the order when the app resumes.
+      if (url.startsWith("app.abot.gym://auth/payment")) {
+        void import("@capacitor/browser").then(({ Browser }) => Browser.close()).catch(() => {});
+        return;
+      }
       // Storage must be open before the session can be recorded.
       await startApp();
       const to = await finishNativeSignIn(url);

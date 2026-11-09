@@ -5,7 +5,7 @@ import { Check, Minus, X, Zap } from "lucide-react";
 import { useEntitlements, usePaywallStore, updateEntitlement, autoClaimFounder } from "@/store/useEntitlements";
 import Link from "next/link";
 import { PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, plansFor, rupiah, type PlanId } from "@/lib/entitlements";
-import { CHECKOUT_MESSAGE, checkoutBlock, startMidtransCheckout } from "@/lib/checkout";
+import { CHECKOUT_MESSAGE, checkoutBlock, openPaymentTab, startMidtransCheckout } from "@/lib/checkout";
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { isNativeApp } from "@/lib/native/files";
 import { useRemoteConfig } from "@/lib/remote-config";
@@ -68,19 +68,23 @@ export function AbotProModal() {
   };
 
   async function checkout() {
+    // First thing in the tap, before any await: browsers only allow a new tab from the tap itself.
+    const tab = openPaymentTab();
     feedback.tick();
     setNeedsSignIn(false);
     // The fresh read may still be on its way: wait for it once before saying payments are off.
     if (!checkoutOn) await useRemoteConfig.getState().refresh(true);
     const blocked = checkoutBlock();
     if (blocked || plan === "monthly") {
+      tab?.close();
       setNote(t(CHECKOUT_MESSAGE[blocked ?? "checkout_off"]));
       return;
     }
     setBusy(true);
-    const r = await startMidtransCheckout(plan === "lifetime" && isFounder ? "founders" : plan);
+    const r = await startMidtransCheckout(plan === "lifetime" && isFounder ? "founders" : plan, tab);
     setBusy(false);
-    if (r.ok) setNote(t("Payment page opened. PRO turns on here once Midtrans confirms the payment."));
+    // The paywall steps aside so the waiting line, then the celebration, can show.
+    if (r.ok) done();
     else {
       setNeedsSignIn(r.reason === "sign_in");
       // The technical detail (status, Midtrans' own words) helps the owner debug a failed setup.
