@@ -1,6 +1,6 @@
 import { SUPABASE_ENV, isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
-import { useRemoteConfig } from "./remote-config";
+import { currentMonetizationMode, useRemoteConfig } from "./remote-config";
 import type { Tier } from "./entitlements";
 
 /**
@@ -8,9 +8,11 @@ import type { Tier } from "./entitlements";
  *
  * 1. With Supabase set up and online, the code goes to the `redeem_code` function, which checks
  *    and counts uses atomically and, when signed in, records the grant on the account.
- * 2. Built-in codes (ABOT-FOUNDER-2026, ABOT-PRO-30D, ...) also work offline. They are in every
- *    copy of the app and this repository is public, so treat them as public promo codes: none of
- *    them grants lifetime. Mission Control can turn them off for everyone (remote config).
+ * 2. Built-in codes (ABOT-FOUNDER-2026, ABOT-PRO-30D, ...) also work offline, during the Founders
+ *    beta only. They are in every copy of the app and this repository is public, so they are
+ *    public promo codes: none grants lifetime, and once the app sells PRO (COMMERCIAL_LIVE) they
+ *    stop working so they cannot stand in for a purchase. Mission Control can also turn them off
+ *    during the beta (remote config). Grants already redeemed are kept.
  * 3. Codes made in Mission Control on a build without Supabase are kept on that device only.
  * Codes made in Mission Control with Supabase are checked online only: a code that can be
  * verified with no server would have to ship its secret inside the app.
@@ -23,7 +25,16 @@ export interface Grant {
   founder: boolean;
 }
 
-export type RedeemResult = { ok: true; code: string; grant: Grant; source: "server" | "offline" | "local" } | { ok: false; reason: string };
+export type RedeemResult =
+  | {
+      ok: true;
+      code: string;
+      grant: Grant;
+      source: "server" | "offline" | "local";
+      /** The grant was recorded on the signed-in account, so the account can later revoke it. */
+      onAccount: boolean;
+    }
+  | { ok: false; reason: string };
 
 /** "abot vip  30d" -> "ABOT-VIP-30D" */
 export function normalizeCode(input: string): string {
@@ -95,7 +106,7 @@ export function generateCode(kind: string, random: (n: number) => Uint8Array = (
 
 /* ------------------------------------------------------------------- redeem */
 
-type ServerAnswer = { grant: Grant } | { none: true } | { unreachable: true };
+type ServerAnswer = { grant: Grant; onAccount: boolean } | { none: true } | { unreachable: true };
 
 /** The redeem_code RPC: with the session when signed in (the grant lands on the account). */
 async function redeemOnServer(code: string): Promise<ServerAnswer> {
@@ -118,10 +129,18 @@ async function redeemOnServer(code: string): Promise<ServerAnswer> {
     const r = Array.isArray(rows) ? rows[0] : null;
     if (!r) return { none: true };
     const tier = r.grant_tier === "lifetime" ? "lifetime" : "pro";
-    return { grant: { tier, days: tier === "lifetime" ? null : (r.duration_days ?? 30), founder: r.grants_founder_badge === true } };
+    return {
+      grant: { tier, days: tier === "lifetime" ? null : (r.duration_days ?? 30), founder: r.grants_founder_badge === true },
+      onAccount: maySignedIn(),
+    };
   } catch {
     return { unreachable: true };
   }
+}
+
+/** Built-in codes count only during the Founders beta, and only while Mission Control allows them. */
+export function builtInCodesAccepted(): boolean {
+  return currentMonetizationMode() === "FOUNDERS_BETA" && useRemoteConfig.getState().config.offlineCodesEnabled;
 }
 
 export const REDEEM_REASONS = {
@@ -138,18 +157,18 @@ export async function redeemLicenseCode(input: string): Promise<RedeemResult> {
   if (code.length < 6) return { ok: false, reason: REDEEM_REASONS.empty };
 
   const server = await redeemOnServer(code);
-  if ("grant" in server) return { ok: true, code, grant: server.grant, source: "server" };
+  if ("grant" in server) return { ok: true, code, grant: server.grant, source: "server", onAccount: server.onAccount };
 
-  if (useRemoteConfig.getState().config.offlineCodesEnabled) {
+  if (builtInCodesAccepted()) {
     const builtIn = BUILT_IN[await sha256Hex(code)];
-    if (builtIn) return { ok: true, code, grant: builtIn, source: "offline" };
+    if (builtIn) return { ok: true, code, grant: builtIn, source: "offline", onAccount: false };
   }
 
   const local = readLocalCodes();
   const hit = local.find((c) => c.code === code && c.active && c.uses < c.maxUses);
   if (hit) {
     writeLocalCodes(local.map((c) => (c === hit ? { ...c, uses: c.uses + 1 } : c)));
-    return { ok: true, code, grant: hit.grant, source: "local" };
+    return { ok: true, code, grant: hit.grant, source: "local", onAccount: false };
   }
   return { ok: false, reason: REDEEM_REASONS.unknown };
 }

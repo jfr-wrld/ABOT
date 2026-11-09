@@ -126,7 +126,7 @@ function RestoreFromAccount() {
     setBusy(true);
     setResult(null);
     const r = await restoreEntitlementFromAccount(useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT);
-    if (r.kind === "restored") {
+    if (r.kind === "restored" || r.kind === "revoked") {
       updateEntitlement(r.next);
       feedback.tick();
     }
@@ -136,6 +136,7 @@ function RestoreFromAccount() {
 
   const message: Record<RestoreResult["kind"], string> = {
     restored: t("License restored from your account."),
+    revoked: t("Your account no longer holds this license (refunded or revoked), so it was removed from this phone."),
     "up-to-date": t("This phone already has your account's license."),
     none: t("No license found on this account."),
     "signed-out": t("Sign in again to restore your license."),

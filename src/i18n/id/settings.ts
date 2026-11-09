@@ -502,4 +502,6 @@ export const settings: Record<string, string> = {
   "Settings > Health Connect, then allow it to read exercise and calories.": "Pengaturan > Health Connect, lalu izinkan membaca olahraga dan kalori.",
   "Apple Health needs an iPhone app, which ABOT does not have yet. Strava and Garmin take the .tcx file from a workout's summary.":
     "Apple Health butuh aplikasi iPhone, yang belum dimiliki ABOT. Strava dan Garmin bisa menerima file .tcx dari ringkasan workout.",
+  "Your account no longer holds this license (refunded or revoked), so it was removed from this phone.":
+    "Akunmu tidak lagi memegang lisensi ini (dikembalikan dananya atau dicabut), jadi lisensi dihapus dari HP ini.",
 };

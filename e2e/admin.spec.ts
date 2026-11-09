@@ -62,7 +62,7 @@ test("hidden entry, PIN gate, and the monetization switch with prices and banner
   await expect(page.getByRole("dialog", { name: "Precision engineered for serious lifters." })).toContainText("Rp 35.000");
 });
 
-test("a code made in the console is redeemed on the device; built-in codes work offline", async ({ page }) => {
+test("a code made in the console is redeemed on the device; built-in codes stop in commercial mode", async ({ page }) => {
   await openConsole(page);
   await nav(page, "Monetization").click();
   await page.getByRole("radio", { name: /COMMERCIAL_LIVE/ }).click();
@@ -96,14 +96,13 @@ test("a code made in the console is redeemed on the device; built-in codes work 
   await redeem.getByLabel("VIP, influencer or promo code").fill(code);
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("alert")).toBeVisible();
-  // A built-in code, no server needed.
+  // Built-in codes are public, so once the app sells PRO they no longer unlock it.
   await redeem.getByLabel("VIP, influencer or promo code").fill("abot pro 30d");
   await redeem.getByRole("button", { name: "Activate" }).click();
-  await expect(redeem.getByRole("status")).toContainText("30 days access");
-  await redeem.getByRole("button", { name: "Done" }).click();
-  // Its 30 days stack on the 30 left from the first code.
+  await expect(redeem.getByRole("alert")).toHaveText("This code is not valid, or it has been used up.");
+  await page.keyboard.press("Escape");
   await expect(card).toContainText("BLACK PRO");
-  await expect(card.getByText("60", { exact: true })).toBeVisible();
+  await expect(card.getByText("30", { exact: true })).toBeVisible();
 });
 
 test("algorithm calibration, exercise CMS and database tools change the app for real", async ({ page }) => {

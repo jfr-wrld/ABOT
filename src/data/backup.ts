@@ -139,6 +139,7 @@ function normalizeEntitlement(raw: unknown): EntitlementState {
     founderUnitCode: code,
     founderJoinedAt: isoOrNull(raw.founderJoinedAt),
     proExpiresAt: isoOrNull(raw.proExpiresAt),
+    licenseSource: raw.licenseSource === "account" || raw.licenseSource === "device" ? raw.licenseSource : null,
     devOverrideMode: OVERRIDES.includes(raw.devOverrideMode as never) ? (raw.devOverrideMode as EntitlementState["devOverrideMode"]) : "AUTO",
   };
 }

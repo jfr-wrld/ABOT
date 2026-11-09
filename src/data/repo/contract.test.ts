@@ -99,6 +99,7 @@ describe.each([
           founderUnitCode: "FOUNDER // #0421",
           founderJoinedAt: "2026-11-09T00:00:00.000Z",
           proExpiresAt: null,
+          licenseSource: "account",
           devOverrideMode: "FORCE_FREE",
         },
         bodyweightKg: 72.5,

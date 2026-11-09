@@ -22,6 +22,14 @@ export interface EntitlementState {
   /** ISO date of the claim. */
   founderJoinedAt: string | null;
   proExpiresAt: string | null;
+  /**
+   * Where the paid licence on this device comes from. "account": the signed-in account's
+   * user_entitlements row, which is the source of truth, so a refund or revocation there removes it
+   * here. "device": a code checked on this device only (built-in or a local Mission Control code),
+   * which the account cannot take away. null: free, or a licence from before this field existed
+   * (kept, never downgraded).
+   */
+  licenseSource: "account" | "device" | null;
   devOverrideMode: DevOverride;
 }
 
@@ -31,6 +39,7 @@ export const DEFAULT_ENTITLEMENT: EntitlementState = {
   founderUnitCode: null,
   founderJoinedAt: null,
   proExpiresAt: null,
+  licenseSource: null,
   devOverrideMode: "AUTO",
 };
 
@@ -45,8 +54,6 @@ export type ProFeatureKey =
   | "smart_exercise_swap"
   | "story_studio_pro_presets"
   | "remove_story_watermark"
-  | "unlimited_routines"
-  | "health_connect_autosync"
   | "body_phase_protocols";
 
 /** Names shown on the paywall's "Unlock feature" banner. */
@@ -58,8 +65,6 @@ export const PRO_FEATURE_LABEL: Record<ProFeatureKey, string> = {
   smart_exercise_swap: "Smart exercise swap",
   story_studio_pro_presets: "Story Studio pro presets",
   remove_story_watermark: "Story without watermark",
-  unlimited_routines: "Unlimited routines",
-  health_connect_autosync: "Health Connect auto-sync",
   body_phase_protocols: "Body phase protocols",
 };
 
@@ -99,7 +104,11 @@ export function claimFounder(e: EntitlementState, seed: string, now = new Date()
   return { ...e, isFounder: true, founderUnitCode: `FOUNDER // #${founderNumber(seed)}`, founderJoinedAt: now.toISOString() };
 }
 
-/** Free against PRO on the paywall, row by row. `true` included, `false` not, text a limit. */
+/**
+ * Free against PRO on the paywall, row by row. `true` included, `false` not, text a limit.
+ * Routines and cloud/Health Connect sync stay free: they are core logging, and ProFeatureKey has no
+ * key for them, so this table and the gates say the same thing.
+ */
 export const PRO_MATRIX: { feature: string; core: boolean | string; pro: boolean | string }[] = [
   { feature: "Workout logging, routines, records", core: true, pro: true },
   { feature: "Auto-overload coach", core: false, pro: true },
@@ -128,8 +137,12 @@ export function applyGrant(
   grant: { tier: "pro" | "lifetime"; days: number | null; founder: boolean },
   seed: string,
   now = Date.now(),
+  source: "account" | "device" = "device",
 ): EntitlementState {
-  let next: EntitlementState = { ...e, devOverrideMode: e.devOverrideMode === "FORCE_FREE" ? "AUTO" : e.devOverrideMode };
+  // A device-only grant on top of an account licence makes the result device-held: the account
+  // can no longer take back days it never gave.
+  const licenseSource = source === "device" || e.licenseSource === "device" ? "device" : "account";
+  let next: EntitlementState = { ...e, licenseSource, devOverrideMode: e.devOverrideMode === "FORCE_FREE" ? "AUTO" : e.devOverrideMode };
   if (grant.tier === "lifetime" || e.tier === "lifetime") {
     next = { ...next, tier: "lifetime", proExpiresAt: null };
   } else {

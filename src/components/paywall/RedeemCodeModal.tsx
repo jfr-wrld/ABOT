@@ -24,7 +24,7 @@ export async function redeemAndApply(input: string): Promise<{ ok: true; grant: 
   const r = await redeemLicenseCode(input);
   if (!r.ok) return r;
   const current = useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT;
-  updateEntitlement(applyGrant(current, r.grant, `${newId()}-${r.code}`));
+  updateEntitlement(applyGrant(current, r.grant, `${newId()}-${r.code}`, Date.now(), r.onAccount ? "account" : "device"));
   feedback.pr();
   return { ok: true, grant: r.grant };
 }

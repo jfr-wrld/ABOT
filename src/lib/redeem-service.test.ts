@@ -40,6 +40,15 @@ describe("codes", () => {
 });
 
 describe("redeemLicenseCode without Supabase", () => {
+  it("built-in codes stop once the app sells PRO, so they cannot stand in for a purchase", async () => {
+    useRemoteConfig.setState({ config: { ...DEFAULT_REMOTE_CONFIG, monetizationMode: "COMMERCIAL_LIVE" } });
+    expect(await redeemLicenseCode("abot-pro-30d")).toMatchObject({ ok: false });
+  });
+
+  it("an offline code is held on the device, not the account", async () => {
+    expect(await redeemLicenseCode("abot-pro-30d")).toMatchObject({ ok: true, onAccount: false });
+  });
+
   it("built-in codes work offline", async () => {
     expect(await redeemLicenseCode("abot-pro-30d")).toMatchObject({ ok: true, source: "offline", grant: { tier: "pro", days: 30 } });
     expect(await redeemLicenseCode("ABOT VIP 30D")).toMatchObject({ ok: true, grant: { tier: "pro", days: 30 } });
