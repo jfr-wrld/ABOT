@@ -3,20 +3,9 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Check, Minus, X, Zap } from "lucide-react";
 import { useEntitlements, usePaywallStore, updateEntitlement, autoClaimFounder } from "@/store/useEntitlements";
-import { PLANS, PRO_FEATURE_LABEL, annualSaving, planPrice, rupiah, startCheckout, type PlanId } from "@/lib/entitlements";
+import { PLANS, PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, rupiah, startCheckout, type PlanId } from "@/lib/entitlements";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
-
-/** Free against PRO, row by row. `true` is included, `false` is not, text is a limit. */
-const MATRIX: { feature: string; core: boolean | string; pro: boolean | string }[] = [
-  { feature: "Workout logging, routines, records", core: true, pro: true },
-  { feature: "Auto-overload coach", core: false, pro: true },
-  { feature: "72h thermal recovery inspector", core: "Map only", pro: true },
-  { feature: "Hexagon symmetry radar diagnostics", core: "Radar only", pro: true },
-  { feature: "Story presets", core: "2", pro: "11 + no watermark" },
-  { feature: "Voice logger", core: false, pro: true },
-  { feature: "Cloud backup and Health Connect sync", core: true, pro: true },
-];
 
 /**
  * ABOT // BLACK PRO: the upgrade screen, full height, always dark. During the founders beta it

@@ -2,6 +2,8 @@
 
 import { useId, useState } from "react";
 import { useT } from "@/i18n";
+import { useEntitlements } from "@/store/useEntitlements";
+import { ProBadge, ProLock } from "@/components/paywall/ProBadge";
 import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT, type BodyPart } from "./bodyPaths.generated";
 import { REGIONS, type Region } from "./regions";
 import { STAGE_STYLE, type FatigueStage, type RegionTelemetry } from "@/lib/muscle-recovery";
@@ -136,6 +138,8 @@ export function RecoveryMap({
   const uid = useId().replace(/:/g, "");
   const [view, setView] = useState<"front" | "back">("front");
   const [selected, setSelected] = useState<Region | null>(null);
+  const { canAccessPro } = useEntitlements();
+  const inspect = canAccessPro("thermal_recovery_inspector");
   const name = (r: Region) => t(REGION_NAMES[r]);
   const recovery = (r: Region) => Math.round(100 - data[r].fatigue);
   const label = (r: Region) => t("{muscle}, {pct}% recovered", { muscle: name(r), pct: recovery(r) });
@@ -188,6 +192,15 @@ export function RecoveryMap({
         <path d={view === "front" ? OUTLINE_FRONT : OUTLINE_BACK} fill="none" stroke="rgb(255 255 255 / 0.18)" strokeWidth={2.5} />
       </svg>
 
+      <div className="flex justify-end">
+        <ProBadge suffix="TELEMETRY" />
+      </div>
+      {sel && selected && !inspect ? (
+        <ProLock
+          feature="thermal_recovery_inspector"
+          text={t("{muscle}: recovery %, last session and hours to ready come with ABOT // BLACK.", { muscle: name(selected) })}
+        />
+      ) : (
       <div role="status" aria-live="polite" className="min-h-[60px] rounded-ctl border border-line-strong bg-surface px-3 py-2">
         {sel && selected ? (
           <>
@@ -207,6 +220,7 @@ export function RecoveryMap({
           <p className="text-xs text-text-muted">{t("Tap a muscle to see its recovery.")}</p>
         )}
       </div>
+      )}
 
       <p className="label-caps -mb-1.5 !text-[10px]" id={`${uid}-key`}>
         {t("Fatigue")}

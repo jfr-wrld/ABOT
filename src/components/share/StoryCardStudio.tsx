@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Download, Image as ImageIcon, ImagePlus, LayoutTemplate, Share2, Trash2, X } from "lucide-react";
+import { Camera, Download, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "lucide-react";
+import { useEntitlements } from "@/store/useEntitlements";
+import { ProBadge } from "@/components/paywall/ProBadge";
 import { Button } from "@/components/ui/Button";
 import { formatDuration } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
@@ -176,6 +178,9 @@ function Studio({
   const [photoBusy, setPhotoBusy] = useState(false);
   const [overlay, setOverlay] = useState<number>(OVERLAY_RANGE.initial);
   const [grayscale, setGrayscale] = useState(false);
+  const [hideWatermark, setHideWatermark] = useState(false);
+  const [founderBadgeOn, setFounderBadgeOn] = useState(false);
+  const { proActive, isFounder, founderUnitCode, openPaywall } = useEntitlements();
   const t = useT();
   // The card carries the lifter's @handle from the profile (Profile > About).
   const handle = useSettingsStore((st) => st.profileHandle);
@@ -195,7 +200,13 @@ function Studio({
     };
   }, []);
 
-  const opts = useMemo<StoryOptions>(() => ({ preset, photo, overlay, grayscale }), [preset, photo, overlay, grayscale]);
+  // Layouts 1 and 2 are free; from the third on, and a card without the ABOT mark, are PRO.
+  const presetLocked = !proActive && isProPreset(preset);
+  const founderBadge = founderBadgeOn && isFounder ? founderUnitCode : null;
+  const opts = useMemo<StoryOptions>(
+    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge }),
+    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge],
+  );
   const exportKey = useMemo(() => ({ card, opts }), [card, opts]);
   const png: PngState = made.from === exportKey ? { blob: made.blob, fileName: made.fileName, busy: false } : { blob: null, fileName: "", busy: true };
   const actions = usePngActions(png);
@@ -314,7 +325,7 @@ function Studio({
         </div>
         <button
           type="button"
-          onClick={() => void actions.download()}
+          onClick={() => (presetLocked ? openPaywall("story_studio_pro_presets") : void actions.download())}
           disabled={!actions.ready}
           aria-label={t("Download High-Res PNG")}
           className="flex size-11 items-center justify-center rounded-full text-text hover:bg-surface-2 disabled:opacity-40"
@@ -334,6 +345,20 @@ function Studio({
           className="block h-full max-h-full w-auto max-w-full rounded-card border border-line bg-surface shadow-2xl"
           style={{ aspectRatio: `${STORY_WIDTH} / ${STORY_HEIGHT}` }}
         />
+        {presetLocked && (
+          <div className="force-dark absolute inset-x-8 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 rounded-card border border-[#ccff00]/50 bg-black/85 p-4 text-center backdrop-blur">
+            <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#ccff00]">
+              <Lock aria-hidden="true" size={12} /> {t("PRO layout preview")}
+            </p>
+            <button
+              type="button"
+              onClick={() => openPaywall("story_studio_pro_presets")}
+              className="min-h-11 rounded-ctl bg-[#ccff00] px-4 font-mono text-xs font-black uppercase tracking-[0.1em] text-black"
+            >
+              {t("Unlock with ABOT // BLACK")}
+            </button>
+          </div>
+        )}
         {!fonts && (
           <p role="status" className="absolute inset-0 flex items-center justify-center text-sm text-text-muted">
             {t("Preparing the card")}
@@ -360,8 +385,10 @@ function Studio({
           <ul aria-label={t("Layouts")} className="-mx-4 flex h-full snap-x gap-2 overflow-x-auto px-4 pb-1">
             {STORY_PRESETS.map((p) => {
               const selected = p.id === preset;
+              const pro = isProPreset(p.id);
               return (
-                <li key={p.id} className="h-full shrink-0 snap-start">
+                <li key={p.id} className="relative h-full shrink-0 snap-start">
+                  {pro && <ProBadge className="pointer-events-none absolute bottom-1.5 left-1/2 z-10 -translate-x-1/2 scale-90" />}
                   <button
                     type="button"
                     aria-pressed={selected}
@@ -388,6 +415,27 @@ function Studio({
               );
             })}
           </ul>
+        )}
+
+        {tab === "pro" && (
+          <div className="flex h-full flex-col justify-center gap-2">
+            <ProRow
+              label={t("Hide ABOT watermark")}
+              badge={<ProBadge />}
+              checked={hideWatermark && proActive}
+              onChange={(v) => (proActive ? setHideWatermark(v) : openPaywall("remove_story_watermark"))}
+            />
+            {isFounder ? (
+              <ProRow
+                label={t("Show founder badge")}
+                badge={<span className="font-mono text-[10px] tabular-nums text-text-muted">{founderUnitCode}</span>}
+                checked={founderBadgeOn}
+                onChange={setFounderBadgeOn}
+              />
+            ) : (
+              <p className="text-xs text-text-muted">{t("The founder badge is for Founder pass holders.")}</p>
+            )}
+          </div>
         )}
 
         {tab === "photo" && (
@@ -457,7 +505,7 @@ function Studio({
         }}
       />
 
-      <div role="tablist" aria-label={t("Edit")} className="mx-4 mt-2 grid shrink-0 grid-cols-2 gap-1 rounded-ctl bg-surface-2 p-1">
+      <div role="tablist" aria-label={t("Edit")} className="mx-4 mt-2 grid shrink-0 grid-cols-3 gap-1 rounded-ctl bg-surface-2 p-1">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -479,7 +527,7 @@ function Studio({
       <div className="shrink-0 px-4 pt-3">
         <Button
           variant="primary"
-          onClick={() => void actions.share()}
+          onClick={() => (presetLocked ? openPaywall("story_studio_pro_presets") : void actions.share())}
           disabled={!actions.ready || !shareable}
           aria-label={t("Share to Instagram / System Share")}
           className="min-h-12 w-full text-base"
@@ -493,8 +541,36 @@ function Studio({
   );
 }
 
-type Tab = "layout" | "photo";
+type Tab = "layout" | "photo" | "pro";
 const TABS: { id: Tab; label: string; icon: typeof Camera }[] = [
   { id: "layout", label: "Layout", icon: LayoutTemplate },
   { id: "photo", label: "Photo", icon: ImagePlus },
+  { id: "pro", label: "Pro", icon: Gem },
 ];
+
+/** Layouts after the first two are part of ABOT // BLACK PRO. */
+function isProPreset(id: StoryPresetId): boolean {
+  return STORY_PRESETS.findIndex((p) => p.id === id) >= 2;
+}
+
+/** One switch row in the Pro tab: label, its badge, and the switch. */
+function ProRow({ label, badge, checked, onChange }: { label: string; badge: React.ReactNode; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
+      <span className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+        <span className="truncate">{label}</span>
+        {badge}
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={`relative h-8 w-14 shrink-0 rounded-full border transition-colors ${checked ? "border-accent bg-accent" : "border-line-strong bg-surface-2"}`}
+      >
+        <span aria-hidden="true" className={`absolute top-0.5 size-6 rounded-full transition-[left] ${checked ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`} />
+      </button>
+    </label>
+  );
+}

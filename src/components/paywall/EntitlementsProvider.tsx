@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useHydration } from "@/store/hydration";
-import { autoClaimFounder } from "@/store/useEntitlements";
+import { autoClaimFounder, usePaywallStore } from "@/store/useEntitlements";
 import { AbotProModal } from "./AbotProModal";
 
 /**
@@ -14,5 +14,8 @@ export function EntitlementsProvider() {
   useEffect(() => {
     if (hydrated) autoClaimFounder();
   }, [hydrated]);
-  return <AbotProModal />;
+  // Mounted only while open. Left in the page closed, the full-screen <dialog> made links on
+  // other screens (the workout summary's) never settle for a click in the e2e browser.
+  const open = usePaywallStore((s) => s.open);
+  return open ? <AbotProModal /> : null;
 }

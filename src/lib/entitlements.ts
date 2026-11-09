@@ -97,6 +97,24 @@ export function claimFounder(e: EntitlementState, seed: string, now = new Date()
   return { ...e, isFounder: true, founderUnitCode: `FOUNDER // #${founderNumber(seed)}`, founderJoinedAt: now.toISOString() };
 }
 
+/** Free against PRO on the paywall, row by row. `true` included, `false` not, text a limit. */
+export const PRO_MATRIX: { feature: string; core: boolean | string; pro: boolean | string }[] = [
+  { feature: "Workout logging, routines, records", core: true, pro: true },
+  { feature: "Auto-overload coach", core: false, pro: true },
+  { feature: "72h thermal recovery inspector", core: "Map only", pro: true },
+  { feature: "Hexagon symmetry radar diagnostics", core: "Radar only", pro: true },
+  { feature: "Story presets", core: "2", pro: "11 + no watermark" },
+  { feature: "Voice logger", core: false, pro: true },
+  { feature: "Cloud backup and Health Connect sync", core: true, pro: true },
+];
+
+/** The simulator's three positions. */
+export const SIMULATOR: { mode: DevOverride; label: string }[] = [
+  { mode: "AUTO", label: "Beta mode" },
+  { mode: "FORCE_FREE", label: "Free locked" },
+  { mode: "FORCE_PRO", label: "Pro active" },
+];
+
 /* ---------------------------------------------------------------- plans */
 
 export type PlanId = "monthly" | "annual" | "lifetime";
@@ -146,6 +164,8 @@ export function rupiah(n: number): string {
 
 /* ---------------------------------------------------------------- checkout */
 
+export const CHECKOUT_NOT_CONNECTED = "Payments are not connected yet. During the beta every PRO feature is free.";
+
 export type CheckoutResult = { ok: true } | { ok: false; reason: string };
 
 /**
@@ -153,6 +173,7 @@ export type CheckoutResult = { ok: true } | { ok: false; reason: string };
  * LemonSqueezy checkout URL on the web. Nothing is connected yet, and ABOT makes no network
  * calls, so this answers honestly instead of pretending to charge.
  */
-export async function startCheckout(_plan: PlanId): Promise<CheckoutResult> {
-  return { ok: false, reason: "Payments are not connected yet. During the beta every PRO feature is free." };
+export async function startCheckout(plan: PlanId): Promise<CheckoutResult> {
+  void plan; // The provider will take the plan id; none is wired yet.
+  return { ok: false, reason: CHECKOUT_NOT_CONNECTED };
 }

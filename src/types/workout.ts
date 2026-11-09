@@ -11,6 +11,8 @@
  *   sets that were actually performed. They share the same `SetType`.
  */
 
+import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
+
 export type WeightUnit = "kg" | "lbs";
 
 export type MuscleGroup =
@@ -252,6 +254,8 @@ export interface UserSettings {
   healthAutoSync: boolean;
   /** Last night's sleep from Health Connect; scales the recovery map. */
   lastSleep: { minutes: number; endAt: number } | null;
+  /** ABOT // BLACK PRO tier, founder pass and the monetization simulator (lib/entitlements). */
+  entitlement: EntitlementState;
 }
 
 export type AppLanguage = "auto" | "en" | "id";
@@ -286,6 +290,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   tapFeedback: true,
   healthAutoSync: false,
   lastSleep: null,
+  entitlement: DEFAULT_ENTITLEMENT,
   bodyweightKg: null,
   heightCm: null,
   profilePhoto: null,

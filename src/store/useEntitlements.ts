@@ -51,7 +51,13 @@ export function useEntitlements() {
   const show = usePaywallStore((s) => s.show);
   const r = useMemo(() => resolveEntitlement(e), [e]);
   // Every PRO feature is gated the same way today; the key names what is being asked for.
-  const canAccessPro = useCallback((_feature?: ProFeatureKey) => r.proActive, [r.proActive]);
+  const canAccessPro = useCallback(
+    (feature?: ProFeatureKey) => {
+      void feature;
+      return r.proActive;
+    },
+    [r.proActive],
+  );
   const openPaywall = useCallback((feature?: ProFeatureKey) => show(feature ?? null), [show]);
   const setDevOverride = useCallback((m: DevOverride) => updateEntitlement({ devOverrideMode: m }), []);
   return {

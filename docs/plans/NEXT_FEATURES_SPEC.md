@@ -116,3 +116,72 @@ lacks the equipment.
 - Picking one keeps the planned sets: with nothing ticked the exercise is replaced in place;
   otherwise ticked sets stay with the old exercise and the sets left move to the new one,
   placed right after it and in the same superset. The new weight fills those sets.
+
+---
+
+# Phase 4: Commercial Architecture, Founder Pass & Paywall Engine
+
+## PRIORITY 11: Entitlement Engine, Founder Pass & Tactile Paywall (`ABOT // BLACK PRO`)
+
+**Objective:** monetization built on feature flags. It runs today as **Founders Early Access**
+(every PRO feature open, marked `PRO // BETA`) and can switch to a **commercial paywall** with
+one build setting, without touching the UI.
+
+### 11.1 Entitlements (`src/lib/entitlements.ts`, `src/store/useEntitlements.ts`)
+- **Monetization mode**, set at build time with `NEXT_PUBLIC_ABOT_MONETIZATION`:
+  - `FOUNDERS_BETA` (default): every PRO feature is open; PRO spots carry `PRO // BETA`.
+  - `COMMERCIAL_LIVE`: PRO needs `tier === "pro"` (not expired) or `"lifetime"`. Free users
+    see a soft-locked preview and the paywall.
+- **State**, kept in settings on the device and in backup files (settings are not part of cloud
+  sync yet, so the pass travels by backup):
+  ```ts
+  interface EntitlementState {
+    tier: "free" | "pro" | "lifetime";
+    isFounder: boolean;
+    founderUnitCode: string | null;   // "FOUNDER // #0421"
+    founderJoinedAt: string | null;   // ISO date
+    proExpiresAt: string | null;
+    devOverrideMode: "AUTO" | "FORCE_FREE" | "FORCE_PRO" | "FORCE_BETA";
+  }
+  ```
+- **Founder auto-claim:** once saved settings load during the beta, the install is stamped a
+  Founder with a four-digit unit code from a random install seed. It never changes after.
+- **Hook:** `useEntitlements()` gives `canAccessPro(feature)`, `isBetaUnlocked`, `proActive`,
+  `isFounder`, `founderUnitCode`, `tier`, `openPaywall(feature)` and `setDevOverride(mode)`.
+  `EntitlementsProvider` (in the root layout) claims the founder pass and holds the one paywall.
+- **Feature keys:** `progressive_overload_coach`, `symmetry_radar_telemetry`,
+  `thermal_recovery_inspector`, `voice_handsfree_logger`, `smart_exercise_swap`,
+  `story_studio_pro_presets`, `remove_story_watermark`, `unlimited_routines`,
+  `health_connect_autosync`.
+
+### 11.2 Paywall (`src/components/paywall/AbotProModal.tsx`)
+- Full screen, always dark: Matte Obsidian `#09090b`, a thin technical grid and a soft Volt glow,
+  badge `ABOT // BLACK TELEMETRY SYSTEM`, headline `PRECISION ENGINEERED FOR SERIOUS LIFTERS.`
+- Opened from a feature, it names it: `UNLOCK FEATURE: STORY STUDIO PRO PRESETS`.
+- Comparison table `CORE (FREE)` against `BLACK PRO`.
+- Three plans in `font-mono tabular-nums`:
+  1. **Monthly protocol:** Rp 29.000 a month ($2.99), cancel any time.
+  2. **Annual telemetry:** Rp 199.000 a year ($19.99, about Rp 16.583 a month), **save 43%**,
+     Volt border, selected by default.
+  3. **Founders lifetime license:** Rp 798.000 once ($79.98); founders pay **Rp 399.000**
+     ($39.99) with the full price struck through and `FOUNDER 50% OFF PRIVILEGE APPLIED`.
+- **Beta:** `ACTIVE: FOUNDERS BETA PASS. ALL PRO FEATURES UNLOCKED FREE.` with the unit code,
+  `Claim / Verify Founder Pass`, and `Simulate activating this plan`.
+- **Commercial:** `Activate <plan>` calls `startCheckout(plan)`, the single place where
+  RevenueCat (Google Play Billing) or a QRIS / LemonSqueezy checkout URL plugs in. ABOT makes no
+  network calls today, so it answers that payments are not connected yet.
+
+### 11.3 Founder pass card and locks
+- **`FounderPassCard`** at the top of Settings: a steel plate (`from-[#141418] to-[#09090b]`,
+  `border-[#ccff00]/40`, rivets) with `FOUNDER UNIT // #XXXX`, the activation date, the status,
+  `View ABOT // BLACK PRO specs`, and the **monetization simulator**:
+  `Beta mode | Free locked | Pro active`.
+- **Story Studio:** layouts 1 and 2 free, 3 to 11 tagged PRO. When locked, a PRO layout shows
+  a preview with `Unlock with ABOT // BLACK`, and download and share open the paywall. A Pro tab
+  holds `Hide ABOT watermark` (PRO: removes the ABOT mark and name from every layout) and
+  `Show founder badge` (founders only: `ABOT // FOUNDER EDITION` and the unit number in the top
+  corner of the 9:16 card).
+- **Coach Pill:** a `PRO` tag; when locked, APPLY opens the paywall.
+- **Symmetry radar and recovery map:** `PRO // TELEMETRY` in the corner. When locked, the radar
+  still draws, and the score and diagnostics give way to an unlock panel; on the map, tapping a
+  muscle shows the unlock panel instead of its recovery details.

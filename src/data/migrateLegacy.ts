@@ -71,6 +71,7 @@ export async function migrateFromLocalStorage(
       tapFeedback: DEFAULT_SETTINGS.tapFeedback,
       healthAutoSync: DEFAULT_SETTINGS.healthAutoSync,
       lastSleep: DEFAULT_SETTINGS.lastSleep,
+      entitlement: DEFAULT_SETTINGS.entitlement,
       bodyweightKg: DEFAULT_SETTINGS.bodyweightKg,
       heightCm: DEFAULT_SETTINGS.heightCm,
       profilePhoto: DEFAULT_SETTINGS.profilePhoto,

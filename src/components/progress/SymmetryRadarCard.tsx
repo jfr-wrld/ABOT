@@ -5,6 +5,8 @@ import type { Exercise, WorkoutSession } from "@/types/workout";
 import { RangeTabs } from "./RangeTabs";
 import { AXES, AXIS_LABEL, IDEAL_SHARE, MIN_SETS, analyzeSymmetry, type Axis } from "@/lib/symmetry-analyzer";
 import { useT } from "@/i18n";
+import { useEntitlements } from "@/store/useEntitlements";
+import { ProBadge, ProLock } from "@/components/paywall/ProBadge";
 
 const DAY = 86_400_000;
 const R = 100;
@@ -28,6 +30,8 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
   const t = useT();
   const uid = useId().replace(/:/g, "");
   const [days, setDays] = useState<7 | 30 | 90>(7);
+  const { canAccessPro } = useEntitlements();
+  const unlocked = canAccessPro("symmetry_radar_telemetry");
   const r = useMemo(() => analyzeSymmetry(sessions, byId, now - days * DAY, now + 1), [sessions, byId, now, days]);
   const radius = (a: Axis) => (Math.min(r.axes[a].ratio, CAP) / CAP) * R;
   const ideal = R / CAP;
@@ -41,7 +45,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
         <h2 id={`${uid}-h`} className="text-sm font-semibold">
           {t("Muscle balance")}
         </h2>
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">{t("Working sets")}</span>
+        <ProBadge suffix="TELEMETRY" />
       </div>
       <RangeTabs
         id="symmetry-range"
@@ -113,6 +117,9 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
         })}
       </svg>
 
+      {!unlocked && enough ? (
+        <ProLock feature="symmetry_radar_telemetry" text={t("The score, the ratio checks and what to add this week come with ABOT // BLACK.")} />
+      ) : (
       <div role="status" className="rounded-ctl border border-[#27272a] bg-[#121215] px-3 py-2.5 font-mono text-xs leading-relaxed tabular-nums">
         {enough ? (
           <>
@@ -143,6 +150,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
           <p className="text-zinc-300">{t("Log at least {n} working sets in this range to read your balance.", { n: MIN_SETS })}</p>
         )}
       </div>
+      )}
       <p className="text-[11px] text-text-muted">
         {t("Dashed: a balanced week ({push}% push, {pull}% pull, a third legs). Main muscles count a set, helpers half.", {
           push: Math.round(IDEAL_SHARE.push * 100),

@@ -3,6 +3,7 @@ import { SPLITS } from "@/lib/seed-routines";
 import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
 import { KIND_LABEL, WHY } from "@/lib/progressive-overload";
 import { FILTER_LABEL } from "@/lib/exercise-swapper";
+import { CHECKOUT_NOT_CONNECTED, PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
 import { AXIS_LABEL, DIAGNOSTIC_KEYS } from "@/lib/symmetry-analyzer";
 
 /**
@@ -97,4 +98,11 @@ export const DYNAMIC_KEYS: string[] = [
   "OPTIMAL", "BALANCED", "IMBALANCED", "CRITICAL",
   DIAGNOSTIC_KEYS.pushPull, DIAGNOSTIC_KEYS.noPull, DIAGNOSTIC_KEYS.pullPush, DIAGNOSTIC_KEYS.quadHam, DIAGNOSTIC_KEYS.hamQuad, DIAGNOSTIC_KEYS.skipLegs,
   ...Object.values(DIAGNOSTIC_KEYS.low),
+  // ABOT // BLACK PRO: feature names, plans, comparison rows, simulator, checkout answer, Pro tab
+  ...Object.values(PRO_FEATURE_LABEL),
+  ...PLANS.flatMap((p) => [p.name, p.note]),
+  ...PRO_MATRIX.flatMap((r) => [r.feature, ...[r.core, r.pro].filter((v): v is string => typeof v === "string")]),
+  ...SIMULATOR.map((s) => s.label),
+  CHECKOUT_NOT_CONNECTED,
+  "Pro",
 ];

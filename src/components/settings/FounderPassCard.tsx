@@ -1,15 +1,9 @@
 "use client";
 
 import { useEntitlements } from "@/store/useEntitlements";
-import type { DevOverride } from "@/lib/entitlements";
+import { SIMULATOR } from "@/lib/entitlements";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
-
-const SIMULATOR: { mode: DevOverride; label: string }[] = [
-  { mode: "AUTO", label: "Beta mode" },
-  { mode: "FORCE_FREE", label: "Free locked" },
-  { mode: "FORCE_PRO", label: "Pro active" },
-];
 
 /**
  * ABOT // FOUNDER TELEMETRY PASS: a steel plate with the unit number, the join date and what is
