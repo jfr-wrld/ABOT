@@ -34,10 +34,9 @@ You need the Supabase CLI logged in and linked to the project (`supabase link --
 2. **Secrets.** Use the Sandbox Server Key from Midtrans Dashboard → Settings → Access Keys (it starts with `SB-Mid-server-`). Replace `<site>` with the web app's domain.
 
    ```bash
-   supabase secrets set MIDTRANS_SERVER_KEY=SB-Mid-server-xxxx MIDTRANS_IS_PRODUCTION=false ABOT_RETURN_URL=https://<site>/settings/ ABOT_ALLOWED_ORIGINS=https://<site>,https://localhost
+   supabase secrets set MIDTRANS_SERVER_KEY=SB-Mid-server-xxxx MIDTRANS_IS_PRODUCTION=false ABOT_RETURN_URL=https://<site>/settings/
    ```
 
-   `https://localhost` is the Android app's origin (Capacitor).
 3. **Functions:**
 
    ```bash
@@ -91,7 +90,7 @@ select u.email, e.tier, e.pro_expires_at, e.is_founder, e.source from public.use
 - **"The payment page could not be opened":** read the `midtrans-checkout` logs. The usual causes are a wrong Server Key or the wrong `MIDTRANS_IS_PRODUCTION`.
 - **Paid but no PRO, and no row in `payment_events`:** the Notification URL is wrong, or `midtrans-notify` was deployed without `--no-verify-jwt`. A `401 bad signature` in the logs means the key does not match.
 - **A row in `payment_events` but the order is still pending:** compare its `gross_amount` with the order's `amount_idr`.
-- **CORS error in the browser:** the site's origin is missing from `ABOT_ALLOWED_ORIGINS`.
+- **"(FunctionsFetchError)" after the message:** the browser got no readable answer. Usually "Verify JWT" is still on for `midtrans-checkout` (the gateway rejects the browser's preflight), or the function name is not exactly `midtrans-checkout`.
 - **Notification arrived before a fix:** the Midtrans dashboard can resend it.
 
 ## Going live

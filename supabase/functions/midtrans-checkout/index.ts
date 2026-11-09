@@ -6,28 +6,26 @@
 //   MIDTRANS_SERVER_KEY      the Server Key from the Midtrans dashboard (Sandbox: SB-Mid-server-...)
 //   MIDTRANS_IS_PRODUCTION   "true" for real money; anything else uses the Sandbox
 //   ABOT_RETURN_URL          where Midtrans sends the buyer after paying, e.g. https://<site>/settings/
-//   ABOT_ALLOWED_ORIGINS     comma-separated web origins allowed to call this (the site, and
-//                            https://localhost for the Android app)
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { PLAN_LABEL, allowedOrigin, basicAuth, isWebPlan, makeOrderId, priceIdr, snapUrl } from "../_shared/midtrans.ts";
+import { PLAN_LABEL, basicAuth, isWebPlan, makeOrderId, priceIdr, snapUrl } from "../_shared/midtrans.ts";
 
 const SERVER_KEY = Deno.env.get("MIDTRANS_SERVER_KEY") ?? "";
 const PRODUCTION = Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true";
 const RETURN_URL = Deno.env.get("ABOT_RETURN_URL") ?? "";
-const ORIGINS = (Deno.env.get("ABOT_ALLOWED_ORIGINS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 
+// Any origin may call this: it is authorised by the user's bearer token, not by cookies, so a
+// page on another site cannot act for the user. (An origin allowlist only broke real setups.)
 function respond(req: Request, status: number, body: unknown): Response {
-  const origin = allowedOrigin(req.headers.get("origin"), ORIGINS);
-  const headers: Record<string, string> = { "content-type": "application/json", vary: "origin" };
-  if (origin) {
-    headers["access-control-allow-origin"] = origin;
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    "access-control-allow-origin": "*",
     // Echo what the browser asks to send: supabase-js adds headers over time (x-region, ...).
-    headers["access-control-allow-headers"] = req.headers.get("access-control-request-headers") ?? "authorization, apikey, content-type, x-client-info";
-    headers["access-control-allow-methods"] = "POST, OPTIONS";
-  }
+    "access-control-allow-headers": req.headers.get("access-control-request-headers") ?? "authorization, apikey, content-type, x-client-info",
+    "access-control-allow-methods": "POST, OPTIONS",
+  };
   return new Response(status === 204 ? null : JSON.stringify(body), { status, headers });
 }
 
