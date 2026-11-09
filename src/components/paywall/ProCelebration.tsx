@@ -19,7 +19,11 @@ export const useCelebrationStore = create<{ unlocked: Unlocked | null; show: (u:
   close: () => set({ unlocked: null }),
 }));
 
-const SPARKS = 12;
+const SPARKS = 24;
+const EMBERS = 18;
+const TICKS = 60;
+/** The impact: everything dramatic is timed from the moment the plate lands. */
+const HIT = 0.42;
 const PERKS = [
   { icon: Brain, text: "Auto-overload coach" },
   { icon: Activity, text: "72h recovery inspector" },
@@ -110,117 +114,262 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
       : unlocked.until
         ? t("Active until {date}", { date: new Date(unlocked.until).toLocaleDateString(t.locale, { day: "numeric", month: "long", year: "numeric" }) })
         : t("Active on your account");
-  // Lock-in timing: the plate lands at 0.35 s, the flash and sparks follow, then the words.
   const after = (s: number) => (reduce ? 0 : s);
+  // Loops only run with motion allowed; with reduced motion the screen is still.
+  const loop = (t: object) => (reduce ? { duration: 0 } : { repeat: Infinity, ...t });
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="pro-celebration-title"
-      className="force-dark fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden bg-[#09090b] px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(24px+env(safe-area-inset-top))] text-text"
+      className="force-dark fixed inset-0 z-[60] overflow-hidden bg-[#09090b] text-text"
     >
-      {/* Volt glow behind the plate. */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[38%] size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{ background: "radial-gradient(circle, rgb(204 255 0 / 0.22), transparent 62%)" }}
-        initial={{ opacity: 0, scale: reduce ? 1 : 0.4 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: after(0.35), duration: reduce ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
-      />
+      {/* Embers rising for as long as the screen is open. */}
+      {!reduce && <Embers />}
 
-      <div className="relative flex size-44 items-center justify-center">
-        {/* Shock ring from the impact. */}
+      {/* One flash on impact (a single pulse, never a strobe). */}
+      {!reduce && (
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-10 bg-[#f4ffcc]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.32, 0] }}
+          transition={{ delay: HIT, duration: 0.45, times: [0, 0.15, 1] }}
+        />
+      )}
+
+      {/* The whole stage shakes once with the hit. */}
+      <motion.div
+        className="relative flex size-full flex-col items-center justify-center px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(24px+env(safe-area-inset-top))]"
+        animate={reduce ? undefined : { x: [0, -9, 8, -6, 4, -2, 0], y: [0, 6, -5, 3, -2, 0, 0] }}
+        transition={{ delay: HIT, duration: 0.42 }}
+      >
+        {/* Breathing Volt glow behind the plate. */}
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-[34%] size-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{ background: "radial-gradient(circle, rgb(204 255 0 / 0.26), rgb(204 255 0 / 0.06) 40%, transparent 64%)" }}
+          initial={{ opacity: 0, scale: reduce ? 1 : 0.3 }}
+          animate={reduce ? { opacity: 1, scale: 1 } : { opacity: [0, 1, 0.75, 1], scale: [0.3, 1.1, 1, 1.06, 1] }}
+          transition={reduce ? { duration: 0 } : { delay: HIT, duration: 1.2, ease: "easeOut" }}
+        />
         {!reduce && (
-          <motion.span
+          <motion.div
             aria-hidden="true"
-            className="absolute inset-0 rounded-full border-2 border-[#ccff00]"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1.6, opacity: [0, 0.9, 0] }}
-            transition={{ delay: 0.35, duration: 0.8, ease: "easeOut" }}
+            className="pointer-events-none absolute left-1/2 top-[34%] size-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{ background: "radial-gradient(circle, rgb(204 255 0 / 0.12), transparent 55%)" }}
+            animate={{ scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] }}
+            transition={{ delay: 1.6, duration: 3.4, ease: "easeInOut", repeat: Infinity }}
           />
         )}
-        {/* Sparks thrown outward at the lock-in. */}
-        {!reduce &&
-          Array.from({ length: SPARKS }, (_, i) => {
-            const a = (i / SPARKS) * Math.PI * 2;
-            const r = 110 + (i % 3) * 18;
-            return (
-              <motion.span
-                key={i}
-                aria-hidden="true"
-                className="absolute left-1/2 top-1/2 h-1 w-3 rounded-full bg-[#ccff00]"
-                style={{ rotate: `${(a * 180) / Math.PI}deg`, translateX: "-50%", translateY: "-50%" }}
-                initial={{ x: 0, y: 0, opacity: 0 }}
-                animate={{ x: Math.cos(a) * r, y: Math.sin(a) * r, opacity: [0, 1, 0] }}
-                transition={{ delay: 0.38, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+
+        <div className="relative flex size-56 items-center justify-center">
+          {/* Charging: a ring draws itself before the plate arrives. */}
+          {!reduce && (
+            <svg aria-hidden="true" viewBox="0 0 200 200" className="absolute inset-0 size-full -rotate-90">
+              <motion.circle
+                cx="100"
+                cy="100"
+                r="92"
+                fill="none"
+                stroke="#ccff00"
+                strokeWidth="2"
+                strokeLinecap="round"
+                initial={{ pathLength: 0, opacity: 0.9 }}
+                animate={{ pathLength: 1, opacity: [0.9, 0.9, 0] }}
+                transition={{ pathLength: { duration: HIT - 0.04, ease: "easeIn" }, opacity: { duration: HIT + 0.3, times: [0, 0.75, 1] } }}
               />
-            );
-          })}
-        {/* The plate: drops in, overshoots, locks. */}
-        <motion.div
-          className="text-[#ccff00] drop-shadow-[0_0_28px_rgb(204_255_0/0.55)]"
-          initial={reduce ? false : { y: -260, rotate: -90, scale: 0.6, opacity: 0 }}
-          animate={{ y: 0, rotate: 0, scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 14, mass: 0.9 }}
-        >
-          <AbotMark size={128} />
-        </motion.div>
-      </div>
+            </svg>
+          )}
 
-      <motion.p
-        className="mt-6 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-[#ccff00]"
-        initial={{ opacity: 0, y: reduce ? 0 : 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: after(0.7), duration: 0.35 }}
-      >
-        {t("Payment received")}
-      </motion.p>
-      <motion.h2
-        id="pro-celebration-title"
-        className="mt-2 text-center text-4xl font-extrabold leading-none tracking-tight text-white"
-        initial={{ opacity: 0, scale: reduce ? 1 : 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: after(0.8), type: "spring", stiffness: 300, damping: 18 }}
-      >
-        {unlocked.tier === "lifetime" ? t("Lifetime unlocked") : t("BLACK PRO unlocked")}
-      </motion.h2>
-      <motion.p
-        className="mt-2 text-center text-sm text-zinc-300"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: after(0.95), duration: 0.35 }}
-      >
-        {term}
-      </motion.p>
-
-      <ul className="mt-7 grid w-full max-w-sm grid-cols-2 gap-2">
-        {PERKS.map(({ icon: Icon, text }, i) => (
-          <motion.li
-            key={text}
-            className="flex items-center gap-2 rounded-ctl border border-white/10 bg-[#121215] px-3 py-2.5 text-xs font-semibold leading-tight text-white"
-            initial={{ opacity: 0, y: reduce ? 0 : 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: after(1.1 + i * 0.08), duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          {/* The dial: tick marks turning slowly, a dashed ring the other way. */}
+          <motion.svg
+            aria-hidden="true"
+            viewBox="0 0 200 200"
+            className="absolute -inset-6 size-[calc(100%+48px)] text-[#ccff00]"
+            initial={{ opacity: 0, scale: reduce ? 1 : 0.7 }}
+            animate={{ opacity: 1, scale: 1, rotate: reduce ? 0 : 360 }}
+            transition={{ opacity: { delay: after(HIT + 0.15), duration: 0.5 }, scale: { delay: after(HIT + 0.15), duration: 0.6, ease: [0.22, 1, 0.36, 1] }, rotate: loop({ duration: 36, ease: "linear" }) }}
           >
-            <Icon aria-hidden="true" size={16} className="shrink-0 text-[#ccff00]" />
-            {t(text)}
-          </motion.li>
-        ))}
-      </ul>
+            {Array.from({ length: TICKS }, (_, i) => (
+              <line
+                key={i}
+                x1="100"
+                y1="4"
+                x2="100"
+                y2={i % 5 === 0 ? 14 : 9}
+                stroke="currentColor"
+                strokeWidth={i % 5 === 0 ? 1.6 : 1}
+                strokeOpacity={i % 5 === 0 ? 0.75 : 0.3}
+                transform={`rotate(${(i * 360) / TICKS} 100 100)`}
+              />
+            ))}
+          </motion.svg>
+          <motion.svg
+            aria-hidden="true"
+            viewBox="0 0 200 200"
+            className="absolute inset-2 size-[calc(100%-16px)] text-[#ccff00]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5, rotate: reduce ? 0 : -360 }}
+            transition={{ opacity: { delay: after(HIT + 0.3), duration: 0.5 }, rotate: loop({ duration: 20, ease: "linear" }) }}
+          >
+            <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2 9" />
+          </motion.svg>
 
-      <motion.button
-        ref={button}
-        type="button"
-        onClick={close}
-        className="mt-8 min-h-14 w-full max-w-sm rounded-ctl bg-[#ccff00] font-mono text-sm font-extrabold uppercase tracking-[0.1em] text-black hover:brightness-95"
-        initial={{ opacity: 0, y: reduce ? 0 : 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: after(1.5), duration: 0.35 }}
-      >
-        {t("Start training")}
-      </motion.button>
+          {/* Shockwaves from the impact. */}
+          {!reduce &&
+            [0, 0.12].map((d) => (
+              <motion.span
+                key={d}
+                aria-hidden="true"
+                className="absolute inset-6 rounded-full border-2 border-[#ccff00]"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 2.4, opacity: [0, 0.85, 0] }}
+                transition={{ delay: HIT + d, duration: 0.9, ease: "easeOut" }}
+              />
+            ))}
+
+          {/* Sparks thrown outward, falling a little as they fly. */}
+          {!reduce &&
+            Array.from({ length: SPARKS }, (_, i) => {
+              const a = (i / SPARKS) * Math.PI * 2 + (i % 2) * 0.13;
+              const r = 120 + (i % 4) * 26;
+              return (
+                <motion.span
+                  key={i}
+                  aria-hidden="true"
+                  className={`absolute left-1/2 top-1/2 rounded-full bg-[#ccff00] ${i % 3 === 0 ? "h-1 w-5" : "h-[3px] w-3"}`}
+                  style={{ rotate: `${(a * 180) / Math.PI}deg`, translateX: "-50%", translateY: "-50%" }}
+                  initial={{ x: 0, y: 0, opacity: 0 }}
+                  animate={{ x: Math.cos(a) * r, y: Math.sin(a) * r + 40, opacity: [0, 1, 1, 0] }}
+                  transition={{ delay: HIT + 0.02, duration: 0.9 + (i % 3) * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                />
+              );
+            })}
+
+          {/* The plate: falls hard, locks, then floats while the screen is open. */}
+          <motion.div
+            className="relative text-[#ccff00] drop-shadow-[0_0_34px_rgb(204_255_0/0.6)]"
+            initial={reduce ? false : { y: -340, rotate: -120, scale: 0.5, opacity: 0 }}
+            animate={{ y: 0, rotate: 0, scale: 1, opacity: 1 }}
+            transition={{ y: { duration: HIT, ease: [0.55, 0, 1, 0.45] }, rotate: { duration: HIT, ease: "easeIn" }, scale: { duration: HIT }, opacity: { duration: 0.15 } }}
+          >
+            <motion.div
+              animate={reduce ? undefined : { scaleY: [1, 0.86, 1.06, 1], scaleX: [1, 1.1, 0.97, 1] }}
+              transition={{ delay: HIT, duration: 0.4 }}
+            >
+              <motion.div
+                animate={reduce ? undefined : { y: [0, -9, 0], rotate: [0, 3, 0, -3, 0] }}
+                transition={{ delay: 1.4, duration: 4, ease: "easeInOut", repeat: Infinity }}
+              >
+                <AbotMark size={132} />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        <motion.p
+          className="mt-8 font-mono text-[11px] font-bold uppercase text-[#ccff00]"
+          initial={{ opacity: 0, letterSpacing: reduce ? "0.22em" : "0.9em" }}
+          animate={{ opacity: 1, letterSpacing: "0.22em" }}
+          transition={{ delay: after(HIT + 0.3), duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {t("Payment received")}
+        </motion.p>
+        <motion.h2
+          id="pro-celebration-title"
+          className="mt-2 bg-[linear-gradient(110deg,#ffffff_40%,#ccff00_50%,#ffffff_60%)] bg-[length:300%_100%] bg-clip-text text-center text-[2.6rem] font-extrabold leading-[0.95] tracking-tight text-transparent"
+          initial={{ opacity: 0, scale: reduce ? 1 : 1.35, filter: reduce ? "blur(0px)" : "blur(10px)", backgroundPosition: "100% 0" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)", backgroundPosition: reduce ? "100% 0" : ["100% 0", "0% 0"] }}
+          transition={{
+            opacity: { delay: after(HIT + 0.38), duration: 0.3 },
+            scale: { delay: after(HIT + 0.38), type: "spring", stiffness: 260, damping: 16 },
+            filter: { delay: after(HIT + 0.38), duration: 0.35 },
+            backgroundPosition: loop({ delay: 1.6, duration: 1.4, ease: "easeInOut", repeatDelay: 2.6 }),
+          }}
+        >
+          {unlocked.tier === "lifetime" ? t("Lifetime unlocked") : t("BLACK PRO unlocked")}
+        </motion.h2>
+        <motion.p
+          className="mt-2.5 text-center text-sm text-zinc-300"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: after(HIT + 0.55), duration: 0.35 }}
+        >
+          {term}
+        </motion.p>
+
+        <ul className="mt-7 grid w-full max-w-sm grid-cols-2 gap-2 [perspective:600px]">
+          {PERKS.map(({ icon: Icon, text }, i) => (
+            <motion.li
+              key={text}
+              className="flex items-center gap-2 rounded-ctl border border-[#ccff00]/20 bg-[#121215]/90 px-3 py-2.5 text-xs font-semibold leading-tight text-white"
+              initial={{ opacity: 0, rotateX: reduce ? 0 : -80, y: reduce ? 0 : 10 }}
+              animate={{ opacity: 1, rotateX: 0, y: 0 }}
+              transition={{ delay: after(HIT + 0.7 + i * 0.09), duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.span
+                aria-hidden="true"
+                className="shrink-0 text-[#ccff00]"
+                animate={reduce ? undefined : { scale: [1, 1.25, 1] }}
+                transition={{ delay: 2.4 + i * 0.6, duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
+              >
+                <Icon size={16} />
+              </motion.span>
+              {t(text)}
+            </motion.li>
+          ))}
+        </ul>
+
+        <motion.button
+          ref={button}
+          type="button"
+          onClick={close}
+          className="mt-8 min-h-14 w-full max-w-sm rounded-ctl bg-[#ccff00] font-mono text-sm font-extrabold uppercase tracking-[0.1em] text-black hover:brightness-95"
+          initial={{ opacity: 0, y: reduce ? 0 : 16 }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            boxShadow: reduce
+              ? "0 0 0px rgb(204 255 0 / 0)"
+              : ["0 0 0px rgb(204 255 0 / 0)", "0 0 28px rgb(204 255 0 / 0.55)", "0 0 0px rgb(204 255 0 / 0)"],
+          }}
+          transition={{
+            opacity: { delay: after(HIT + 1.1), duration: 0.35 },
+            y: { delay: after(HIT + 1.1), duration: 0.35 },
+            boxShadow: loop({ delay: 2.2, duration: 2.4, ease: "easeInOut" }),
+          }}
+        >
+          {t("Start training")}
+        </motion.button>
+      </motion.div>
+    </div>
+  );
+}
+
+/**
+ * Volt embers drifting up behind everything, forever. Positions and timings come from the
+ * index (no randomness), so each render is the same and nothing jumps.
+ */
+function Embers() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+      {Array.from({ length: EMBERS }, (_, i) => {
+        const left = (i * 37 + 11) % 100;
+        const size = 2 + (i % 3);
+        const dur = 4.2 + (i % 5) * 0.8;
+        return (
+          <motion.span
+            key={i}
+            className="absolute bottom-0 rounded-full bg-[#ccff00]"
+            style={{ left: `${left}%`, width: size, height: size, boxShadow: "0 0 8px rgb(204 255 0 / 0.8)" }}
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: [40, -520 - (i % 4) * 90], x: [0, (i % 2 ? 1 : -1) * (12 + (i % 3) * 8), 0], opacity: [0, 0.9, 0] }}
+            transition={{ delay: 0.9 + ((i * 0.53) % 3.2), duration: dur, ease: "easeOut", repeat: Infinity, repeatDelay: (i % 4) * 0.4 }}
+          />
+        );
+      })}
     </div>
   );
 }

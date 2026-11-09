@@ -96,17 +96,17 @@ describe("sound profiles (Phase 2 spec)", () => {
     expect(oscs.map((o) => Math.round(o.set[0][0]))).toEqual([523, 659, 784, 1047, 1319]);
   });
 
-  it("pro unlocked: whoosh, impact at 0.35 s, the 600/900 Hz lock, a C major chord, under three seconds", async () => {
+  it("pro unlocked: whoosh, impact at 0.42 s, the 600/900 Hz lock, a C major chord, under three seconds", async () => {
     (await load()).playProUnlocked();
     const at = (f: number) => oscs.filter((o) => Math.round(o.set[0][0]) === f).map((o) => round(o.start));
-    expect(at(120)).toEqual([0.35]);
-    expect(at(600)).toEqual([0.43]);
-    expect(at(900)).toEqual([0.48]);
-    expect(oscs.filter((o) => round(o.start) === 0.92).map((o) => Math.round(o.set[0][0])).sort((a, b) => a - b)).toEqual([131, 523, 659, 784, 1047]);
+    expect(at(120)).toEqual([0.42]);
+    expect(at(600)).toEqual([0.5]);
+    expect(at(900)).toEqual([0.55]);
+    expect(oscs.filter((o) => round(o.start) === 1).map((o) => Math.round(o.set[0][0])).sort((a, b) => a - b)).toEqual([131, 523, 659, 784, 1047]);
     expect(Math.max(...oscs.map((o) => o.stop))).toBeLessThan(3.1);
     // The loudest moment (the chord with the bass) stays well under clipping.
     const peakAt = (t: number) => oscs.filter((o) => o.start <= t && o.stop > t).length;
-    expect(peakAt(1.0)).toBeLessThanOrEqual(7);
+    expect(peakAt(1.05)).toBeLessThanOrEqual(7);
   });
 
   it("stays silent without Web Audio instead of throwing", async () => {

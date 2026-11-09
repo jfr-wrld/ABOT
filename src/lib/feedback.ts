@@ -37,11 +37,11 @@ export const feedback = {
     playPRUnlocked();
     hapticPR();
   },
-  /** A purchase landed: the celebration sting, with a pulse on the plate's impact (0.35 s). */
+  /** A purchase landed: the celebration sting, with a pulse on the plate's impact (0.42 s). */
   subscribed(): void {
     if (!on()) return;
     playProUnlocked();
-    setTimeout(() => buzz([60, 50, 30, 50, 30, 90, 120]), 350);
+    setTimeout(() => buzz([60, 50, 30, 50, 30, 90, 120]), 420);
   },
   /** A workout started. */
   start(): void {

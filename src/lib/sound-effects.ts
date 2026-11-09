@@ -139,39 +139,39 @@ export async function audioReady(): Promise<boolean> {
 
 /**
  * BLACK PRO unlocked: about three seconds timed to the celebration screen.
- * 0.00 s a rising whoosh while the plate falls; 0.35 s the impact (low thud, metal clank) and
- * the app's own lock (600 then 900 Hz); 0.62 s a G-C-E pickup into a C major chord over a low C
- * as the title lands; 1.10 s four high sparkles with the feature cards; 1.50 s a soft G-B-D
- * shimmer (C major 9) under the button. Peaks are kept low so the stacked chord never clips.
+ * 0.00 s a charging whoosh while the ring draws and the plate falls; 0.42 s the impact (low thud,
+ * metal clank) and the app's own lock (600 then 900 Hz); 0.72 s a G-C-E pickup into a C major
+ * chord over a low C as the title lands; 1.15 s four high sparkles with the feature cards;
+ * 1.55 s a soft G-B-D shimmer (C major 9) under the button. Peaks stay low so nothing clips.
  */
 export function playProUnlocked(): boolean {
   const s = (f: number, at: number, dur: number, peak: number, wave: Wave = "sine"): Tone => ({ wave, from: f, at, dur, peak });
   return play([
-    // Whoosh.
-    { wave: "sawtooth", from: 90, to: 700, at: 0, dur: 0.34, peak: 0.04 },
-    { wave: "triangle", from: 180, to: 1400, at: 0.05, dur: 0.3, peak: 0.04 },
+    // Charging whoosh.
+    { wave: "sawtooth", from: 80, to: 760, at: 0, dur: 0.41, peak: 0.04 },
+    { wave: "triangle", from: 160, to: 1500, at: 0.06, dur: 0.36, peak: 0.04 },
     // Impact and lock.
-    { wave: "sine", from: 120, to: 40, at: 0.35, dur: 0.35, peak: 0.4 },
-    { wave: "triangle", from: 1600, to: 700, at: 0.35, dur: 0.07, peak: 0.16 },
-    s(600, 0.43, 0.04, 0.12, "triangle"),
-    s(900, 0.48, 0.05, 0.12, "triangle"),
+    { wave: "sine", from: 120, to: 38, at: 0.42, dur: 0.4, peak: 0.42 },
+    { wave: "triangle", from: 1600, to: 700, at: 0.42, dur: 0.07, peak: 0.16 },
+    s(600, 0.5, 0.04, 0.12, "triangle"),
+    s(900, 0.55, 0.05, 0.12, "triangle"),
     // Pickup and chord.
-    s(392, 0.62, 0.18, 0.14),
-    s(523.25, 0.72, 0.18, 0.14),
-    s(659.25, 0.82, 0.2, 0.14),
-    s(523.25, 0.92, 1.2, 0.09),
-    s(659.25, 0.92, 1.2, 0.09),
-    s(783.99, 0.92, 1.2, 0.09),
-    s(1046.5, 0.92, 1.3, 0.09),
-    s(130.81, 0.92, 1.1, 0.14, "triangle"),
+    s(392, 0.72, 0.18, 0.14),
+    s(523.25, 0.82, 0.18, 0.14),
+    s(659.25, 0.92, 0.2, 0.14),
+    s(523.25, 1.0, 1.2, 0.09),
+    s(659.25, 1.0, 1.2, 0.09),
+    s(783.99, 1.0, 1.2, 0.09),
+    s(1046.5, 1.0, 1.3, 0.09),
+    s(130.81, 1.0, 1.1, 0.14, "triangle"),
     // Sparkles.
-    s(2093, 1.1, 0.12, 0.05),
-    s(2637, 1.18, 0.12, 0.05),
-    s(3136, 1.26, 0.12, 0.05),
-    s(4186, 1.34, 0.14, 0.05),
+    s(2093, 1.15, 0.12, 0.05),
+    s(2637, 1.23, 0.12, 0.05),
+    s(3136, 1.31, 0.12, 0.05),
+    s(4186, 1.39, 0.14, 0.05),
     // Shimmer.
-    s(783.99, 1.5, 1.4, 0.05),
-    s(987.77, 1.5, 1.4, 0.05),
-    s(1174.66, 1.5, 1.5, 0.05),
+    s(783.99, 1.55, 1.4, 0.05),
+    s(987.77, 1.55, 1.4, 0.05),
+    s(1174.66, 1.55, 1.5, 0.05),
   ]);
 }
