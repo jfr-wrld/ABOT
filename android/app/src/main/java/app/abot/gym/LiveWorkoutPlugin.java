@@ -214,6 +214,9 @@ public class LiveWorkoutPlugin extends Plugin {
         Notification.Builder b = builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_abot)
             .setColor(ACCENT)
+            // The small icon is always drawn as one-colour silhouette; the app icon in colour
+            // goes beside the text, where ColorOS and others show it.
+            .setLargeIcon(Icon.createWithResource(ctx, R.mipmap.ic_launcher))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(Notification.CATEGORY_STOPWATCH)
@@ -221,7 +224,7 @@ public class LiveWorkoutPlugin extends Plugin {
             .setContentIntent(openApp(ctx));
         if (s.paused) {
             b.setContentTitle(s.pausedTitle).setContentText(s.text + " · " + clock(s.pausedElapsed)).setShowWhen(false);
-            b.addAction(button(ctx, "resume", s.resumeLabel, 1));
+            b.addAction(button(ctx, "resume", s.resumeLabel, 1, R.drawable.ic_action_resume));
         } else {
             b.setContentTitle(resting ? s.restTitle : s.title)
                 .setContentText(resting ? s.restText : s.text)
@@ -230,11 +233,11 @@ public class LiveWorkoutPlugin extends Plugin {
                 .setWhen(resting ? s.restEndsAt : s.clockStart);
             if (Build.VERSION.SDK_INT >= 24) b.setChronometerCountDown(resting);
             if (resting) {
-                b.addAction(button(ctx, "add30", s.addLabel, 4));
-                b.addAction(button(ctx, "skip", s.skipLabel, 3));
+                b.addAction(button(ctx, "add30", s.addLabel, 4, R.drawable.ic_action_add));
+                b.addAction(button(ctx, "skip", s.skipLabel, 3, R.drawable.ic_action_skip));
             }
-            if (s.canLog) b.addAction(button(ctx, "log", s.logLabel, 5));
-            if (!resting) b.addAction(button(ctx, "pause", s.pauseLabel, 2));
+            if (s.canLog) b.addAction(button(ctx, "log", s.logLabel, 5, R.drawable.ic_action_log));
+            if (!resting) b.addAction(button(ctx, "pause", s.pauseLabel, 2, R.drawable.ic_action_pause));
         }
         // Android 16 Live Update (a clock chip on the status bar). This is the extra that
         // Builder#setRequestPromotedOngoing sets; that setter is newer than compileSdk 36.
@@ -251,6 +254,7 @@ public class LiveWorkoutPlugin extends Plugin {
         Notification.Builder b = builder(ctx, ALERT_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_abot)
             .setColor(ACCENT)
+            .setLargeIcon(Icon.createWithResource(ctx, R.mipmap.ic_launcher))
             .setContentTitle(title)
             .setContentText(text)
             .setAutoCancel(true)
@@ -272,10 +276,11 @@ public class LiveWorkoutPlugin extends Plugin {
         return h > 0 ? String.format(java.util.Locale.US, "%d:%02d:%02d", h, m, ss) : String.format(java.util.Locale.US, "%d:%02d", m, ss);
     }
 
-    private static Notification.Action button(Context ctx, String id, String label, int request) {
+    /** A button with its own icon: ColorOS and One UI draw the icon beside the label. */
+    private static Notification.Action button(Context ctx, String id, String label, int request, int icon) {
         Intent i = new Intent(ctx, LiveWorkoutReceiver.class).setAction(ACTION_BUTTON).putExtra(EXTRA_ID, id);
         PendingIntent pi = PendingIntent.getBroadcast(ctx, request, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-        return new Notification.Action.Builder(Icon.createWithResource(ctx, R.drawable.ic_stat_abot), label, pi).build();
+        return new Notification.Action.Builder(Icon.createWithResource(ctx, icon), label, pi).build();
     }
 
     private static PendingIntent openApp(Context ctx) {
