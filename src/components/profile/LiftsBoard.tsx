@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import type { Exercise, WeightUnit, WorkoutSession } from "@/types/workout";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { Sparkline } from "@/components/phase/visuals";
@@ -118,28 +118,30 @@ export function LiftsBoard({
 
 function LiftLine({ row: r, rank, unit, now }: { row: LiftRow; rank: number; unit: WeightUnit; now: number }) {
   const t = useT();
+  const up = r.changePct !== null && r.changePct > 0;
   return (
     <li>
+      {/* Name gets the width; the trend sits under the number so names stay readable at 360px. */}
       <Link href={exercisePath(r.exercise.id)} className="flex min-h-16 items-center gap-2.5 rounded-xl px-1.5 py-1.5 hover:bg-ink/[0.04]">
         <span className="num w-5 shrink-0 text-center text-xs text-text-muted">{rank}</span>
         <ExerciseThumb exercise={r.exercise} size={40} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold">{r.exercise.name}</span>
+          <span className="line-clamp-2 text-sm font-semibold leading-5">{r.exercise.name}</span>
           <span className="num block truncate text-[11px] text-text-muted">
             {formatWeight(r.best.weightKg, unit)} × {r.best.reps} · {relativeDay(r.lastDone, now, t)}
           </span>
         </span>
-        {r.points.length > 1 && <Sparkline values={r.points.map((p) => p.e1rmKg)} width={52} height={24} />}
-        <span className="w-16 shrink-0 text-right">
-          <span className="num block text-sm font-bold">{formatWeight(r.best.value, unit)}</span>
-          {r.changePct !== null && (
-            <span className={`num block text-[11px] font-semibold ${r.changePct > 0 ? "text-accent" : "text-text-muted"}`}>
-              {r.changePct > 0 ? "▲ +" : r.changePct < 0 ? "▼ " : "± "}
+        <span className="flex w-16 shrink-0 flex-col items-end gap-0.5">
+          <span className="num text-sm font-bold">{formatWeight(r.best.value, unit)}</span>
+          {r.changePct !== null ? (
+            <span className={`num text-[11px] font-semibold ${up ? "text-accent" : "text-text-muted"}`}>
+              {up ? "▲ +" : r.changePct < 0 ? "▼ " : "± "}
               {r.changePct.toFixed(1)}%
             </span>
+          ) : (
+            r.points.length > 1 && <Sparkline values={r.points.map((p) => p.e1rmKg)} width={56} height={16} />
           )}
         </span>
-        <ChevronRight aria-hidden="true" size={14} className="shrink-0 text-text-muted" />
       </Link>
     </li>
   );
