@@ -62,6 +62,12 @@ in with Google, then import or sign in again after installing.
 - Previous numbers for each set, plates and bar per gym, supersets, reorder and replace.
 - A rest timer starts when you tick a set; it sits above the tab bar within thumb reach.
 - Pause and resume the workout clock.
+- The Coach Pill under each exercise suggests the next target from your last three sessions:
+  more weight, one more rep, or a deload when you are grinding.
+- Sounds, synthesised on the phone so your music keeps playing: a tick on steppers, a latch when
+  a set is done, a chord for a record, a tone when a workout starts and a chord when it ends,
+  three pips at 3, 2, 1 seconds of rest and a beep at zero. Settings > Workout switches the
+  sounds and the rest alert separately.
 
 ### Workout in the notification panel (Android)
 - While a workout runs, a notification shows the next lift and set, and a clock Android ticks
@@ -75,8 +81,9 @@ in with Google, then import or sign in again after installing.
 - Settings: show it for rest and workout, or rest only; second line with the next set's target
   or the total volume.
 - The end of a rest rings and buzzes, even with ABOT in the background.
-- On Android 16 the clock shows as a chip in the status bar (Live Update). One UI and HyperOS
-  decide for themselves which apps get their own status bar pill.
+- On Android 16 the clock shows as a chip in the status bar (Live Update). Phone makers decide
+  which apps get their own pill by the camera: on ColorOS (OPPO) turn on Settings >
+  Notifications > ABOT > Live updates; HyperOS and One UI choose for themselves.
 
 ### Routines and templates
 - Your own routines, plus a Template Vault of ready programs (PPL, Upper/Lower, Full Body,
@@ -90,7 +97,23 @@ in with Google, then import or sign in again after installing.
   volume in a set. The first time you log a lift is your baseline, not a record.
 - Workout summary with a comparison to last time; workout detail with a body map of the
   muscles worked; lift trends, weekly volume and a training calendar on Profile.
-- Bodyweight log.
+- Bodyweight log with a trend line that smooths out day-to-day water swings.
+
+### Body phases: cut, lean bulk, recomp, strength peak
+- Pick a phase, your body numbers and a goal in four short steps. ABOT sets today's calories
+  and protein, carbs and fat (Mifflin-St Jeor plus your logged training), and draws the block as
+  a weight plate that lights one segment per week, with a deload every fourth week.
+- The rest of the app follows the phase: on a cut the Coach Pill holds the weight when sets get
+  hard and drops a set instead of a deload, and the recovery map runs 15% slower; on a lean bulk
+  it adds weight after clean sessions and recovery runs 10% faster; a strength peak moves
+  compounds to 3 to 5 reps with at least 3 minutes of rest. Routine templates that suit the
+  phase are marked.
+- Relative strength (best compound e1RM per kg of trend weight) shows on a cut whether muscle is
+  holding as weight comes down.
+- Meals and foods: a meal before and after training sized from today's target, and 24 everyday
+  foods and drinks (many easy to find in Indonesia) with calories, macros and a portion you can
+  judge by eye. One tap adds 25 g protein or 500 ml water to today's tally.
+- The targets are estimates, not medical advice.
 
 ### Exercises
 - 88 built-in exercises with start and end photos that play like a short loop, steps and form
@@ -147,6 +170,8 @@ in with Google, then import or sign in again after installing.
   Overpass does not answer (no key, no account).
 - Signing in copies your data to your own Supabase project, where row level security lets each
   account read only its own rows. Signing out keeps everything on the phone.
+- The body phase, weigh-ins and the protein and water tally stay on the phone (the phase also
+  goes into backup files). Food values are built into the app; nothing about your diet is sent.
 - Story photos are drawn into the PNG on the phone and are never uploaded. Workout photos stay on
   the phone and go into backup files only if you include them; they are never synced.
 
@@ -185,13 +210,16 @@ Android details (static export, native plugins, signing, CI): [`docs/android.md`
 Next.js (App Router, static export for Android), TypeScript, Tailwind CSS v4, Zustand, Dexie,
 Recharts, Framer Motion, Lucide icons, Capacitor 8.
 
-- `src/app/`: screens (Home, Workout, Exercises, Profile, Settings, workout summary and detail).
+- `src/app/`: screens (Home, Workout, Exercises, Profile, Settings, workout summary and detail,
+  and `phase/` for the body phase, its setup and meals).
 - `src/types/workout.ts`: the data model. Weights are stored in kg and converted at the UI edge.
 - `src/lib/calc.ts`: 1RM, volume and record detection. `src/lib/session-insights.ts`: the record
   rule shown on screens.
 - `src/data/repo/` and `src/store/persistence.ts`: storage behind a repository interface.
 - `src/data/sync/`: merge engine and Supabase adapter; schema in `supabase/migrations/`.
 - `src/lib/story-exporter.ts`: the Story Studio layouts, drawn on a canvas.
+- `src/lib/phase-engine.ts`: body phases, trend weight, calorie and macro targets, and how they
+  tune the coach and recovery. `src/lib/nutrition-guide.ts`: the food list and meal sizes.
 - `src/lib/native/` and `android/app/src/main/java/app/abot/gym/`: Android-only pieces (files,
   notifications, permissions).
 - `DESIGN.md`: palette, themes, typography and screen notes. `docs/plans/`: roadmap.
@@ -222,6 +250,8 @@ Contact us in the app (it fills in your app version). Social accounts are coming
 - Exercise data and images: [free-exercise-db](https://github.com/yuhonas/free-exercise-db)
   (public domain, Unlicense).
 - Body and muscle shapes: react-muscle-highlighter (MIT License).
+- Food values: typical figures from [USDA FoodData Central](https://fdc.nal.usda.gov/) (public
+  domain).
 - Fonts: Inter and JetBrains Mono (SIL Open Font License).
 
 Full notices: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). No license has been chosen for
@@ -232,6 +262,15 @@ ABOT's own code yet, so all rights are reserved by its author.
 ABOT adalah aplikasi pencatat latihan beban untuk HP: catat set di gym, simpan routine, pantau
 rekor dan progres, lalu bagikan hasil latihan ke Instagram Story. Bisa dipakai offline, tanpa
 akun; login Google opsional untuk backup cloud.
+
+**Fase tubuh:** pilih cutting, lean bulk, recomp atau puncak kekuatan. ABOT menghitung target
+kalori dan makro harian, menyesuaikan coach dan peta pemulihan, dan memberi contoh makan sebelum
+dan sesudah latihan dari makanan sehari-hari (dada ayam, tempe, tahu, ikan nila, nasi, ubi).
+Target ini perkiraan, bukan saran medis.
+
+**Timer di status bar (Android):** saat latihan berjalan, notifikasi menampilkan hitung mundur
+istirahat dengan tombol +30s, Lewati istirahat dan Catat set. Di HP OPPO (ColorOS), nyalakan
+Pengaturan > Notifikasi > ABOT > Live updates supaya timer muncul di kapsul dekat kamera.
 
 Tampilan ABOT tersedia dalam **Bahasa Indonesia** dan English: Pengaturan, Umum, Bahasa. Pilihan
 "Phone" (Ikuti HP) otomatis memakai Bahasa Indonesia kalau bahasa HP-mu Indonesia. Nama gerakan,
