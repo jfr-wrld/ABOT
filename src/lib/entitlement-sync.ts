@@ -87,7 +87,13 @@ export async function restoreEntitlementFromAccount(local: EntitlementState): Pr
     const supabase = await getSupabase();
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) return { kind: "signed-out" };
-    const { data, error } = await supabase.from("user_entitlements").select("tier, pro_expires_at, is_founder, founder_unit_code").maybeSingle();
+    // Filter by the signed-in user: an admin may read every row (RLS), and several rows would
+    // make maybeSingle() fail, leaving the admin's own licence never restored.
+    const { data, error } = await supabase
+      .from("user_entitlements")
+      .select("tier, pro_expires_at, is_founder, founder_unit_code")
+      .eq("user_id", session.session.user.id)
+      .maybeSingle();
     if (error) return { kind: "error" };
     const next = mergeAccountEntitlement(local, (data as AccountEntitlement | null) ?? null);
     if (next !== local) return { kind: isLoss(local, next) ? "revoked" : "restored", next };
