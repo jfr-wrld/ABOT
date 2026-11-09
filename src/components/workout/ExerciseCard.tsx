@@ -298,7 +298,7 @@ export function ExerciseCard({
               onChange={(e) => store.setExerciseNotes(item.id, e.target.value)}
               rows={2}
               placeholder={t("Seat height, grip, cues")}
-              className="w-full rounded-ctl border border-line-strong bg-surface-2 px-3 py-2 text-base placeholder:text-text-muted/70"
+              className="w-full rounded-ctl border border-line-strong bg-surface-2 px-3 py-2 text-base placeholder:text-text-muted"
             />
           </div>
 

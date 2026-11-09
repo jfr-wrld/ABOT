@@ -80,7 +80,7 @@ export function ExercisesModule() {
                 role="radio"
                 aria-checked={filter === f}
                 onClick={() => setFilter(f)}
-                className={`min-h-11 rounded-ctl border px-2 font-mono text-[10px] font-bold uppercase tabular-nums ${filter === f ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-500"}`}
+                className={`min-h-11 rounded-ctl border px-2 font-mono text-[10px] font-bold uppercase tabular-nums ${filter === f ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-400"}`}
               >
                 {f}
                 {f !== "all" && <span className="block">{counts[f]}</span>}
@@ -114,8 +114,8 @@ export function ExercisesModule() {
                   </td>
                   <td className="py-1.5 pr-2 text-zinc-400">{e.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}</td>
                   <td className="py-1.5 pr-2 text-zinc-400">{EQUIPMENT_LABELS[e.equipment]}</td>
-                  <td className="py-1.5 pr-2 font-mono text-zinc-500">{e.loadMode}</td>
-                  <td className={`py-1.5 text-right font-mono uppercase ${source(e) === "custom" ? "text-[#00f0ff]" : "text-zinc-500"}`}>{source(e)}</td>
+                  <td className="py-1.5 pr-2 font-mono text-zinc-400">{e.loadMode}</td>
+                  <td className={`py-1.5 text-right font-mono uppercase ${source(e) === "custom" ? "text-[#00f0ff]" : "text-zinc-400"}`}>{source(e)}</td>
                 </tr>
               ))}
             </tbody>
@@ -222,7 +222,7 @@ function ExerciseEditor({
                   type="button"
                   aria-pressed={on}
                   onClick={() => setSecondary((s) => (on ? s.filter((x) => x !== m) : [...s, m]))}
-                  className={`min-h-9 rounded-full border px-3 text-xs ${on ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-500"}`}
+                  className={`min-h-9 rounded-full border px-3 text-xs ${on ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-400"}`}
                 >
                   {MUSCLE_GROUP_LABELS[m]}
                 </button>
@@ -271,7 +271,7 @@ export function RoutinesModule() {
               <input aria-label={`Name of ${r.name}`} defaultValue={r.name} onBlur={(e) => e.target.value.trim() && update(r.id, { name: e.target.value.trim() })} className={cls.input} />
               <input aria-label={`Folder of ${r.name}`} defaultValue={r.folder ?? ""} placeholder="Folder" onBlur={(e) => update(r.id, { folder: e.target.value.trim() || undefined })} className={cls.input} />
               <span className="flex items-center gap-1">
-                <span className="w-16 text-right font-mono text-[11px] tabular-nums text-zinc-500">{r.exercises.length} ex</span>
+                <span className="w-16 text-right font-mono text-[11px] tabular-nums text-zinc-400">{r.exercises.length} ex</span>
                 <button type="button" onClick={() => duplicate(r.id)} className={cls.ghost}>
                   Copy
                 </button>
@@ -290,7 +290,7 @@ export function RoutinesModule() {
             <li key={tpl.id} className="flex items-center justify-between gap-2 border-t border-[#27272a] py-1.5 text-xs">
               <span className="min-w-0">
                 <span className="block truncate text-zinc-200">{tpl.name}</span>
-                <span className="font-mono text-[10px] uppercase text-zinc-500">{SPLITS.find((s) => s.value === tpl.split)?.label}</span>
+                <span className="font-mono text-[10px] uppercase text-zinc-400">{SPLITS.find((s) => s.value === tpl.split)?.label}</span>
               </span>
               <button
                 type="button"

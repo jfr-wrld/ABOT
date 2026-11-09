@@ -169,9 +169,9 @@ export function AbotProModal() {
                   </span>
                 </span>
                 <span className="shrink-0 text-right font-mono tabular-nums">
-                  {price.was && <span className="block text-[11px] text-zinc-500 line-through">{rupiah(price.was.idr)}</span>}
+                  {price.was && <span className="block text-[11px] text-zinc-400 line-through">{rupiah(price.was.idr)}</span>}
                   <span className="block text-sm font-bold text-white">{rupiah(price.idr)}</span>
-                  <span className="block text-[10px] uppercase text-zinc-500">
+                  <span className="block text-[10px] uppercase text-zinc-400">
                     {p.per === "month" ? t("per month") : p.per === "year" ? t("per year") : t("once")} · ${price.usd.toFixed(2)}
                   </span>
                 </span>

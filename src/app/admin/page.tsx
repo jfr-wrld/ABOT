@@ -161,7 +161,7 @@ function Console() {
             <p className={cls.label}>ABOT // MISSION CONTROL</p>
             <p className="mt-1 font-mono text-[11px] tabular-nums">
               {!mode ? (
-                <span className="text-zinc-500">checking access...</span>
+                <span className="text-zinc-400">checking access...</span>
               ) : mode.kind === "local" ? (
                 <span className="text-[#f59e0b]">● LOCAL MODE</span>
               ) : mode.admin ? (
@@ -190,7 +190,7 @@ function Console() {
               {label}
             </button>
           ))}
-          <Link href="/settings" className="mt-4 hidden min-h-11 items-center gap-2 rounded-ctl px-3 text-sm text-zinc-500 hover:text-white lg:flex">
+          <Link href="/settings" className="mt-4 hidden min-h-11 items-center gap-2 rounded-ctl px-3 text-sm text-zinc-400 hover:text-white lg:flex">
             <ArrowLeft aria-hidden="true" size={16} /> Back to Settings
           </Link>
         </nav>

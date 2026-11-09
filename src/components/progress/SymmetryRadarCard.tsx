@@ -141,7 +141,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
                 </p>
               ))
             )}
-            <p className="mt-1.5 text-[10px] uppercase tracking-[0.1em] text-zinc-500">
+            <p className="mt-1.5 text-[10px] uppercase tracking-[0.1em] text-zinc-400">
               {t("Push : Pull")} {r.pushPull === null ? "-" : `1 : ${(1 / r.pushPull).toFixed(2)}`} · {t("Quad : Ham")}{" "}
               {r.quadHam === null ? "-" : `1 : ${r.quadHam.toFixed(2)}`} · {t("Legs")} {r.lowerShare === null ? "-" : `${Math.round(r.lowerShare * 100)}%`}
             </p>

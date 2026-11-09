@@ -90,7 +90,7 @@ export function ExerciseForm({
             placeholder="Pendlay Row"
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? "ex-name-error" : undefined}
-            className={`${field} placeholder:text-text-muted/70`}
+            className={`${field} placeholder:text-text-muted`}
           />
           {error && (
             <p id="ex-name-error" role="alert" className="mt-1 text-xs text-failure">

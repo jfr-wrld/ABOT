@@ -58,7 +58,7 @@ export function ExercisePicker({
         onChange={(e) => setQuery(e.target.value)}
         placeholder={t("Search by name or equipment")}
         autoComplete="off"
-        className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
+        className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
       />
 
       <div className="-mx-4 mt-3 overflow-x-auto px-4" role="group" aria-label={t("Filter by muscle")}>

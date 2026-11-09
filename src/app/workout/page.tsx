@@ -133,7 +133,7 @@ function WorkoutScreen() {
         <button
           type="button"
           onClick={() => setDiscardOpen(true)}
-          className="mx-auto mt-6 min-h-11 rounded-ctl px-4 text-xs font-medium text-failure/80 transition-colors hover:bg-failure/10 hover:text-failure"
+          className="mx-auto mt-6 min-h-11 rounded-ctl px-4 text-xs font-medium text-failure transition-colors hover:bg-failure/10 hover:text-failure"
         >
           {t("Discard workout")}
         </button>

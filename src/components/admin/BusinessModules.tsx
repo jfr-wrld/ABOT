@@ -228,7 +228,7 @@ function CodesPanel({ mode, codes, onChange }: { mode: AdminMode; codes: AdminCo
           <tbody>
             {codes.length === 0 && (
               <tr>
-                <td colSpan={4} className="py-3 text-zinc-500">
+                <td colSpan={4} className="py-3 text-zinc-400">
                   No codes yet.
                 </td>
               </tr>
@@ -252,7 +252,7 @@ function CodesPanel({ mode, codes, onChange }: { mode: AdminMode; codes: AdminCo
                         .then(onChange)
                         .catch((e) => setError(errText(e)))
                     }
-                    className={`${cls.ghost} min-h-9 px-2 ${c.active ? "text-[#ccff00]" : "text-zinc-500"}`}
+                    className={`${cls.ghost} min-h-9 px-2 ${c.active ? "text-[#ccff00]" : "text-zinc-400"}`}
                   >
                     {c.active ? "Active" : "Off"}
                   </button>

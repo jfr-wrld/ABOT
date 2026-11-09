@@ -1,7 +1,7 @@
 "use client";
 
-import { useId } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useId, useSyncExternalStore } from "react";
+import { motion } from "framer-motion";
 
 /** The same geometry as AbotMark: a flat-top hexagon plate, a 22 hole, an inner ring at 31. */
 const HEX = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
@@ -13,14 +13,32 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * ring is scored, and one band of light passes across it (the same sweep as a ticked set). About
  * 0.9 s. With reduced motion it is simply drawn.
  */
+const REDUCE = "(prefers-reduced-motion: reduce)";
+const subscribe = (fn: () => void) => {
+  const mq = window.matchMedia(REDUCE);
+  mq.addEventListener("change", fn);
+  return () => mq.removeEventListener("change", fn);
+};
+
+/**
+ * Reduced motion, read so hydration matches the server: false while the prerendered HTML is
+ * adopted, the real setting right after. (framer's useReducedMotion is null on the server and
+ * true on such a phone's first render, so the two markups differed and every page re-rendered.)
+ */
+function useReducedMotionAfterHydration(): boolean {
+  return useSyncExternalStore(subscribe, () => window.matchMedia(REDUCE).matches, () => false);
+}
+
 export function AnimatedAbotMark({ size = 88, delay = 0 }: { size?: number; delay?: number }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionAfterHydration();
   const id = useId().replace(/:/g, "");
   const at = (t: number) => (reduce ? 0 : delay + t);
   const still = reduce ?? false;
 
   return (
     <motion.svg
+      // A new element once reduced motion is known, so it is drawn at rest instead of animating.
+      key={reduce ? "still" : "moving"}
       width={size}
       height={size}
       viewBox="0 0 100 100"
@@ -105,9 +123,9 @@ export function AnimatedAbotMark({ size = 88, delay = 0 }: { size?: number; dela
 
 /** "ABOT", each letter rising out of a slot one after another. */
 export function AnimatedWordmark({ delay = 0, className = "" }: { delay?: number; className?: string }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionAfterHydration();
   return (
-    <span aria-hidden="true" className={`flex overflow-hidden ${className}`}>
+    <span key={reduce ? "still" : "moving"} aria-hidden="true" className={`flex overflow-hidden ${className}`}>
       {"ABOT".split("").map((ch, i) => (
         <motion.span
           key={i}

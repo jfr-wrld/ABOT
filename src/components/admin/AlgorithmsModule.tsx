@@ -86,7 +86,7 @@ export function AlgorithmsModule({ mode }: { mode: AdminMode }) {
                         aria-label={s.label}
                         className={cls.input}
                       />
-                      <span aria-hidden={!s.unit} className="w-12 shrink-0 font-mono text-[11px] text-zinc-500">{s.unit ?? ""}</span>
+                      <span aria-hidden={!s.unit} className="w-12 shrink-0 font-mono text-[11px] text-zinc-400">{s.unit ?? ""}</span>
                     </span>
                   </label>
                 );
