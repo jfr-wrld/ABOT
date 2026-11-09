@@ -89,10 +89,10 @@ test("the routine editor builds a superset that carries into the workout", async
   }
   await page.getByRole("button", { name: "Superset Bicep Curl (Barbell) with" }).click();
   await page.getByRole("dialog", { name: "Superset Bicep Curl (Barbell) with" }).getByRole("button", { name: /Triceps Pushdown/ }).click();
-  await expect(page.getByText("Superset A")).toHaveCount(2);
+  await expect(page.getByText(/^Superset \/\/ A[12]$/)).toHaveCount(2);
 
   await page.reload();
-  await expect(page.getByText("Superset A")).toHaveCount(2);
+  await expect(page.getByText(/^Superset \/\/ A[12]$/)).toHaveCount(2);
 
   await page.goto("/routines");
   await page.getByRole("tab", { name: "My Routines" }).click();
@@ -104,7 +104,7 @@ test("the routine editor builds a superset that carries into the workout", async
   await expect(card.getByRole("list", { name: "Equipment" })).toBeVisible();
   await page.getByRole("button", { name: "Start Arms" }).click();
   await page.waitForURL("**/workout");
-  await expect(page.getByText("Superset A")).toHaveCount(2);
+  await expect(page.getByText(/^Superset \/\/ A[12]$/)).toHaveCount(2);
 });
 
 test("removing one of a two-exercise superset in the editor dissolves it", async ({ page }) => {
@@ -116,7 +116,7 @@ test("removing one of a two-exercise superset in the editor dissolves it", async
   }
   await page.getByRole("button", { name: "Superset Bicep Curl (Barbell) with" }).click();
   await page.getByRole("dialog", { name: "Superset Bicep Curl (Barbell) with" }).getByRole("button", { name: /Triceps Pushdown/ }).click();
-  await expect(page.getByText("Superset A")).toHaveCount(2);
+  await expect(page.getByText(/^Superset \/\/ A[12]$/)).toHaveCount(2);
   await page.getByRole("button", { name: "Remove Triceps Pushdown (Cable) from superset" }).click();
-  await expect(page.getByText("Superset A")).toHaveCount(0);
+  await expect(page.getByText(/^Superset \/\/ A[12]$/)).toHaveCount(0);
 });

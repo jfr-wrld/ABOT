@@ -75,6 +75,19 @@ Settings > Workout > Sounds & vibration switches the tap sounds off (on by defau
 alarm follows Rest alert. A first-ever lift is a baseline, so it plays no record chord. The
 first touch unlocks Web Audio so the timer-driven rest beep can play.
 
+## Supersets and giant sets
+
+- Cards in one group share a coloured left edge, and the edge runs through the gap between
+  neighbouring cards, so the group reads as one bracket. Each group keeps its own colour
+  (orange, blue, pink, green) rather than Volt: Volt already means "live", and two supersets
+  in one workout must stay apart.
+- Badge: `Superset // A1`, `A2`; three or more exercises is `Giant set // A1` to `A3`. The
+  number is the card's place in the list, so reordering renumbers it.
+- Ticking a set hands off to the next exercise of the group that has a set left: no rest, the
+  island shows `Up next A2 · No rest` with the name and set, and the screen scrolls to that
+  card. Rest starts after the last exercise with work left.
+- On white the group colours are darkened (`.ss-text`) to stay above 4.5:1.
+
 ## Where the accent lands
 
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the

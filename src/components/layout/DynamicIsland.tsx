@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { LayoutGroup, MotionConfig, motion } from "framer-motion";
-import { Pause, X } from "lucide-react";
+import { Pause, X, Zap } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useHydration } from "@/store/hydration";
@@ -15,6 +15,10 @@ import { usePagePath } from "@/components/layout/usePagePath";
 import { feedback } from "@/lib/feedback";
 import { isNativeApp } from "@/lib/native/files";
 import { notificationPermission } from "@/lib/notifications/reminder-service";
+import { useAllExercises } from "@/store/useExerciseStore";
+import { supersetLabels, type SupersetHandoff } from "@/lib/superset";
+import { setNumbers } from "@/lib/sets";
+import { scrollToExercise } from "@/lib/scroll-to-exercise";
 import { useT } from "@/i18n";
 
 /** Fast to settle, a little overshoot: the capsule should feel like hardware snapping open. */
@@ -25,7 +29,8 @@ const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { d
 /**
  * A black capsule that sits just above the dock, where the thumb already is. Compact while a
  * workout runs (elapsed time, tap to return to it); it morphs open into the rest countdown with
- * its controls, then shows "Go" when rest is over. One layoutId, so the change is a single shape
+ * its controls, then shows "Go" when rest is over. Mid-superset it names the next exercise instead,
+ * since there is no rest until the last one. One layoutId, so the change is a single shape
  * stretching, not one box swapped for another. Outside the app, the same state is shown as a
  * status notification (useLiveWorkoutNotification).
  */
@@ -41,16 +46,18 @@ function Island() {
   const hydrated = useHydration((s) => s.hydrated);
   const active = useWorkoutStore((s) => s.active);
   const timer = useWorkoutStore((s) => s.restTimer);
+  const rawHandoff = useWorkoutStore((s) => s.handoff);
   const pathname = usePagePath();
+  const handoff = active && rawHandoff && liveHandoff(active, rawHandoff) ? rawHandoff : null;
   useLiveWorkoutNotification();
   // The intro and sign-in have no dock, so there is nothing to sit above.
   const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login" && pathname !== "/permissions" && !pathname.startsWith("/workout/summary");
 
   // Pages pad their bottom by this much more, so the bar never covers the last row.
   useEffect(() => {
-    document.documentElement.style.setProperty("--live-bar", shown ? (timer ? "72px" : "52px") : "0px");
+    document.documentElement.style.setProperty("--live-bar", shown ? (timer || handoff ? "72px" : "52px") : "0px");
     return () => document.documentElement.style.setProperty("--live-bar", "0px");
-  }, [shown, timer]);
+  }, [shown, timer, handoff]);
 
   if (!shown || !active) return null;
 
@@ -60,6 +67,8 @@ function Island() {
         <LayoutGroup>
           {timer ? (
             <RestCapsule key="rest" />
+          ) : handoff ? (
+            <HandoffCapsule key="handoff" session={active} handoff={handoff} onWorkoutPage={pathname === "/workout"} />
           ) : (
             <CompactCapsule key="compact" session={active} onWorkoutPage={pathname === "/workout"} />
           )}
@@ -106,6 +115,59 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
           aria-label={t("Open the workout in progress")}
           className="flex h-full items-center hover:bg-ink/[0.06]"
         >
+          {body}
+        </Link>
+      )}
+    </motion.div>
+  );
+}
+
+/** The handoff still points at a superset exercise whose set is not done yet. */
+function liveHandoff(session: WorkoutSession, h: SupersetHandoff): boolean {
+  const ex = session.exercises.find((e) => e.id === h.sessionExerciseId);
+  return !!ex && !!supersetLabels(session.exercises)[ex.id] && ex.sets[h.setIndex]?.completed === false;
+}
+
+/** Mid-superset: where to go next, with no rest. Tapping brings that card into view. */
+function HandoffCapsule({ session, handoff, onWorkoutPage }: { session: WorkoutSession; handoff: SupersetHandoff; onWorkoutPage: boolean }) {
+  const t = useT();
+  const { byId } = useAllExercises();
+  const ex = session.exercises.find((e) => e.id === handoff.sessionExerciseId)!;
+  const label = supersetLabels(session.exercises)[ex.id]!;
+  const name = byId[ex.exerciseId]?.name ?? t("Unknown exercise");
+  const n = setNumbers(ex.sets)[handoff.setIndex];
+  const setText = n === null || n === undefined ? t("Warm-up") : t("Set {n}", { n });
+  const aria = t("Next: {name}, {set}, no rest", { name, set: setText });
+  const body = (
+    <motion.span {...fade} className="flex min-w-0 flex-1 items-center gap-3 pl-5 pr-5">
+      <Zap aria-hidden="true" size={18} className="shrink-0 fill-accent text-accent" />
+      <span className="flex min-w-0 flex-col items-start" aria-hidden="true">
+        <span className="label-caps">
+          {t("Up next")} <span className="num">{`${label.letter}${label.order}`}</span> · {t("No rest")}
+        </span>
+        <span className="flex w-full min-w-0 items-baseline gap-2 text-sm font-semibold">
+          <span className="truncate">{name}</span>
+          <span className="num shrink-0 text-accent">{setText}</span>
+        </span>
+      </span>
+    </motion.span>
+  );
+  return (
+    <motion.div layoutId="island" transition={ISLAND_SPRING} className={`${capsule} h-14 w-full rounded-[28px]`}>
+      <span role="status" className="sr-only">
+        {aria}
+      </span>
+      {onWorkoutPage ? (
+        <button
+          type="button"
+          onClick={() => scrollToExercise(ex.id)}
+          aria-label={aria}
+          className="flex h-full w-full items-center text-left hover:bg-ink/[0.06]"
+        >
+          {body}
+        </button>
+      ) : (
+        <Link href="/workout" aria-label={aria} className="flex h-full w-full items-center hover:bg-ink/[0.06]">
           {body}
         </Link>
       )}

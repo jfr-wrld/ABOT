@@ -79,6 +79,15 @@
   color: var(--color-accent-text);
 }
 
+/* Superset labels: the group colour (--ss) as text. On white the pastel group colours fall under
+   4.5:1, so light mode darkens them toward black. */
+.ss-text {
+  color: var(--ss);
+}
+[data-theme="light"] .ss-text {
+  color: color-mix(in oklab, var(--ss) 55%, black);
+}
+
 /* Dark in every theme: over photos and video, the live capsule, the intro, Story Studio. */
 [data-theme="light"] .force-dark {
   color-scheme: dark;
