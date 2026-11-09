@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { liftTrends, percentChange, periodTotals, rangeStart } from "./progress";
+import { percentChange, periodTotals, rangeStart } from "./progress";
 import type { WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES_BY_ID as byId } from "@/data/exercises";
 
@@ -54,30 +54,5 @@ describe("percentChange", () => {
     expect(percentChange(120, 100)).toBe(20);
     expect(percentChange(90, 100)).toBe(-10);
     expect(percentChange(50, 0)).toBeNull();
-  });
-});
-
-describe("liftTrends", () => {
-  const sessions = [
-    session("old", now - 60 * DAY, [["bench-press-barbell", [set("o1", 120, 1)]]]),
-    session("w1", now - 14 * DAY, [
-      ["bench-press-barbell", [set("b1", 80, 5)]],
-      ["squat-barbell", [set("s1", 100, 5)]],
-      ["pull-up", [set("p1", null, 8)]],
-    ]),
-    session("w2", now - 7 * DAY, [["bench-press-barbell", [set("b2", 85, 5)]]]),
-    session("w3", now - DAY, [["bench-press-barbell", [set("b3", 90, 3)]]]),
-  ];
-  const trends = liftTrends(sessions, now - 21 * DAY, now + DAY, byId);
-
-  it("ranks lifts by how often they were trained and skips bodyweight-only lifts", () => {
-    expect(trends.map((t) => t.name)).toEqual(["Bench Press (Barbell)", "Squat (Barbell)"]);
-    expect(trends[0].points).toHaveLength(3);
-  });
-
-  it("counts only records set inside the range that still stand", () => {
-    // The 120 kg single from two months ago keeps heaviest weight and 1RM; set volume fell in range.
-    expect(trends[0].records).toBe(1);
-    expect(trends[1].records).toBe(3);
   });
 });

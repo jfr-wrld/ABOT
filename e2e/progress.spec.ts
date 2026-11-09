@@ -56,9 +56,6 @@ test("range, chart tabs and the hero follow the data", async ({ page }) => {
   await page.getByRole("button", { name: "Time", exact: true }).click();
   await expect(page.getByText(/Time training per week/)).toBeVisible();
 
-  const lifts = page.getByRole("region", { name: "Main lifts" });
-  await expect(lifts.getByRole("link", { name: /Bench Press \(Barbell\)/ })).toBeVisible();
-  await expect(lifts.getByText("76 kg")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 

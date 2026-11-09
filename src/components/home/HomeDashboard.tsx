@@ -38,6 +38,9 @@ import {
 import type { Exercise, WorkoutSession } from "@/types/workout";
 import { historyPath } from "@/lib/routes";
 import { useT } from "@/i18n";
+import { MuscleIcon } from "@/components/icons/MuscleIcon";
+import { trainingFocus } from "@/lib/training-focus";
+import { weekStreak } from "@/lib/analytics";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
@@ -77,7 +80,7 @@ export function HomeDashboard() {
           </Link>
         </div>
         <AnnouncementBanner />
-        <WeekStrip days={weekStrip(sessions, now, firstDayOfWeek)} />
+        <WeekStrip days={weekStrip(sessions, now, firstDayOfWeek)} sessions={sessions} byId={byId} streak={weekStreak(sessions, now, firstDayOfWeek)} />
       </header>
 
       <Rise step={0.07} order={1}>{active ? <ActiveCard now={now} /> : <ProtocolHero next={next} byId={byId} />}</Rise>
@@ -100,53 +103,95 @@ export function HomeDashboard() {
 /* ---------------------------------------------------------------- week strip */
 
 /** Trained days light up one after another; today keeps a slow breathing ring. */
-function WeekStrip({ days }: { days: ReturnType<typeof weekStrip> }) {
+/**
+ * The week as seven days: the date under each letter, and on a trained day the muscle that got
+ * the most sets lit in Volt with the day's focus (Push, Pull, Legs...) under it, so the split
+ * reads at a glance. Above: the month, and the week streak when there is one.
+ */
+function WeekStrip({
+  days,
+  sessions,
+  byId,
+  streak,
+}: {
+  days: ReturnType<typeof weekStrip>;
+  sessions: WorkoutSession[];
+  byId: Record<string, Exercise>;
+  streak: number;
+}) {
   const t = useT();
   const controls = useEntrance();
   const reduce = useReducedMotion();
+  const focus = useMemo(
+    () =>
+      days.map((d) =>
+        d.trained ? trainingFocus(sessions.filter((s) => s.status === "completed" && s.startedAt >= d.start && s.startedAt < d.start + 86_400_000), byId) : null,
+      ),
+    [days, sessions, byId],
+  );
+  const month = new Date(days[0]!.start).toLocaleDateString(t.locale, { month: "long", year: "numeric" });
   return (
-    <ol aria-label={t("This week")} className="grid grid-cols-7 gap-1.5">
-      {days.map((d, i) => {
-        const date = new Date(d.start);
-        const weekday = date.toLocaleDateString(t.locale, { weekday: "short" });
-        const status = d.trained ? t("trained") : d.isToday ? t("today") : d.isFuture ? "" : t("rest");
-        return (
-          <li key={d.start} className="flex flex-col items-center gap-1">
-            <span aria-hidden="true" className={`label-caps ${d.isToday ? "!text-text" : ""}`}>
-              {weekday.slice(0, 1)}
-            </span>
-            <span aria-hidden="true" className="relative flex h-9 w-full max-w-11 items-center justify-center">
-              {d.isToday && !d.trained && (
-                <motion.span
-                  className="absolute inset-0 rounded-lg border border-ink/70"
-                  animate={reduce ? undefined : { opacity: [1, 0.45, 1] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                />
-              )}
-              {d.trained ? (
-                <motion.span
-                  className="flex size-full items-center justify-center rounded-lg bg-accent text-on-accent"
-                  style={{ scale: 0.4, opacity: 0 }}
-                  animate={controls}
-                  variants={{
-                    still: { scale: 1, opacity: 1 },
-                    show: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 420, damping: 18, delay: 0.15 + i * 0.06 } },
-                  }}
-                >
-                  <Check size={16} strokeWidth={3} />
-                </motion.span>
-              ) : (
-                <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-zinc-800"}`} />
-              )}
-            </span>
-            <span className="sr-only">
-              {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric" })}
-              {status && `, ${status}`}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+    <section className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="label-caps">{month}</p>
+        {streak > 0 && (
+          <p className="num flex items-center gap-1 text-xs font-bold text-accent">
+            <Flame aria-hidden="true" size={14} />
+            {t.n(streak, "{n}-week streak", "{n}-week streak")}
+          </p>
+        )}
+      </div>
+      <ol aria-label={t("This week")} className="grid grid-cols-7 gap-1.5">
+        {days.map((d, i) => {
+          const date = new Date(d.start);
+          const weekday = date.toLocaleDateString(t.locale, { weekday: "short" });
+          const f = focus[i];
+          const status = d.trained ? t("trained") : d.isToday ? t("today") : d.isFuture ? "" : t("rest");
+          return (
+            <li key={d.start} className="flex flex-col items-center gap-1">
+              <span aria-hidden="true" className={`label-caps ${d.isToday ? "!text-text" : ""}`}>
+                {weekday.slice(0, 1)}
+              </span>
+              <span aria-hidden="true" className={`num text-xs font-bold leading-none ${d.isToday ? "text-text" : "text-text-muted"}`}>
+                {date.getDate()}
+              </span>
+              <span aria-hidden="true" className="relative flex h-11 w-full max-w-11 items-center justify-center">
+                {d.isToday && !d.trained && (
+                  <motion.span
+                    className="absolute inset-0 rounded-lg border border-ink/70"
+                    animate={reduce ? undefined : { opacity: [1, 0.45, 1] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                )}
+                {d.trained ? (
+                  <motion.span
+                    className={`flex size-full items-center justify-center rounded-lg border bg-accent-tint ${d.isToday ? "border-accent" : "border-accent/40"}`}
+                    style={{ scale: 0.4, opacity: 0 }}
+                    animate={controls}
+                    variants={{
+                      still: { scale: 1, opacity: 1 },
+                      show: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 420, damping: 18, delay: 0.15 + i * 0.06 } },
+                    }}
+                  >
+                    {f ? <MuscleIcon muscle={f.muscle} size={30} /> : <Check size={16} strokeWidth={3} className="text-accent" />}
+                  </motion.span>
+                ) : (
+                  <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-zinc-800"}`} />
+                )}
+              </span>
+              <span aria-hidden="true" className="h-3 max-w-full truncate text-[10px] font-semibold leading-3 text-text-muted">
+                {f ? t(f.label) : ""}
+              </span>
+              <span className="sr-only">
+                {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric" })}
+                {f && `, ${t(f.label)}`}
+                {status && `, ${status}`}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
   );
 }
 

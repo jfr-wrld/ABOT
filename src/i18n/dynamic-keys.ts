@@ -31,6 +31,8 @@ export const DYNAMIC_KEYS: string[] = [
   // MUSCLE_GROUP_LABELS ("Back" goes through "Back (muscle)", see muscleText in lib/home)
   "Chest", "Shoulders", "Biceps", "Triceps", "Forearms", "Abs", "Quads", "Hamstrings", "Glutes", "Calves",
   "Traps", "Lats", "Adductors", "Abductors", "Neck", "Lower Back", "Full Body", "Cardio",
+  // training-focus BUCKET_LABEL / FocusLabel
+  "Push", "Pull", "Legs", "Core", "Upper", "Lower", "Full body",
   // EQUIPMENT_LABELS
   "Barbell", "Dumbbell", "Machine", "Smith Machine", "Cable", "Bodyweight", "Kettlebell", "Band", "Other",
   // SET_TYPE_META labels and SetTypeMenu hints

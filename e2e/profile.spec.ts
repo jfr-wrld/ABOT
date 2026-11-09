@@ -77,6 +77,7 @@ test("weigh-ins build a history; the same day updates, a mistake can be deleted"
     });
   });
   await page.goto("/profile?tab=about");
+  await page.getByText("History", { exact: true }).click();
   const recent = page.getByRole("list", { name: "Recent weigh-ins" });
   await expect(recent.getByRole("listitem")).toHaveCount(1);
   await expect(page.getByText("Log another day to see the trend.")).toBeVisible();
@@ -149,6 +150,6 @@ test("account and settings links lead somewhere real", async ({ page }) => {
   await page.getByRole("link", { name: "Back up with an account" }).click();
   await expect(page.getByRole("heading", { name: "Back up and sync" })).toBeVisible();
   await page.goto("/profile?tab=about");
-  await page.getByRole("link", { name: "All settings" }).click();
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
 });

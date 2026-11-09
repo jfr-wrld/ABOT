@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, ChevronRight, Image as ImageIcon, Pencil, Settings, Trophy } from "lucide-react";
+import { Camera, Image as ImageIcon, Pencil, Settings } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -13,14 +13,14 @@ import { ProgressPanel } from "@/components/analytics/ProgressPanel";
 import { NumberField } from "@/components/ui/NumberField";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { BodyweightSection } from "@/components/profile/BodyweightSection";
+import { LiftsBoard } from "@/components/profile/LiftsBoard";
 import { AccountChip, AccountSection } from "@/components/profile/AccountSection";
-import { normalizeHandle, profileStats, type ProfileStats } from "@/lib/profile";
+import { normalizeHandle, profileStats } from "@/lib/profile";
 import { weeklyBuckets } from "@/lib/analytics";
 import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
-import { cmToFtIn, formatVolume, formatWeight, ftInToCm } from "@/lib/units";
+import { cmToFtIn, formatVolume, ftInToCm } from "@/lib/units";
 import { PROFILE_LIMITS } from "@/types/workout";
-import { exercisePath } from "@/lib/routes";
 import { Sheet } from "@/components/ui/Sheet";
 import { isNativeApp } from "@/lib/native/files";
 import { openPhotoInput } from "@/lib/native/photo-input";
@@ -194,11 +194,10 @@ function ProfileScreen() {
           </>
         )}
 
-        {tab === "lifts" && <TopLifts lifts={stats.topLifts} unit={unit} />}
+        {tab === "lifts" && <LiftsBoard sessions={sessions} byId={byId} unit={unit} bodyweightKg={s.bodyweightKg} now={now} />}
 
         {tab === "about" && (
           <>
-            <BodyweightSection now={now} />
             <section aria-labelledby="body-heading" className="panel flex flex-col gap-3 p-3">
               <h2 id="body-heading" className="label-caps">
                 {t("About you")}
@@ -252,15 +251,8 @@ function ProfileScreen() {
                 </div>
               )}
             </section>
+            <BodyweightSection now={now} />
             <AccountSection />
-            <Link
-              href="/settings"
-              className="panel flex min-h-14 items-center gap-3 px-4 text-sm font-semibold transition-colors hover:bg-surface-2"
-            >
-              <Settings aria-hidden="true" size={18} className="text-text-muted" />
-              <span className="flex-1">{t("All settings")}</span>
-              <ChevronRight aria-hidden="true" size={16} className="text-text-muted" />
-            </Link>
           </>
         )}
       </div>
@@ -304,46 +296,6 @@ function Cover({ weeks }: { weeks: number[] }) {
       )}
       <span className="label-caps absolute top-3 right-3">{t("12 wk volume")}</span>
     </div>
-  );
-}
-
-function TopLifts({ lifts, unit }: { lifts: ProfileStats["topLifts"]; unit: "kg" | "lbs" }) {
-  const t = useT();
-  if (lifts.length === 0) {
-    return <p className="panel px-4 py-6 text-center text-sm text-text-muted">{t("Finish a workout to rank your lifts.")}</p>;
-  }
-  return (
-    <section aria-labelledby="lifts-heading" className="panel p-3">
-      <div className="flex items-baseline justify-between">
-        <h2 id="lifts-heading" className="label-caps flex items-center gap-1.5">
-          <Trophy aria-hidden="true" size={12} className="text-pr" />
-          {t("Top lifts")}
-        </h2>
-        <span className="label-caps" title={t("Estimated one-rep max from your best set")}>
-          e1RM
-        </span>
-      </div>
-      <ol className="mt-1 flex flex-col">
-        {lifts.map(({ exercise, record }, i) => (
-          <li key={exercise.id}>
-            <Link
-              href={exercisePath(exercise.id)}
-              className="-mx-1 flex min-h-14 items-center gap-3 rounded-xl px-1 transition-colors hover:bg-ink/[0.04]"
-            >
-              <span className="num w-4 text-sm text-text-muted">{i + 1}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{exercise.name}</span>
-                <span className="num block text-xs text-text-muted">
-                  {formatWeight(record.weightKg, unit)} × {record.reps}
-                </span>
-              </span>
-              <span className="num text-base font-bold text-pr">{formatWeight(record.value, unit)}</span>
-              <ChevronRight aria-hidden="true" size={16} className="text-text-muted" />
-            </Link>
-          </li>
-        ))}
-      </ol>
-    </section>
   );
 }
 

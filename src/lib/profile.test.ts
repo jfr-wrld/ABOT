@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initials, profileStats } from "./profile";
+import { initials, liftBoard, profileStats } from "./profile";
 import type { Exercise, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES } from "@/data/exercises";
 
@@ -52,14 +52,17 @@ describe("profileStats", () => {
     expect(stats.firstWorkoutAt).toBe(now - 20 * DAY);
   });
 
-  it("ranks the top lifts by estimated 1RM, ignoring the unfinished workout", () => {
-    expect(stats.topLifts.map((l) => l.exercise.id)).toEqual(["deadlift-barbell", "squat-barbell", "bench-press-barbell"]);
-    expect(stats.topLifts[2]!.record.weightKg).toBe(80);
+  it("ranks every weighted lift by estimated 1RM, ignoring the unfinished workout", () => {
+    const board = liftBoard(sessions, byId);
+    expect(board.map((l) => l.exercise.id).slice(0, 3)).toEqual(["deadlift-barbell", "squat-barbell", "bench-press-barbell"]);
+    expect(board[2]!.best.weightKg).toBe(80);
+    expect(board[2]!.points.length).toBeGreaterThan(0);
+    expect(liftBoard([], byId)).toEqual([]);
   });
 
   it("is empty, not broken, with no history", () => {
     const empty = profileStats([], byId, now, 1);
-    expect(empty).toMatchObject({ workouts: 0, sets: 0, volumeKg: 0, trainingSec: 0, firstWorkoutAt: null, topLifts: [] });
+    expect(empty).toMatchObject({ workouts: 0, sets: 0, volumeKg: 0, trainingSec: 0, firstWorkoutAt: null });
   });
 });
 

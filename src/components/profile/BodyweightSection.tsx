@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, ChevronRight, Scale, Trash2 } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useBodyStore } from "@/store/useBodyStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -12,6 +13,7 @@ import { changeOver, dayKey } from "@/lib/bodyweight";
 import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
 import { PROFILE_LIMITS } from "@/types/workout";
 import { useT } from "@/i18n";
+import { Sparkline } from "@/components/phase/visuals";
 
 const shortDate = (at: number, locale: string) => new Date(at).toLocaleDateString(locale, { day: "numeric", month: "short" });
 
@@ -21,6 +23,7 @@ export function BodyweightSection({ now }: { now: number }) {
   const logWeight = useBodyStore((s) => s.logWeight);
   const remove = useBodyStore((s) => s.remove);
   const { weightUnit: unit, bodyweightKg } = useSettingsStore();
+  const phaseActive = useSettingsStore((s) => s.bodyPhase?.isActive === true);
   const [draft, setDraft] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const t = useT();
@@ -50,18 +53,28 @@ export function BodyweightSection({ now }: { now: number }) {
       <h2 id="bw-heading" className="label-caps">
         {t("Bodyweight")}
       </h2>
-      <div className="mt-1 flex items-baseline justify-between gap-3">
-        <p className="num text-3xl font-bold tracking-tight">
-          {current === null ? "–" : shown(current)}
-          {current !== null && <span className="ml-1 text-base font-semibold text-text-muted">{unit}</span>}
-        </p>
-        {change !== null && (
-          <p className="num text-sm text-text-muted">
-            {change > 0 ? "+" : change < 0 ? "−" : "±"}
-            {t("{weight} {unit} in 30 days", { weight: shown(Math.abs(change)), unit })}
+      <div className="mt-1 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="num text-3xl font-bold tracking-tight">
+            {current === null ? "–" : shown(current)}
+            {current !== null && <span className="ml-1 text-base font-semibold text-text-muted">{unit}</span>}
           </p>
-        )}
+          {change !== null && (
+            <p className="num text-xs text-text-muted">
+              {change > 0 ? "+" : change < 0 ? "−" : "±"}
+              {t("{weight} {unit} in 30 days", { weight: shown(Math.abs(change)), unit })}
+            </p>
+          )}
+        </div>
+        <Sparkline values={entries.slice(-30).map((e) => e.weightKg)} width={96} height={36} />
       </div>
+      {phaseActive && (
+        <Link href="/phase" className="mt-3 flex min-h-11 items-center gap-2 rounded-ctl bg-surface-2 px-3 text-sm font-semibold hover:bg-press">
+          <Scale aria-hidden="true" size={16} className="text-accent" />
+          <span className="flex-1">{t("Trend and targets in your body phase")}</span>
+          <ChevronRight aria-hidden="true" size={16} className="text-text-muted" />
+        </Link>
+      )}
 
       <form
         className="mt-3 flex items-start gap-2"
@@ -98,8 +111,22 @@ export function BodyweightSection({ now }: { now: number }) {
         </Button>
       </form>
 
-      {entries.length >= 2 ? (
-        <figure className="mt-3">
+      {entries.length < 2 && (
+        <p className="mt-3 text-sm text-text-muted">
+          {entries.length === 0 ? t("One weigh-in a day builds your trend.") : t("Log another day to see the trend.")}
+        </p>
+      )}
+
+      {/* Chart and the list behind one tap: the figure and the log above are what is used daily. */}
+      {entries.length > 0 && (
+        <details className="group mt-3 border-t border-line pt-1">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+            <span className="flex-1">{t("History")}</span>
+            <span className="num text-xs text-text-muted">{entries.length}</span>
+            <ChevronDown aria-hidden="true" size={16} className="text-text-muted transition-transform group-open:rotate-180" />
+          </summary>
+      {entries.length >= 2 && (
+        <figure className="mt-1">
           <figcaption className="sr-only">{t("Bodyweight over time in {unit}", { unit })}</figcaption>
           <div className="h-36">
             <ResponsiveContainer width="100%" height="100%">
@@ -113,10 +140,6 @@ export function BodyweightSection({ now }: { now: number }) {
             </ResponsiveContainer>
           </div>
         </figure>
-      ) : (
-        <p className="mt-3 text-sm text-text-muted">
-          {entries.length === 0 ? t("One weigh-in a day builds your trend.") : t("Log another day to see the trend.")}
-        </p>
       )}
 
       {recent.length > 0 && (
@@ -140,6 +163,8 @@ export function BodyweightSection({ now }: { now: number }) {
             </li>
           ))}
         </ul>
+      )}
+        </details>
       )}
     </section>
   );

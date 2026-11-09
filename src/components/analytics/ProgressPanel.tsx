@@ -12,13 +12,12 @@ import { RangeTabs } from "@/components/progress/RangeTabs";
 import { ProgressHero, StreakPlates } from "@/components/progress/ProgressHero";
 import { MuscleFocus } from "@/components/progress/MuscleFocus";
 import { SymmetryRadarCard } from "@/components/progress/SymmetryRadarCard";
-import { LiftTrends } from "@/components/progress/LiftTrends";
 import { PhaseCommandCard } from "@/components/phase/PhaseCommandCard";
 import { StoryShareButton } from "@/components/share/ShareStoryButton";
 import { startOfWeek, weekStreak, weeklyBuckets } from "@/lib/analytics";
 import { formatDuration, muscleSplit } from "@/lib/calc";
 import { formatVolume, toDisplay } from "@/lib/units";
-import { liftTrends, percentChange, periodTotals, rangeStart } from "@/lib/progress";
+import { percentChange, periodTotals, rangeStart } from "@/lib/progress";
 import { buildPeriodStoryData } from "@/lib/story-data";
 import { useNow } from "@/lib/useNow";
 import { useT } from "@/i18n";
@@ -62,7 +61,6 @@ export function ProgressPanel() {
     sets: percentChange(totals.sets, previous.sets),
   };
   const streak = weekStreak(sessions, now, firstDayOfWeek);
-  const trends = useMemo(() => liftTrends(sessions, from, to, byId), [sessions, from, to, byId]);
 
   const split = useMemo(() => {
     const start = splitRange === "week" ? startOfWeek(now, firstDayOfWeek) : from;
@@ -151,11 +149,7 @@ export function ProgressPanel() {
           <WeeklyBars key={`${metric}-${weeks}`} title={chart.title} unitLabel={chart.unit} points={chart.points} />
         </motion.section>
 
-        <motion.div custom={4} variants={section} initial="hidden" animate="show">
-          <LiftTrends trends={trends} unit={weightUnit} />
-        </motion.div>
-
-        <motion.div custom={5} variants={section} initial="hidden" animate="show" className="flex flex-col gap-2">
+        <motion.div custom={4} variants={section} initial="hidden" animate="show" className="flex flex-col gap-2">
           <RangeTabs
             id="split"
             label={t("Muscle split range")}
@@ -173,11 +167,11 @@ export function ProgressPanel() {
           />
         </motion.div>
 
-        <motion.div custom={6} variants={section} initial="hidden" animate="show">
+        <motion.div custom={5} variants={section} initial="hidden" animate="show">
           <SymmetryRadarCard sessions={sessions} byId={byId} now={now} />
         </motion.div>
 
-        <motion.div custom={7} variants={section} initial="hidden" animate="show">
+        <motion.div custom={6} variants={section} initial="hidden" animate="show">
           <WorkoutCalendar sessions={sessions} firstDay={firstDayOfWeek} now={now} />
         </motion.div>
       </div>
