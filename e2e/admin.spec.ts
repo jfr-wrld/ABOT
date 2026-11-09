@@ -1,5 +1,17 @@
+import fs from "node:fs";
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { addExercise, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+
+/** The build under test has Supabase when .env carries it; then the console is in server mode. */
+function supabaseConfigured(): boolean {
+  try {
+    return /^NEXT_PUBLIC_SUPABASE_URL=.+$/m.test(fs.readFileSync(path.join(__dirname, "..", ".env"), "utf8")) && process.env.E2E_REUSE_SERVER !== "1";
+  } catch {
+    return false;
+  }
+}
+const configured = supabaseConfigured();
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -7,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 /** Five taps on the build tag at the foot of Settings, then the PIN. */
-async function openConsole(page: Page) {
+async function openConsole(page: Page, expectMode = "● LOCAL MODE") {
   await page.goto("/settings");
   const tag = page.getByRole("button", { name: /\/\/ TELEMETRY BUILD$/ });
   for (let i = 0; i < 5; i++) await tag.click();
@@ -17,10 +29,13 @@ async function openConsole(page: Page) {
   await expect(page.getByRole("alert").filter({ hasText: "Wrong PIN." })).toBeVisible();
   await page.getByLabel("PIN").fill("2026");
   await page.getByRole("button", { name: "Unlock" }).click();
-  await expect(page.getByText("● LOCAL MODE")).toBeVisible();
+  await expect(page.getByText(expectMode)).toBeVisible();
 }
 
 const nav = (page: Page, name: string) => page.getByRole("navigation", { name: "Modules" }).getByRole("button", { name });
+
+test.describe("local mode (no Supabase in the build)", () => {
+  test.skip(configured, "this build has Supabase: see the server-mode test");
 
 test("hidden entry, PIN gate, and the monetization switch with prices and banner reaching the app", async ({ page }) => {
   await openConsole(page);
@@ -132,4 +147,19 @@ test("desktop: sidebar layout with every module", async ({ page }) => {
   const box = await page.getByRole("navigation", { name: "Modules" }).boundingBox();
   expect(box!.width).toBeLessThan(260);
   expect(box!.height).toBeGreaterThan(300);
+});
+});
+
+test("server mode: signed out, Global modules stay closed and Device modules work", async ({ page }) => {
+  test.skip(!configured, "needs a build with Supabase (.env)");
+  await openConsole(page, "● NOT AN ADMIN");
+  for (const m of ["Monetization", "Licenses", "Algorithms"]) {
+    await nav(page, m).click();
+    await expect(page.getByText("Admin account needed")).toBeVisible();
+    await expect(page.getByText(/Sign in with the founder's Google account/)).toBeVisible();
+  }
+  await nav(page, "Database").click();
+  await expect(page.getByText("OK · No problems found")).toBeVisible();
+  await nav(page, "Exercises").click();
+  await expect(page.getByRole("button", { name: "New" })).toBeVisible();
 });
