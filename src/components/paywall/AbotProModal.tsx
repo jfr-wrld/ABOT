@@ -82,7 +82,8 @@ export function AbotProModal() {
     if (r.ok) setNote(t("Payment page opened. PRO turns on here once Midtrans confirms the payment."));
     else {
       setNeedsSignIn(r.reason === "sign_in");
-      setNote(t(CHECKOUT_MESSAGE[r.reason]));
+      // The technical detail (status, Midtrans' own words) helps the owner debug a failed setup.
+      setNote(t(CHECKOUT_MESSAGE[r.reason]) + (r.detail && r.reason === "gateway" ? ` (${r.detail})` : ""));
     }
   }
 

@@ -24,19 +24,20 @@ function respond(req: Request, status: number, body: unknown): Response {
   const headers: Record<string, string> = { "content-type": "application/json", vary: "origin" };
   if (origin) {
     headers["access-control-allow-origin"] = origin;
-    headers["access-control-allow-headers"] = "authorization, apikey, content-type, x-client-info";
+    // Echo what the browser asks to send: supabase-js adds headers over time (x-region, ...).
+    headers["access-control-allow-headers"] = req.headers.get("access-control-request-headers") ?? "authorization, apikey, content-type, x-client-info";
     headers["access-control-allow-methods"] = "POST, OPTIONS";
   }
   return new Response(status === 204 ? null : JSON.stringify(body), { status, headers });
 }
 
-/** A refusal the app shows as is. `code` lets it pick a translated message. */
-const refuse = (req: Request, status: number, code: string) => respond(req, status, { error: code });
+/** A refusal the app shows as is. `code` lets it pick a translated message; `detail` helps debugging. */
+const refuse = (req: Request, status: number, code: string, detail?: string) => respond(req, status, { error: code, ...(detail ? { detail } : {}) });
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return respond(req, 204, null);
   if (req.method !== "POST") return refuse(req, 405, "method");
-  if (!SERVER_KEY) return refuse(req, 503, "not_configured");
+  if (!SERVER_KEY) return refuse(req, 503, "gateway", "MIDTRANS_SERVER_KEY secret is not set");
 
   const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   const { data: auth } = await db.auth.getUser(jwt);
@@ -71,7 +72,10 @@ Deno.serve(async (req) => {
   const amount = priceIdr(plan, config);
   const orderId = makeOrderId(plan, Date.now());
   const { error: insertError } = await db.from("payment_orders").insert({ order_id: orderId, user_id: user.id, plan, amount_idr: amount });
-  if (insertError) return refuse(req, 500, "order_failed");
+  if (insertError) {
+    console.error("order insert failed", insertError.message);
+    return refuse(req, 500, "gateway", `order insert: ${insertError.message.slice(0, 160)}`);
+  }
 
   const snap = await fetch(snapUrl(PRODUCTION), {
     method: "POST",
@@ -86,7 +90,10 @@ Deno.serve(async (req) => {
   const answer = snap ? await snap.json().catch(() => null) : null;
   if (!snap?.ok || !answer?.redirect_url) {
     await db.rpc("abot_order_closed", { p_order_id: orderId, p_status: "failed" });
-    return refuse(req, 502, "gateway");
+    // Midtrans says why (wrong key, sandbox vs production, bad field); never the key itself.
+    const why = snap ? `midtrans ${snap.status}: ${(answer?.error_messages ?? []).join("; ").slice(0, 200)}` : "midtrans unreachable";
+    console.error("snap failed", why);
+    return refuse(req, 502, "gateway", why);
   }
   return respond(req, 200, { order_id: orderId, redirect_url: answer.redirect_url, amount_idr: amount });
 });

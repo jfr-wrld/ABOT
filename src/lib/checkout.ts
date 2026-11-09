@@ -69,7 +69,9 @@ export function pendingOrder(): string | null {
 }
 
 /** Creates the order and opens Midtrans' payment page (same tab on the web, browser on Android). */
-export async function startMidtransCheckout(plan: WebPlan): Promise<{ ok: true; orderId: string } | { ok: false; reason: CheckoutFailure }> {
+export async function startMidtransCheckout(
+  plan: WebPlan,
+): Promise<{ ok: true; orderId: string } | { ok: false; reason: CheckoutFailure; detail?: string }> {
   const blocked = checkoutBlock();
   if (blocked) return { ok: false, reason: blocked };
   if (!maySignedIn()) return { ok: false, reason: "sign_in" };
@@ -81,10 +83,13 @@ export async function startMidtransCheckout(plan: WebPlan): Promise<{ ok: true; 
       body: { plan, platform: isNativeApp() ? "android" : "web" },
     });
     if (error) {
-      // FunctionsHttpError carries the function's JSON answer in `context`.
-      const answer = await (error as { context?: Response }).context?.json?.().catch(() => null);
+      // FunctionsHttpError carries the function's response in `context`; FunctionsFetchError
+      // (no response: blocked by CORS, offline, wrong function name) does not.
+      const res = (error as { context?: Response }).context;
+      const answer = res && typeof res.json === "function" ? await res.json().catch(() => null) : null;
       const code = answer?.error as CheckoutFailure | undefined;
-      return { ok: false, reason: code && code in CHECKOUT_MESSAGE ? code : "gateway" };
+      const detail = res?.status ? `HTTP ${res.status}${answer?.detail ? `, ${answer.detail}` : answer?.message ? `, ${answer.message}` : ""}` : (error as Error).name;
+      return { ok: false, reason: code && code in CHECKOUT_MESSAGE ? code : "gateway", detail };
     }
     const url = (data as { redirect_url?: string; order_id?: string } | null)?.redirect_url;
     const orderId = (data as { order_id?: string } | null)?.order_id;
