@@ -40,6 +40,12 @@ interface WorkoutState {
   reorderExercises: (sessionExerciseIds: string[]) => void;
   /** Swaps the movement of one exercise, keeping its sets as typed (for picking the wrong variant). */
   replaceExercise: (sessionExerciseId: string, exerciseId: string) => void;
+  /**
+   * Smart swap mid-workout: the sets still to do move to `exerciseId` at `weightKg` (null leaves
+   * them empty). Sets already ticked stay on the old exercise as what was done, and the new one
+   * goes right after it, in the same superset. With nothing ticked it is a plain replace.
+   */
+  swapExercise: (sessionExerciseId: string, exerciseId: string, weightKg: number | null) => void;
   /** Stops the workout clock and the rest timer; ticking a set or resume starts it again. */
   pauseActive: () => void;
   resumeActive: () => void;
@@ -180,6 +186,30 @@ export const useWorkoutStore = create<WorkoutState>()(
             // Only a full permutation of the current exercises is applied.
             if (ordered.length !== a.exercises.length || new Set(ids).size !== ids.length) return a;
             return { ...a, exercises: ordered };
+          }),
+        ),
+
+      swapExercise: (id, exerciseId, weightKg) =>
+        set((s) =>
+          patchActive(s, (a) => {
+            const i = a.exercises.findIndex((e) => e.id === id);
+            const ex = a.exercises[i];
+            if (!ex) return a;
+            const todo = ex.sets.filter((st) => !st.completed).map((st) => ({ ...st, weightKg }));
+            const done = ex.sets.filter((st) => st.completed);
+            if (done.length === 0) {
+              return { ...a, exercises: a.exercises.map((e) => (e.id === id ? { ...e, exerciseId, sets: todo } : e)) };
+            }
+            const next = {
+              id: newId(),
+              exerciseId,
+              restSeconds: ex.restSeconds,
+              sets: todo.length ? todo : [newSet({ weightKg })],
+              ...(ex.supersetId ? { supersetId: ex.supersetId } : {}),
+            };
+            const exercises = [...a.exercises];
+            exercises.splice(i, 1, { ...ex, sets: done }, next);
+            return { ...a, exercises };
           }),
         ),
 

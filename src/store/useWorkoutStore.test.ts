@@ -274,3 +274,39 @@ describe("starting from a routine", () => {
     expect(ex[1]!.supersetId).toBe(ex[0]!.supersetId);
   });
 });
+
+describe("swapExercise", () => {
+  const start = () => {
+    useWorkoutStore.setState({ ...initial, sessions: [], active: null, restTimer: null }, true);
+    useWorkoutStore.getState().startEmpty(90);
+    useWorkoutStore.getState().addExercise("bench-press-barbell", 90);
+    return useWorkoutStore.getState().active!.exercises[0]!;
+  };
+
+  it("with nothing ticked, swaps the movement and sets the converted weight on every set", () => {
+    const ex = start();
+    useWorkoutStore.getState().updateSet(ex.id, ex.sets[0]!.id, { reps: 8 });
+    useWorkoutStore.getState().swapExercise(ex.id, "bench-press-dumbbell", 32.5);
+    const after = useWorkoutStore.getState().active!.exercises;
+    expect(after).toHaveLength(1);
+    expect(after[0]).toMatchObject({ id: ex.id, exerciseId: "bench-press-dumbbell" });
+    expect(after[0]!.sets.map((s) => s.weightKg)).toEqual([32.5, 32.5, 32.5]);
+    expect(after[0]!.sets[0]!.reps).toBe(8);
+  });
+
+  it("keeps ticked sets on the old exercise and moves the rest to a new card after it", () => {
+    const ex = start();
+    const s = useWorkoutStore.getState();
+    s.updateSet(ex.id, ex.sets[0]!.id, { weightKg: 80, reps: 8 });
+    s.completeSet(ex.id, ex.sets[0]!.id, true);
+    useWorkoutStore.getState().swapExercise(ex.id, "chest-press-machine", 87.5);
+    const after = useWorkoutStore.getState().active!.exercises;
+    expect(after.map((e) => e.exerciseId)).toEqual(["bench-press-barbell", "chest-press-machine"]);
+    expect(after[0]!.sets).toHaveLength(1);
+    expect(after[0]!.sets[0]).toMatchObject({ completed: true, weightKg: 80 });
+    expect(after[1]!.sets.map((s) => [s.completed, s.weightKg])).toEqual([
+      [false, 87.5],
+      [false, 87.5],
+    ]);
+  });
+});

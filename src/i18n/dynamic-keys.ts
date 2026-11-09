@@ -1,6 +1,9 @@
 import { FAQ, LANGUAGE_LABEL, SECTION_TITLE, THEME_LABEL } from "@/components/settings/labels";
 import { SPLITS } from "@/lib/seed-routines";
 import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
+import { KIND_LABEL, WHY } from "@/lib/progressive-overload";
+import { FILTER_LABEL } from "@/lib/exercise-swapper";
+import { AXIS_LABEL, DIAGNOSTIC_KEYS } from "@/lib/symmetry-analyzer";
 
 /**
  * English texts that reach t() through a variable (labels kept in constants and maps), so the
@@ -86,4 +89,12 @@ export const DYNAMIC_KEYS: string[] = [
   ...PLATE_SETS.kg.bars.map((b) => b.label),
   "Gym bar",
   ...PLATE_COLORS.map((c) => c.name),
+  // Phase 3 coaching: pill titles and reasons, swap filters, radar axes, grades, diagnostics
+  ...Object.values(KIND_LABEL),
+  ...Object.values(WHY),
+  ...Object.values(FILTER_LABEL),
+  ...Object.values(AXIS_LABEL),
+  "OPTIMAL", "BALANCED", "IMBALANCED", "CRITICAL",
+  DIAGNOSTIC_KEYS.pushPull, DIAGNOSTIC_KEYS.noPull, DIAGNOSTIC_KEYS.pullPush, DIAGNOSTIC_KEYS.quadHam, DIAGNOSTIC_KEYS.hamQuad, DIAGNOSTIC_KEYS.skipLegs,
+  ...Object.values(DIAGNOSTIC_KEYS.low),
 ];
