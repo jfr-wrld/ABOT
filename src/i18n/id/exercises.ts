@@ -319,4 +319,5 @@ export const exercises: Record<string, string> = {
   "{n}-week streak": "Streak {n} minggu",
   "No active streak": "Belum ada streak aktif",
   "Trained in {n} of {total} weeks": "Latihan di {n} dari {total} minggu",
+  Catalog: "Katalog",
 };

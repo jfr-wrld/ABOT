@@ -78,9 +78,12 @@ function LibraryScreen() {
             : t("{n} in your library", { n: list.length })
         }
         action={
-          <Button variant="primary" onClick={() => setFormOpen(true)}>
-            <Plus aria-hidden="true" size={18} /> {t("New")}
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            <CatalogSection />
+            <Button variant="primary" onClick={() => setFormOpen(true)}>
+              <Plus aria-hidden="true" size={18} /> {t("New")}
+            </Button>
+          </div>
         }
       />
 
@@ -130,8 +133,6 @@ function LibraryScreen() {
         </div>
       </div>
 
-      <CatalogSection />
-
       {filtered.length === 0 ? (
         <p className="mx-4 mt-4 panel px-4 py-8 text-center text-sm text-text-muted">
           {t("No exercise matches these filters. Clear a filter, or add it as a new exercise with the button above.")}
@@ -143,9 +144,14 @@ function LibraryScreen() {
               {/* Sticky so the muscle stays named while its list scrolls. */}
               <h2
                 id={`group-${m}`}
-                className="sticky top-[env(safe-area-inset-top)] z-10 flex items-baseline justify-between bg-bg/95 px-4 py-2 backdrop-blur-sm"
+                className="sticky top-[env(safe-area-inset-top)] z-10 flex items-center justify-between bg-bg/95 px-4 py-2 backdrop-blur-sm"
               >
-                <span className="text-sm font-bold">{muscleLabel(m, t)}</span>
+                <span className="flex items-center gap-2.5">
+                  <span aria-hidden="true" className="flex size-9 items-center justify-center rounded-lg border border-line bg-surface">
+                    <MuscleIcon muscle={m} size={28} />
+                  </span>
+                  <span className="text-sm font-bold">{muscleLabel(m, t)}</span>
+                </span>
                 <span className="num text-xs text-text-muted">{items.length}</span>
               </h2>
               <ul className={view === "grid" ? "grid grid-cols-2 gap-2 px-4 sm:grid-cols-3" : "flex flex-col px-2"}>
