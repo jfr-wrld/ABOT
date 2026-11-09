@@ -7,6 +7,7 @@ import type { WorkoutSession } from "@/types/workout";
 import { monthGrid, sessionsByDay, startOfDay } from "@/lib/analytics";
 import { countSets, formatDuration, sessionDurationSec } from "@/lib/calc";
 import { historyPath } from "@/lib/routes";
+import { useLocationStore } from "@/store/useLocationStore";
 import { useT } from "@/i18n";
 
 /** Two-letter weekday heads; the English text is the translation key. */
@@ -25,6 +26,8 @@ export function WorkoutCalendar({
   const [ym, setYm] = useState(() => ({ y: new Date(now).getFullYear(), m: new Date(now).getMonth() }));
   const [selected, setSelected] = useState<number>(() => startOfDay(now));
   const t = useT();
+  const locations = useLocationStore((s) => s.locations);
+  const gyms: Record<string, string> = Object.fromEntries(locations.map((l) => [l.id, l.name]));
   const byDay = sessionsByDay(sessions);
   const cells = monthGrid(ym.y, ym.m, firstDay, now);
   const monthLabel = new Date(ym.y, ym.m, 1).toLocaleDateString(t.locale, { month: "long", year: "numeric" });
@@ -109,8 +112,9 @@ export function WorkoutCalendar({
                   href={historyPath(s.id)}
                   className="flex min-h-11 items-center justify-between rounded-ctl px-2 hover:bg-surface-2"
                 >
-                  <span className="text-sm font-semibold">{s.name}</span>
-                  <span className="text-xs text-text-muted">
+                  <span className="min-w-0 truncate text-sm font-semibold">{s.name}</span>
+                  <span className="min-w-0 truncate pl-2 text-right text-xs text-text-muted">
+                    {gyms[s.locationId ?? ""] ? `${gyms[s.locationId!]} · ` : ""}
                     {formatDuration(sessionDurationSec(s))} · {t("{n} sets", { n: countSets(s).completed })}
                   </span>
                 </Link>

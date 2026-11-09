@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Select } from "@/components/ui/Select";
 import type { WeightUnit, WorkoutSession } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
@@ -10,7 +11,7 @@ import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
 import { motion } from "framer-motion";
-import { Pause, Play } from "lucide-react";
+import { MapPin, Pause, Play } from "lucide-react";
 import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { useT } from "@/i18n";
@@ -74,6 +75,15 @@ export function ActiveWorkoutHeader({
             className="flex-1"
           />
         </div>
+      )}
+      {locations.length === 0 && (
+        <Link
+          href="/settings?section=workout"
+          className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-ctl px-1 text-sm text-text-muted hover:text-text"
+        >
+          <MapPin aria-hidden="true" size={16} />
+          {t("Add your gym to tag workouts")}
+        </Link>
       )}
 
       <dl className="mt-3 grid grid-cols-3 gap-2">

@@ -19,7 +19,7 @@ const ROWS: { kind: Kind; icon: LucideIcon }[] = [
 
 function rowText(kind: Kind, t: T): { title: string; why: string } {
   if (kind === "notifications") return { title: t("Notifications"), why: t("Rest-over alarm, the workout on your lock screen, reminders.") };
-  if (kind === "camera") return { title: t("Camera"), why: t("Take a profile photo or a story background.") };
+  if (kind === "camera") return { title: t("Camera"), why: t("Take workout photos, a profile photo or a story background.") };
   return { title: t("Location"), why: t("Picks the gym you are at when a workout starts.") };
 }
 

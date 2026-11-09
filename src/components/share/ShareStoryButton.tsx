@@ -22,11 +22,13 @@ export function StoryShareButton({
   variant = "secondary",
   className = "",
   label,
+  photo,
 }: {
   makeData: () => StoryData;
   variant?: "primary" | "secondary";
   className?: string;
   label?: string;
+  photo?: Blob;
 }) {
   const [data, setData] = useState<StoryData | null>(null);
   const t = useT();
@@ -35,7 +37,7 @@ export function StoryShareButton({
       <Button variant={variant} onClick={() => setData(makeData())} className={className}>
         {label ?? t("Share to IG Story")} <span aria-hidden="true">↗</span>
       </Button>
-      {data && <StoryCardStudio open onClose={() => setData(null)} data={data} />}
+      {data && <StoryCardStudio open onClose={() => setData(null)} data={data} photo={photo} />}
     </>
   );
 }
@@ -46,11 +48,14 @@ export function ShareStoryButton({
   variant,
   className,
   label,
+  photo,
 }: {
   session: WorkoutSession;
   variant?: "primary" | "secondary";
   className?: string;
   label?: string;
+  /** The workout's first photo, used as the studio's starting background. */
+  photo?: Blob;
 }) {
   const sessions = useWorkoutStore((s) => s.sessions);
   const { weightUnit } = useSettingsStore();
@@ -61,6 +66,7 @@ export function ShareStoryButton({
       variant={variant}
       className={className}
       label={label}
+      photo={photo}
       makeData={() => buildStoryData(session, sessions, byId, weightUnit, locations)}
     />
   );

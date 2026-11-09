@@ -85,6 +85,11 @@ export const DYNAMIC_KEYS: string[] = [
   "This browser cannot resize photos.",
   "This photo is too detailed to store. Try another one.",
   "This browser cannot draw photos.",
+  // Workout photos (components/workout/WorkoutPhotos), shown with t()
+  "This workout already has 6 photos. Delete one to add another.",
+  "This phone has no room left for photos. Free up space and try again.",
+  "This photo could not be used.",
+  "The photo could not be deleted. Try again.",
   "Could not download the catalog. Check your connection and try again.",
   "The catalog file was not in the expected format.",
   // Plate calculator: bar presets and plate colour names

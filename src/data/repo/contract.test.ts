@@ -215,3 +215,52 @@ describe.each([
     });
   });
 });
+
+describe.each([
+  ["memory", () => createMemoryRepository()],
+  ["dexie", () => createDexieRepository(`t-${crypto.randomUUID()}`)],
+] as [string, () => Repository][])("%s repository, workout photos", (_name, make) => {
+  const photo = (id: string, sessionId: string, createdAt: number) => ({
+    id,
+    sessionId,
+    createdAt,
+    blob: new Blob([id], { type: "image/jpeg" }),
+    width: 4,
+    height: 3,
+  });
+
+  it("lists a workout's photos oldest first and removes one", async () => {
+    const repo = make();
+    await repo.sessions.put(session("a"));
+    await repo.photos.add(photo("p2", "a", 2));
+    await repo.photos.add(photo("p1", "a", 1));
+    await repo.photos.add(photo("x", "other", 1));
+    expect((await repo.photos.list("a")).map((p) => p.id)).toEqual(["p1", "p2"]);
+    expect(await (await repo.photos.list("a"))[0]!.blob.text()).toBe("p1");
+    await repo.photos.remove("p1");
+    expect((await repo.photos.list("a")).map((p) => p.id)).toEqual(["p2"]);
+  });
+
+  it("deleting a workout, here or from sync, deletes its photos", async () => {
+    const repo = make();
+    await repo.sessions.put(session("a"));
+    await repo.sessions.put(session("b"));
+    await repo.photos.add(photo("pa", "a", 1));
+    await repo.photos.add(photo("pb", "b", 1));
+    await repo.sessions.remove("a");
+    expect(await repo.photos.list("a")).toEqual([]);
+    await repo.sync.applyRemote({ kind: "session", id: "b", payload: null, updatedAt: 5, deleted: true }, 6);
+    expect(await repo.photos.list("b")).toEqual([]);
+  });
+
+  it("photos stay out of snapshots and sync, and prune drops orphans", async () => {
+    const repo = make();
+    await repo.sessions.put(session("a"));
+    await repo.photos.add(photo("pa", "a", 1));
+    await repo.photos.add(photo("lost", "gone", 1));
+    expect(JSON.stringify(await repo.snapshot())).not.toContain("pa");
+    expect((await repo.sync.pending()).some((r) => r.id === "pa")).toBe(false);
+    expect(await repo.photos.prune()).toBe(1);
+    expect((await repo.photos.list("a")).map((p) => p.id)).toEqual(["pa"]);
+  });
+});
