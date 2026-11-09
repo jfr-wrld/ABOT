@@ -10,6 +10,7 @@ import { updateEntitlement } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { useCelebrationStore } from "./ProCelebration";
 
 /**
  * After Midtrans: the web return URL carries ?order_id=..., and on Android the buyer comes back
@@ -32,9 +33,14 @@ export function PaymentReturn() {
     if (status === "paid" || status === "refunded") {
       const next = await syncEntitlementWithAccount(useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT);
       if (next) updateEntitlement(next);
-      if (status === "paid") feedback.pr();
     }
-    setShown(status ?? "unknown");
+    if (status === "paid") {
+      // The full-screen moment replaces the one-line banner.
+      const e = useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT;
+      feedback.pr();
+      useCelebrationStore.getState().show(e.tier === "lifetime" ? { tier: "lifetime" } : { tier: "pro", until: e.proExpiresAt });
+      setShown(null);
+    } else setShown(status ?? "unknown");
     if (fromUrl) {
       // Drop Midtrans' query so a reload does not check the same order again.
       const url = new URL(window.location.href);

@@ -34,7 +34,8 @@ export function AbotProModal() {
   const open = usePaywallStore((s) => s.open);
   const feature = usePaywallStore((s) => s.feature);
   const close = usePaywallStore((s) => s.close);
-  const { isBetaUnlocked, proActive, tier, isFounder, founderUnitCode } = useEntitlements();
+  const { isBetaUnlocked, tier, isFounder, founderUnitCode, proExpiresAt } = useEntitlements();
+  const paid = tier === "pro" || tier === "lifetime";
   const [plan, setPlan] = useState<PlanId>("annual");
   // Prices from Mission Control (remote config), the built-in ones until it answers.
   const prices = useRemoteConfig((s) => s.config.prices);
@@ -223,7 +224,20 @@ export function AbotProModal() {
         </fieldset>
 
         <div className="relative flex flex-col gap-2">
-          {isBetaUnlocked ? (
+          {paid ? (
+            <>
+              {/* A paid licence outranks the beta: say what was bought, and until when. */}
+              <p role="status" className="rounded-ctl border border-[#ccff00] bg-[#ccff00]/10 px-3 py-3 font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.08em] text-[#ccff00]">
+                {tier === "lifetime" ? t("Active: lifetime license") : t("Active: ABOT // BLACK PRO")}
+                {tier === "pro" && proExpiresAt && (
+                  <span className="mt-1 block text-zinc-300">{t("Until {date}", { date: new Date(proExpiresAt).toLocaleDateString(t.locale, { day: "numeric", month: "long", year: "numeric" }) })}</span>
+                )}
+              </p>
+              {tier === "pro" && checkoutOn && plan !== "monthly" && (
+                <BuyButton busy={busy} onClick={() => void checkout()} label={plan === "lifetime" ? t("Upgrade to lifetime") : t("Add another year")} />
+              )}
+            </>
+          ) : isBetaUnlocked ? (
             <>
               <p role="status" className="rounded-ctl border border-[#ccff00] bg-[#ccff00]/10 px-3 py-3 font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.08em] text-[#ccff00]">
                 ⚡ {t("Active: Founders Beta Pass. All PRO features unlocked free.")}
@@ -245,10 +259,6 @@ export function AbotProModal() {
                 {t("Simulate activating this plan")}
               </button>
             </>
-          ) : proActive ? (
-            <p role="status" className="rounded-ctl border border-[#ccff00] px-3 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-[#ccff00]">
-              {tier === "lifetime" ? t("Active: lifetime license") : t("Active: ABOT // BLACK PRO")}
-            </p>
           ) : (
             <>
               <BuyButton busy={busy} onClick={() => void checkout()} label={t("Activate {plan}", { plan: t(PLANS.find((p) => p.id === plan)?.name ?? "") })} />

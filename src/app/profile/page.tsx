@@ -16,6 +16,7 @@ import { BodyweightSection } from "@/components/profile/BodyweightSection";
 import { LiftsBoard } from "@/components/profile/LiftsBoard";
 import { AccountChip, AccountSection } from "@/components/profile/AccountSection";
 import { normalizeHandle, profileStats } from "@/lib/profile";
+import { PlanBadge } from "@/components/paywall/PlanBadge";
 import { weeklyBuckets } from "@/lib/analytics";
 import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
@@ -124,11 +125,14 @@ function ProfileScreen() {
           </Button>
         </div>
         <div className="mt-2 flex flex-col items-start">
-          {name ? (
-            <h2 className="max-w-full truncate text-2xl font-bold tracking-tight">{name}</h2>
-          ) : (
-            <h2 className="text-2xl font-bold tracking-tight text-text-muted">{t("Your name")}</h2>
-          )}
+          <div className="flex max-w-full items-center gap-2">
+            {name ? (
+              <h2 className="min-w-0 truncate text-2xl font-bold tracking-tight">{name}</h2>
+            ) : (
+              <h2 className="text-2xl font-bold tracking-tight text-text-muted">{t("Your name")}</h2>
+            )}
+            <PlanBadge />
+          </div>
           {s.profileHandle && <p className="num text-sm text-text-muted">@{s.profileHandle}</p>}
           <p className="num mt-0.5 text-xs text-text-muted">{record.join(" · ")}</p>
           <AccountChip onOpen={() => edit("account")} />

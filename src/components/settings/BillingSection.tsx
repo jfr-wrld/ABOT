@@ -14,6 +14,7 @@ import { PLAN_NAME, billingStatus, type PlanKind } from "@/lib/billing-status";
 import { useNow } from "@/lib/useNow";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { AbotMark } from "@/components/brand/AbotMark";
 
 /** A week or less of PRO left: the card says so in words, not only in colour. */
 const ENDS_SOON_DAYS = 7;
@@ -51,21 +52,47 @@ export function BillingSection() {
           ? t("PRO ends soon. Redeem a code or upgrade to keep it.")
           : null;
 
+  const paid = s.plan === "pro" || s.plan === "lifetime";
+  // Days left as a bar over a year of PRO: the figure, made visible at a glance.
+  const left = s.plan === "pro" && s.daysLeft !== null ? Math.min(1, s.daysLeft / 365) : null;
+
   return (
-    <section aria-labelledby="billing-heading" className="force-dark rounded-card border border-white/10 bg-[#121215] px-4 py-3 text-text">
+    <section
+      aria-labelledby="billing-heading"
+      className={`force-dark relative overflow-hidden rounded-card border bg-[#121215] px-4 py-3 text-text ${paid ? "border-[#ccff00]/45" : "border-white/10"}`}
+    >
+      {paid && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full"
+          style={{ background: "radial-gradient(circle, rgb(204 255 0 / 0.16), transparent 65%)" }}
+        />
+      )}
       {/* Plan name and status on one row; the dates, a note and the actions under it. */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 id="billing-heading" className="label-caps text-zinc-400">
             {t("Plan & billing")}
           </h2>
-          <p className="text-xl font-extrabold leading-tight tracking-tight text-white">{PLAN_NAME[s.plan]}</p>
+          <p className="flex items-center gap-2 text-xl font-extrabold leading-tight tracking-tight text-white">
+            {paid && (
+              <span className="text-[#ccff00] drop-shadow-[0_0_10px_rgb(204_255_0/0.45)]">
+                <AbotMark size={20} />
+              </span>
+            )}
+            {PLAN_NAME[s.plan]}
+          </p>
         </div>
         <span className={`mt-0.5 shrink-0 rounded-[4px] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${BADGE[s.plan]}`}>{badge}</span>
       </div>
 
+      {left !== null && (
+        <div aria-hidden="true" className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div className={`h-full rounded-full ${s.daysLeft! <= ENDS_SOON_DAYS ? "bg-[#f59e0b]" : "bg-[#ccff00]"}`} style={{ width: `${Math.max(2, left * 100)}%` }} />
+        </div>
+      )}
       {s.plan === "pro" && (
-        <dl className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs">
+        <dl className="relative mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs">
           <div className="flex gap-1.5">
             <dt className="text-zinc-400">{t("Expires")}</dt>
             <dd className="font-mono font-semibold tabular-nums text-white">{s.expiresAt ? date(s.expiresAt) : t("No end date")}</dd>
@@ -87,7 +114,7 @@ export function BillingSection() {
       {note && <p className="mt-1.5 text-xs text-zinc-300">{note}</p>}
       {simulator && <p className="mt-0.5 text-xs text-zinc-400">{t("Simulator on: {mode}", { mode: t(simulator.label) })}</p>}
 
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="relative mt-3 grid grid-cols-2 gap-2">
         <Button variant="primary" className="px-2 leading-tight" onClick={() => e.openPaywall()}>
           {primary}
         </Button>
