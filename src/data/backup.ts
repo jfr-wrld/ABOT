@@ -5,6 +5,7 @@ import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./n
 import type { Repository, RepoSnapshot, StoredSettings } from "./repo";
 import { mergeLog } from "./repo/types";
 import { parseVideoUrl } from "@/lib/videoUrl";
+import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
 
 export interface AbotBackup {
   app: "ABOT";
@@ -71,9 +72,29 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     tapFeedback: raw.tapFeedback !== false,
     healthAutoSync: raw.healthAutoSync === true,
     lastSleep: normalizeSleep(raw.lastSleep),
+    entitlement: normalizeEntitlement(raw.entitlement),
     bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
     profilePhoto: normalizePhoto(raw.profilePhoto),
+  };
+}
+
+const TIERS = ["free", "pro", "lifetime"] as const;
+const OVERRIDES = ["AUTO", "FORCE_FREE", "FORCE_PRO", "FORCE_BETA"] as const;
+const FOUNDER_CODE = /^FOUNDER \/\/ #\d{4}$/;
+const isoOrNull = (v: unknown) => (typeof v === "string" && Number.isFinite(Date.parse(v)) ? v : null);
+
+/** A file can carry the founder pass across devices; anything malformed falls back to free. */
+function normalizeEntitlement(raw: unknown): EntitlementState {
+  if (!isObj(raw)) return DEFAULT_ENTITLEMENT;
+  const code = typeof raw.founderUnitCode === "string" && FOUNDER_CODE.test(raw.founderUnitCode) ? raw.founderUnitCode : null;
+  return {
+    tier: TIERS.includes(raw.tier as never) ? (raw.tier as EntitlementState["tier"]) : "free",
+    isFounder: raw.isFounder === true && code !== null,
+    founderUnitCode: code,
+    founderJoinedAt: isoOrNull(raw.founderJoinedAt),
+    proExpiresAt: isoOrNull(raw.proExpiresAt),
+    devOverrideMode: OVERRIDES.includes(raw.devOverrideMode as never) ? (raw.devOverrideMode as EntitlementState["devOverrideMode"]) : "AUTO",
   };
 }
 

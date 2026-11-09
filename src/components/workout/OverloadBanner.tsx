@@ -9,6 +9,8 @@ import { KIND_LABEL, suggestOverload, type OverloadKind } from "@/lib/progressiv
 import { formatWeight } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { useEntitlements } from "@/store/useEntitlements";
+import { ProBadge } from "@/components/paywall/ProBadge";
 
 /** Volt for more load, cyan for more reps, amber for a deload: on black in every theme. */
 const LOOK: Record<OverloadKind, { color: string; Icon: typeof Zap; label: string }> = {
@@ -28,6 +30,7 @@ export function OverloadBanner({ item, exercise, unit }: { item: SessionExercise
   const active = useWorkoutStore((s) => s.active);
   const updateSet = useWorkoutStore((s) => s.updateSet);
   const { byId } = useAllExercises();
+  const { canAccessPro, openPaywall } = useEntitlements();
   const s = useMemo(
     () => suggestOverload(exercise, sessions, { unit, excludeSessionId: active?.id, variant: { byId, locationId: active?.locationId } }),
     [exercise, sessions, unit, active?.id, active?.locationId, byId],
@@ -47,6 +50,10 @@ export function OverloadBanner({ item, exercise, unit }: { item: SessionExercise
         : t.n(s.deltaReps, "+{n} rep", "+{n} reps");
 
   function apply() {
+    if (!canAccessPro("progressive_overload_coach")) {
+      openPaywall("progressive_overload_coach");
+      return;
+    }
     feedback.tick();
     for (const x of todo) updateSet(item.id, x.id, { reps: s!.reps, ...(s!.weightKg !== null ? { weightKg: s!.weightKg } : {}) });
   }
@@ -60,6 +67,7 @@ export function OverloadBanner({ item, exercise, unit }: { item: SessionExercise
     >
       <look.Icon aria-hidden="true" size={14} className="shrink-0" style={{ color: look.color }} />
       <p className="min-w-0 flex-1 font-mono text-[11px] uppercase leading-tight tracking-[0.08em] text-zinc-300">
+        <ProBadge className="mb-0.5 mr-1.5 align-middle" />
         <span className="font-semibold" style={{ color: look.color }}>
           {t(look.label)}:
         </span>{" "}

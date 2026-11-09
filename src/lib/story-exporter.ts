@@ -60,6 +60,10 @@ export interface StoryOptions {
   /** How dark the tint over the photo is, 0.2 to 0.85. */
   overlay: number;
   grayscale: boolean;
+  /** ABOT // BLACK PRO: leave out the ABOT mark and name. */
+  hideWatermark?: boolean;
+  /** Founder pass holders: "FOUNDER // #0421" stamped in the top corner. */
+  founderBadge?: string | null;
 }
 
 export const OVERLAY_RANGE = { min: 0.2, max: 0.85, step: 0.05, initial: 0.55 } as const;
@@ -396,6 +400,7 @@ function mark(ctx: Ctx, x: number, y: number, size: number, color: string, ringC
 
 /** Mark plus wordmark; `y` is the vertical centre. Returns the total width. */
 function wordmark(s: Scene, x: number, y: number, size: number, color: string, wordColor = TEXT, ring = OBSIDIAN) {
+  if (s.opts.hideWatermark) return 0;
   mark(s.ctx, x, y - size / 2, size, color, ring);
   const w = text(s, "ABOT", x + size + size * 0.28, y, {
     size: size * 0.82,
@@ -735,7 +740,7 @@ function brutalistReceipt(s: Scene) {
   const dashed = (y: number) => hline(ctx, x, r, y, INK, 3, [12, 10]);
 
   let y = py + 130;
-  text(s, "ABOT", W / 2, y, { size: 84, weight: 900, color: INK, align: "center", tracking: -2 });
+  text(s, s.opts.hideWatermark ? "LIFT LOG" : "ABOT", W / 2, y, { size: 84, weight: 900, color: INK, align: "center", tracking: -2 });
   y += 52;
   text(s, "STRENGTH RECEIPT", W / 2, y, { ...ink, size: 26, align: "center", tracking: 6 });
   y += 64;
@@ -938,7 +943,7 @@ function monochromeSteel(s: Scene) {
   const inner = W - 2 * x;
 
   hline(ctx, x, W - x, SAFE_TOP - 50, "#ffffff", 4);
-  text(s, "ABOT", x, SAFE_TOP, { size: 44, weight: 900, color: "#ffffff", tracking: -1 });
+  if (!s.opts.hideWatermark) text(s, "ABOT", x, SAFE_TOP, { size: 44, weight: 900, color: "#ffffff", tracking: -1 });
   caps(s, `Issue ${dateLabel(data)}`, W - x, SAFE_TOP - 4, { color: "#ffffff", align: "right" });
 
   const head = data.title.toUpperCase();
@@ -1098,7 +1103,7 @@ function prTrophyVault(s: Scene) {
       });
       y += cardH + 24;
     }
-    if (shown.length < lifts.length) caps(s, `+${lifts.length - shown.length} more lifts in ABOT`, x, y + 20);
+    if (shown.length < lifts.length) caps(s, `+${lifts.length - shown.length} more lifts`, x, y + 20);
   } else {
     text(s, "No record fell this time. Top sets from the session:", x, y + 30, { size: 32, color: MUTED, maxWidth: inner });
     y += 80;
@@ -1293,7 +1298,7 @@ function splitSpecSheet(s: Scene) {
     text(s, value, W - x, y + 48, { size: 32, weight: 700, family: "mono", align: "right", maxWidth: inner / 2 });
     y += 70;
   }
-  mark(ctx, W - x - 56, H - 130, 56, VOLT, CARBON);
+  if (!s.opts.hideWatermark) mark(ctx, W - x - 56, H - 130, 56, VOLT, CARBON);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1518,8 +1523,10 @@ function voltPoster(s: Scene) {
     text(s, str, x, y, { color: INK, shadow: false, ...o });
 
   // Header.
-  mark(ctx, m, SAFE_TOP - 80, 60, INK, VOLT);
-  ink("ABOT", m + 78, SAFE_TOP - 34, { size: 46, weight: 900 });
+  if (!s.opts.hideWatermark) {
+    mark(ctx, m, SAFE_TOP - 80, 60, INK, VOLT);
+    ink("ABOT", m + 78, SAFE_TOP - 34, { size: 46, weight: 900 });
+  }
   ink(dateLabel(data).toUpperCase(), W - m, SAFE_TOP - 34, { size: 30, weight: 700, family: "mono", align: "right", tracking: 2 });
   hline(ctx, m, W - m, SAFE_TOP + 8, INK, 8);
 
@@ -1638,6 +1645,34 @@ const PAINTERS: Record<StoryPresetId, (s: Scene) => void> = {
  * Draws one preset in 1080x1920 units. Scale the context first to draw a thumbnail; the
  * layout does not change with size.
  */
+/**
+ * The founder stamp: a small plate in the top-right corner, above every layout's own top line
+ * (inside Instagram's top bar margin, which only covers the progress bars and the name).
+ */
+function drawFounderBadge(s: Scene) {
+  const code = s.opts.founderBadge;
+  if (!code) return;
+  const { ctx } = s;
+  const label = "ABOT // FOUNDER EDITION";
+  const num = code.replace(/^FOUNDER\s*\/\/\s*/, "");
+  ctx.save();
+  ctx.font = `700 22px ${s.fonts.mono}`;
+  const w = Math.max(ctx.measureText(label).width, ctx.measureText(num).width) + 40;
+  const h = 76;
+  const x = W - 56 - w;
+  const y = 130;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.82)";
+  ctx.strokeStyle = VOLT;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 10);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+  text(s, label, x + 20, y + 28, { size: 20, weight: 700, family: "mono", color: VOLT, baseline: "middle", tracking: 2, shadow: false });
+  text(s, num, x + 20, y + 56, { size: 22, weight: 700, family: "mono", color: "#ffffff", baseline: "middle", tracking: 2, shadow: false });
+}
+
 export function renderStory(ctx: Ctx, data: StoryData, opts: StoryOptions, fonts: StoryFonts): void {
   const scene: Scene = { ctx, fonts, data, unit: data.unit, opts, onPhoto: opts.photo !== null };
   ctx.save();
@@ -1645,5 +1680,6 @@ export function renderStory(ctx: Ctx, data: StoryData, opts: StoryOptions, fonts
   ctx.textBaseline = "alphabetic";
   PAINTERS[opts.preset](scene);
   drawHandle(scene);
+  drawFounderBadge(scene);
   ctx.restore();
 }
