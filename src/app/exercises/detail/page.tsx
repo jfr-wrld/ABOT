@@ -290,8 +290,10 @@ function MusclesWorked({ exercise }: { exercise: Exercise }) {
 function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.ReactNode }) {
   const t = useT();
   return (
-    <header className="force-dark relative">
-      <PhotoLoop exercise={exercise} className="aspect-[4/3] max-h-[52vh] w-full" />
+    <header>
+      {/* Only the photo stays dark in light mode; the name below it follows the page's theme. */}
+      <div className="force-dark relative">
+        <PhotoLoop exercise={exercise} className="aspect-[4/3] max-h-[52vh] w-full" />
       <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-6 pt-3">
         <Link
           href="/exercises"
@@ -301,6 +303,7 @@ function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.React
           {t("Exercises")}
         </Link>
         {actions}
+        </div>
       </div>
       <Rise order={0} className="px-4 pt-4">
         <h1 className="text-2xl font-bold leading-tight tracking-tight">{exercise.name}</h1>

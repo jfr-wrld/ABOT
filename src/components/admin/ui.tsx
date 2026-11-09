@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 /** Shared pieces of the Mission Control look: Carbon panels on Matte Obsidian, mono numbers. */
 
 export const cls = {
-  label: "font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500",
+  label: "font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400",
   input:
     "min-h-11 w-full rounded-ctl border border-[#27272a] bg-[#09090b] px-3 font-mono text-sm tabular-nums text-white placeholder:text-zinc-600 focus:border-[#ccff00] focus:outline-none disabled:opacity-50",
   volt: "inline-flex min-h-11 items-center justify-center gap-2 rounded-ctl bg-[#ccff00] px-4 font-mono text-xs font-black uppercase tracking-[0.1em] text-black hover:brightness-95 disabled:opacity-40",

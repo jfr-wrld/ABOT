@@ -86,7 +86,7 @@ export function LocationsSection() {
           placeholder={t("Gym name")}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "new-gym-error" : undefined}
-          className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
+          className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
         />
         <Button type="submit">{t("Add gym")}</Button>
       </form>

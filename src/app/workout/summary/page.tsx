@@ -489,7 +489,7 @@ function RecordCard({
               <span className="font-bold">
                 {formatWeight(pr.weightKg, unit)} × {pr.reps}
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-pr/80">{kinds.map((k) => t(SHORT[k])).join(" · ")}</span>
+              <span className="text-[9px] uppercase tracking-wider text-pr">{kinds.map((k) => t(SHORT[k])).join(" · ")}</span>
               <span className="sr-only">{kinds.map((k) => t(PR_KIND_LABEL[k])).join(", ")}</span>
             </li>
           ))}

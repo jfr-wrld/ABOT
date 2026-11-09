@@ -245,7 +245,7 @@ export function RoutineLibrary() {
               aria-describedby={nameError ? "routine-name-error" : undefined}
               placeholder="Push A"
               autoFocus
-              className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
+              className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
             />
             {nameError && (
               <p id="routine-name-error" role="alert" className="mt-1 text-xs text-failure">
@@ -263,7 +263,7 @@ export function RoutineLibrary() {
               value={newFolder}
               onChange={(e) => setNewFolder(e.target.value)}
               placeholder="Push / Pull / Legs"
-              className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
+              className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
             />
             <datalist id="routine-folders">
               {existingFolders.map((f) => (

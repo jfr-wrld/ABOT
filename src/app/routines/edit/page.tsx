@@ -107,7 +107,7 @@ function Editor() {
               value={routine.folder ?? ""}
               onChange={(e) => update(routine.id, { folder: e.target.value })}
               placeholder="Push / Pull / Legs"
-              className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
+              className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
             />
           </div>
         </div>

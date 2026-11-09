@@ -88,7 +88,7 @@ export function WorkoutCalendar({
               }`}
               onClick={() => setSelected(c.date)}
               className={`mx-auto flex h-11 w-11 flex-col items-center justify-center rounded-ctl text-sm num hover:bg-surface-2 ${
-                c.inMonth ? "text-text" : "text-text-muted/60"
+                c.inMonth ? "text-text" : "text-text-muted"
               } ${isSel ? "border border-accent" : ""} ${n ? "bg-accent-tint font-semibold" : ""}`}
             >
               <span className={c.isToday ? "underline underline-offset-4 decoration-2" : ""}>{d.getDate()}</span>

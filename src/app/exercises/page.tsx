@@ -96,7 +96,7 @@ function LibraryScreen() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("Search by name")}
             autoComplete="off"
-            className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
+            className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
           />
           <ViewToggle value={view} onChange={setView} />
         </div>

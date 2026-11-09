@@ -348,7 +348,7 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
             }}
             placeholder="https://www.youtube.com/shorts/..."
             aria-invalid={error ? true : undefined}
-            className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted/70"
+            className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
           />
           {error && (
             <p role="alert" className="text-xs text-failure">

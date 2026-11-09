@@ -30,11 +30,15 @@ Core palette: neutrals plus Volt. Cyan and the set-type colours are status label
 Settings > General > Theme: System (default, follows the phone), Dark, Light. The same token names
 take light values on `[data-theme="light"]` (`globals.css`), checked against white: text 16:1,
 muted 7.7:1, accent text `#3f6212` 7:1, accent fill `#65a30d` 3.1:1 with black text on it at 6.8:1,
-PR `#0e7490` 5.4:1. Volt `#ccff00` cannot carry text on white, so `text-accent` switches to the
+PR `#155e75` 7.3:1 (5.7:1 on its own tint, where `#0e7490` fell to 4.3:1). Volt `#ccff00` cannot carry text on white, so `text-accent` switches to the
 darker lime there; fills and borders use the mid lime.
 
 - **`ink`** is white on dark and black on light: hairlines and hovers are `border-ink/[…]` and
   `bg-ink/[…]`, never `white/[…]`.
+- Charts read the same tokens (`chartTheme.ts`: accent, line, text-muted, surface), so a series
+  is the mid lime on white instead of Volt, which nearly vanishes there.
+- `force-dark` sets tokens but no background: give the dark block its own fill (a photo, `bg-bg`),
+  or text under it turns white on the light page. The exercise page keeps only its photo dark.
 - **`force-dark`** keeps the dark tokens inside it on a light page: photo and video boxes, the
   exercise hero, the live workout capsule, the splash, onboarding and Story Studio (a darkroom).
 - The theme is set before the first paint by `THEME_SCRIPT` (`ThemeController.tsx`) from a

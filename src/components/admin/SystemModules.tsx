@@ -152,7 +152,7 @@ export function DatabaseModule() {
               role="tab"
               aria-selected={table === k}
               onClick={() => setTable(k)}
-              className={`min-h-9 rounded-ctl border px-2 font-mono text-[10px] font-bold uppercase tabular-nums ${table === k ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-500"}`}
+              className={`min-h-9 rounded-ctl border px-2 font-mono text-[10px] font-bold uppercase tabular-nums ${table === k ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-400"}`}
             >
               {k} {snap ? size(snap[k]) : ""}
             </button>
@@ -174,7 +174,7 @@ export function DatabaseModule() {
             </li>
           ))}
         </ul>
-        <p className="text-[11px] text-zinc-500">Read only. A deleted custom exercise in old workouts is expected and harmless.</p>
+        <p className="text-[11px] text-zinc-400">Read only. A deleted custom exercise in old workouts is expected and harmless.</p>
       </Panel>
 
       <Panel id="d-tools" title="Backup and reset" scope="device">
