@@ -44,6 +44,7 @@ public class LiveWorkoutPlugin extends Plugin {
     static final String ACTION_REST_OVER = "app.abot.gym.REST_OVER";
     static final String ACTION_BUTTON = "app.abot.gym.LIVE_BUTTON";
     static final String EXTRA_ID = "id";
+    static final String EXTRA_OPEN_WORKOUT = "app.abot.gym.OPEN_WORKOUT";
     private static final String PREFS = "abot_live";
     private static final String PENDING = "pending";
     private static final int ALARM_REQUEST = 4243;
@@ -88,6 +89,20 @@ public class LiveWorkoutPlugin extends Plugin {
         s.logLabel = call.getString("logLabel", "Log set");
         s.pauseLabel = call.getString("pauseLabel", "Pause");
         s.resumeLabel = call.getString("resumeLabel", "Resume");
+        s.pausedChip = call.getString("pausedChip", "Paused");
+        s.progressDone = call.getInt("progressDone", 0);
+        s.photo = call.getString("photo", null);
+        StringBuilder segments = new StringBuilder();
+        JSArray list = call.getArray("progressSegments");
+        if (list != null) {
+            for (int i = 0; i < list.length(); i++) {
+                int n = list.optInt(i, 0);
+                if (n <= 0) continue;
+                if (segments.length() > 0) segments.append(',');
+                segments.append(n);
+            }
+        }
+        s.progressSegments = segments.toString();
         s.save(ctx);
         cancelAlarm(ctx);
         if (s.restEndsAt > System.currentTimeMillis()) scheduleAlarm(ctx, s.restEndsAt);
@@ -216,7 +231,7 @@ public class LiveWorkoutPlugin extends Plugin {
             .setColor(ACCENT)
             // The small icon is always drawn as one-colour silhouette; the app icon in colour
             // goes beside the text, where ColorOS and others show it.
-            .setLargeIcon(Icon.createWithResource(ctx, R.mipmap.ic_launcher))
+            .setLargeIcon(largeIcon(ctx, s))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(Notification.CATEGORY_STOPWATCH)
@@ -239,12 +254,58 @@ public class LiveWorkoutPlugin extends Plugin {
             if (s.canLog) b.addAction(button(ctx, "log", s.logLabel, 5, R.drawable.ic_action_log));
             if (!resting) b.addAction(button(ctx, "pause", s.pauseLabel, 2, R.drawable.ic_action_pause));
         }
-        // Android 16 Live Update (a clock chip on the status bar). This is the extra that
-        // Builder#setRequestPromotedOngoing sets; that setter is newer than compileSdk 36.
+        if (Build.VERSION.SDK_INT >= 36) {
+            Notification.ProgressStyle progress = progress(s);
+            if (progress != null) b.setStyle(progress);
+        }
+        // Android 16 Live Update (a clock chip on the status bar). These are the extras that
+        // Builder#setRequestPromotedOngoing and #setShortCriticalText set, written directly so
+        // they build against compileSdk 36. The chip shows the clock; paused, there is none,
+        // so it says "Paused" instead.
         Bundle promoted = new Bundle();
         promoted.putBoolean("android.requestPromotedOngoing", true);
+        if (s.paused && s.pausedChip != null) promoted.putString("android.shortCriticalText", s.pausedChip);
         b.addExtras(promoted);
         return b.build();
+    }
+
+    /**
+     * Workout progress, one segment per exercise sized by its sets, filled up to the sets done.
+     * It changes only when a set is ticked, so it stays true while ABOT is frozen.
+     */
+    private static Notification.ProgressStyle progress(LiveState s) {
+        if (s.progressSegments == null || s.progressSegments.isEmpty()) return null;
+        java.util.List<Notification.ProgressStyle.Segment> segments = new java.util.ArrayList<>();
+        int total = 0;
+        for (String part : s.progressSegments.split(",")) {
+            try {
+                int n = Integer.parseInt(part.trim());
+                if (n <= 0) continue;
+                segments.add(new Notification.ProgressStyle.Segment(n).setColor(ACCENT));
+                total += n;
+            } catch (NumberFormatException e) {
+                // A bad entry only drops that segment.
+            }
+        }
+        if (segments.isEmpty()) return null;
+        return new Notification.ProgressStyle()
+            .setStyledByProgress(true)
+            .setProgressSegments(segments)
+            .setProgress(Math.min(Math.max(0, s.progressDone), total));
+    }
+
+    /** The next exercise's photo when the app sent one, else the app icon in colour. */
+    private static Icon largeIcon(Context ctx, LiveState s) {
+        if (s.photo != null && !s.photo.isEmpty()) {
+            try {
+                byte[] bytes = android.util.Base64.decode(s.photo, android.util.Base64.DEFAULT);
+                android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                if (bmp != null) return Icon.createWithBitmap(bmp);
+            } catch (IllegalArgumentException e) {
+                // Not base64: fall back to the app icon.
+            }
+        }
+        return Icon.createWithResource(ctx, R.mipmap.ic_launcher);
     }
 
     /** The sound-and-buzz alert for the end of a rest. Returns false without permission. */
@@ -286,6 +347,8 @@ public class LiveWorkoutPlugin extends Plugin {
     private static PendingIntent openApp(Context ctx) {
         Intent launch = ctx.getPackageManager().getLaunchIntentForPackage(ctx.getPackageName());
         if (launch == null) launch = new Intent(ctx, MainActivity.class);
+        // MainActivity sees this and opens the workout page, whatever page ABOT was left on.
+        launch.putExtra(EXTRA_OPEN_WORKOUT, true);
         launch.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         return PendingIntent.getActivity(ctx, 0, launch, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }

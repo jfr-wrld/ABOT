@@ -58,6 +58,7 @@ public class LiveWorkoutReceiver extends BroadcastReceiver {
                 // The app works out the next set; until it does, the button is gone so one tap
                 // cannot log two sets, and the rest that follows starts here.
                 s.canLog = false;
+                s.progressDone += 1;
                 s.title = s.loggedTitle;
                 s.text = s.loggedText;
                 s.restTitle = s.loggedTitle;

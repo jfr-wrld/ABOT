@@ -91,7 +91,7 @@ export async function setupNativeNotifications(open: (url: string) => void): Pro
 /* Live workout                                                        */
 /* ------------------------------------------------------------------ */
 
-export type LiveAction = "pause" | "resume" | "skip" | "add30" | "log";
+export type LiveAction = "pause" | "resume" | "skip" | "add30" | "log" | "open";
 
 interface LiveWorkoutPlugin {
   show(opts: NativeLive): Promise<void>;

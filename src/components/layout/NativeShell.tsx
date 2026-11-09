@@ -64,7 +64,8 @@ export function NativeShell() {
       .then(keep)
       .catch(() => {});
     // +30s, Skip rest, Log set, Pause and Resume tapped on the workout notification.
-    void onLiveAction((id) => applyCapsuleAction(id, useWorkoutStore.getState(), exerciseIndex().byId))
+    // A tap on the notification itself opens the workout, whatever page ABOT was left on.
+    void onLiveAction((id) => (id === "open" ? router.push("/workout") : applyCapsuleAction(id, useWorkoutStore.getState(), exerciseIndex().byId)))
       .then(keep)
       .catch(() => {});
     // Installs from before the permissions step see it once, on top of where they are.

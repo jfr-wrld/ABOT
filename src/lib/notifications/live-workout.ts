@@ -83,4 +83,13 @@ export interface NativeLive {
   logLabel?: string;
   pauseLabel?: string;
   resumeLabel?: string;
+  /** Short text for the status bar chip while paused, when no clock runs (Android 16). */
+  pausedChip?: string;
+  /** Sets per exercise, and sets done: a segmented progress bar (Android 16 ProgressStyle). */
+  progressSegments?: number[];
+  progressDone?: number;
+  /** Which exercise `photo` shows; the photo is sent only when it changes. */
+  photoKey?: string;
+  /** The next exercise's photo, base64 (WebP or JPEG), shown as the large icon. */
+  photo?: string;
 }

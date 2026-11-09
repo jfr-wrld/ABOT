@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { Exercise, WeightUnit, WorkoutSession } from "@/types/workout";
 import { previousSets, sessionVolume } from "@/lib/calc";
-import { supersetNext } from "@/lib/superset";
+import { supersetNext, type SupersetHandoff } from "@/lib/superset";
 import { formatVolume, formatWeight } from "@/lib/units";
 import { currentT, type T } from "@/i18n";
 import type { NativeLive } from "@/lib/notifications/live-workout";
@@ -49,6 +49,8 @@ export const useCapsulePrefs = create<CapsulePrefs>((set, get) => ({
 
 export interface CapsuleTarget {
   sessionExerciseId: string;
+  /** The catalog exercise, for its photo. */
+  exerciseId: string;
   setId: string;
   name: string;
   /** 1-based, warm-ups included, as on the card. */
@@ -61,26 +63,46 @@ export interface CapsuleTarget {
   restSec: number;
 }
 
-/** The first unticked set, with the weight and reps it will be logged with. */
-export function nextTarget(session: WorkoutSession, sessions: WorkoutSession[], byId: Record<string, Exercise>, t: T = currentT()): CapsuleTarget | null {
+/**
+ * The set the lifter does next, with the weight and reps it will be logged with. Mid-superset
+ * that is the handoff (A1 done, A2 next, no rest); otherwise the first unticked set in order.
+ */
+export function nextTarget(
+  session: WorkoutSession,
+  sessions: WorkoutSession[],
+  byId: Record<string, Exercise>,
+  t: T = currentT(),
+  handoff: SupersetHandoff | null = null,
+): CapsuleTarget | null {
+  const handed = handoff && session.exercises.find((e) => e.id === handoff.sessionExerciseId);
+  if (handed && handed.sets[handoff.setIndex]?.completed === false) return target(session, sessions, byId, t, handed, handoff.setIndex);
   for (const ex of session.exercises) {
     const i = ex.sets.findIndex((s) => !s.completed);
-    if (i < 0) continue;
-    const st = ex.sets[i]!;
-    const before = st.reps === null ? previousSets(ex.exerciseId, sessions, session.id, { byId, locationId: session.locationId })?.[i] : undefined;
-    const ticked = session.exercises.map((e) => (e.id === ex.id ? { ...e, sets: e.sets.map((s, j) => (j === i ? { ...s, completed: true } : s)) } : e));
-    return {
-      sessionExerciseId: ex.id,
-      setId: st.id,
-      name: byId[ex.exerciseId]?.name ?? t("Exercise"),
-      set: i + 1,
-      of: ex.sets.length,
-      weightKg: st.reps === null ? (before?.weightKg ?? st.weightKg) : st.weightKg,
-      reps: st.reps ?? before?.reps ?? null,
-      restSec: supersetNext(ticked, ex.id) ? 0 : ex.restSeconds,
-    };
+    if (i >= 0) return target(session, sessions, byId, t, ex, i);
   }
   return null;
+}
+
+function target(session: WorkoutSession, sessions: WorkoutSession[], byId: Record<string, Exercise>, t: T, ex: WorkoutSession["exercises"][number], i: number): CapsuleTarget {
+  const st = ex.sets[i]!;
+  const before = st.reps === null ? previousSets(ex.exerciseId, sessions, session.id, { byId, locationId: session.locationId })?.[i] : undefined;
+  const ticked = session.exercises.map((e) => (e.id === ex.id ? { ...e, sets: e.sets.map((s, j) => (j === i ? { ...s, completed: true } : s)) } : e));
+  return {
+    sessionExerciseId: ex.id,
+    exerciseId: ex.exerciseId,
+    setId: st.id,
+    name: byId[ex.exerciseId]?.name ?? t("Exercise"),
+    set: i + 1,
+    of: ex.sets.length,
+    weightKg: st.reps === null ? (before?.weightKg ?? st.weightKg) : st.weightKg,
+    reps: st.reps ?? before?.reps ?? null,
+    restSec: supersetNext(ticked, ex.id) ? 0 : ex.restSeconds,
+  };
+}
+
+/** "Bench Press (Barbell)" → "Bench Press": the pill is narrow, and the photo shows the tool. */
+export function shortName(name: string): string {
+  return name.replace(/\s*\([^)]*\)\s*$/, "").trim() || name;
 }
 
 const loggable = (x: CapsuleTarget | null): x is CapsuleTarget => !!x && x.reps !== null && x.reps > 0;
@@ -96,25 +118,27 @@ export interface CapsuleInput {
   detail: CapsuleDetail;
   /** Rest alert. */
   ring: boolean;
+  /** Mid-superset: the exercise that follows with no rest. */
+  handoff?: SupersetHandoff | null;
 }
 
 /** Everything the notification shows, for each state it can switch to on its own. */
-export function capsuleContent({ session, sessions, byId, rest, now, unit, mode, detail, ring }: CapsuleInput, t: T = currentT()): NativeLive {
-  const next = nextTarget(session, sessions, byId, t);
-  const lift = next ? t("{name}, set {set}/{of}", { name: next.name, set: next.set, of: next.of }) : null;
+export function capsuleContent({ session, sessions, byId, rest, now, unit, mode, detail, ring, handoff = null }: CapsuleInput, t: T = currentT()): NativeLive {
+  const next = nextTarget(session, sessions, byId, t, handoff);
+  const lift = next ? t("{name} · {set}/{of}", { name: shortName(next.name), set: next.set, of: next.of }) : null;
   const load = next && next.reps !== null ? (next.weightKg !== null && next.weightKg > 0 ? `${formatWeight(next.weightKg, unit)} × ${next.reps}` : t("{n} reps", { n: next.reps })) : null;
   const second =
     detail === "volume"
       ? t("Volume {volume}", { volume: formatVolume(sessionVolume(session, byId), unit) })
-      : next && load
-        ? t("Target: {load}", { load })
-        : session.name;
+      : (load ?? session.name);
   const clockStart = session.startedAt + (session.pausedMs ?? 0);
+  const counted = session.exercises.filter((e) => e.sets.length > 0);
   const base: NativeLive = {
     title: lift ?? t("All sets done"),
     text: next ? second : `${session.name} · ${t("tap to finish")}`,
     clockStart,
     pausedTitle: lift ? `${t("Paused")} · ${lift}` : t("Paused"),
+    pausedChip: t("Paused"),
     ring,
     restOnly: mode === "rest",
     canLog: loggable(next) && session.pausedAt === undefined,
@@ -126,16 +150,17 @@ export function capsuleContent({ session, sessions, byId, rest, now, unit, mode,
     logLabel: t("Log set"),
     pauseLabel: t("Pause"),
     resumeLabel: t("Resume"),
+    progressSegments: counted.map((e) => e.sets.length),
+    progressDone: counted.reduce((n, e) => n + e.sets.filter((st) => st.completed).length, 0),
+    photoKey: next?.exerciseId,
   };
   if (session.pausedAt !== undefined) return { ...base, pausedElapsed: Math.max(0, session.pausedAt - clockStart) };
   if (!rest || rest.endsAt <= now) return base;
-  const restText =
-    detail === "volume" ? second : next && load ? t("Set {set}: {load}", { set: next.set, load }) : session.name;
   return {
     ...base,
     restEndsAt: rest.endsAt,
-    restTitle: next ? t("Resting · next: {name}", { name: next.name }) : t("Resting"),
-    restText,
+    restTitle: lift ? t("Rest · next {lift}", { lift }) : t("Resting"),
+    restText: second,
     overTitle: lift ? `${t("Rest over")} · ${lift}` : t("Rest over"),
     overText: base.text,
   };
@@ -145,6 +170,7 @@ interface WorkoutActions {
   active: WorkoutSession | null;
   sessions: WorkoutSession[];
   restTimer: { endsAt: number } | null;
+  handoff?: SupersetHandoff | null;
   pauseActive(): void;
   resumeActive(): void;
   skipRest(): void;
@@ -160,6 +186,9 @@ interface WorkoutActions {
 export function applyCapsuleAction(id: string, w: WorkoutActions, byId: Record<string, Exercise>): void {
   if (!w.active) return;
   switch (id) {
+    case "open":
+      // Handled by the caller, which can navigate.
+      return;
     case "pause":
       return w.pauseActive();
     case "resume":
@@ -170,7 +199,7 @@ export function applyCapsuleAction(id: string, w: WorkoutActions, byId: Record<s
       if (w.restTimer) w.adjustRest(30);
       return;
     case "log": {
-      const next = nextTarget(w.active, w.sessions, byId);
+      const next = nextTarget(w.active, w.sessions, byId, currentT(), w.handoff ?? null);
       if (!loggable(next)) return;
       const st = w.active.exercises.find((e) => e.id === next.sessionExerciseId)?.sets.find((s) => s.id === next.setId);
       if (st && st.reps === null) w.updateSet(next.sessionExerciseId, next.setId, { reps: next.reps, weightKg: next.weightKg });
@@ -178,4 +207,34 @@ export function applyCapsuleAction(id: string, w: WorkoutActions, byId: Record<s
       return;
     }
   }
+}
+
+const photoCache = new Map<string, Promise<string | undefined>>();
+
+/**
+ * An exercise's photo as base64 for the notification's large icon: the bundled thumbnail
+ * (offline), else the free-exercise-db frame while online. Read once per exercise.
+ */
+export function capsulePhoto(id: string, url: string | undefined): Promise<string | undefined> {
+  if (!url) return Promise.resolve(undefined);
+  let p = photoCache.get(id);
+  if (!p) {
+    p = fetch(url)
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+      .then(
+        (blob) =>
+          new Promise<string | undefined>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result).split(",")[1] || undefined);
+            reader.onerror = () => resolve(undefined);
+            reader.readAsDataURL(blob);
+          }),
+      )
+      .catch(() => {
+        photoCache.delete(id);
+        return undefined;
+      });
+    photoCache.set(id, p);
+  }
+  return p;
 }

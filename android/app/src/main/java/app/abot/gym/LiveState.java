@@ -36,6 +36,13 @@ class LiveState {
     String logLabel;
     String pauseLabel;
     String resumeLabel;
+    /** Status bar chip text while paused, when no clock runs. */
+    String pausedChip;
+    /** Sets per exercise, comma separated, and sets done: the segmented progress bar. */
+    String progressSegments;
+    int progressDone;
+    /** The next exercise's photo, base64; null shows the app icon. */
+    String photo;
 
     void save(Context ctx) {
         LiveWorkoutPlugin.prefs(ctx)
@@ -62,6 +69,10 @@ class LiveState {
             .putString("logLabel", logLabel)
             .putString("pauseLabel", pauseLabel)
             .putString("resumeLabel", resumeLabel)
+            .putString("pausedChip", pausedChip)
+            .putString("progressSegments", progressSegments)
+            .putInt("progressDone", progressDone)
+            .putString("photo", photo)
             .apply();
     }
 
@@ -92,6 +103,10 @@ class LiveState {
         s.logLabel = p.getString("logLabel", "Log set");
         s.pauseLabel = p.getString("pauseLabel", "Pause");
         s.resumeLabel = p.getString("resumeLabel", "Resume");
+        s.pausedChip = p.getString("pausedChip", "Paused");
+        s.progressSegments = p.getString("progressSegments", "");
+        s.progressDone = p.getInt("progressDone", 0);
+        s.photo = p.getString("photo", null);
         return s;
     }
 
