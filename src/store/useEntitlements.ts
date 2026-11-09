@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { create } from "zustand";
 import { useSettingsStore } from "./useSettingsStore";
+import { useRemoteConfig, currentMonetizationMode } from "@/lib/remote-config";
 import {
-  APP_MONETIZATION_MODE,
   DEFAULT_ENTITLEMENT,
   claimFounder,
   resolveEntitlement,
@@ -36,7 +36,7 @@ export function updateEntitlement(patch: Partial<EntitlementState>): void {
 
 /** Stamps this install a Founder once, while the build is in the founders beta. */
 export function autoClaimFounder(): void {
-  if (APP_MONETIZATION_MODE !== "FOUNDERS_BETA") return;
+  if (currentMonetizationMode() !== "FOUNDERS_BETA") return;
   const e = current();
   if (e.isFounder) return;
   useSettingsStore.getState().update({ entitlement: claimFounder(e, `${newId()}-${Date.now()}`) });
@@ -49,7 +49,9 @@ export function autoClaimFounder(): void {
 export function useEntitlements() {
   const e = useSettingsStore((s) => s.entitlement) ?? DEFAULT_ENTITLEMENT;
   const show = usePaywallStore((s) => s.show);
-  const r = useMemo(() => resolveEntitlement(e), [e]);
+  // Mission Control's switch (remote config) decides beta or paywall for every install.
+  const appMode = useRemoteConfig((s) => s.config.monetizationMode);
+  const r = useMemo(() => resolveEntitlement(e, appMode), [e, appMode]);
   // Every PRO feature is gated the same way today; the key names what is being asked for.
   const canAccessPro = useCallback(
     (feature?: ProFeatureKey) => {

@@ -1,5 +1,6 @@
 import type { Exercise, WorkoutSession } from "@/types/workout";
 import { isWorkingSet, sessionDurationSec, sessionVolume } from "./calc";
+import { tunables } from "./tunables";
 
 /**
  * Calories for a lifting session, from the MET method health apps use:
@@ -20,8 +21,6 @@ export const MET_MAX = 6.5;
 /** Used when no body weight is known yet, and reported as such. */
 export const FALLBACK_BODYWEIGHT_KG = 75;
 
-const DENSITY_LOW = 40;
-const DENSITY_HIGH = 300;
 
 export interface CalorieEstimate {
   kcal: number;
@@ -37,10 +36,11 @@ export interface CalorieEstimate {
 }
 
 export function metFor(density: number, avgRpe: number | null): number {
-  const t = Math.min(1, Math.max(0, (density - DENSITY_LOW) / (DENSITY_HIGH - DENSITY_LOW)));
-  const base = MET_MIN + t * (6 - MET_MIN);
+  const c = tunables().calories;
+  const t = Math.min(1, Math.max(0, (density - c.densityLow) / (c.densityHigh - c.densityLow)));
+  const base = c.metMin + t * (Math.max(6, c.metMin) - c.metMin);
   const rpe = avgRpe === null ? 0 : (avgRpe - 7) * 0.25;
-  return Math.min(MET_MAX, Math.max(MET_MIN, base + rpe));
+  return Math.min(c.metMax, Math.max(c.metMin, base + rpe));
 }
 
 export function kcalFrom(met: number, bodyweightKg: number, minutes: number): number {
@@ -58,7 +58,7 @@ export function estimateCalories(
   const avgRpe = rpes.length ? rpes.reduce((a, b) => a + b, 0) / rpes.length : null;
   const met = metFor(density, avgRpe);
   const known = opts.bodyweightKg !== null && opts.bodyweightKg > 0;
-  const bodyweightKg = known ? opts.bodyweightKg! : FALLBACK_BODYWEIGHT_KG;
+  const bodyweightKg = known ? opts.bodyweightKg! : tunables().calories.fallbackKg;
   return {
     kcal: Math.round(kcalFrom(met, bodyweightKg, minutes)),
     met: Math.round(met * 10) / 10,

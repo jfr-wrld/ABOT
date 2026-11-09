@@ -2,8 +2,12 @@
 
 import { useEffect } from "react";
 import { useHydration } from "@/store/hydration";
-import { autoClaimFounder, usePaywallStore } from "@/store/useEntitlements";
+import { autoClaimFounder, updateEntitlement, usePaywallStore } from "@/store/useEntitlements";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
+import { syncEntitlementWithAccount } from "@/lib/entitlement-sync";
 import { AbotProModal } from "./AbotProModal";
+import { RedeemCodeModal } from "./RedeemCodeModal";
 
 /**
  * Once saved settings have loaded: stamps the Founder pass on installs made during the beta,
@@ -12,10 +16,18 @@ import { AbotProModal } from "./AbotProModal";
 export function EntitlementsProvider() {
   const hydrated = useHydration((s) => s.hydrated);
   useEffect(() => {
-    if (hydrated) autoClaimFounder();
+    if (!hydrated) return;
+    autoClaimFounder();
+    // Signed in: a licence bought or granted on the account comes down to this device.
+    void syncEntitlementWithAccount(useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT).then((next) => next && updateEntitlement(next));
   }, [hydrated]);
   // Mounted only while open. Left in the page closed, the full-screen <dialog> made links on
   // other screens (the workout summary's) never settle for a click in the e2e browser.
   const open = usePaywallStore((s) => s.open);
-  return open ? <AbotProModal /> : null;
+  return (
+    <>
+      {open && <AbotProModal />}
+      <RedeemCodeModal />
+    </>
+  );
 }

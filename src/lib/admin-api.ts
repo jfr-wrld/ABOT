@@ -59,6 +59,7 @@ export async function saveConfig(mode: AdminMode, c: RemoteConfig): Promise<void
       lifetime_price_usd: c.prices.lifetimeUsd,
       announcement_banner: c.announcement,
       offline_codes_enabled: c.offlineCodesEnabled,
+      tunables: c.tunables,
     })
     .eq("id", "global")
     .select()

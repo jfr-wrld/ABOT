@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Megaphone, X } from "lucide-react";
 import { useRemoteConfig } from "@/lib/remote-config";
 import { useT } from "@/i18n";
 
 const DISMISSED = "abot.announcement-dismissed";
+const noop = () => () => {};
+function readDismissed(): string | null {
+  try {
+    return localStorage.getItem(DISMISSED);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * The broadcast line from Mission Control, at the top of Home. Dismissing hides that text only;
@@ -14,14 +22,10 @@ const DISMISSED = "abot.announcement-dismissed";
 export function AnnouncementBanner() {
   const t = useT();
   const text = useRemoteConfig((s) => s.config.announcement);
-  const [dismissed, setDismissed] = useState<string | null>(null);
-  useEffect(() => {
-    try {
-      setDismissed(localStorage.getItem(DISMISSED));
-    } catch {
-      // Storage blocked: the banner shows until closed for this visit.
-    }
-  }, []);
+  // What was dismissed before (read after hydration; the prerendered page has none).
+  const stored = useSyncExternalStore(noop, readDismissed, () => null);
+  const [dismissedNow, setDismissed] = useState<string | null>(null);
+  const dismissed = dismissedNow ?? stored;
   if (!text || dismissed === text) return null;
   return (
     <aside aria-label={t("Announcement")} className="force-dark flex items-start gap-2 rounded-ctl border border-[#ccff00]/40 bg-black py-1.5 pl-3 pr-1 text-text">

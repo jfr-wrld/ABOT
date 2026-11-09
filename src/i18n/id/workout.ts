@@ -278,7 +278,7 @@ export const workout: Record<string, string> = {
   "Could not share the file: {error}": "File tidak bisa dibagikan: {error}",
   "Calories (estimate)": "Kalori (estimasi)",
   "MET {met} for {kg} kg body weight and {min} minutes.": "MET {met} untuk berat badan {kg} kg selama {min} menit.",
-  "Worked out for 75 kg. Set your body weight for a closer figure.": "Dihitung untuk 75 kg. Isi berat badanmu agar lebih akurat.",
+  "Worked out for {kg} kg. Set your body weight for a closer figure.": "Dihitung untuk {kg} kg. Isi berat badanmu agar lebih akurat.",
   "Set body weight": "Isi berat badan",
   "Sending to Health Connect...": "Mengirim ke Health Connect...",
   "Sent to Health Connect.": "Terkirim ke Health Connect.",

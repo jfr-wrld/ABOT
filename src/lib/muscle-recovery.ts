@@ -1,5 +1,6 @@
 import type { Exercise, MuscleGroup, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { REGIONS, regionsFor, type Region } from "@/components/anatomy/regions";
+import { tunables } from "./tunables";
 
 /**
  * Muscle fatigue over time, for the recovery map.
@@ -15,21 +16,22 @@ import { REGIONS, regionsFor, type Region } from "@/components/anatomy/regions";
  * most 1.1x). Sleep that ended over a day ago is ignored.
  */
 
+/** Shipped defaults; the values in force come from tunables().recovery. */
 export const PRIMARY_FATIGUE = 15;
 export const SECONDARY_FATIGUE = 7.5;
-/** At or below this a muscle counts as ready to train. */
 export const READY_AT = 20;
 
 const BIG: ReadonlySet<MuscleGroup> = new Set(["chest", "back", "lats", "quads", "hamstrings", "glutes", "lower_back"]);
 
-/** Hours for this muscle to go from 100% fatigue to none. */
+/** Hours for this muscle to go from 100% fatigue to none (Mission Control can change both). */
 export function recoveryHours(m: MuscleGroup): number {
-  return BIG.has(m) ? 72 : 48;
+  const t = tunables().recovery;
+  return BIG.has(m) ? t.bigHours : t.smallHours;
 }
 
 const HOUR = 3_600_000;
-/** Older sets cannot matter: even 100% is gone after 72 hours. Twice that covers any capping. */
-const LOOKBACK = 144 * HOUR;
+/** Older sets cannot matter: even 100% is gone after the longest recovery. Twice that covers any capping. */
+const lookback = () => 2 * Math.max(tunables().recovery.bigHours, tunables().recovery.smallHours) * HOUR;
 
 export interface Sleep {
   minutes: number;
@@ -60,13 +62,14 @@ function loads(ex: Exercise | undefined): [MuscleGroup, number][] {
   const add = (m: MuscleGroup, v: number) => {
     if (m === "cardio") return;
     if (m === "full_body") {
-      for (const g of ALL_MUSCLES) out.set(g, Math.max(out.get(g) ?? 0, SECONDARY_FATIGUE));
+      for (const g of ALL_MUSCLES) out.set(g, Math.max(out.get(g) ?? 0, t.secondaryPct));
       return;
     }
     out.set(m, Math.max(out.get(m) ?? 0, v));
   };
-  for (const m of ex.secondaryMuscles) add(m, SECONDARY_FATIGUE);
-  for (const m of ex.primaryMuscles) add(m, PRIMARY_FATIGUE);
+  const t = tunables().recovery;
+  for (const m of ex.secondaryMuscles) add(m, t.secondaryPct);
+  for (const m of ex.primaryMuscles) add(m, t.primaryPct);
   return [...out];
 }
 
@@ -92,7 +95,7 @@ function hits(sessions: WorkoutSession[], byId: Record<string, Exercise>, now: n
       for (const set of ex.sets) {
         if (!counts(set)) continue;
         const at = set.completedAt ?? s.finishedAt ?? s.startedAt;
-        if (at > now || now - at > LOOKBACK) continue;
+        if (at > now || now - at > lookback()) continue;
         const f = rpeFactor(set.rpe);
         out.push({ at, sessionId: s.id, loads: l.map(([m, v]) => [m, v * f]) });
       }
@@ -131,7 +134,7 @@ export type FatigueStage = "fresh" | "recovering" | "high" | "exhausted";
 /** 0-20 fresh, 21-50 recovering, 51-80 high load, 81-100 exhausted. */
 export function fatigueStage(f: number): FatigueStage {
   const p = Math.round(f);
-  if (p <= READY_AT) return "fresh";
+  if (p <= tunables().recovery.readyAtPct) return "fresh";
   if (p <= 50) return "recovering";
   if (p <= 80) return "high";
   return "exhausted";
@@ -164,10 +167,11 @@ export function regionTelemetry(
     const muscles = ALL_MUSCLES.filter((m) => regionsFor(m).includes(region));
     let f = 0;
     let ready = 0;
+    const readyAt = tunables().recovery.readyAtPct;
     for (const m of muscles) {
       const v = fatigue[m] ?? 0;
       f = Math.max(f, v);
-      if (v > READY_AT) ready = Math.max(ready, Math.ceil((v - READY_AT) / ((100 / recoveryHours(m)) * speed)));
+      if (v > readyAt) ready = Math.max(ready, Math.ceil((v - readyAt) / ((100 / recoveryHours(m)) * speed)));
     }
     const touching = all.filter((h) => h.loads.some(([m]) => muscles.includes(m)));
     const last = touching[touching.length - 1];

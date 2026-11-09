@@ -48,8 +48,12 @@ create table if not exists public.app_remote_config (
   -- Built-in offline codes (ABOT-FOUNDER-2026 and friends) are in every copy of the app; this
   -- turns them off for everyone once they are no longer wanted.
   offline_codes_enabled boolean not null default true,
+  -- Algorithm constants (recovery, MET, coach, radar, story, gyms); the app bounds every field
+  -- and falls back to its built-in value for anything missing. See src/lib/tunables.ts.
+  tunables jsonb not null default '{}'::jsonb check (jsonb_typeof(tunables) = 'object'),
   updated_at timestamptz not null default now()
 );
+alter table public.app_remote_config add column if not exists tunables jsonb not null default '{}'::jsonb;
 
 insert into public.app_remote_config (id) values ('global') on conflict (id) do nothing;
 

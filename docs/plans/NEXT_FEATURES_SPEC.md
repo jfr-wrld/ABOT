@@ -185,3 +185,51 @@ one build setting, without touching the UI.
 - **Symmetry radar and recovery map:** `PRO // TELEMETRY` in the corner. When locked, the radar
   still draws, and the score and diagnostics give way to an unlock panel; on the map, tapping a
   muscle shows the unlock panel instead of its recovery details.
+
+---
+
+## PRIORITY 12: Remote Config, VIP Redeem Codes & Founder Mission Control (`/admin`)
+
+**Objective:** the founder runs the business and calibrates the app from a console, without a
+new APK: monetization switch, prices, announcement, algorithm constants, license codes, manual
+upgrades, plus device-level content and database tools. Architecture and the full module matrix:
+[`ADMIN_ARCHITECTURE_SPEC.md`](ADMIN_ARCHITECTURE_SPEC.md). Future features are brought into the
+console with the `/sync-admin` command (`.claude/commands/sync-admin.md`).
+
+### 12.1 Supabase schema (`supabase/migrations/20261109_admin_and_redeem.sql`)
+- `app_admins (email)`: who may write; filled once in the SQL editor. `is_abot_admin()`.
+- `app_remote_config` (one `global` row): `monetization_mode`, `monthly/annual/lifetime_price_idr`
+  and `_usd`, `announcement_banner`, `offline_codes_enabled`, `tunables` (jsonb), `updated_at`.
+  Anyone reads it; only admins update it.
+- `redeem_codes`: `code`, `grant_tier` (`pro` / `lifetime`), `duration_days` (null = lifetime),
+  `grants_founder_badge`, `max_uses`, `current_uses`, `is_active`, `note`. Admin only.
+- `redeem_claims`, `user_entitlements` (tier, expiry, founder unit; users read their own row and
+  never write it).
+- Functions: `redeem_code(code)` (locks the row, counts the use once per account, grants on the
+  account when signed in), `claim_founder(code)` (beta only), `admin_grant(email, tier, days)`,
+  `admin_stats()`.
+- Checked on a local Postgres by `scripts/check-supabase-schema.sh` (anon cannot write the config
+  or list codes, a user cannot grant themselves a tier, use limits hold, admins can do all).
+
+### 12.2 App side
+- `src/lib/remote-config.ts`: cached copy at start, background read through Supabase REST (no
+  supabase-js) at most every 6 hours, local override for Mission Control without Supabase.
+  Monetization mode, prices (`plansFor`) and the Home announcement follow it.
+- `src/lib/tunables.ts`: recovery, MET, Coach Pill, radar, free story layouts and gym radius are
+  read at call time from the remote config, bounded field by field.
+- `src/lib/redeem-service.ts`: server first; built-in offline codes `ABOT-FOUNDER-2026` (pro 365
+  days + founder badge), `ABOT-VIP-LIFETIME` and `ABOT-BLACK-LIFE` (lifetime), `ABOT-PRO-30D`
+  and `ABOT-VIP-30D` (30 days), stored as SHA-256 hashes and switchable off remotely; codes made
+  in local mode work on that device. Generated codes are `ABOT-<KIND>-XXXX-XXXX-XXXX` (60 bits).
+- `RedeemCodeModal`: from the paywall and the founder card; on success the record chord and
+  haptic, `LICENSE ACTIVATED: ABOT // BLACK PRO [LIFETIME ACCESS]`, the entitlement saved on the
+  device (and on the account when signed in).
+- Signed in, the account's licence comes down at start (`lib/entitlement-sync.ts`).
+
+### 12.3 Mission Control (`src/app/admin/page.tsx`, `src/components/admin/*`)
+- Entry: `/admin`, or five taps on `ABOT vX // TELEMETRY BUILD` at the foot of Settings. PIN
+  (`NEXT_PUBLIC_ABOT_ADMIN_PIN`, default `2026`) hides the page; Supabase RLS protects the data.
+- Modules: Overview, Monetization, Licenses, Algorithms, Exercises, Routines & gyms, Database,
+  Device. Every panel is tagged Global or Device.
+- Sidebar on desktop, a module bar on phones; a full-screen layer outside the 640 px app shell.
+

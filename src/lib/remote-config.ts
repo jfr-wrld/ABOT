@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { SUPABASE_ENV, isCloudSyncConfigured } from "@/data/sync/supabase";
 import type { MonetizationMode } from "./entitlements";
+import { DEFAULT_TUNABLES, normalizeTunables, setTunablesSource, type Tunables } from "./tunables";
 
 /**
  * Settings the founder changes from Mission Control (/admin) without a new APK: monetization
@@ -18,6 +19,8 @@ export interface RemoteConfig {
   prices: { monthlyIdr: number; annualIdr: number; lifetimeIdr: number; monthlyUsd: number; annualUsd: number; lifetimeUsd: number };
   announcement: string | null;
   offlineCodesEnabled: boolean;
+  /** Algorithm constants (lib/tunables). */
+  tunables: Tunables;
   /** ISO time of the server row, or null for the defaults. */
   updatedAt: string | null;
 }
@@ -27,6 +30,7 @@ export const DEFAULT_REMOTE_CONFIG: RemoteConfig = {
   prices: { monthlyIdr: 29_000, annualIdr: 199_000, lifetimeIdr: 798_000, monthlyUsd: 2.99, annualUsd: 19.99, lifetimeUsd: 79.98 },
   announcement: null,
   offlineCodesEnabled: true,
+  tunables: DEFAULT_TUNABLES,
   updatedAt: null,
 };
 
@@ -57,6 +61,7 @@ export function normalizeRemoteConfig(raw: unknown): RemoteConfig {
     },
     announcement: typeof banner === "string" && banner.trim() ? banner.trim().slice(0, 280) : null,
     offlineCodesEnabled: (r.offline_codes_enabled ?? r.offlineCodesEnabled) !== false,
+    tunables: normalizeTunables(r.tunables),
     updatedAt: typeof (r.updated_at ?? r.updatedAt) === "string" ? ((r.updated_at ?? r.updatedAt) as string) : null,
   };
 }
@@ -132,6 +137,9 @@ export const useRemoteConfig = create<RemoteConfigState>()((set, get) => ({
     set({ config: c, source: "server" });
   },
 }));
+
+// Algorithm modules read their constants through lib/tunables; this hands them the live config.
+setTunablesSource(() => useRemoteConfig.getState().config.tunables);
 
 /** The monetization mode in force: remote config, else the build setting. */
 export function currentMonetizationMode(): MonetizationMode {

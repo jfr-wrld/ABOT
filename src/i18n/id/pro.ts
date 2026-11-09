@@ -75,4 +75,19 @@ export const pro: Record<string, string> = {
   "Cloud backup and Health Connect sync": "Backup cloud dan sinkron Health Connect",
   "Payments are not connected yet. During the beta every PRO feature is free.":
     "Pembayaran belum tersambung. Selama beta semua fitur PRO gratis.",
+  // Redeem codes and announcements (Priority 12)
+  Activate: "Aktifkan",
+  Announcement: "Pengumuman",
+  "Dismiss announcement": "Tutup pengumuman",
+  "Founder badge unlocked": "Lencana founder terbuka",
+  "License activated: ABOT // BLACK PRO": "Lisensi aktif: ABOT // BLACK PRO",
+  "Lifetime access": "Akses seumur hidup",
+  "Redeem VIP / activation code": "Tukar kode VIP / aktivasi",
+  "Redeem license code": "Tukar kode lisensi",
+  "VIP, influencer or promo code": "Kode VIP, influencer, atau promo",
+  "{n} days access": "Akses {n} hari",
+  "⚡ Your ABOT // BLACK PRO VIP access code: {code}. Open ABOT > Settings > Redeem code to unlock every Telemetry Pro feature!":
+    "⚡ Ini kode akses VIP ABOT // BLACK PRO kamu: {code}. Buka aplikasi ABOT > Settings > Redeem Code untuk mengaktifkan semua fitur Telemetry Pro!",
+  "Enter a code.": "Masukkan kode.",
+  "This code is not valid, or it has been used up.": "Kode ini tidak valid, atau kuotanya sudah habis.",
 };

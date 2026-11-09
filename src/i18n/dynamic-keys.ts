@@ -3,6 +3,7 @@ import { SPLITS } from "@/lib/seed-routines";
 import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
 import { KIND_LABEL, WHY } from "@/lib/progressive-overload";
 import { FILTER_LABEL } from "@/lib/exercise-swapper";
+import { REDEEM_REASONS } from "@/lib/redeem-service";
 import { CHECKOUT_NOT_CONNECTED, PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
 import { AXIS_LABEL, DIAGNOSTIC_KEYS } from "@/lib/symmetry-analyzer";
 
@@ -104,5 +105,6 @@ export const DYNAMIC_KEYS: string[] = [
   ...PRO_MATRIX.flatMap((r) => [r.feature, ...[r.core, r.pro].filter((v): v is string => typeof v === "string")]),
   ...SIMULATOR.map((s) => s.label),
   CHECKOUT_NOT_CONNECTED,
+  ...Object.values(REDEEM_REASONS),
   "Pro",
 ];

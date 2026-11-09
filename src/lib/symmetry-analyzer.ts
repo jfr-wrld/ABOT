@@ -1,5 +1,6 @@
 import type { Exercise, MuscleGroup, WorkoutSession } from "@/types/workout";
 import { isWorkingSet, setVolume } from "./calc";
+import { tunables } from "./tunables";
 
 /**
  * Muscle balance over a time window, on six axes, with the ratio checks coaches use.
@@ -95,7 +96,7 @@ export interface SymmetryReport {
   diagnostics: Diagnostic[];
 }
 
-/** Fewer working sets than this and the shape says more about chance than about training. */
+/** Fewer working sets than this (default; Mission Control can change it) and the shape says more about chance than about training. */
 export const MIN_SETS = 6;
 
 export function analyzeSymmetry(sessions: WorkoutSession[], byId: Record<string, Exercise>, from: number, to = Infinity): SymmetryReport {
@@ -131,7 +132,8 @@ export function analyzeSymmetry(sessions: WorkoutSession[], byId: Record<string,
     }),
   ) as Record<Axis, AxisValue>;
 
-  if (total < MIN_SETS) {
+  const k = tunables().symmetry;
+  if (total < k.minSets) {
     return { axes, totalSets: total, score: null, grade: null, pushPull: null, quadHam: null, lowerShare: null, diagnostics: [] };
   }
 
@@ -151,23 +153,23 @@ export function analyzeSymmetry(sessions: WorkoutSession[], byId: Record<string,
   if (sets.push > 0 && sets.pull === 0) {
     const add = atLeast2(sets.push);
     diagnostics.push(diag("push-pull", DIAGNOSTIC_KEYS.noPull, { push: Math.round(sets.push * 10) / 10, n: add }, add));
-  } else if (sets.push > sets.pull * 1.25) {
+  } else if (sets.push > sets.pull * k.pushOverPull) {
     const add = atLeast2(sets.push - sets.pull);
     diagnostics.push(diag("push-pull", DIAGNOSTIC_KEYS.pushPull, { pct: pct(sets.push / sets.pull - 1), n: add }, add));
   } else if (sets.pull > sets.push * 1.5 && sets.push > 0) {
     const add = atLeast2(sets.pull / 1.2 - sets.push);
     diagnostics.push(diag("pull-push", DIAGNOSTIC_KEYS.pullPush, { pct: pct(sets.pull / sets.push - 1), n: add }, add));
   }
-  if (quadHam !== null && quads >= 3 && quadHam < 0.75) {
-    const add = atLeast2(quads * 0.75 - hams);
+  if (quadHam !== null && quads >= 3 && quadHam < k.quadHamMin) {
+    const add = atLeast2(quads * k.quadHamMin - hams);
     diagnostics.push(diag("quad-ham", DIAGNOSTIC_KEYS.quadHam, { ratio: quadHam.toFixed(2), n: add }, add));
   } else if (quadHam !== null && quads >= 3 && quadHam > 1.33) {
     const add = atLeast2(hams * 0.75 - quads);
     diagnostics.push(diag("ham-quad", DIAGNOSTIC_KEYS.hamQuad, { ratio: quadHam.toFixed(2), n: add }, add));
   }
-  if (lowerShare !== null && lowerShare < 0.25) {
-    // Sets of lower body that bring it to a quarter of upper + lower.
-    const add = atLeast2(upper / 3 - lower);
+  if (lowerShare !== null && lowerShare < k.legsMinShare) {
+    // Sets of lower body that bring it to that share of upper + lower.
+    const add = atLeast2((upper * k.legsMinShare) / (1 - k.legsMinShare) - lower);
     diagnostics.push(diag("skip-legs", DIAGNOSTIC_KEYS.skipLegs, { pct: pct(lowerShare), n: add }, add));
   }
   const weakest = AXES.filter((a) => a !== "push" && a !== "pull").sort((a, b) => axes[a].ratio - axes[b].ratio)[0]!;

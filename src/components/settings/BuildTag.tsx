@@ -28,7 +28,7 @@ export function BuildTag() {
       }}
       className="mx-auto min-h-11 px-3 font-mono text-[10px] uppercase tabular-nums tracking-[0.14em] text-text-muted"
     >
-      ABOT {version ? `v${version}` : "web"} // TELEMETRY BUILD
+      {`ABOT ${version ? `v${version}` : "web"} // TELEMETRY BUILD`}
     </button>
   );
 }

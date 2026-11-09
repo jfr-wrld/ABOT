@@ -333,7 +333,7 @@ function Calories({ session, byId, unit }: { session: WorkoutSession; byId: Reco
           t("MET {met} for {kg} kg body weight and {min} minutes.", { met: est.met, kg: est.bodyweightKg, min: Math.round(est.minutes) })
         ) : (
           <>
-            {t("Worked out for 75 kg. Set your body weight for a closer figure.")}{" "}
+            {t("Worked out for {kg} kg. Set your body weight for a closer figure.", { kg: est.bodyweightKg })}{" "}
             <Link href="/settings?section=health" className="font-semibold text-text underline underline-offset-4">
               {t("Set body weight")}
             </Link>
