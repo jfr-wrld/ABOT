@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
 import { syncEntitlementWithAccount } from "@/lib/entitlement-sync";
-import { CHECKOUT_OPENED, PAYMENT_STATUS_MESSAGE as MESSAGE, pendingOrder, rememberPendingOrder, waitForOrder, type PaymentShown as Shown } from "@/lib/checkout";
+import { CHECKOUT_OPENED, PAYMENT_STATUS_MESSAGE as MESSAGE, pendingOrder, rememberPendingOrder, waitForOrder, whenForeground, type PaymentShown as Shown } from "@/lib/checkout";
 import { useAppResumed } from "@/lib/native/useAppResumed";
 import { updateEntitlement } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -37,6 +37,8 @@ export function PaymentReturn() {
       if (next) updateEntitlement(next);
     }
     if (status === "paid") {
+      // Not behind the payment browser: the plate and the sting wait until ABOT is in front.
+      await whenForeground();
       // The full-screen moment replaces the one-line banner.
       // What changed decides what the screen says: a first unlock, a year added, or lifetime.
       const after = useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT;

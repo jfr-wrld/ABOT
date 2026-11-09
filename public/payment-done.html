@@ -32,16 +32,18 @@
     </main>
     <script>
       (function () {
-        var q = new URLSearchParams(location.search);
-        var order = q.get("order_id") || "";
-        var status = q.get("transaction_status") || "";
-        if (!/^ABOT-[A-Z0-9-]+$/.test(order)) order = "";
+        // Read by pattern, not URLSearchParams: if Midtrans appends its own query with "?" after
+        // our "?app=1", the parameters are still found.
+        var href = location.href;
+        var pick = function (name, re) { var m = new RegExp("[?&]" + name + "=(" + re + ")").exec(href); return m ? m[1] : ""; };
+        var order = pick("order_id", "ABOT-[A-Z0-9-]+");
+        var status = pick("transaction_status", "[a-z_]+");
         if (status === "deny" || status === "cancel" || status === "expire" || status === "failure") {
           document.getElementById("title").textContent = "Payment not completed";
           document.getElementById("body").textContent = "Nothing was charged. Go back to ABOT to try again. / Tidak ada yang ditagih; kembali ke ABOT untuk mencoba lagi.";
         }
         // midtrans-checkout adds app=1 when the Android app started the payment.
-        var app = q.get("app") === "1";
+        var app = /[?&]app=1(?:[&?#]|$)/.test(location.search);
         var back = document.getElementById("back");
         // Tell the waiting ABOT tab (same origin) to check the order now.
         try { localStorage.setItem("abot.payment-done", JSON.stringify({ order: order, at: Date.now() })); } catch (e) {}

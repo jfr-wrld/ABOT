@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { startMidtransCheckout, waitForOrder, checkoutAvailable, type OrderStatus } from "./checkout";
+import { startMidtransCheckout, waitForOrder, checkoutAvailable, whenForeground, type OrderStatus } from "./checkout";
 import { DEFAULT_REMOTE_CONFIG, useRemoteConfig } from "./remote-config";
 
 afterEach(() => useRemoteConfig.setState({ config: DEFAULT_REMOTE_CONFIG, source: "default" }));
@@ -24,5 +24,23 @@ describe("checkout", () => {
   it("gives back pending when the buyer has not paid yet, and null when nothing can be read", async () => {
     expect(await waitForOrder("o", { tries: 3, read: async () => "pending", sleep: async () => {} })).toBe("pending");
     expect(await waitForOrder("o", { tries: 2, read: async () => null, sleep: async () => {} })).toBeNull();
+  });
+
+  it("waits for the tab to be visible before it resolves, and resolves at once when it already is", async () => {
+    const listeners: (() => void)[] = [];
+    const doc = {
+      visibilityState: "hidden" as DocumentVisibilityState,
+      addEventListener: (_: string, f: () => void) => listeners.push(f),
+      removeEventListener: () => {},
+    };
+    let done = false;
+    const p = whenForeground(false, doc as never).then(() => (done = true));
+    await Promise.resolve();
+    expect(done).toBe(false);
+    doc.visibilityState = "visible";
+    listeners.forEach((f) => f());
+    await p;
+    expect(done).toBe(true);
+    await expect(whenForeground(false, { ...doc, visibilityState: "visible" } as never)).resolves.toBeUndefined();
   });
 });

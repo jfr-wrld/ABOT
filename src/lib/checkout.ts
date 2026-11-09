@@ -185,3 +185,36 @@ export const PAYMENT_STATUS_MESSAGE: Record<PaymentShown, string> = {
   refunded: "This payment was refunded, so its license was removed.",
   unknown: "Could not check the payment yet. Open ABOT again in a moment.",
 };
+
+/**
+ * Resolves once ABOT is in front. In the Android app the order can settle while the payment
+ * browser covers the app (and its WebView never reports visibilitychange), so the app state is
+ * asked instead; on the web, the tab's visibility.
+ */
+export async function whenForeground(
+  native = isNativeApp(),
+  doc: Pick<Document, "visibilityState" | "addEventListener" | "removeEventListener"> = document,
+): Promise<void> {
+  if (native) {
+    const { App } = await import("@capacitor/app");
+    if ((await App.getState()).isActive) return;
+    await new Promise<void>((resolve) => {
+      const handle = App.addListener("appStateChange", ({ isActive }) => {
+        if (!isActive) return;
+        void handle.then((h) => h.remove());
+        resolve();
+      });
+    });
+    return;
+  }
+  if (doc.visibilityState !== "hidden") return;
+  await new Promise<void>((resolve) => {
+    const on = () => {
+      if (doc.visibilityState === "hidden") return;
+      doc.removeEventListener("visibilitychange", on);
+      resolve();
+    };
+    doc.addEventListener("visibilitychange", on);
+  });
+}
+
