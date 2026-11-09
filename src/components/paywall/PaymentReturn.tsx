@@ -10,6 +10,7 @@ import { updateEntitlement } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useT } from "@/i18n";
 import { useCelebrationStore } from "./ProCelebration";
+import { celebrationCase } from "@/lib/celebration";
 
 /**
  * After Midtrans: the web return URL carries ?order_id=..., and on Android the buyer comes back
@@ -30,14 +31,16 @@ export function PaymentReturn() {
     setShown(waiting ? "pending" : "checking");
     const status = await waitForOrder(orderId, waiting ? { tries: 100, everyMs: 3000 } : undefined);
     if (status && status !== "pending") rememberPendingOrder(null);
+    const before = useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT;
     if (status === "paid" || status === "refunded") {
       const next = await syncEntitlementWithAccount(useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT);
       if (next) updateEntitlement(next);
     }
     if (status === "paid") {
       // The full-screen moment replaces the one-line banner.
-      const e = useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT;
-      useCelebrationStore.getState().show(e.tier === "lifetime" ? { tier: "lifetime" } : { tier: "pro", until: e.proExpiresAt });
+      // What changed decides what the screen says: a first unlock, a year added, or lifetime.
+      const after = useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT;
+      useCelebrationStore.getState().show(celebrationCase(before, after));
       setShown(null);
     } else setShown(status ?? "unknown");
     if (fromUrl) {

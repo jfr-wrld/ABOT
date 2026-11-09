@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { animate } from "framer-motion";
 import { create } from "zustand";
 import { motion, useReducedMotion } from "framer-motion";
-import { Activity, Brain, Mic, Sparkles } from "lucide-react";
+import { Activity, ArrowRight, Brain, Mic, Sparkles } from "lucide-react";
+import type { Unlocked } from "@/lib/celebration";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { audioReady, unlockAudio } from "@/lib/sound-effects";
 import { feedback } from "@/lib/feedback";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useT } from "@/i18n";
-
-/** What just became active: pro until a date, or lifetime. */
-type Unlocked = { tier: "pro"; until: string | null } | { tier: "lifetime" };
 
 export const useCelebrationStore = create<{ unlocked: Unlocked | null; show: (u: Unlocked) => void; close: () => void }>()((set) => ({
   unlocked: null,
@@ -85,7 +84,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
 
   if (phase !== "playing") {
     return (
-      <div role="dialog" aria-modal="true" aria-label={t("BLACK PRO unlocked")} className="force-dark fixed inset-0 z-[60] bg-[#09090b] text-text">
+      <div role="dialog" aria-modal="true" aria-label={titleOf(unlocked, t)} className="force-dark fixed inset-0 z-[60] bg-[#09090b] text-text">
         {phase === "armed" && (
           <button
             type="button"
@@ -108,12 +107,17 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
     );
   }
 
+  const longDate = (iso: string) => new Date(iso).toLocaleDateString(t.locale, { day: "numeric", month: "long", year: "numeric" });
   const term =
-    unlocked.tier === "lifetime"
-      ? t("Lifetime license. No end date.")
-      : unlocked.until
-        ? t("Active until {date}", { date: new Date(unlocked.until).toLocaleDateString(t.locale, { day: "numeric", month: "long", year: "numeric" }) })
-        : t("Active on your account");
+    unlocked.kind === "upgraded"
+      ? t("Your PRO is now lifetime. No end date.")
+      : unlocked.tier === "lifetime"
+        ? t("Lifetime license. No end date.")
+        : unlocked.kind === "extended"
+          ? t("BLACK PRO now runs until {date}", { date: longDate(unlocked.until) })
+          : unlocked.until
+            ? t("Active until {date}", { date: longDate(unlocked.until) })
+            : t("Active on your account");
   const after = (s: number) => (reduce ? 0 : s);
   // Loops only run with motion allowed; with reduced motion the screen is still.
   const loop = (t: object) => (reduce ? { duration: 0 } : { repeat: Infinity, ...t });
@@ -289,7 +293,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
             backgroundPosition: loop({ delay: 1.6, duration: 1.4, ease: "easeInOut", repeatDelay: 2.6 }),
           }}
         >
-          {unlocked.tier === "lifetime" ? t("Lifetime unlocked") : t("BLACK PRO unlocked")}
+          {unlocked.kind === "extended" ? <DaysAdded days={unlocked.days} reduce={!!reduce} /> : titleOf(unlocked, t)}
         </motion.h2>
         <motion.p
           className="mt-2.5 text-center text-sm text-zinc-300"
@@ -300,27 +304,31 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           {term}
         </motion.p>
 
-        <ul className="mt-7 grid w-full max-w-sm grid-cols-2 gap-2 [perspective:600px]">
-          {PERKS.map(({ icon: Icon, text }, i) => (
-            <motion.li
-              key={text}
-              className="flex items-center gap-2 rounded-ctl border border-[#ccff00]/20 bg-[#121215]/90 px-3 py-2.5 text-xs font-semibold leading-tight text-white"
-              initial={{ opacity: 0, rotateX: reduce ? 0 : -80, y: reduce ? 0 : 10 }}
-              animate={{ opacity: 1, rotateX: 0, y: 0 }}
-              transition={{ delay: after(HIT + 0.7 + i * 0.09), duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <motion.span
-                aria-hidden="true"
-                className="shrink-0 text-[#ccff00]"
-                animate={reduce ? undefined : { scale: [1, 1.25, 1] }}
-                transition={{ delay: 2.4 + i * 0.6, duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
+        {unlocked.kind === "extended" ? (
+          <DateRoll from={longDate(unlocked.from)} until={longDate(unlocked.until)} delay={after(HIT + 0.7)} reduce={!!reduce} />
+        ) : (
+          <ul className="mt-7 grid w-full max-w-sm grid-cols-2 gap-2 [perspective:600px]">
+            {PERKS.map(({ icon: Icon, text }, i) => (
+              <motion.li
+                key={text}
+                className="flex items-center gap-2 rounded-ctl border border-[#ccff00]/20 bg-[#121215]/90 px-3 py-2.5 text-xs font-semibold leading-tight text-white"
+                initial={{ opacity: 0, rotateX: reduce ? 0 : -80, y: reduce ? 0 : 10 }}
+                animate={{ opacity: 1, rotateX: 0, y: 0 }}
+                transition={{ delay: after(HIT + 0.7 + i * 0.09), duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Icon size={16} />
-              </motion.span>
-              {t(text)}
-            </motion.li>
-          ))}
-        </ul>
+                <motion.span
+                  aria-hidden="true"
+                  className="shrink-0 text-[#ccff00]"
+                  animate={reduce ? undefined : { scale: [1, 1.25, 1] }}
+                  transition={{ delay: 2.4 + i * 0.6, duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
+                >
+                  <Icon size={16} />
+                </motion.span>
+                {t(text)}
+              </motion.li>
+            ))}
+          </ul>
+        )}
 
         <motion.button
           ref={button}
@@ -371,5 +379,78 @@ function Embers() {
         );
       })}
     </div>
+  );
+}
+
+type T = ReturnType<typeof useT>;
+
+/** The headline for each case. The extended case counts its days up on screen instead. */
+function titleOf(u: Unlocked, t: T): string {
+  if (u.kind === "upgraded") return t("Upgraded to lifetime");
+  if (u.kind === "extended") return t("+{n} days added", { n: u.days });
+  return u.tier === "lifetime" ? t("Lifetime unlocked") : t("BLACK PRO unlocked");
+}
+
+/** "+365 days added", the number counting up from zero as the title lands. */
+function DaysAdded({ days, reduce }: { days: number; reduce: boolean }) {
+  const t = useT();
+  const [n, setN] = useState(reduce ? days : 0);
+  useEffect(() => {
+    if (reduce) return;
+    const c = animate(0, days, { delay: HIT + 0.45, duration: 1.1, ease: [0.22, 1, 0.36, 1], onUpdate: (v) => setN(Math.round(v)) });
+    return () => c.stop();
+  }, [days, reduce]);
+  return (
+    <>
+      <span aria-hidden="true">{t("+{n} days added", { n })}</span>
+      <span className="sr-only">{t("+{n} days added", { n: days })}</span>
+    </>
+  );
+}
+
+/** The old end date struck through, an arrow, and the new one landing in Volt. */
+function DateRoll({ from, until, delay, reduce }: { from: string; until: string; delay: number; reduce: boolean }) {
+  const t = useT();
+  return (
+    <motion.div
+      className="mt-7 flex w-full max-w-sm items-center gap-2 rounded-ctl border border-[#ccff00]/25 bg-[#121215]/90 p-3"
+      initial={{ opacity: 0, y: reduce ? 0 : 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <div className="min-w-0 flex-1">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">{t("Was until")}</p>
+        <p className="relative mt-0.5 inline-block text-sm font-semibold text-zinc-400">
+          {from}
+          <motion.span
+            aria-hidden="true"
+            className="absolute inset-x-0 top-1/2 h-[2px] origin-left bg-zinc-400"
+            initial={{ scaleX: reduce ? 1 : 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: reduce ? 0 : delay + 0.35, duration: 0.35 }}
+          />
+        </p>
+      </div>
+      <motion.span
+        aria-hidden="true"
+        className="shrink-0 text-[#ccff00]"
+        initial={{ x: reduce ? 0 : -8, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: reduce ? 0 : delay + 0.55, duration: 0.3 }}
+      >
+        <ArrowRight size={18} />
+      </motion.span>
+      <div className="min-w-0 flex-1 text-right">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#ccff00]">{t("Now until")}</p>
+        <motion.p
+          className="mt-0.5 text-sm font-extrabold text-white"
+          initial={{ opacity: 0, scale: reduce ? 1 : 1.4 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: reduce ? 0 : delay + 0.7, type: "spring", stiffness: 320, damping: 16 }}
+        >
+          {until}
+        </motion.p>
+      </div>
+    </motion.div>
   );
 }

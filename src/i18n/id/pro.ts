@@ -121,4 +121,10 @@ export const pro: Record<string, string> = {
   "Story presets, no watermark": "Preset story, tanpa watermark",
   "Payment received": "Pembayaran diterima",
   "Tap to unlock": "Ketuk untuk membuka",
+  "Your PRO is now lifetime. No end date.": "PRO kamu sekarang lifetime. Tanpa batas waktu.",
+  "BLACK PRO now runs until {date}": "BLACK PRO sekarang aktif sampai {date}",
+  "Upgraded to lifetime": "Naik ke lifetime",
+  "+{n} days added": "+{n} hari ditambahkan",
+  "Was until": "Sebelumnya sampai",
+  "Now until": "Sekarang sampai",
 };
