@@ -145,7 +145,7 @@ export const settings: Record<string, string> = {
   Camera: "Kamera",
   Location: "Lokasi",
   "Rest-over alarm, the workout on your lock screen, reminders.": "Alarm istirahat selesai, latihan di layar kunci, pengingat.",
-  "Take a profile photo or a story background.": "Ambil foto profil atau latar story.",
+  "Take workout photos, a profile photo or a story background.": "Ambil foto latihan, foto profil atau latar story.",
   "Picks the gym you are at when a workout starts.": "Memilih gym tempatmu berada saat latihan dimulai.",
   "{name} is off. Open Android settings": "{name} mati. Buka pengaturan Android",
   "Allow {name}": "Izinkan {name}",

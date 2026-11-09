@@ -51,10 +51,13 @@ export function StoryCardStudio({
   open,
   onClose,
   data,
+  photo,
 }: {
   open: boolean;
   onClose: () => void;
   data: StoryData | null;
+  /** The workout's own photo, if it has one: the studio starts with it as the background. */
+  photo?: Blob;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -79,7 +82,7 @@ export function StoryCardStudio({
       }}
       className="force-dark m-0 h-dvh max-h-dvh w-full max-w-none bg-bg p-0 text-text backdrop:bg-black/80"
     >
-      {open && data && <Studio data={data} status={status} setStatus={setStatus} shareable={shareable} onClose={() => ref.current?.close()} />}
+      {open && data && <Studio data={data} initialPhoto={photo} status={status} setStatus={setStatus} shareable={shareable} onClose={() => ref.current?.close()} />}
     </dialog>
   );
 }
@@ -158,12 +161,14 @@ function reason(err: unknown): string {
 
 function Studio({
   data,
+  initialPhoto,
   status,
   setStatus,
   shareable,
   onClose,
 }: {
   data: StoryData;
+  initialPhoto?: Blob;
   status: Status;
   setStatus: (s: Status) => void;
   shareable: boolean;
@@ -278,6 +283,14 @@ function Studio({
       if (fileInput.current) fileInput.current.value = "";
     }
   }, [setStatus, t]);
+
+  // Once per opening: the workout's first photo, so a photo layout shows it without picking again.
+  const usedInitial = useRef(false);
+  useEffect(() => {
+    if (!initialPhoto || usedInitial.current) return;
+    usedInitial.current = true;
+    void pickPhoto(new File([initialPhoto], "workout.jpg", { type: initialPhoto.type || "image/jpeg" }));
+  }, [initialPhoto, pickPhoto]);
 
   const current = STORY_PRESETS.find((p) => p.id === preset) ?? STORY_PRESETS[0];
   const forcedGray = preset === "monochrome-steel";

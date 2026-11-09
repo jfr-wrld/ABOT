@@ -15,6 +15,8 @@ import { Button, PRESS_SPRING } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { SetTypeChip } from "@/components/workout/SetTypeChip";
 import { ShareStoryButton } from "@/components/share/ShareStoryButton";
+import { GymTag } from "@/components/workout/GymTag";
+import { WorkoutPhotos, useWorkoutPhotos } from "@/components/workout/WorkoutPhotos";
 import { ExerciseThumb, exercisePhoto } from "@/components/exercise/ExerciseThumb";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
@@ -84,6 +86,7 @@ function SessionDetail() {
   const prs = useMemo(() => (session ? sessionRecords(session, sessions, byId).records : []), [session, sessions, byId]);
   const prSetIds = useMemo(() => new Set(prs.map((p) => p.setId)), [prs]);
   const prLifts = new Set(prs.map((p) => p.exerciseId)).size;
+  const photos = useWorkoutPhotos(session?.id);
 
   if (!session) {
     return (
@@ -100,7 +103,7 @@ function SessionDetail() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <Hero session={session} byId={byId} onMenu={() => setMenu(true)} />
+      <Hero session={session} byId={byId} cover={photos.photos[0]?.url} onMenu={() => setMenu(true)} />
 
       <div className="flex flex-col gap-3 px-4 pt-4">
         <Rise order={1}>
@@ -146,6 +149,8 @@ function SessionDetail() {
             <ExerciseCard ex={ex} def={byId[ex.exerciseId]} total={total} unit={weightUnit} prSetIds={prSetIds} />
           </Rise>
         ))}
+
+        <WorkoutPhotos state={photos} sessionName={session.name} />
       </div>
 
       {/* Room for the action bar, so the last card can scroll clear of it. */}
@@ -175,7 +180,7 @@ function SessionDetail() {
               {t("Repeat")}
             </Button>
           )}
-          <ShareStoryButton session={session} label={t("Share story")} className="min-h-12 w-full" />
+          <ShareStoryButton session={session} photo={photos.photos[0]?.blob} label={t("Share story")} className="min-h-12 w-full" />
         </div>
       </div>
 
@@ -220,15 +225,26 @@ function SessionDetail() {
 }
 
 /**
- * The top of the page: the workout's own exercise photos blurred into a backdrop (they are small
- * files, so they are used as colour and texture, not detail), the crisp photos in a row on top,
- * then the date and name. The backdrop drifts slightly, like a slow camera.
+ * The top of the page: the lifter's first photo of the session, or else the workout's own exercise
+ * photos, blurred into a backdrop (used as colour and texture, not detail), the crisp exercise
+ * photos in a row on top, then the date, the name and the gym. The backdrop drifts slightly, like
+ * a slow camera.
  */
-function Hero({ session, byId, onMenu }: { session: WorkoutSession; byId: Record<string, Exercise>; onMenu: () => void }) {
+function Hero({
+  session,
+  byId,
+  cover,
+  onMenu,
+}: {
+  session: WorkoutSession;
+  byId: Record<string, Exercise>;
+  cover?: string;
+  onMenu: () => void;
+}) {
   const t = useT();
   const reduce = useReducedMotion();
   const defs = session.exercises.map((e) => byId[e.exerciseId]).filter(Boolean) as Exercise[];
-  const photos = defs.map((d) => exercisePhoto(d)).filter(Boolean).slice(0, 4) as string[];
+  const photos = cover ? [cover] : (defs.map((d) => exercisePhoto(d)).filter(Boolean).slice(0, 4) as string[]);
   const date = new Date(session.startedAt);
   return (
     <header className="relative overflow-hidden border-b border-line">
@@ -278,6 +294,7 @@ function Hero({ session, byId, onMenu }: { session: WorkoutSession; byId: Record
             {date.toLocaleTimeString(t.locale, { hour: "2-digit", minute: "2-digit" })}
           </p>
           <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight">{session.name}</h1>
+          <GymTag session={session} />
         </Rise>
       </div>
     </header>

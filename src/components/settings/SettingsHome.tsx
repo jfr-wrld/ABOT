@@ -14,6 +14,7 @@ import { useAppVersion } from "./AppVersion";
 import { LANGUAGE_LABEL, SECTION_TITLE, THEME_LABEL, type SettingsSection } from "./labels";
 import { useT } from "@/i18n";
 import { FounderPassCard } from "./FounderPassCard";
+import { BillingSection } from "./BillingSection";
 import { BuildTag } from "./BuildTag";
 
 export { SECTION_TITLE, type SettingsSection };
@@ -37,6 +38,7 @@ export function SettingsHome() {
   return (
     <div className="flex flex-col gap-5 px-4 pb-8 pt-4">
       <FounderPassCard />
+      <BillingSection />
 
       <Group title={t("Account")}>
         <Row

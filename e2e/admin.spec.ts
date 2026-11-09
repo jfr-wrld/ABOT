@@ -56,9 +56,9 @@ test("hidden entry, PIN gate, and the monetization switch with prices and banner
 
   // Commercial mode: a free user is locked, and the paywall shows the new price.
   await page.goto("/settings");
-  const card = page.getByRole("region", { name: /FOUNDER UNIT/ });
-  await expect(card).toContainText("Core: PRO locked");
-  await card.getByRole("button", { name: "View ABOT // BLACK PRO specs" }).click();
+  const card = page.getByRole("region", { name: "Plan & billing" });
+  await expect(card).toContainText("PRO features are locked on this phone.");
+  await card.getByRole("button", { name: "Upgrade to Black Pro" }).click();
   await expect(page.getByRole("dialog", { name: "Precision engineered for serious lifters." })).toContainText("Rp 35.000");
 });
 
@@ -76,8 +76,8 @@ test("a code made in the console is redeemed on the device; built-in codes work 
   await expect(page.getByRole("table", { name: "Redeem codes" })).toContainText("0/1");
 
   await page.goto("/settings");
-  const card = page.getByRole("region", { name: /FOUNDER UNIT/ });
-  await expect(card).toContainText("Core: PRO locked");
+  const card = page.getByRole("region", { name: "Plan & billing" });
+  await expect(card).toContainText("PRO features are locked on this phone.");
   await card.getByRole("button", { name: "Redeem VIP / activation code" }).click();
   const redeem = page.getByRole("dialog", { name: "Redeem license code" });
   await redeem.getByLabel("VIP, influencer or promo code").fill("ABOT-NOPE-0000");
@@ -88,7 +88,8 @@ test("a code made in the console is redeemed on the device; built-in codes work 
   await expect(redeem.getByRole("status")).toContainText("License activated: ABOT // BLACK PRO");
   await expect(redeem.getByRole("status")).toContainText("30 days access");
   await redeem.getByRole("button", { name: "Done" }).click();
-  await expect(card).toContainText("Black Pro active");
+  await expect(card).toContainText("BLACK PRO");
+  await expect(card.getByText("Days left")).toBeVisible();
 
   // Used once: a second redeem of the same code is refused.
   await card.getByRole("button", { name: "Redeem VIP / activation code" }).click();
@@ -100,7 +101,9 @@ test("a code made in the console is redeemed on the device; built-in codes work 
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("status")).toContainText("30 days access");
   await redeem.getByRole("button", { name: "Done" }).click();
-  await expect(card).toContainText("Black Pro active");
+  // Its 30 days stack on the 30 left from the first code.
+  await expect(card).toContainText("BLACK PRO");
+  await expect(card.getByText("60", { exact: true })).toBeVisible();
 });
 
 test("algorithm calibration, exercise CMS and database tools change the app for real", async ({ page }) => {
