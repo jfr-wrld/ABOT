@@ -82,7 +82,20 @@ async function main() {
 
   const [device] = await android.devices({ omitDriverInstall: true });
   // Revoking a permission makes Android kill the app, so every relaunch attaches to a new WebView.
-  const attach = async () => (await device.webView({ pkg: PKG }, { timeout: 60000 })).page();
+  // On a cold emulator the first attach sometimes never sees the WebView: relaunch once and try
+  // again. A crash cannot hide behind this, as any FATAL EXCEPTION in ABOT fails the run below.
+  const attach = async () => {
+    for (let tries = 1; ; tries++) {
+      try {
+        return (await device.webView({ pkg: PKG }, { timeout: 60000 })).page();
+      } catch (e) {
+        if (tries >= 2) throw e;
+        console.log(`RETRY WebView not attached (${String(e?.message ?? e).split("\n")[0]}); relaunching ABOT once`);
+        shell(`am force-stop ${PKG}`);
+        await openApp();
+      }
+    }
+  };
   let page = await attach();
   const fits = () => page.evaluate(() => document.scrollingElement.scrollHeight <= window.innerHeight + 1);
 
@@ -219,6 +232,14 @@ main()
     try {
       const log = execFileSync("adb", ["logcat", "-d", "-v", "brief"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
       writeFileSync(join(out, "logcat.txt"), log);
+      // An ABOT crash anywhere in the run fails it, with its stack, even if every check passed.
+      const all = log.split("\n");
+      const crash = all.findIndex((l, i) => /FATAL EXCEPTION/.test(l) && all.slice(i, i + 3).some((x) => /app\.abot\.gym/.test(x)));
+      if (crash >= 0) {
+        failures++;
+        console.log("FAIL  ABOT crashed:");
+        console.log(all.slice(crash, crash + 40).join("\n"));
+      }
       const lines = log.split("\n").filter((l) => /Capacitor|LocalNotification|AndroidRuntime|FATAL|Exception|abot/i.test(l));
       console.log("LOGCAT (filtered, last 80):");
       console.log(lines.slice(-80).join("\n"));
