@@ -6,6 +6,7 @@ import { InfoTip } from "@/components/ui/InfoTip";
 import { formatClock } from "@/lib/calc";
 import { isNativeApp } from "@/lib/native/files";
 import { BackupSection } from "./BackupSection";
+import { DataPortabilityCard } from "./DataPortabilityCard";
 import { StorageSection } from "./StorageSection";
 import { SyncSection } from "./SyncSection";
 import { WorkoutReminderSettings } from "./WorkoutReminderSettings";
@@ -155,7 +156,7 @@ export function NotificationsSection() {
   );
 }
 
-/** Cloud backup, the backup file, and what the phone keeps. */
+/** Cloud backup, the backup file, importing from other apps, and what the phone keeps. */
 export function DataSection() {
   return (
     <div className="flex flex-col gap-5">
@@ -164,6 +165,9 @@ export function DataSection() {
       </div>
       <div className="border-t border-line pt-5">
         <BackupSection />
+      </div>
+      <div className="border-t border-line pt-5">
+        <DataPortabilityCard />
       </div>
       <div className="border-t border-line pt-5">
         <StorageSection />

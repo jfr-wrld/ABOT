@@ -62,6 +62,10 @@ export const DYNAMIC_KEYS: string[] = [
   "This file is not valid JSON",
   "This is not an ABOT backup",
   "This backup was made by a newer version of ABOT",
+  // Errors from lib/data-portability (CSV import)
+  "This file is empty",
+  "This CSV does not look like a workout export. It needs date, exercise name and weight or reps columns.",
+  "No workouts were found in this file",
   "Pick a photo (JPEG, PNG or WebP).",
   "This photo could not be read. Try a JPEG or PNG.",
   "This browser cannot resize photos.",

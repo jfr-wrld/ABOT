@@ -32,8 +32,8 @@ export function backupFromSnapshot(data: RepoSnapshot, now = new Date()): AbotBa
 }
 
 export function backupFileName(now = new Date()): string {
-  const d = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  return `abot-backup-${d}.json`;
+  const d = `${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, "0")}_${String(now.getDate()).padStart(2, "0")}`;
+  return `ABOT_BACKUP_${d}.json`;
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);

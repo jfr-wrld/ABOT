@@ -20,7 +20,7 @@ test("export, wipe the device, import with replace", async ({ page }, info) => {
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Export backup" }).click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(/^abot-backup-\d{4}-\d{2}-\d{2}\.json$/);
+  expect(download.suggestedFilename()).toMatch(/^ABOT_BACKUP_\d{4}_\d{2}_\d{2}\.json$/);
   const file = info.outputPath("backup.json");
   await download.saveAs(file);
   const json = JSON.parse(await readFile(file, "utf8"));
