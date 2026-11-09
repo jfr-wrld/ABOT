@@ -32,7 +32,7 @@ test("a template's superset carries into the workout", async ({ page }) => {
   await page.getByRole("button", { name: "Specialized" }).click();
   await page.getByRole("button", { name: "Start workout: Shoulders and arms" }).click();
   await page.waitForURL("**/workout");
-  await expect(page.getByText("Superset A")).toHaveCount(2);
+  await expect(page.getByText(/^Superset \/\/ A[12]$/)).toHaveCount(2);
 });
 
 test("Save to My Routines makes an editable copy", async ({ page }) => {
