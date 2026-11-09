@@ -18,6 +18,7 @@ import {
   type SyncStatusRow,
   type Table,
   type TableName,
+  type WorkoutPhoto,
 } from "./types";
 
 interface KvRow {
@@ -33,6 +34,7 @@ export class AbotDB extends Dexie {
   catalog!: EntityTable<Exercise, "id">;
   kv!: EntityTable<KvRow, "key">;
   syncStatus!: Dexie.Table<SyncStatusRow, [SyncKind, string]>;
+  photos!: EntityTable<WorkoutPhoto, "id">;
 
   constructor(name: string) {
     super(name);
@@ -63,6 +65,8 @@ export class AbotDB extends Dexie {
         }
         await tx.table("syncStatus").bulkPut(rows);
       });
+    // v4: workout photos. Device-only, so the upgrade queues nothing for sync.
+    this.version(4).stores({ photos: "id, sessionId, createdAt" });
   }
 }
 
@@ -134,11 +138,37 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
     return { kind, id, payload, updatedAt: s?.localUpdatedAt ?? 0, deleted: false };
   }
 
+  const dropPhotos = (sessionId: string) => db.photos.where("sessionId").equals(sessionId).delete();
+  const sessions = table<WorkoutSession>("sessions");
+
   const repo: Repository = {
-    sessions: table<WorkoutSession>("sessions"),
+    sessions: {
+      ...sessions,
+      remove: async (id) => {
+        await sessions.remove(id);
+        await dropPhotos(id);
+      },
+    },
     routines: table<Routine>("routines"),
     exercises: table<Exercise>("exercises"),
     locations: table<GymLocation>("locations"),
+    photos: {
+      list: (sessionId) => db.photos.where("sessionId").equals(sessionId).sortBy("createdAt"),
+      add: async (photo) => {
+        await db.photos.put(photo);
+      },
+      remove: (id) => db.photos.delete(id),
+      removeForSession: async (sessionId) => {
+        await dropPhotos(sessionId);
+      },
+      prune: () =>
+        db.transaction("rw", [db.sessions, db.photos], async () => {
+          const keep = new Set((await db.sessions.toCollection().primaryKeys()) as string[]);
+          const orphans = (await db.photos.toArray()).filter((p) => !keep.has(p.sessionId)).map((p) => p.id);
+          await db.photos.bulkDelete(orphans);
+          return orphans.length;
+        }),
+    },
     catalog: {
       all: () => db.catalog.toArray(),
       replaceAll: async (rows) => {
@@ -183,8 +213,8 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
           const s = (await db.syncStatus.get([kind, id])) ?? null;
           return { record: s?.deleted ? null : await record(kind, id, s), status: s };
         }),
-      applyRemote: (rec, at, expected) =>
-        rw(async () => {
+      applyRemote: async (rec, at, expected) => {
+        const applied = await rw(async () => {
           if (expected !== undefined && ((await db.syncStatus.get([rec.kind, rec.id]))?.localUpdatedAt ?? null) !== expected) return false;
           const n = KIND_TABLES[rec.kind];
           if (n) {
@@ -207,7 +237,10 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
             deleted: rec.deleted,
           });
           return true;
-        }),
+        });
+        if (applied && rec.kind === "session" && rec.deleted) await dropPhotos(rec.id);
+        return applied;
+      },
       markSynced: (kind, id, version, at) =>
         rw(async () => {
           const s = await db.syncStatus.get([kind, id]);
@@ -248,6 +281,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         await setKv("exerciseMedia", data.exerciseMedia, true);
         await setKv("bodyweightLog", data.bodyweightLog, true);
       });
+      await repo.photos.prune();
     },
     async commitFinishedWorkout(session) {
       await rw(async () => {

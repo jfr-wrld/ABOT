@@ -310,3 +310,27 @@ describe("swapExercise", () => {
     ]);
   });
 });
+
+describe("setSessionLocation", () => {
+  it("tags a finished workout with a gym, swaps it, and clears it", () => {
+    setup();
+    const done = useWorkoutStore.getState().finishActive()!;
+    const other = useWorkoutStore.getState().sessions;
+    useWorkoutStore.getState().setSessionLocation(done.id, "gym-a");
+    expect(useWorkoutStore.getState().sessions[0]!.locationId).toBe("gym-a");
+    useWorkoutStore.getState().setSessionLocation(done.id, "gym-b");
+    expect(useWorkoutStore.getState().sessions[0]!.locationId).toBe("gym-b");
+    useWorkoutStore.getState().setSessionLocation(done.id, undefined);
+    expect("locationId" in useWorkoutStore.getState().sessions[0]!).toBe(false);
+    expect(other).not.toBe(useWorkoutStore.getState().sessions);
+  });
+
+  it("leaves the list untouched when nothing changes", () => {
+    setup();
+    const done = useWorkoutStore.getState().finishActive()!;
+    useWorkoutStore.getState().setSessionLocation(done.id, "gym-a");
+    const before = useWorkoutStore.getState().sessions[0];
+    useWorkoutStore.getState().setSessionLocation(done.id, "gym-a");
+    expect(useWorkoutStore.getState().sessions[0]).toBe(before);
+  });
+});

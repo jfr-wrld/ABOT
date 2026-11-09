@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, ChevronRight, Dumbbell, Flame, Layers, Play, Plus, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useLocationStore } from "@/store/useLocationStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { useReminderStore } from "@/store/useReminderStore";
 import { Button, PRESS_SPRING } from "@/components/ui/Button";
@@ -538,12 +539,20 @@ function RecentCard({
   const t = useT();
   const controls = useEntrance();
   const bodyweightKg = useSettingsStore((st) => st.bodyweightKg);
+  const gym = useLocationStore((st) => st.locations.find((l) => l.id === s.locationId)?.name);
   const { completed } = countSets(s);
   const est = estimateCalories(s, { bodyweightKg, byId });
   // Under a minute (a test tap, a mistake) the figure means nothing.
   const kcal = est.minutes >= 1 ? est.kcal : 0;
   const stats = (
     <p className="num flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-zinc-400">
+      {gym && (
+        <span className="inline-flex min-w-0 max-w-full items-center gap-1 font-sans">
+          <MapPin aria-hidden="true" size={12} className="shrink-0" />
+          <span className="sr-only">{t("Gym")}: </span>
+          <span className="truncate">{gym}</span>
+        </span>
+      )}
       <span className="inline-flex items-center gap-1 whitespace-nowrap">
         <Timer aria-hidden="true" size={12} />
         {formatDuration(sessionDurationSec(s))}

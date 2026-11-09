@@ -75,6 +75,18 @@ export interface Repository {
     remove(key: KvKey): Promise<void>;
   };
   /**
+   * Photos the lifter attached to a workout. Kept on this device only: not in snapshots,
+   * backups or sync. Removing a session removes its photos.
+   */
+  photos: {
+    list(sessionId: string): Promise<WorkoutPhoto[]>;
+    add(photo: WorkoutPhoto): Promise<void>;
+    remove(id: string): Promise<void>;
+    removeForSession(sessionId: string): Promise<void>;
+    /** Deletes photos whose workout no longer exists; returns how many. */
+    prune(): Promise<number>;
+  };
+  /**
    * Saves a finished workout and clears the in-progress workout and rest timer in one
    * transaction, so a failure leaves the workout recoverable as in progress, never lost.
    */
@@ -103,6 +115,16 @@ export interface Repository {
   /** Replaces every table and the settings/active workout in one transaction; clears the rest timer. */
   replaceAll(data: RepoSnapshot): Promise<void>;
   snapshot(): Promise<RepoSnapshot>;
+}
+
+/** One photo on a workout: a JPEG re-encoded on the device (no EXIF, so no GPS). */
+export interface WorkoutPhoto {
+  id: string;
+  sessionId: string;
+  createdAt: number;
+  blob: Blob;
+  width: number;
+  height: number;
 }
 
 /** Merge weigh-ins by day: an incoming entry replaces that day's local one. Oldest first. */

@@ -17,6 +17,7 @@ import {
   type SyncStatusRow,
   type Table,
   type TableName,
+  type WorkoutPhoto,
 } from "./types";
 
 /** Copies on the way in and out, like IndexedDB, so callers never share references with storage. */
@@ -34,6 +35,11 @@ export function createMemoryRepository(): Repository {
   const kv = new Map<KvKey, unknown>();
   const status = new Map<string, SyncStatusRow>();
   let catalog: RepoSnapshot["exercises"] = [];
+  // Blobs are immutable, so a shallow copy is enough to keep callers off the stored rows.
+  const photos = new Map<string, WorkoutPhoto>();
+  const dropPhotos = (sessionId: string) => {
+    for (const p of [...photos.values()]) if (p.sessionId === sessionId) photos.delete(p.id);
+  };
 
   function mark(kind: SyncKind, id: string, deleted: boolean) {
     const prev = status.get(key(kind, id));
@@ -86,8 +92,34 @@ export function createMemoryRepository(): Repository {
     return { kind, id, payload: clone(payload), updatedAt: s?.localUpdatedAt ?? 0, deleted: false };
   }
 
+  const sessions = table("sessions");
   const repo: Repository = {
-    sessions: table("sessions"),
+    sessions: {
+      ...sessions,
+      async remove(id) {
+        await sessions.remove(id);
+        dropPhotos(id);
+      },
+    },
+    photos: {
+      async list(sessionId) {
+        return [...photos.values()].filter((p) => p.sessionId === sessionId).sort((a, b) => a.createdAt - b.createdAt).map((p) => ({ ...p }));
+      },
+      async add(photo) {
+        photos.set(photo.id, { ...photo });
+      },
+      async remove(id) {
+        photos.delete(id);
+      },
+      async removeForSession(sessionId) {
+        dropPhotos(sessionId);
+      },
+      async prune() {
+        const orphans = [...photos.values()].filter((p) => !tables.sessions.has(p.sessionId));
+        for (const p of orphans) photos.delete(p.id);
+        return orphans.length;
+      },
+    },
     routines: table("routines"),
     exercises: table("exercises"),
     locations: table("locations"),
@@ -133,8 +165,10 @@ export function createMemoryRepository(): Repository {
         const name = KIND_TABLES[rec.kind];
         if (name) {
           const map = tables[name] as Map<string, unknown>;
-          if (rec.deleted) map.delete(rec.id);
-          else map.set(rec.id, clone(rec.payload));
+          if (rec.deleted) {
+            map.delete(rec.id);
+            if (rec.kind === "session") dropPhotos(rec.id);
+          } else map.set(rec.id, clone(rec.payload));
         } else if (!(rec.kind === "settings" && rec.deleted)) {
           const { key: k, value } = kvApply(rec, { bodyweightLog: kv.get("bodyweightLog"), exerciseMedia: kv.get("exerciseMedia") });
           setKv(k, value, false);
@@ -183,6 +217,7 @@ export function createMemoryRepository(): Repository {
       kv.set("restTimer", null);
       setKv("exerciseMedia", data.exerciseMedia, true);
       setKv("bodyweightLog", data.bodyweightLog, true);
+      await repo.photos.prune();
     },
     async commitFinishedWorkout(session) {
       putRows("sessions", [session]);

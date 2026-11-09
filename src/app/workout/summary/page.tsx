@@ -11,6 +11,7 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ShareStoryButton } from "@/components/share/ShareStoryButton";
+import { WorkoutPhotos, useWorkoutPhotos } from "@/components/workout/WorkoutPhotos";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
@@ -63,6 +64,7 @@ function Summary() {
   }, [session, sessions, byId]);
 
   const recordLifts = insights ? Object.keys(insights.byLift).length : 0;
+  const photos = useWorkoutPhotos(session?.id);
 
   // One short buzz to mark the finish, on phones that vibrate and only if the lifter keeps alerts on.
   useEffect(() => {
@@ -183,13 +185,17 @@ function Summary() {
             </section>
           </Rise>
         )}
+
+        <Rise order={12}>
+          <WorkoutPhotos state={photos} sessionName={session.name} />
+        </Rise>
       </div>
 
       {/* Room for the action bar, so the last block scrolls clear of it. */}
       <div className="h-40" aria-hidden="true" />
 
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-[640px] flex-col gap-2 border-t border-line bg-bg/85 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
-        <ShareStoryButton session={session} variant="primary" className="min-h-12 w-full text-base" />
+        <ShareStoryButton session={session} photo={photos.photos[0]?.blob} variant="primary" className="min-h-12 w-full text-base" />
         <div className="grid grid-cols-2 gap-2">
           <Link
             href={historyPath(session.id)}

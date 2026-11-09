@@ -73,6 +73,8 @@ interface WorkoutState {
   finishActive: () => WorkoutSession | null;
   discardActive: () => void;
   deleteSession: (id: string) => void;
+  /** Changes the gym of a finished workout; undefined clears it. */
+  setSessionLocation: (id: string, locationId: string | undefined) => void;
 }
 
 export function newSet(partial: Partial<WorkoutSet> = {}): WorkoutSet {
@@ -370,6 +372,16 @@ export const useWorkoutStore = create<WorkoutState>()(
       discardActive: () => set({ active: null, restTimer: null, handoff: null }),
 
       deleteSession: (id) => set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) })),
+
+      setSessionLocation: (id, locationId) =>
+        set((s) => ({
+          sessions: s.sessions.map((x) => {
+            if (x.id !== id || x.locationId === locationId) return x;
+            const { locationId: _old, ...rest } = x;
+            void _old;
+            return locationId ? { ...rest, locationId } : rest;
+          }),
+        })),
     }),
 );
 
