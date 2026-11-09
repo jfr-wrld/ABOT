@@ -11,12 +11,19 @@ ABOT runs as an **Android app** (built with Capacitor) and in the **browser**, i
 Bahasa Indonesia**, with a dark and a light theme.
 
 <p>
-  <img src="docs/images/home-dark.webp" width="200" alt="Home screen, dark theme: week strip, workout in progress, volume and recovery">
-  <img src="docs/images/logger-dark.webp" width="200" alt="Workout logger: sets with weight, reps and RPE, rest timer above the tab bar">
-  <img src="docs/images/story-studio.webp" width="200" alt="Story Studio: a finished workout as an Instagram Story card, with layouts to pick">
-  <img src="docs/images/home-light.webp" width="200" alt="Home screen, light theme">
-  <img src="docs/images/exercise-light.webp" width="200" alt="Exercise detail: start and end photos, best e1RM, heaviest set">
+  <img src="docs/images/home-dark.webp" width="200" alt="Home, dark theme: week strip, next routine, body phase card with trend weight, today's calories and protein and water rings">
+  <img src="docs/images/logger-dark.webp" width="200" alt="Workout logger: Coach Pill suggesting the next weight, sets with weight, reps and RPE, rest countdown above the tab bar">
+  <img src="docs/images/phase-dark.webp" width="200" alt="Body phase page: the block drawn as a weight plate at week 3 of 8, trend weight, today's calories in a macro donut">
+  <img src="docs/images/phase-setup-dark.webp" width="200" alt="Body phase setup: cut, lean bulk, recomp and strength peak, each card drawing its weight curve">
 </p>
+<p>
+  <img src="docs/images/fuel-dark.webp" width="200" alt="Meals and foods: a meal before and after training sized from today's target, and the food list">
+  <img src="docs/images/story-studio.webp" width="200" alt="Story Studio: a finished workout as an Instagram Story card, with layouts to pick">
+  <img src="docs/images/home-light.webp" width="200" alt="Home, light theme">
+  <img src="docs/images/exercise-light.webp" width="200" alt="Exercise detail, light theme: start and end photos, best e1RM, heaviest set">
+</p>
+
+Screenshots show sample data loaded from a generated backup file.
 
 ## Contents
 
@@ -62,6 +69,8 @@ in with Google, then import or sign in again after installing.
 - Previous numbers for each set, plates and bar per gym, supersets, reorder and replace.
 - A rest timer starts when you tick a set; it sits above the tab bar within thumb reach.
 - Pause and resume the workout clock.
+- Add up to six photos to a workout from the camera or the gallery. They show on the summary and
+  in history, can be saved to the phone's gallery, and go into backup files.
 - The Coach Pill under each exercise suggests the next target from your last three sessions:
   more weight, one more rep, or a deload when you are grinding.
 - Sounds, synthesised on the phone so your music keeps playing: a tick on steppers, a latch when
@@ -122,14 +131,16 @@ in with Google, then import or sign in again after installing.
 
 ### Share to Instagram Stories
 - Story Studio turns a workout into a 1080 x 1920 card in eleven layouts.
-- Add a background photo from the camera or the gallery, with overlay and black-and-white.
+- Add a background photo from the camera, the gallery or the workout's own photos, with overlay
+  and black-and-white.
 - Your @username (from Profile) on every layout. Share opens the phone's share sheet, where
   Instagram Stories is a target; Download saves the PNG to the gallery (album ABOT).
 
 ### Gyms
 - Bar weight and plates per gym; machine records stay per gym.
-- Pin a gym where it is: a workout started within about 300 m picks it by itself (Android,
-  with location allowed).
+- Find gyms near me lists the real gyms around you from OpenStreetMap, so you add yours by name
+  and place instead of typing it. A workout started within about 300 m of a saved gym picks it
+  by itself (Android, with location allowed), and the summary and history show the gym tag.
 
 ### Settings
 - General: language (Phone, English, Bahasa Indonesia; Phone follows the phone's language),
@@ -138,6 +149,11 @@ in with Google, then import or sign in again after installing.
   stay in English.
 - Workout, Notifications (with a test alert), Data & backup, app permissions.
 - FAQ, About, Contact us, social links (coming soon), Sign out.
+
+### ABOT // BLACK PRO
+- Some features are marked PRO: the Coach Pill, body phases, the full recovery and symmetry
+  readouts and most story layouts. During the founders beta every PRO feature is open to
+  everyone; a code can be redeemed in Settings.
 
 ### Health apps (Android)
 - Settings, Health apps connects ABOT to Android Health Connect. Finished workouts go there as

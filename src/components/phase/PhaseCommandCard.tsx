@@ -137,7 +137,9 @@ export function Pacer({
   const t = useT();
   const { proteinG, waterMl } = useTodayFuel(now);
   const add = useFuelPacer((s) => s.add);
-  const item = (key: string, label: string, value: number, target: number, unitLabel: string, step: string, aria: string, onAdd: () => void, Icon: typeof Droplets) => (
+  // Water reads in litres ("1.5/2.5 L"): four-digit millilitres do not fit beside the ring at 360px.
+  const show = (n: number, litres: boolean) => (litres ? (n / 1000).toLocaleString(t.locale, { maximumFractionDigits: 1 }) : n.toLocaleString(t.locale));
+  const item = (key: string, label: string, value: number, target: number, unitLabel: string, step: string, aria: string, onAdd: () => void, Icon: typeof Droplets, litres = false) => (
     <button
       key={key}
       type="button"
@@ -154,9 +156,9 @@ export function Pacer({
       <span className="min-w-0 flex-1">
         <span className="block text-[11px] font-semibold text-text-muted">{label}</span>
         <span className="num block whitespace-nowrap text-sm font-bold">
-          {value.toLocaleString(t.locale)}
+          {show(value, litres)}
           <span className="text-[11px] font-semibold text-text-muted">
-            /{target.toLocaleString(t.locale)} {unitLabel}
+            /{show(target, litres)} {unitLabel}
           </span>
         </span>
         <span aria-hidden="true" className="num mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-bold text-accent">
@@ -169,7 +171,7 @@ export function Pacer({
   return (
     <div role="group" aria-label={t("Today's protein and water")} className={`flex gap-1 px-2 py-1.5 ${bordered ? "border-t border-line" : ""}`}>
       {item("p", t("Protein"), proteinG, proteinTarget, "g", "25 g", t("Add 25 g protein"), () => add({ proteinG: 25 }), Beef)}
-      {item("w", t("Water"), waterMl, waterTarget, "ml", "500 ml", t("Add 500 ml water"), () => add({ waterMl: 500 }), Droplets)}
+      {item("w", t("Water"), waterMl, waterTarget, "L", "0.5 L", t("Add 500 ml water"), () => add({ waterMl: 500 }), Droplets, true)}
     </div>
   );
 }
