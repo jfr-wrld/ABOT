@@ -1,6 +1,7 @@
 import type { GymLocation } from "@/types/workout";
+import { tunables } from "./tunables";
 
-/** A workout counts as "at" a gym within this distance of its pin. */
+/** A workout counts as "at" a gym within this distance of its pin (default; see tunables().gyms). */
 export const NEARBY_M = 300;
 
 /** Great-circle distance in metres. */
@@ -20,7 +21,7 @@ export function nearestGym(gyms: GymLocation[], here: { lat: number; lng: number
   for (const gym of gyms) {
     if (gym.lat === undefined || gym.lng === undefined) continue;
     const d = distanceM(here, { lat: gym.lat, lng: gym.lng });
-    if (d <= NEARBY_M + slack && (!best || d < best.d)) best = { gym, d };
+    if (d <= tunables().gyms.nearbyM + slack && (!best || d < best.d)) best = { gym, d };
   }
   return best?.gym ?? null;
 }

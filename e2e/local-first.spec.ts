@@ -2,9 +2,12 @@ import { expect, test, type Page, type Request } from "@playwright/test";
 import { addExercise, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
 
 /**
- * Records every request that leaves the app's own origin, except exercise photo thumbnails
- * (owner decision 2026-11-08): plain image GETs from the public-domain free-exercise-db, which
- * carry no user data. Anything else, and any photo request that is not an image GET, counts.
+ * Records every request that leaves the app's own origin, except:
+ * - exercise photo thumbnails (owner decision 2026-11-08): plain image GETs from the
+ *   public-domain free-exercise-db, which carry no user data;
+ * - the remote config read (owner decision 2026-11-09, Priority 12): one GET of the public
+ *   `app_remote_config` row from the build's Supabase, which sends nothing about the user.
+ * Anything else counts, including any other Supabase call made without signing in.
  */
 function watchExternal(page: Page): string[] {
   const external: string[] = [];
@@ -17,7 +20,8 @@ function watchExternal(page: Page): string[] {
       u.pathname.startsWith("/yuhonas/free-exercise-db/main/exercises/") &&
       r.method() === "GET" &&
       r.resourceType() === "image";
-    if (!photo) external.push(r.url());
+    const remoteConfig = u.pathname === "/rest/v1/app_remote_config" && r.method() === "GET" && u.searchParams.get("id") === "eq.global";
+    if (!photo && !remoteConfig) external.push(r.url());
   });
   return external;
 }

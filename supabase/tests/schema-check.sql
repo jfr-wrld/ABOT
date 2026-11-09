@@ -5,22 +5,30 @@ set client_min_messages = warning;
 
 -- Minimal stand-in for what Supabase provides: the auth schema, auth.uid() and the API role.
 create schema if not exists auth;
-create table if not exists auth.users (id uuid primary key);
+create table if not exists auth.users (id uuid primary key, email text);
 create or replace function auth.uid() returns uuid language sql stable as
   $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+create or replace function auth.jwt() returns jsonb language sql stable as
+  $$ select jsonb_build_object('email', nullif(current_setting('request.jwt.claim.email', true), '')) $$;
 do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated; end if;
+  if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon; end if;
 end $$;
-grant usage on schema auth, public to authenticated;
+grant usage on schema auth, public to authenticated, anon;
+grant execute on function auth.uid(), auth.jwt() to authenticated, anon;
 
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
+\i supabase/migrations/20261109_admin_and_redeem.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
+\i supabase/migrations/20261109_admin_and_redeem.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
-insert into auth.users values ('00000000-0000-0000-0000-00000000000a'), ('00000000-0000-0000-0000-00000000000b');
+insert into auth.users values ('00000000-0000-0000-0000-00000000000a', 'a@example.com'), ('00000000-0000-0000-0000-00000000000b', 'boss@example.com');
+-- B is the admin; seeded as the owner, the way the migration says to.
+insert into public.app_admins (email) values ('boss@example.com');
 
 set role authenticated;
 
@@ -87,6 +95,113 @@ begin
   select array_agg(kind || ':' || id order by server_updated_at) into ids
     from public.abot_records where server_updated_at > first_cursor;
   if ids <> array['media:squat-barbell'] then raise exception 'pull after cursor returned %', ids; end if;
+end $$;
+
+-- 20261109: remote config, redeem codes, entitlements.
+reset role;
+set role anon;
+set request.jwt.claim.sub = '';
+set request.jwt.claim.email = '';
+do $$
+declare g record;
+begin
+  if (select monetization_mode from public.app_remote_config) <> 'FOUNDERS_BETA' then raise exception 'anon cannot read the config'; end if;
+  begin
+    update public.app_remote_config set monetization_mode = 'COMMERCIAL_LIVE';
+    raise exception 'anon changed the config';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform count(*) from public.redeem_codes;
+    raise exception 'anon can list redeem codes';
+  exception when insufficient_privilege then null;
+  end;
+  select * into g from public.redeem_code('NOPE-NOPE');
+  if found then raise exception 'unknown code redeemed'; end if;
+end $$;
+
+reset role;
+set role authenticated;
+-- A, not an admin: cannot change the config or see codes, cannot grant.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+set request.jwt.claim.email = 'a@example.com';
+do $$ begin
+  update public.app_remote_config set monetization_mode = 'COMMERCIAL_LIVE';
+  if (select monetization_mode from public.app_remote_config) <> 'FOUNDERS_BETA' then raise exception 'non-admin changed the config'; end if;
+  if (select count(*) from public.redeem_codes) <> 0 then raise exception 'non-admin sees codes'; end if;
+  begin
+    insert into public.redeem_codes (code, grant_tier, duration_days) values ('ABOT-SELF-MADE', 'lifetime', null);
+    raise exception 'non-admin created a code';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.admin_grant('a@example.com', 'lifetime', null);
+    raise exception 'non-admin granted';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into public.user_entitlements (user_id, tier) values ('00000000-0000-0000-0000-00000000000a', 'lifetime');
+    raise exception 'user wrote their own tier';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- B, the admin: changes the config, makes codes, reads stats.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+set request.jwt.claim.email = 'boss@example.com';
+do $$
+declare s record;
+begin
+  update public.app_remote_config set monetization_mode = 'COMMERCIAL_LIVE', announcement_banner = 'v1.1 is out';
+  if (select monetization_mode from public.app_remote_config) <> 'COMMERCIAL_LIVE' then raise exception 'admin could not change the config'; end if;
+  insert into public.redeem_codes (code, grant_tier, duration_days, max_uses) values ('ABOT-PRO-TEST', 'pro', 30, 1);
+  insert into public.redeem_codes (code, grant_tier, duration_days, grants_founder_badge, max_uses) values ('ABOT-LIFE-TEST', 'lifetime', null, true, 5);
+  begin
+    insert into public.redeem_codes (code, grant_tier, duration_days) values ('ABOT-BAD', 'lifetime', 30);
+    raise exception 'lifetime with a duration accepted';
+  exception when check_violation then null;
+  end;
+  select * into s from public.admin_stats();
+  if s.total_users <> 2 or s.active_codes <> 2 then raise exception 'stats wrong: %', s; end if;
+end $$;
+
+-- A redeems: the grant lands in their row, a second try does not spend another use, a used-up
+-- code stops working.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+set request.jwt.claim.email = 'a@example.com';
+do $$
+declare g record;
+begin
+  select * into g from public.redeem_code(' abot-pro-test ');
+  if not found or g.grant_tier <> 'pro' or g.duration_days <> 30 then raise exception 'redeem failed: %', g; end if;
+  select * into g from public.redeem_code('ABOT-PRO-TEST');
+  if not found then raise exception 'same user redeeming again was refused'; end if;
+  if (select tier from public.user_entitlements) <> 'pro' then raise exception 'pro not granted'; end if;
+  select * into g from public.redeem_code('ABOT-LIFE-TEST');
+  if (select tier from public.user_entitlements) <> 'lifetime' or not (select is_founder from public.user_entitlements) then raise exception 'lifetime + founder not granted'; end if;
+end $$;
+
+reset role;
+set role anon;
+set request.jwt.claim.sub = '';
+set request.jwt.claim.email = '';
+do $$
+declare g record;
+begin
+  -- One use, taken by A: nobody else gets it.
+  select * into g from public.redeem_code('ABOT-PRO-TEST');
+  if found then raise exception 'used-up code redeemed again'; end if;
+end $$;
+
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+set request.jwt.claim.email = 'boss@example.com';
+do $$ begin
+  if (select current_uses from public.redeem_codes where code = 'ABOT-PRO-TEST') <> 1 then raise exception 'use count wrong'; end if;
+  if not public.admin_grant('boss@example.com', 'pro', 365) then raise exception 'admin_grant did not find the user'; end if;
+  if public.admin_grant('nobody@example.com', 'pro', 30) then raise exception 'admin_grant invented a user'; end if;
+  if (select tier from public.user_entitlements where user_id = '00000000-0000-0000-0000-00000000000b') <> 'pro' then raise exception 'manual grant missing'; end if;
 end $$;
 
 reset role;

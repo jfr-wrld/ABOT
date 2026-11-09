@@ -3,7 +3,9 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Check, Minus, X, Zap } from "lucide-react";
 import { useEntitlements, usePaywallStore, updateEntitlement, autoClaimFounder } from "@/store/useEntitlements";
-import { PLANS, PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, rupiah, startCheckout, type PlanId } from "@/lib/entitlements";
+import { PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, plansFor, rupiah, startCheckout, type PlanId } from "@/lib/entitlements";
+import { useRemoteConfig } from "@/lib/remote-config";
+import { useRedeemStore } from "./RedeemCodeModal";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 
@@ -12,6 +14,15 @@ import { useT } from "@/i18n";
  * says PRO is already open and lets the lifter simulate a plan; in commercial mode the button
  * goes to startCheckout(), which a payment provider plugs into.
  */
+/** What "Simulate activating this plan" writes: the plan's tier and term from now, simulator on Pro. */
+function simulatePlan(plan: PlanId) {
+  updateEntitlement({
+    tier: plan === "lifetime" ? "lifetime" : "pro",
+    proExpiresAt: plan === "lifetime" ? null : new Date(Date.now() + (plan === "annual" ? 365 : 30) * 86_400_000).toISOString(),
+    devOverrideMode: "FORCE_PRO",
+  });
+}
+
 export function AbotProModal() {
   const t = useT();
   const open = usePaywallStore((s) => s.open);
@@ -19,6 +30,10 @@ export function AbotProModal() {
   const close = usePaywallStore((s) => s.close);
   const { isBetaUnlocked, proActive, tier, isFounder, founderUnitCode } = useEntitlements();
   const [plan, setPlan] = useState<PlanId>("annual");
+  // Prices from Mission Control (remote config), the built-in ones until it answers.
+  const prices = useRemoteConfig((s) => s.config.prices);
+  const PLANS = plansFor(prices);
+  const showRedeem = useRedeemStore((s) => s.show);
   const [note, setNote] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -43,15 +58,11 @@ export function AbotProModal() {
 
   function simulate() {
     feedback.setComplete();
-    updateEntitlement({
-      tier: plan === "lifetime" ? "lifetime" : "pro",
-      proExpiresAt: plan === "lifetime" ? null : new Date(Date.now() + (plan === "annual" ? 365 : 30) * 86_400_000).toISOString(),
-      devOverrideMode: "FORCE_PRO",
-    });
+    simulatePlan(plan);
     setNote(t("Simulated: {plan} active on this device. Switch back in Settings, Founder pass.", { plan: t(PLANS.find((p) => p.id === plan)!.name) }));
   }
 
-  const saving = annualSaving();
+  const saving = annualSaving(PLANS);
 
   return (
     <dialog
@@ -224,6 +235,16 @@ export function AbotProModal() {
               {note}
             </p>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              done();
+              showRedeem();
+            }}
+            className="min-h-11 rounded-ctl border border-dashed border-[#ccff00]/50 font-mono text-xs font-bold uppercase tracking-[0.1em] text-[#ccff00] hover:bg-[#ccff00]/10"
+          >
+            {t("Redeem VIP / activation code")}
+          </button>
         </div>
       </div>
     </dialog>

@@ -131,7 +131,10 @@ in with Google, then import or sign in again after installing.
 
 - Your training is stored on your phone (IndexedDB) and works with no connection.
 - ABOT has no ads, no analytics and no paid API. The network is used only for exercise photos,
-  the optional full catalog download, and backup if you sign in.
+  the optional full catalog download, backup if you sign in, and, in builds with Supabase set
+  up, one small read of the public app settings row (`app_remote_config`: plan prices, the
+  announcement, algorithm calibration) at most every 6 hours. That read sends nothing about you.
+  Redeeming a code sends the code.
 - Signing in copies your data to your own Supabase project, where row level security lets each
   account read only its own rows. Signing out keeps everything on the phone.
 - Story photos are drawn into the PNG on the phone and are never uploaded.

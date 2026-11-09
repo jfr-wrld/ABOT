@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Download, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "lucide-react";
 import { useEntitlements } from "@/store/useEntitlements";
 import { ProBadge } from "@/components/paywall/ProBadge";
+import { tunables } from "@/lib/tunables";
 import { Button } from "@/components/ui/Button";
 import { formatDuration } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
@@ -548,9 +549,9 @@ const TABS: { id: Tab; label: string; icon: typeof Camera }[] = [
   { id: "pro", label: "Pro", icon: Gem },
 ];
 
-/** Layouts after the first two are part of ABOT // BLACK PRO. */
+/** Layouts after the free ones (two by default; Mission Control sets it) are ABOT // BLACK PRO. */
 function isProPreset(id: StoryPresetId): boolean {
-  return STORY_PRESETS.findIndex((p) => p.id === id) >= 2;
+  return STORY_PRESETS.findIndex((p) => p.id === id) >= tunables().story.freePresets;
 }
 
 /** One switch row in the Pro tab: label, its badge, and the switch. */

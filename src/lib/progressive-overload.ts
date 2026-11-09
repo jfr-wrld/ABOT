@@ -1,5 +1,6 @@
 import type { Exercise, MuscleGroup, WeightUnit, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { isWorkingSet, kgToLbs, lbsToKg, matchesVariant, setVolume, type VariantOptions } from "./calc";
+import { tunables } from "./tunables";
 
 /**
  * The Coach Pill: next session's target for one exercise, from its last three sessions.
@@ -54,8 +55,6 @@ export interface SessionSummary {
 }
 
 const LOWER: ReadonlySet<MuscleGroup> = new Set(["quads", "hamstrings", "glutes", "back", "lower_back"]);
-const REP_CEILING = 12;
-const REP_FLOOR = 8;
 
 const counted = (s: WorkoutSet) => isWorkingSet(s) && s.type !== "dropset";
 
@@ -78,7 +77,7 @@ export function summarize(session: WorkoutSession, exerciseId: string, ex?: Exer
 /** Every top set reached the reps of the best one, nothing failed, effort in hand. */
 function clean(s: SessionSummary): boolean {
   const target = Math.max(...s.topReps);
-  return !s.failed && s.topReps.every((r) => r >= target) && (s.avgRpe === null || s.avgRpe <= 8.5);
+  return !s.failed && s.topReps.every((r) => r >= target) && (s.avgRpe === null || s.avgRpe <= tunables().coach.cleanRpe);
 }
 
 /** The loadable step for this equipment, in kg. */
@@ -115,15 +114,16 @@ export function suggestOverload(
   if (!last) return null;
   const reps = Math.max(...last.topReps);
   const loaded = last.topKg > 0;
+  const coach = tunables().coach;
   const basedOn = history.length;
 
   // Fatigue first: a lifter grinding down should not be told to add weight.
   const falling = history.length >= 3 && history[0]!.volume < history[1]!.volume && history[1]!.volume < history[2]!.volume;
   const grinding =
-    history.length >= 2 && history.slice(0, 2).every((s) => s.avgRpe !== null && s.avgRpe >= 9.5 && !clean({ ...s, avgRpe: null }));
+    history.length >= 2 && history.slice(0, 2).every((s) => s.avgRpe !== null && s.avgRpe >= coach.grindRpe && !clean({ ...s, avgRpe: null }));
   const stuck = history.length >= 3 && history.every((s) => s.topKg === last.topKg) && !history.some(clean);
   if (loaded && (falling || grinding || stuck)) {
-    const weightKg = roundLoad(last.topKg * 0.9, ex, opts.unit, "down");
+    const weightKg = roundLoad(last.topKg * (1 - coach.deloadPct / 100), ex, opts.unit, "down");
     return {
       kind: "deload",
       weightKg,
@@ -152,17 +152,17 @@ export function suggestOverload(
     return { kind: "load", weightKg, reps, deltaKg: weightKg - last.topKg, deltaReps: 0, basedOn, why: WHY.clean };
   }
 
-  if (reps < REP_CEILING) {
-    const add = Math.min(easy ? 2 : 1, REP_CEILING - reps);
+  if (reps < coach.repCeiling) {
+    const add = Math.min(easy ? 2 : 1, coach.repCeiling - reps);
     return { kind: "reps", weightKg: last.topKg, reps: reps + add, deltaKg: 0, deltaReps: add, basedOn, why: WHY.clean };
   }
   const weightKg = roundLoad(last.topKg + step(ex, opts.unit, last.topKg), ex, opts.unit);
   return {
     kind: "load",
     weightKg,
-    reps: REP_FLOOR,
+    reps: coach.repFloor,
     deltaKg: weightKg - last.topKg,
-    deltaReps: REP_FLOOR - reps,
+    deltaReps: coach.repFloor - reps,
     basedOn,
     why: WHY.top,
   };

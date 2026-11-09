@@ -15,6 +15,7 @@ import { AbotWordmark } from "@/components/brand/AbotMark";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
+import { AnnouncementBanner } from "@/components/remote/AnnouncementBanner";
 import { REGIONS, type Region } from "@/components/anatomy/regions";
 import { Sheet } from "@/components/ui/Sheet";
 import { regionTelemetry, sleepFactor, type RegionTelemetry, type Sleep } from "@/lib/muscle-recovery";
@@ -73,6 +74,7 @@ export function HomeDashboard() {
             <Settings aria-hidden="true" size={22} />
           </Link>
         </div>
+        <AnnouncementBanner />
         <WeekStrip days={weekStrip(sessions, now, firstDayOfWeek)} />
       </header>
 

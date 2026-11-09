@@ -3,6 +3,7 @@
 import { useEntitlements } from "@/store/useEntitlements";
 import { SIMULATOR } from "@/lib/entitlements";
 import { feedback } from "@/lib/feedback";
+import { useRedeemStore } from "@/components/paywall/RedeemCodeModal";
 import { useT } from "@/i18n";
 
 /**
@@ -39,6 +40,13 @@ export function FounderPassCard() {
           <dd className={proActive ? "text-[#ccff00]" : "text-[#f59e0b]"}>{status}</dd>
         </div>
       </dl>
+      <button
+        type="button"
+        onClick={() => useRedeemStore.getState().show()}
+        className="mt-4 min-h-11 w-full rounded-ctl border border-dashed border-[#ccff00]/50 font-mono text-xs font-bold uppercase tracking-[0.12em] text-[#ccff00] hover:bg-[#ccff00]/10"
+      >
+        {t("Redeem VIP / activation code")}
+      </button>
       <button
         type="button"
         onClick={() => openPaywall()}

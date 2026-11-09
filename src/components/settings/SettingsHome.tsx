@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { SocialIcon } from "@/components/brand/SocialIcons";
 import { CONTACT_EMAIL, SOCIAL_LINKS, contactHref } from "@/lib/social";
-import { AppVersion, useAppVersion } from "./AppVersion";
+import { useAppVersion } from "./AppVersion";
 import { LANGUAGE_LABEL, SECTION_TITLE, THEME_LABEL, type SettingsSection } from "./labels";
 import { useT } from "@/i18n";
 import { FounderPassCard } from "./FounderPassCard";
+import { BuildTag } from "./BuildTag";
 
 export { SECTION_TITLE, type SettingsSection };
 
@@ -81,7 +82,7 @@ export function SettingsHome() {
       </Group>
 
       {signedIn && <SignOutButton />}
-      <AppVersion />
+      <BuildTag />
     </div>
   );
 }

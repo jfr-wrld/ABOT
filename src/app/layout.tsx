@@ -17,6 +17,7 @@ import { LangAttr } from "@/components/layout/LangAttr";
 import { LoadingStatus } from "@/components/ui/Loading";
 import { AudioUnlock } from "@/components/layout/AudioUnlock";
 import { EntitlementsProvider } from "@/components/paywall/EntitlementsProvider";
+import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeController />
         <LangAttr />
         <AudioUnlock />
+        <RemoteConfigLoader />
         <EntitlementsProvider />
         <MotionProvider>
           <StoreHydrator />
