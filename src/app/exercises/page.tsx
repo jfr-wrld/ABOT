@@ -160,7 +160,7 @@ function LibraryScreen() {
                         >
                           {/* The photo fills the card's width. */}
                           <span className="block aspect-square overflow-hidden rounded-lg [&>span]:!size-full [&>span]:!rounded-none [&>span]:!border-0">
-                            <ExerciseThumb exercise={e} size={72} />
+                            <ExerciseThumb exercise={e} size={44} />
                           </span>
                           <span className="line-clamp-2 px-0.5 text-sm font-semibold leading-snug">{e.name}</span>
                           <span className="mt-auto px-0.5 text-xs text-text-muted">

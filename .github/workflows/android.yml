@@ -48,3 +48,49 @@ jobs:
           name: abot-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+  # The APK on a real Android 14 emulator: intro and permissions screens, Android's permission
+  # dialogs, the Settings hand-off and the workout notification (scripts/android-smoke.mjs).
+  # Skipped on main, where the same commit already passed it on its branch.
+  smoke:
+    needs: apk
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: abot-debug-apk
+          path: apk
+
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the smoke checks on an Android 14 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: node scripts/android-smoke.mjs apk/app-debug.apk smoke-out
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-smoke-screens
+          path: smoke-out
+          if-no-files-found: ignore

@@ -547,7 +547,7 @@ function RecentCard({
               {[0, 1, 2, 3].map((i) =>
                 ids[i] ? (
                   <div key={i} className="flex aspect-square items-center justify-center overflow-hidden bg-surface-2 [&>span]:!size-full [&>span]:!rounded-none [&>span]:!border-0">
-                    <ExerciseThumb exercise={byId[ids[i]]} size={64} />
+                    <ExerciseThumb exercise={byId[ids[i]]} size={36} />
                   </div>
                 ) : (
                   <div key={i} className="aspect-square bg-surface-2" />
