@@ -34,6 +34,7 @@ import {
 import type { Exercise, WorkoutSession } from "@/types/workout";
 import { historyPath } from "@/lib/routes";
 import { useT } from "@/i18n";
+import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-xl border border-line bg-surface p-3";
@@ -460,20 +461,25 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
   const recent = useMemo(() => [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 10), [sessions]);
   const prs = useMemo(() => prCounts(recent, sessions, byId), [recent, sessions, byId]);
 
+  const [view, setView] = useViewMode("recent");
+
   return (
     <section aria-labelledby="recent-heading" className="flex flex-col gap-2">
-      <h2 id="recent-heading" className="label-caps">
-        {t("Recent workouts")}
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="recent-heading" className="label-caps">
+          {t("Recent workouts")}
+        </h2>
+        {recent.length > 0 && <ViewToggle value={view} onChange={setView} />}
+      </div>
       {recent.length === 0 ? (
         <div className={`${TILE} flex flex-col items-center gap-2 py-6 text-center`}>
           <Dumbbell aria-hidden="true" size={22} className="text-text-muted" />
           <p className="text-sm text-text-muted">{t("No workouts yet.")}</p>
         </div>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col gap-2"}>
           {recent.map((s, i) => (
-            <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} />
+            <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} grid={view === "grid"} />
           ))}
         </ul>
       )}
@@ -488,6 +494,7 @@ function RecentCard({
   byId,
   now,
   order,
+  grid,
 }: {
   session: WorkoutSession;
   pr: number;
@@ -495,10 +502,70 @@ function RecentCard({
   byId: Record<string, Exercise>;
   now: number;
   order: number;
+  grid: boolean;
 }) {
   const t = useT();
   const controls = useEntrance();
   const { completed } = countSets(s);
+  const stats = (
+    <p className="num flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-zinc-400">
+      <span className="inline-flex items-center gap-1 whitespace-nowrap">
+        <Timer aria-hidden="true" size={12} />
+        {formatDuration(sessionDurationSec(s))}
+      </span>
+      <span className="inline-flex items-center gap-1 whitespace-nowrap">
+        <Dumbbell aria-hidden="true" size={12} />
+        {formatVolume(sessionVolume(s, byId), unit)}
+      </span>
+      <span className="inline-flex items-center gap-1 whitespace-nowrap">
+        <Layers aria-hidden="true" size={12} />
+        {completed}
+        <span className="sr-only"> {completed === 1 ? t("set") : t("sets")}</span>
+      </span>
+    </p>
+  );
+  const prChip = pr > 0 && (
+    <span className="num inline-flex shrink-0 items-center gap-1 rounded-full border border-pr/40 px-1.5 py-px text-[11px] font-semibold text-pr">
+      <Trophy aria-hidden="true" size={11} />
+      {pr} PR
+    </span>
+  );
+  const when = (
+    <time dateTime={new Date(s.startedAt).toISOString()} className="num shrink-0 text-xs text-text-muted">
+      {relativeDay(s.startedAt, now, t)}
+    </time>
+  );
+
+  if (grid) {
+    const ids = s.exercises.map((e) => e.exerciseId).filter((id) => byId[id]);
+    return (
+      <motion.li style={{ opacity: 0, y: 8 }} animate={controls} variants={{ still: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0, transition: { ...SPRING, delay: 0.35 + Math.min(order, 6) * 0.05 } } }}>
+        <motion.div whileTap={{ scale: 0.97 }} transition={PRESS_SPRING} className="h-full">
+          <Link href={historyPath(s.id)} className={`${TILE} flex h-full flex-col gap-2 transition-colors hover:border-line-hover`}>
+            {/* Up to four of its exercises, as a 2 x 2 photo mosaic. */}
+            <div aria-hidden="true" className="grid grid-cols-2 gap-1 overflow-hidden rounded-lg">
+              {[0, 1, 2, 3].map((i) =>
+                ids[i] ? (
+                  <div key={i} className="flex aspect-square items-center justify-center overflow-hidden bg-surface-2 [&>span]:!size-full [&>span]:!rounded-none [&>span]:!border-0">
+                    <ExerciseThumb exercise={byId[ids[i]]} size={64} />
+                  </div>
+                ) : (
+                  <div key={i} className="aspect-square bg-surface-2" />
+                ),
+              )}
+            </div>
+            <span className="line-clamp-2 text-sm font-semibold leading-snug">{s.name}</span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              {when}
+              {prChip}
+            </div>
+            <div className="mt-auto">{stats}</div>
+          </Link>
+        </motion.div>
+      </motion.li>
+    );
+  }
+
   return (
     <motion.li
       style={{ opacity: 0, x: -10 }}
@@ -511,35 +578,15 @@ function RecentCard({
       <motion.div whileTap={{ scale: 0.98 }} transition={PRESS_SPRING}>
         <Link href={historyPath(s.id)} className={`${TILE} flex items-center gap-3 transition-colors hover:border-line-hover`}>
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <span className="truncate text-base font-semibold">{s.name}</span>
-              {pr > 0 && (
-                <span className="num inline-flex shrink-0 items-center gap-1 rounded-full border border-pr/40 px-1.5 py-px text-[11px] font-semibold text-pr">
-                  <Trophy aria-hidden="true" size={11} />
-                  {pr} PR
-                </span>
-              )}
-              <time dateTime={new Date(s.startedAt).toISOString()} className="num ml-auto shrink-0 text-xs text-text-muted">
-                {relativeDay(s.startedAt, now, t)}
-              </time>
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="min-w-0 truncate text-base font-semibold">{s.name}</span>
+              {prChip}
+              <span className="ml-auto">{when}</span>
             </div>
-            <div className="flex items-center justify-between gap-2">
+            {/* Photos and figures share a row while they fit; the figures wrap below on narrow cards. */}
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <ThumbRow exerciseIds={s.exercises.map((e) => e.exerciseId)} byId={byId} size={30} />
-              <p className="num flex shrink-0 items-center gap-2.5 text-xs text-zinc-400">
-                <span className="inline-flex items-center gap-1">
-                  <Timer aria-hidden="true" size={12} />
-                  {formatDuration(sessionDurationSec(s))}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Dumbbell aria-hidden="true" size={12} />
-                  {formatVolume(sessionVolume(s, byId), unit)}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Layers aria-hidden="true" size={12} />
-                  {completed}
-                  <span className="sr-only"> {completed === 1 ? t("set") : t("sets")}</span>
-                </span>
-              </p>
+              {stats}
             </div>
           </div>
           <ChevronRight aria-hidden="true" size={16} className="shrink-0 text-text-muted" />

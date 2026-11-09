@@ -24,6 +24,7 @@ export function NativeShell() {
 
   useEffect(() => {
     if (!isNativeApp()) return;
+    document.documentElement.classList.add("native-app");
     const cleanups: (() => void)[] = [];
     let cancelled = false;
     const keep = (fn: () => void) => (cancelled ? fn() : cleanups.push(fn));

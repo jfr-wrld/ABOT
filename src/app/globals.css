@@ -163,6 +163,15 @@
     margin: 0;
   }
 
+  /* The Android app scrolls like a native app: no scroll bars drawn by the WebView. */
+  .native-app,
+  .native-app * {
+    scrollbar-width: none;
+  }
+  .native-app ::-webkit-scrollbar {
+    display: none;
+  }
+
   dialog::backdrop {
     background: rgb(0 0 0 / 0.6);
   }

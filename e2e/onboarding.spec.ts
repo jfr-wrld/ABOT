@@ -75,3 +75,21 @@ test("switching tabs lands on each page", async ({ page }) => {
   await nav.getByRole("link", { name: "Home" }).click();
   await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
 });
+
+for (const [w, h] of [
+  [360, 640],
+  [390, 844],
+]) {
+  test(`the intro and the permissions step fit a ${w}x${h} screen without scrolling`, async ({ page }) => {
+    await page.setViewportSize({ width: w, height: h });
+    await freshStart(page, { intro: true });
+    await page.waitForURL("**/onboarding");
+    await expect(page.getByRole("heading", { name: "Log a set in one tap" })).toBeVisible();
+    const fits = () => page.evaluate(() => document.scrollingElement!.scrollHeight <= window.innerHeight);
+    expect(await fits()).toBe(true);
+    await page.goto("/permissions");
+    await expect(page.getByRole("heading", { name: "Allow access" })).toBeVisible();
+    expect(await fits()).toBe(true);
+    await expect(page.getByRole("button", { name: "Allow all" })).toBeInViewport();
+  });
+}

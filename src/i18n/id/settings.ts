@@ -407,4 +407,9 @@ export const settings: Record<string, string> = {
   "This browser cannot draw photos.": "Browser ini tidak bisa menggambar foto.",
   "Could not download the catalog. Check your connection and try again.": "Katalog gagal diunduh. Cek koneksimu lalu coba lagi.",
   "The catalog file was not in the expected format.": "Format file katalog tidak sesuai.",
+  // Recovering a denied permission
+  "Android will not ask again. Turn it on in Android settings.": "Android tidak akan bertanya lagi. Nyalakan di pengaturan Android.",
+  "Notifications are off for ABOT, so the rest alarm and the workout status cannot show.":
+    "Notifikasi ABOT mati, jadi alarm istirahat dan status latihan tidak bisa muncul.",
+  "Turn on in Android settings": "Nyalakan di pengaturan Android",
 };

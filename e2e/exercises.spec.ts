@@ -77,3 +77,15 @@ test("the exercise page shows the muscle and equipment with their icons", async 
   await expect(header.getByText("Barbell", { exact: true })).toBeVisible();
   await expect(header.locator("svg g[fill='var(--color-accent)']").first()).toBeAttached();
 });
+
+test("the library switches between list and grid and remembers it", async ({ page }) => {
+  await page.goto("/exercises");
+  const grid = page.getByRole("button", { name: "Grid view" });
+  await expect(page.getByRole("button", { name: "List view" })).toHaveAttribute("aria-pressed", "true");
+  await grid.click();
+  await expect(grid).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("link", { name: /Bench Press \(Barbell\)/ }).first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Grid view" })).toHaveAttribute("aria-pressed", "true");
+});

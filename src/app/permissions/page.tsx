@@ -29,10 +29,10 @@ function PermissionsStep() {
   }
 
   return (
-    <main className="flex min-h-[100dvh] flex-1 flex-col px-5 pb-[calc(16px+env(safe-area-inset-bottom))] pt-8">
+    <main className="fixed inset-0 z-30 flex h-dvh flex-col overflow-hidden overscroll-none bg-bg px-5 pb-[calc(16px+env(safe-area-inset-bottom))] pt-[calc(32px+env(safe-area-inset-top))]">
       <h1 className="text-2xl font-bold tracking-tight">{t("Allow access")}</h1>
       <p className="mt-1 text-sm text-text-muted">{t("Each one turns on a feature. Change them any time in Settings.")}</p>
-      <div className="mt-6">
+      <div className="mt-6 min-h-0 flex-1 overflow-y-auto">
         <AppPermissionsList perms={perms} />
       </div>
       <div className="mt-auto flex flex-col gap-2 pt-6">

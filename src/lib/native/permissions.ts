@@ -16,6 +16,7 @@ interface AppPermissionsPlugin {
   checkPermissions(): Promise<Record<AccessKind, NativeState>>;
   requestPermissions(opts: { permissions: AccessKind[] }): Promise<Record<AccessKind, NativeState>>;
   openAppSettings(): Promise<void>;
+  openNotificationSettings(): Promise<void>;
 }
 
 const AppPermissions = registerPlugin<AppPermissionsPlugin>("AppPermissions");
@@ -51,6 +52,11 @@ export async function requestAccess(kind: AccessKind): Promise<Access> {
 /** ABOT's page in Android settings, for an access the lifter turned down for good. */
 export function openAppSettings(): Promise<void> {
   return AppPermissions.openAppSettings();
+}
+
+/** ABOT's notification page in Android settings. */
+export function openNotificationSettings(): Promise<void> {
+  return AppPermissions.openNotificationSettings();
 }
 
 export interface Fix {

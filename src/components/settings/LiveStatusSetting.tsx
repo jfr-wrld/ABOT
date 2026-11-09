@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { useReminderStore } from "@/store/useReminderStore";
 import { liveStatusEnabled, setLiveStatusEnabled } from "@/lib/notifications/useLiveWorkoutNotification";
 import { isNativeApp } from "@/lib/native/files";
 import { exactAlarmsAllowed, openExactAlarmSettings, testRestAlert } from "@/lib/native/notify";
+import { openNotificationSettings } from "@/lib/native/permissions";
+import { useAppResumed } from "@/lib/native/useAppResumed";
 import { Button } from "@/components/ui/Button";
 import { useT } from "@/i18n";
 
@@ -23,16 +25,26 @@ export function LiveStatusSetting() {
   const app = isNativeApp();
   // Android 12+ can deliver alarms late unless exact alarms are allowed for ABOT.
   const [exact, setExact] = useState(true);
-  useEffect(() => {
-    if (!app || !on) return;
-    const check = () => void exactAlarmsAllowed().then(setExact);
-    check();
-    // Coming back from Android settings re-checks.
-    document.addEventListener("visibilitychange", check);
-    return () => document.removeEventListener("visibilitychange", check);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const checkExact = useCallback(() => {
+    if (app && on) void exactAlarmsAllowed().then(setExact);
   }, [app, on]);
+  useEffect(checkExact, [checkExact]);
+  // Coming back from Android settings re-checks exact alarms and notification access.
+  useAppResumed(checkExact);
+
+  async function openSettings() {
+    setSettingsError(null);
+    try {
+      await openNotificationSettings();
+    } catch (err) {
+      setSettingsError(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   async function toggle() {
+    // Android will no longer ask: the switch leads to ABOT's notification settings instead.
+    if (app && blocked) return openSettings();
     if (on) {
       setLiveStatusEnabled(false);
       setEnabled(false);
@@ -71,7 +83,7 @@ export function LiveStatusSetting() {
           type="button"
           role="switch"
           aria-checked={on}
-          disabled={unsupported || blocked}
+          disabled={unsupported || (blocked && !app)}
           onClick={() => void toggle()}
           className={`relative h-8 w-14 shrink-0 rounded-full border transition-colors disabled:opacity-40 ${
             on ? "border-accent bg-accent" : "border-line-strong bg-surface-2"
@@ -84,6 +96,19 @@ export function LiveStatusSetting() {
           <span className="sr-only">{on ? t("On") : t("Off")}</span>
         </button>
       </div>
+      {app && blocked && (
+        <div className="mt-2 rounded-ctl border border-line bg-surface-2 p-3">
+          <p className="text-xs text-text-muted">{t("Notifications are off for ABOT, so the rest alarm and the workout status cannot show.")}</p>
+          <Button onClick={() => void openSettings()} className="mt-2 w-full">
+            {t("Turn on in Android settings")}
+          </Button>
+          {settingsError && (
+            <p role="alert" className="mt-2 text-xs text-failure">
+              {settingsError}
+            </p>
+          )}
+        </div>
+      )}
       {app && on && (
         <div className="mt-2 flex items-center justify-between gap-3">
           <p role="status" className="text-xs text-text-muted">
