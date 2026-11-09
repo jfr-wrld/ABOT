@@ -1,5 +1,6 @@
 import { FAQ, LANGUAGE_LABEL, SECTION_TITLE, THEME_LABEL } from "@/components/settings/labels";
 import { SPLITS } from "@/lib/seed-routines";
+import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
 
 /**
  * English texts that reach t() through a variable (labels kept in constants and maps), so the
@@ -68,4 +69,8 @@ export const DYNAMIC_KEYS: string[] = [
   "This browser cannot draw photos.",
   "Could not download the catalog. Check your connection and try again.",
   "The catalog file was not in the expected format.",
+  // Plate calculator: bar presets and plate colour names
+  ...PLATE_SETS.kg.bars.map((b) => b.label),
+  "Gym bar",
+  ...PLATE_COLORS.map((c) => c.name),
 ];

@@ -48,6 +48,17 @@ Data & backup, FAQ, About. Contact is a mail link with the app version in the su
 rows read "Soon" until `src/lib/social.ts` has their links. Sign out sits at the bottom, behind a
 confirm, and keeps every workout on the phone.
 
+## Plate calculator
+
+"Plates" on a barbell (or Smith machine) exercise card opens it, starting from the next set
+waiting to be done. `src/lib/plate-calculator.ts` loads each sleeve greedily from the heaviest
+plate, in integer grams, and reports what the plates cannot make. Bars: 20 / 15 / 10 / 0 kg
+(45 / 35 / 25 / 0 lb). Plates take IWF-inspired colours (25 Crimson `#ef4444`, 20 Cyber Blue
+`#3b82f6`, 15 Amber `#eab308`, 10 Green `#22c55e`, 5 Titanium `#e4e4e7`, 2.5 Carbon `#18181b`
+with a Volt edge, 1.25 Chrome `#71717a`). The sleeve drawing stays dark in both themes, like a
+product shot. With a gym on the workout, the bar and plates are that gym's and changes save to
+it; otherwise they are remembered on the device. Figures are tabular (`num`).
+
 ## Where the accent lands
 
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the

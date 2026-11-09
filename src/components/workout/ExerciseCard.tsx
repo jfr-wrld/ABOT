@@ -27,6 +27,8 @@ import { Button } from "@/components/ui/Button";
 import { formatClock } from "@/lib/calc";
 import { useT, type T } from "@/i18n";
 import { muscleText } from "@/lib/home";
+import { PlateCalculatorModal } from "./PlateCalculatorModal";
+import { fromDisplay, toDisplay } from "@/lib/units";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -60,10 +62,20 @@ export function ExerciseCard({
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [reorderOpen, setReorderOpen] = useState(false);
   const [supersetOpen, setSupersetOpen] = useState(false);
+  const [platesOpen, setPlatesOpen] = useState(false);
   const ssColor = superset ? SUPERSET_COLORS[superset.color] : undefined;
   const locationId = useWorkoutStore((s) => s.active?.locationId);
 
   const numbers = setNumbers(item.sets);
+  // Plate calculator: barbells only, starting from the next set waiting to be done.
+  const loadsPlates = exercise?.equipment === "barbell" || exercise?.equipment === "smith_machine";
+  const nextIndex = item.sets.findIndex((x) => !x.completed);
+  const nextSet = nextIndex >= 0 ? item.sets[nextIndex] : undefined;
+  const plateTarget =
+    nextSet?.weightKg ??
+    (nextIndex >= 0 ? previous?.[nextIndex]?.weightKg : null) ??
+    [...item.sets].reverse().find((x) => x.weightKg !== null)?.weightKg ??
+    null;
 
   const name = exercise?.name ?? t("Unknown exercise");
   const subtitle = exercise
@@ -131,7 +143,30 @@ export function ExerciseCard({
         <span>
           {t("Rest")} <span className="num">{item.restSeconds === 0 ? t("off") : formatClock(item.restSeconds)}</span>
         </span>
+        {loadsPlates && (
+          <button
+            type="button"
+            onClick={() => setPlatesOpen(true)}
+            aria-haspopup="dialog"
+            aria-label={t("Plate calculator for {name}", { name })}
+            className="-mr-1 ml-auto flex min-h-11 items-center gap-1.5 rounded-ctl px-2 font-semibold text-text-muted hover:bg-surface-2 hover:text-text"
+          >
+            <PlateIcon />
+            {t("Plates")}
+          </button>
+        )}
       </div>
+      {loadsPlates && (
+        <PlateCalculatorModal
+          open={platesOpen}
+          onClose={() => setPlatesOpen(false)}
+          unit={unit}
+          locationId={locationId}
+          initialTarget={plateTarget === null ? null : toDisplay(plateTarget, unit)}
+          onUse={nextSet ? (w) => store.updateSet(item.id, nextSet.id, { weightKg: fromDisplay(w, unit) }) : undefined}
+          setNumber={nextIndex >= 0 ? (numbers[nextIndex] ?? null) : null}
+        />
+      )}
 
       <div
         className="label-caps mt-3 grid gap-1 px-[5px]"
@@ -314,4 +349,15 @@ function weightColumnLabel(exercise: Exercise | undefined, unit: WeightUnit, t: 
   if (exercise?.loadMode === "per_hand") return t("{unit}/hand", { unit });
   if (exercise?.loadMode === "unilateral") return t("{unit}/side", { unit });
   return unit;
+}
+
+/** A weight plate seen face on: the calculator's icon. */
+function PlateIcon() {
+  return (
+    <svg aria-hidden="true" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M12 3v2.5M12 18.5V21" strokeLinecap="round" />
+    </svg>
+  );
 }
