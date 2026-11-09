@@ -30,7 +30,7 @@ The Server Key only lives in Supabase secrets. It is never in the app, this repo
 
 You need the Supabase CLI logged in and linked to the project (`supabase link --project-ref <ref>`).
 
-1. **Database:** apply `supabase/migrations/20261111_midtrans_payments.sql`, using the SQL editor or `supabase db push`.
+1. **Database:** apply `supabase/migrations/20261111_midtrans_payments.sql`, then `20261112_payment_test_tools.sql`, using the SQL editor or `supabase db push`.
 2. **Secrets.** Use the Sandbox Server Key from Midtrans Dashboard → Settings → Access Keys (it starts with `SB-Mid-server-`). Replace `<site>` with the web app's domain.
 
    ```bash
@@ -61,6 +61,12 @@ You need the Supabase CLI logged in and linked to the project (`supabase link --
    - a refund in the dashboard sets the order to `refunded` and the next sync removes PRO from the phone.
 
 ## Sandbox test checklist
+
+**Without paying anything:** press Buy on the paywall, signed in, so a pending order exists. Then open Mission Control → Monetization → **Test payments (Sandbox)**. Each order there has **Success**, **Fail**, **Expire** and **Refund** buttons. They run the same grant and revoke a real Midtrans notification does. Go back to ABOT, or reopen it, to see the result.
+
+The buttons work only for admins, and only while `payments_sandbox` is true.
+
+The table below is the full test through Midtrans itself.
 
 Run these signed in with Google, on the web first, then in the APK.
 
@@ -95,6 +101,7 @@ select u.email, e.tier, e.pro_expires_at, e.is_founder, e.source from public.use
 
 ## Going live
 
+1. Turn the test buttons off: run `update public.app_remote_config set payments_sandbox = false;`.
 1. Production Server Key: run `supabase secrets set MIDTRANS_SERVER_KEY=Mid-server-xxxx MIDTRANS_IS_PRODUCTION=true`.
 2. Set the same Notification and Redirect URLs in the **Production** dashboard.
 3. Redeploy both functions so they pick up the new secrets.

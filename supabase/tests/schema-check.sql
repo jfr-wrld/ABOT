@@ -26,12 +26,14 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261109_admin_and_redeem.sql
 \i supabase/migrations/20261110_lock_down_grants.sql
 \i supabase/migrations/20261111_midtrans_payments.sql
+\i supabase/migrations/20261112_payment_test_tools.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
 \i supabase/migrations/20261109_admin_and_redeem.sql
 \i supabase/migrations/20261110_lock_down_grants.sql
 \i supabase/migrations/20261111_midtrans_payments.sql
+\i supabase/migrations/20261112_payment_test_tools.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
 insert into auth.users values
@@ -300,6 +302,42 @@ do $$ begin
   begin
     update public.payment_orders set status = 'paid';
     raise exception 'client updated an order';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- Test tools: only an admin, only in sandbox.
+reset role;
+set role service_role;
+insert into public.payment_orders (order_id, user_id, plan, amount_idr) values
+  ('ABOT-ANNUAL-SIM-444', '00000000-0000-0000-0000-00000000000c', 'annual', 199000);
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+set request.jwt.claim.email = 'a@example.com';
+do $$ begin
+  begin
+    perform public.admin_simulate_payment('ABOT-ANNUAL-SIM-444', 'paid');
+    raise exception 'non-admin simulated a payment';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+set request.jwt.claim.email = 'boss@example.com';
+do $$ begin
+  if not public.admin_simulate_payment('ABOT-ANNUAL-SIM-444', 'paid') then raise exception 'simulated payment not granted'; end if;
+  if (select tier from public.user_entitlements where user_id = '00000000-0000-0000-0000-00000000000c') <> 'pro' then raise exception 'simulated payment gave no pro'; end if;
+  if (select count(*) from public.payment_events where order_id = 'ABOT-ANNUAL-SIM-444') <> 1 then raise exception 'simulated payment not logged'; end if;
+  if not public.admin_simulate_payment('ABOT-ANNUAL-SIM-444', 'refunded') then raise exception 'simulated refund not applied'; end if;
+  if (select tier from public.user_entitlements where user_id = '00000000-0000-0000-0000-00000000000c') <> 'free' then raise exception 'simulated refund left pro'; end if;
+end $$;
+reset role;
+update public.app_remote_config set payments_sandbox = false;
+set role authenticated;
+do $$ begin
+  begin
+    perform public.admin_simulate_payment('ABOT-ANNUAL-SIM-444', 'paid');
+    raise exception 'simulated a payment outside the sandbox';
   exception when insufficient_privilege then null;
   end;
 end $$;

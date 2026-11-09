@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import { useRemoteConfig, type RemoteConfig } from "@/lib/remote-config";
-import { createCode, grantByEmail, saveConfig, setCodeActive, type AdminCode, type AdminMode } from "@/lib/admin-api";
+import { createCode, grantByEmail, listOrders, saveConfig, setCodeActive, simulateOrder, type AdminCode, type AdminMode, type AdminOrder, type SimulatedOutcome } from "@/lib/admin-api";
 import { generateCode, type Grant } from "@/lib/redeem-service";
 import { DEFAULT_ENTITLEMENT, SIMULATOR, annualSaving, plansFor, resolveEntitlement, rupiah, type Tier } from "@/lib/entitlements";
 import { updateEntitlement } from "@/store/useEntitlements";
@@ -120,7 +120,118 @@ export function MonetizationModule({ mode }: { mode: AdminMode }) {
         </button>
         {note && <Note tone={note.error ? "error" : "ok"}>{note.text}</Note>}
       </Panel>
+      <PaymentTestPanel mode={mode} />
     </>
+  );
+}
+
+const OUTCOMES: { outcome: SimulatedOutcome; label: string }[] = [
+  { outcome: "paid", label: "Success" },
+  { outcome: "failed", label: "Fail" },
+  { outcome: "expired", label: "Expire" },
+  { outcome: "refunded", label: "Refund" },
+];
+
+/**
+ * Sandbox test buttons: settle, fail, expire or refund an order without paying in the Midtrans
+ * simulator. Runs the same grant and revoke as a real notification. Refused by the server once
+ * payments_sandbox is off (going live) or for anyone who is not an admin.
+ */
+function PaymentTestPanel({ mode }: { mode: AdminMode }) {
+  const [orders, setOrders] = useState<AdminOrder[] | null>(null);
+  const [note, setNote] = useState<{ text: string; error?: boolean } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const server = mode.kind === "server" && mode.admin;
+
+  const load = useCallback(async () => {
+    if (!server) return;
+    try {
+      setOrders(await listOrders());
+    } catch (e) {
+      setNote({ text: errText(e), error: true });
+    }
+  }, [server]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(id);
+  }, [load]);
+
+  async function run(o: AdminOrder, outcome: SimulatedOutcome) {
+    setBusy(`${o.orderId}:${outcome}`);
+    setNote(null);
+    try {
+      const changed = await simulateOrder(o.orderId, outcome);
+      feedback.tick();
+      setNote(
+        changed
+          ? { text: `${o.orderId}: ${outcome}. The buyer's phone shows it when ABOT is opened or resumed.` }
+          : { text: `${o.orderId} is ${o.status}; ${outcome} does not apply to it.`, error: true },
+      );
+      await load();
+    } catch (e) {
+      setNote({ text: errText(e), error: true });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <Panel
+      id="m-paytest"
+      title="Test payments (Sandbox)"
+      scope="global"
+      wide
+      actions={
+        server ? (
+          <button type="button" onClick={() => void load()} className={cls.ghost}>
+            Reload
+          </button>
+        ) : undefined
+      }
+    >
+      {!server ? (
+        <Note tone="error">Needs Supabase and an admin account: sign in with the admin Google account.</Note>
+      ) : orders === null ? (
+        <p className="text-sm text-zinc-400">Loading orders...</p>
+      ) : orders.length === 0 ? (
+        <p className="text-sm text-zinc-400">No orders yet. Press Buy on the paywall (signed in), then come back here.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {orders.map((o) => (
+            <li key={o.orderId} className="flex flex-col gap-2 rounded-ctl border border-[#27272a] p-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <span className="break-all font-mono text-xs text-white">{o.orderId}</span>
+                <span className={`font-mono text-[11px] font-bold uppercase ${o.status === "paid" ? "text-[#ccff00]" : o.status === "pending" ? "text-[#f59e0b]" : "text-zinc-400"}`}>
+                  {o.status}
+                </span>
+              </div>
+              <p className="font-mono text-[11px] tabular-nums text-zinc-400">
+                {o.plan} · {rupiah(o.amountIdr)} · {new Date(o.createdAt).toLocaleString()}
+                {o.paymentType ? ` · ${o.paymentType}` : ""}
+              </p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {OUTCOMES.map(({ outcome, label }) => (
+                  <button
+                    key={outcome}
+                    type="button"
+                    disabled={busy !== null}
+                    onClick={() => void run(o, outcome)}
+                    className={outcome === "paid" ? cls.volt : outcome === "refunded" ? cls.danger : cls.ghost}
+                  >
+                    {busy === `${o.orderId}:${outcome}` ? "..." : label}
+                  </button>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {note && <Note tone={note.error ? "error" : "ok"}>{note.text}</Note>}
+      <p className="text-xs text-zinc-500">
+        Works only while payments_sandbox is on in the database. When going live run: update public.app_remote_config set payments_sandbox = false;
+      </p>
+    </Panel>
   );
 }
 

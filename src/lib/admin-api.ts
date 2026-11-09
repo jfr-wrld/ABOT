@@ -129,3 +129,44 @@ export async function grantByEmail(email: string, tier: "pro" | "lifetime", days
   fail(error);
   return data === true;
 }
+
+/* --------------------------------------------------------------- payments */
+
+export interface AdminOrder {
+  orderId: string;
+  plan: string;
+  amountIdr: number;
+  status: string;
+  paymentType: string | null;
+  createdAt: string;
+}
+
+/** The latest Midtrans orders (admins read every row through RLS). */
+export async function listOrders(): Promise<AdminOrder[]> {
+  const { data, error } = await (await getSupabase())
+    .from("payment_orders")
+    .select("order_id, plan, amount_idr, status, payment_type, created_at")
+    .order("created_at", { ascending: false })
+    .limit(15);
+  fail(error);
+  return (data ?? []).map((r: Record<string, unknown>) => ({
+    orderId: String(r.order_id),
+    plan: String(r.plan),
+    amountIdr: Number(r.amount_idr),
+    status: String(r.status),
+    paymentType: (r.payment_type as string | null) ?? null,
+    createdAt: String(r.created_at),
+  }));
+}
+
+export type SimulatedOutcome = "paid" | "failed" | "expired" | "refunded";
+
+/**
+ * Settles, fails, expires or refunds an order as if Midtrans had said so (admin_simulate_payment).
+ * Works only while payments_sandbox is on. False: the order was already in a state that ignores it.
+ */
+export async function simulateOrder(orderId: string, outcome: SimulatedOutcome): Promise<boolean> {
+  const { data, error } = await (await getSupabase()).rpc("admin_simulate_payment", { p_order_id: orderId, p_outcome: outcome });
+  fail(error);
+  return data === true;
+}
