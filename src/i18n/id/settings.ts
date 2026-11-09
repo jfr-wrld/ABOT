@@ -87,8 +87,17 @@ export const settings: Record<string, string> = {
   // Notifications and schedule
   "Status outside the app": "Status di luar aplikasi",
   "status outside the app": "status di luar aplikasi",
-  "While a workout runs and you leave ABOT, a notification shows the workout and your next set, and rings when rest is over.":
-    "Saat latihan berjalan dan kamu keluar dari ABOT, notifikasi menampilkan latihan dan set berikutnya, lalu berbunyi saat istirahat selesai.",
+  "While a workout runs, the status bar shows the rest countdown or the workout time, even with ABOT closed or the screen locked. Pull it down to add 30 seconds, skip rest or log the next set. It rings when rest is over.":
+    "Saat latihan berjalan, status bar menampilkan hitung mundur istirahat atau waktu latihan, meski ABOT ditutup atau layar terkunci. Tarik ke bawah untuk menambah 30 detik, melewati istirahat, atau mencatat set berikutnya. Berbunyi saat istirahat selesai.",
+  "Live timer in the status bar": "Timer langsung di status bar",
+  "live timer": "timer langsung",
+  "Show the timer": "Tampilkan timer",
+  "Rest only hides it between rests; it comes back for each rest countdown.": "Hanya istirahat menyembunyikannya di antara istirahat; muncul lagi di setiap hitung mundur istirahat.",
+  "Rest and workout": "Istirahat dan latihan",
+  "Rest only": "Hanya istirahat",
+  "Second line": "Baris kedua",
+  "Next set": "Set berikutnya",
+  "Total volume": "Volume total",
   "While a workout runs and you leave ABOT, a notification shows the workout, when rest ends and your next set. Phones only give the Dynamic Island and live updates to installed native apps, so this is a notification.":
     "Saat latihan berjalan dan kamu keluar dari ABOT, notifikasi menampilkan latihan, kapan istirahat selesai, dan set berikutnya. HP hanya memberi Dynamic Island dan live update ke aplikasi native yang terpasang, jadi ini berupa notifikasi.",
   "Notifications are off for ABOT; turn them on in Android settings.":

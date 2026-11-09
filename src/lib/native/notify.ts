@@ -91,20 +91,21 @@ export async function setupNativeNotifications(open: (url: string) => void): Pro
 /* Live workout                                                        */
 /* ------------------------------------------------------------------ */
 
-export type LiveAction = "pause" | "resume" | "skip";
+export type LiveAction = "pause" | "resume" | "skip" | "add30" | "log";
 
 interface LiveWorkoutPlugin {
   show(opts: NativeLive): Promise<void>;
   clear(): Promise<void>;
   testAlert(): Promise<{ shown: boolean }>;
-  takePendingAction(): Promise<{ id?: LiveAction }>;
+  takePendingActions(): Promise<{ ids?: LiveAction[] }>;
   addListener(event: "action", fn: (e: { id: LiveAction }) => void): Promise<{ remove: () => Promise<void> }>;
 }
 
 /**
  * App-local plugin (android/app/src/main/java/app/abot/gym/LiveWorkoutPlugin.java): the ongoing
- * workout notification with a clock Android ticks itself, its Pause / Resume / Skip rest buttons,
- * and the ringing "rest over" alarm, all of which work while the app is frozen.
+ * workout notification with a clock Android ticks itself, its buttons (+30s, Skip rest, Log set,
+ * Pause, Resume), and the ringing "rest over" alarm, all of which work while the app is frozen.
+ * WorkoutLiveService holds the notification as a foreground service.
  */
 const LiveWorkout = registerPlugin<LiveWorkoutPlugin>("LiveWorkout");
 
@@ -127,8 +128,8 @@ export async function testRestAlert(): Promise<boolean> {
  */
 export async function onLiveAction(handle: (id: LiveAction) => void): Promise<() => void> {
   const h = await LiveWorkout.addListener("action", ({ id }) => handle(id));
-  const { id } = await LiveWorkout.takePendingAction();
-  if (id) handle(id);
+  const { ids = [] } = await LiveWorkout.takePendingActions();
+  for (const id of ids) handle(id);
   return () => void h.remove();
 }
 

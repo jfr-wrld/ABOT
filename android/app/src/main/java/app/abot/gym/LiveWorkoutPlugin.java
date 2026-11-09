@@ -16,6 +16,7 @@ import android.media.RingtoneManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -27,6 +28,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
  * the next lift, the workout name, and a clock Android ticks itself (rest counting down, or the
  * workout time). Pause / Resume and Skip rest work from the notification even while ABOT is
  * frozen: LiveWorkoutReceiver updates the notification at once and hands the tap to the app.
+ * WorkoutLiveService holds it as a foreground service so battery savers leave it alone.
  * The end of a rest is an alarm owned here, so it swaps the notification to "rest over" whether
  * or not the app is running, and rings unless ABOT is on screen (the page beeps then) or Rest
  * alert is off. On Android 16 the notification asks to be a
@@ -72,13 +74,26 @@ public class LiveWorkoutPlugin extends Plugin {
         Long restEndsAt = call.getLong("restEndsAt");
         s.restEndsAt = restEndsAt != null && !s.paused ? restEndsAt : 0;
         s.restTitle = call.getString("restTitle", s.title);
+        s.restText = call.getString("restText", s.text);
         s.overTitle = call.getString("overTitle", s.title);
         s.overText = call.getString("overText", s.text);
         s.ring = call.getBoolean("ring", true);
+        s.restOnly = call.getBoolean("restOnly", false);
+        s.canLog = call.getBoolean("canLog", false);
+        s.logRestSec = call.getInt("logRestSec", 0);
+        s.loggedTitle = call.getString("loggedTitle", s.title);
+        s.loggedText = call.getString("loggedText", s.text);
+        s.addLabel = call.getString("addLabel", "+30s");
+        s.skipLabel = call.getString("skipLabel", "Skip rest");
+        s.logLabel = call.getString("logLabel", "Log set");
+        s.pauseLabel = call.getString("pauseLabel", "Pause");
+        s.resumeLabel = call.getString("resumeLabel", "Resume");
         s.save(ctx);
         cancelAlarm(ctx);
         if (s.restEndsAt > System.currentTimeMillis()) scheduleAlarm(ctx, s.restEndsAt);
         render(ctx, s);
+        // Started here, while the app is in front: Android 12+ refuses it from the background.
+        if (!s.hidden(System.currentTimeMillis())) WorkoutLiveService.ensure(ctx);
         call.resolve();
     }
 
@@ -86,6 +101,7 @@ public class LiveWorkoutPlugin extends Plugin {
     public void clear(PluginCall call) {
         Context ctx = getContext();
         cancelAlarm(ctx);
+        WorkoutLiveService.stop(ctx);
         ctx.getSystemService(NotificationManager.class).cancel(NOTIFICATION_ID);
         prefs(ctx).edit().clear().apply();
         call.resolve();
@@ -100,14 +116,16 @@ public class LiveWorkoutPlugin extends Plugin {
         call.resolve(ret);
     }
 
-    /** A button tapped while the app was not running, so the app can catch up. */
+    /** Buttons tapped while the app was not running, oldest first, so the app can catch up. */
     @PluginMethod
-    public void takePendingAction(PluginCall call) {
+    public void takePendingActions(PluginCall call) {
         SharedPreferences p = prefs(getContext());
-        String id = p.getString(PENDING, null);
+        String ids = p.getString(PENDING, "");
         p.edit().remove(PENDING).apply();
+        JSArray list = new JSArray();
+        for (String id : ids.split(",")) if (!id.isEmpty()) list.put(id);
         JSObject ret = new JSObject();
-        if (id != null) ret.put("id", id);
+        ret.put("ids", list);
         call.resolve(ret);
     }
 
@@ -119,7 +137,10 @@ public class LiveWorkoutPlugin extends Plugin {
             data.put("id", id);
             p.notifyListeners("action", data, true);
         } else {
-            prefs(ctx).edit().putString(PENDING, id).apply();
+            // Kept in order: two "+30s" taps must add a minute, not thirty seconds.
+            SharedPreferences sp = prefs(ctx);
+            String before = sp.getString(PENDING, "");
+            sp.edit().putString(PENDING, before.isEmpty() ? id : before + "," + id).apply();
         }
     }
 
@@ -164,14 +185,35 @@ public class LiveWorkoutPlugin extends Plugin {
         return Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(ctx, channel) : new Notification.Builder(ctx);
     }
 
-    /** Posts or replaces the ongoing notification for the state. */
+    /**
+     * Posts or replaces the ongoing notification for the state. In rest-only mode with no rest
+     * running it takes the notification down instead, service included.
+     */
     static void render(Context ctx, LiveState s) {
         if (!canNotify(ctx)) return;
+        if (s.hidden(System.currentTimeMillis())) {
+            WorkoutLiveService.stop(ctx);
+            ctx.getSystemService(NotificationManager.class).cancel(NOTIFICATION_ID);
+            return;
+        }
+        ctx.getSystemService(NotificationManager.class).notify(NOTIFICATION_ID, build(ctx, s));
+    }
+
+    /** ABOT's Volt; Android darkens it where it would not read on a light shade. */
+    static final int ACCENT = 0xFFCCFF00;
+
+    /**
+     * The ongoing notification: a clock Android ticks itself, counting the rest down to zero or the
+     * workout up from its start, so the status bar chip stays live while ABOT is frozen.
+     * Buttons: while resting +30s, Skip rest and Log set; otherwise Log set and Pause; paused, Resume.
+     */
+    static Notification build(Context ctx, LiveState s) {
         ensureChannels(ctx);
         long now = System.currentTimeMillis();
-        boolean resting = !s.paused && s.restEndsAt > now;
+        boolean resting = s.resting(now);
         Notification.Builder b = builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_abot)
+            .setColor(ACCENT)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(Notification.CATEGORY_STOPWATCH)
@@ -179,23 +221,27 @@ public class LiveWorkoutPlugin extends Plugin {
             .setContentIntent(openApp(ctx));
         if (s.paused) {
             b.setContentTitle(s.pausedTitle).setContentText(s.text + " · " + clock(s.pausedElapsed)).setShowWhen(false);
-            b.addAction(button(ctx, "resume", "Resume", 1));
+            b.addAction(button(ctx, "resume", s.resumeLabel, 1));
         } else {
             b.setContentTitle(resting ? s.restTitle : s.title)
-                .setContentText(s.text)
+                .setContentText(resting ? s.restText : s.text)
                 .setShowWhen(true)
                 .setUsesChronometer(true)
                 .setWhen(resting ? s.restEndsAt : s.clockStart);
             if (Build.VERSION.SDK_INT >= 24) b.setChronometerCountDown(resting);
-            b.addAction(button(ctx, "pause", "Pause", 2));
-            if (resting) b.addAction(button(ctx, "skip", "Skip rest", 3));
+            if (resting) {
+                b.addAction(button(ctx, "add30", s.addLabel, 4));
+                b.addAction(button(ctx, "skip", s.skipLabel, 3));
+            }
+            if (s.canLog) b.addAction(button(ctx, "log", s.logLabel, 5));
+            if (!resting) b.addAction(button(ctx, "pause", s.pauseLabel, 2));
         }
         // Android 16 Live Update (a clock chip on the status bar). This is the extra that
         // Builder#setRequestPromotedOngoing sets; that setter is newer than compileSdk 36.
         Bundle promoted = new Bundle();
         promoted.putBoolean("android.requestPromotedOngoing", true);
         b.addExtras(promoted);
-        ctx.getSystemService(NotificationManager.class).notify(NOTIFICATION_ID, b.build());
+        return b.build();
     }
 
     /** The sound-and-buzz alert for the end of a rest. Returns false without permission. */
@@ -204,6 +250,7 @@ public class LiveWorkoutPlugin extends Plugin {
         ensureChannels(ctx);
         Notification.Builder b = builder(ctx, ALERT_CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_abot)
+            .setColor(ACCENT)
             .setContentTitle(title)
             .setContentText(text)
             .setAutoCancel(true)

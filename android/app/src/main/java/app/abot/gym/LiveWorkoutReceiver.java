@@ -48,6 +48,24 @@ public class LiveWorkoutReceiver extends BroadcastReceiver {
                 s.restEndsAt = 0;
                 LiveWorkoutPlugin.cancelAlarm(ctx);
                 break;
+            case "add30":
+                if (!s.resting(now)) return;
+                s.restEndsAt += 30_000;
+                LiveWorkoutPlugin.scheduleAlarm(ctx, s.restEndsAt);
+                break;
+            case "log":
+                if (!s.canLog || s.paused) return;
+                // The app works out the next set; until it does, the button is gone so one tap
+                // cannot log two sets, and the rest that follows starts here.
+                s.canLog = false;
+                s.title = s.loggedTitle;
+                s.text = s.loggedText;
+                s.restTitle = s.loggedTitle;
+                s.restText = s.loggedText;
+                LiveWorkoutPlugin.cancelAlarm(ctx);
+                s.restEndsAt = s.logRestSec > 0 ? now + s.logRestSec * 1000L : 0;
+                if (s.restEndsAt > 0) LiveWorkoutPlugin.scheduleAlarm(ctx, s.restEndsAt);
+                break;
             default:
                 return;
         }

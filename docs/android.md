@@ -46,10 +46,14 @@ installs over the old one and keeps the workouts. That key is for side-loaded te
 - `src/lib/native/files.ts`: share sheet (`@capacitor/share`) and saving files through the
   app's own `FileSaver` plugin (`android/app/src/main/java/app/abot/gym/FileSaverPlugin.java`):
   PNGs to Pictures/ABOT, backups and the calendar file to Download/ABOT.
-- `LiveWorkoutPlugin.java` (app-local): the workout in progress as an ongoing notification
-  while ABOT is in the background, with a clock Android ticks itself (rest countdown, then the
-  workout clock). On Android 16 it is a Live Update, a chip in the status bar. Shown on the
-  app's pause event: the WebView keeps reporting "visible" in the background.
+- `LiveWorkoutPlugin.java` (app-local): the workout in progress as an ongoing notification,
+  with a clock Android ticks itself (rest countdown, then the workout clock) and buttons
+  (+30s, Skip rest, Log set, Pause, Resume) handled by `LiveWorkoutReceiver.java` while ABOT
+  is frozen, then replayed in the app (`applyCapsuleAction`, `src/lib/live-capsule.ts`, which
+  also builds the text). On Android 16 it is a Live Update, a chip in the status bar.
+  `WorkoutLiveService.java` holds it as a foreground service (`specialUse`; a Play release
+  must explain it in the Play Console declaration). The service starts only from the app in
+  front, as Android 12+ requires; if that is refused, the plain notification stays.
 - `src/lib/native/notify.ts`: the rest-over alarm and the weekly reminders, scheduled with Android (`@capacitor/local-notifications`) so they arrive while
   ABOT is frozen or closed. Android 12+ may deliver alarms late unless exact alarms are
   allowed; Settings offers the switch.

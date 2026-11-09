@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { isNativeApp } from "@/lib/native/files";
 import { onLiveAction, setupNativeNotifications } from "@/lib/native/notify";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { applyCapsuleAction } from "@/lib/live-capsule";
+import { useExerciseStore } from "@/store/useExerciseStore";
+import { buildExerciseIndex } from "@/lib/sets";
 import { syncPermission } from "@/store/useReminderStore";
 import { hasSeenOnboarding } from "@/lib/onboarding";
 import { withPermissionsStep } from "@/lib/native/permissions-step";
@@ -19,6 +22,12 @@ import { startApp } from "@/store/appSession";
  * - Google sign-in coming back through the app.abot.gym://auth deep link, also when Android
  *   started ABOT fresh for it.
  */
+/** Every exercise, read when a notification button needs a name or a previous set. */
+const exerciseIndex = () => {
+  const { custom, catalog } = useExerciseStore.getState();
+  return buildExerciseIndex(custom, catalog);
+};
+
 export function NativeShell() {
   const router = useRouter();
 
@@ -54,13 +63,8 @@ export function NativeShell() {
     void setupNativeNotifications((url) => router.push(url))
       .then(keep)
       .catch(() => {});
-    // Pause / Resume / Skip rest tapped on the workout notification.
-    void onLiveAction((id) => {
-      const w = useWorkoutStore.getState();
-      if (id === "pause") w.pauseActive();
-      else if (id === "resume") w.resumeActive();
-      else w.skipRest();
-    })
+    // +30s, Skip rest, Log set, Pause and Resume tapped on the workout notification.
+    void onLiveAction((id) => applyCapsuleAction(id, useWorkoutStore.getState(), exerciseIndex().byId))
       .then(keep)
       .catch(() => {});
     // Installs from before the permissions step see it once, on top of where they are.

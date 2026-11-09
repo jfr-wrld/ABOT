@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
-import { LIVE_TAG, liveContent, nativeLiveContent } from "./live-workout";
+import { LIVE_TAG, liveContent } from "./live-workout";
+import { capsuleContent, useCapsulePrefs } from "@/lib/live-capsule";
 import { notificationPermission, registerReminderWorker } from "./reminder-service";
 import { useReminderStore } from "@/store/useReminderStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -51,6 +52,9 @@ export function useLiveWorkoutNotification(): void {
   const { byId } = useAllExercises();
   const permission = useReminderStore((s) => s.permission);
   const ring = useSettingsStore((s) => s.restTimerAlert);
+  const unit = useSettingsStore((s) => s.weightUnit);
+  const sessions = useWorkoutStore((s) => s.sessions);
+  const { mode, detail } = useCapsulePrefs();
   const latest = useRef({ active, timer, byId });
   useEffect(() => {
     latest.current = { active, timer, byId };
@@ -64,9 +68,12 @@ export function useLiveWorkoutNotification(): void {
       void clearNativeLive().catch(() => {});
       return;
     }
-    const t = setTimeout(() => void showNativeLive({ ...nativeLiveContent(active, byId, timer, Date.now()), ring }).catch(() => {}), 300);
+    const t = setTimeout(
+      () => void showNativeLive(capsuleContent({ session: active, sessions, byId, rest: timer, now: Date.now(), unit, mode, detail, ring })).catch(() => {}),
+      300,
+    );
     return () => clearTimeout(t);
-  }, [active, timer, byId, permission, ring]);
+  }, [active, timer, byId, permission, ring, sessions, unit, mode, detail]);
 
   // Browser only.
   useEffect(() => {
