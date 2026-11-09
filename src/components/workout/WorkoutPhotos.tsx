@@ -154,7 +154,7 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
           {t("The photos on this workout could not be read.")}
         </p>
       ) : (
-        <ul className="mt-2 grid grid-cols-3 gap-2" aria-busy={status === "loading"}>
+        <ul className="mt-2 grid grid-cols-4 gap-1.5 sm:grid-cols-6" aria-busy={status === "loading"}>
           {status === "loading" && <li aria-hidden="true" className="aspect-square rounded-ctl bg-surface-2" />}
           {photos.map((p, i) => (
             <li key={p.id}>
@@ -176,10 +176,10 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
                 onClick={startAdd}
                 disabled={busy}
                 aria-busy={busy}
-                className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-ctl border border-dashed border-ink/25 text-xs font-semibold text-text-muted hover:border-accent hover:text-text disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex aspect-square w-full flex-col items-center justify-center gap-0.5 rounded-ctl border border-dashed border-ink/25 text-xs font-semibold text-text-muted hover:border-accent hover:text-text disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <Camera aria-hidden="true" size={20} />
-                {busy ? t("Adding...") : t("Add photo")}
+                <Camera aria-hidden="true" size={18} />
+                <span className="text-[11px] leading-tight">{busy ? t("Adding...") : t("Add photo")}</span>
               </button>
             </li>
           )}
@@ -191,7 +191,7 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
           {t(state.error)}
         </p>
       )}
-      <p className="mt-2 text-xs text-text-muted">{t("Photos stay on this phone. They are not in backups or sync.")}</p>
+      <p className="mt-1.5 text-[11px] text-text-muted">{t("Photos stay on this phone and go into backup files. They are not synced.")}</p>
 
       <input
         ref={input}

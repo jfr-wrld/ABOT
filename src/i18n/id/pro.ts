@@ -29,14 +29,15 @@ export const pro: Record<string, string> = {
   "Simulated: {plan} active on this device. Switch back in Settings, Founder pass.":
     "Simulasi: {plan} aktif di perangkat ini. Kembalikan di Pengaturan, Founder pass.",
   "No founder unit": "Belum ada unit founder",
-  Activated: "Aktif sejak",
+  "Since {date}": "Sejak {date}",
   "Monetization simulator": "Simulator monetisasi",
   // Plan & billing (BillingSection)
   "Plan & billing": "Paket & tagihan",
   Active: "Aktif",
   "Beta access": "Akses beta",
   "PRO locked": "PRO terkunci",
-  "Upgrade to Black Pro": "Upgrade ke Black Pro",
+  "Get Black Pro": "Ambil Black Pro",
+  "Redeem code": "Tukar kode",
   "Manage plan": "Kelola paket",
   "View plan details": "Lihat detail paket",
   Expires: "Berakhir",

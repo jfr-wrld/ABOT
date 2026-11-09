@@ -41,7 +41,7 @@ export function BillingSection() {
   const simulator = e.devOverrideMode !== "AUTO" && e.devOverrideMode !== "FORCE_BETA" ? SIMULATOR.find((m) => m.mode === e.devOverrideMode) : undefined;
 
   const badge = { pro: t("Active"), lifetime: t("Active"), beta: t("Beta access"), core: t("PRO locked") }[s.plan];
-  const primary = { core: t("Upgrade to Black Pro"), beta: t("Upgrade to Black Pro"), pro: t("Manage plan"), lifetime: t("View plan details") }[s.plan];
+  const primary = { core: t("Get Black Pro"), beta: t("Get Black Pro"), pro: t("Manage plan"), lifetime: t("View plan details") }[s.plan];
   const note =
     s.plan === "beta"
       ? t("Every PRO feature is open while the founders beta runs.")
@@ -52,45 +52,47 @@ export function BillingSection() {
           : null;
 
   return (
-    <section aria-labelledby="billing-heading" className="force-dark rounded-card border border-white/10 bg-[#121215] p-4 text-text">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="billing-heading" className="label-caps text-zinc-400">
-          {t("Plan & billing")}
-        </h2>
-        <span className={`shrink-0 rounded-[4px] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${BADGE[s.plan]}`}>{badge}</span>
+    <section aria-labelledby="billing-heading" className="force-dark rounded-card border border-white/10 bg-[#121215] px-4 py-3 text-text">
+      {/* Plan name and status on one row; the dates, a note and the actions under it. */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 id="billing-heading" className="label-caps text-zinc-400">
+            {t("Plan & billing")}
+          </h2>
+          <p className="text-xl font-black leading-tight tracking-tight text-white">{PLAN_NAME[s.plan]}</p>
+        </div>
+        <span className={`mt-0.5 shrink-0 rounded-[4px] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${BADGE[s.plan]}`}>{badge}</span>
       </div>
 
-      <p className="mt-2 text-2xl font-black tracking-tight text-white">{PLAN_NAME[s.plan]}</p>
-
       {s.plan === "pro" && (
-        <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-white/10 pt-3">
-          <div>
-            <dt className="text-xs text-zinc-400">{t("Expires")}</dt>
-            <dd className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-white">{s.expiresAt ? date(s.expiresAt) : t("No end date")}</dd>
+        <dl className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs">
+          <div className="flex gap-1.5">
+            <dt className="text-zinc-400">{t("Expires")}</dt>
+            <dd className="font-mono font-semibold tabular-nums text-white">{s.expiresAt ? date(s.expiresAt) : t("No end date")}</dd>
           </div>
           {s.daysLeft !== null && (
-            <div>
-              <dt className="text-xs text-zinc-400">{t("Days left")}</dt>
-              <dd className={`mt-0.5 font-mono text-sm font-semibold tabular-nums ${s.daysLeft <= ENDS_SOON_DAYS ? "text-[#f59e0b]" : "text-[#ccff00]"}`}>{s.daysLeft}</dd>
+            <div className="flex gap-1.5">
+              <dt className="text-zinc-400">{t("Days left")}</dt>
+              <dd className={`font-mono font-semibold tabular-nums ${s.daysLeft <= ENDS_SOON_DAYS ? "text-[#f59e0b]" : "text-[#ccff00]"}`}>{s.daysLeft}</dd>
             </div>
           )}
         </dl>
       )}
       {s.plan === "lifetime" && (
-        <dl className="mt-3 border-t border-white/10 pt-3">
-          <dt className="text-xs text-zinc-400">{t("Expires")}</dt>
-          <dd className="mt-0.5 text-sm font-semibold text-white">{t("Does not expire")}</dd>
+        <dl className="mt-1.5 flex gap-1.5 text-xs">
+          <dt className="text-zinc-400">{t("Expires")}</dt>
+          <dd className="font-semibold text-white">{t("Does not expire")}</dd>
         </dl>
       )}
-      {note && <p className="mt-3 text-sm text-zinc-300">{note}</p>}
-      {simulator && <p className="mt-1 text-xs text-zinc-400">{t("Simulator on: {mode}", { mode: t(simulator.label) })}</p>}
+      {note && <p className="mt-1.5 text-xs text-zinc-300">{note}</p>}
+      {simulator && <p className="mt-0.5 text-xs text-zinc-400">{t("Simulator on: {mode}", { mode: t(simulator.label) })}</p>}
 
-      <div className="mt-4 flex flex-col gap-2">
-        <Button variant="primary" className="w-full" onClick={() => e.openPaywall()}>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Button variant="primary" className="px-2 leading-tight" onClick={() => e.openPaywall()}>
           {primary}
         </Button>
-        <Button className="w-full" onClick={() => useRedeemStore.getState().show()}>
-          {t("Redeem VIP / activation code")}
+        <Button className="px-2 leading-tight" onClick={() => useRedeemStore.getState().show()}>
+          {t("Redeem code")}
         </Button>
         {isCloudSyncConfigured() && <RestoreFromAccount />}
       </div>
@@ -113,7 +115,7 @@ function RestoreFromAccount() {
     return (
       <Link
         href="/login?from=/settings"
-        className="flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/[0.05] hover:text-white active:bg-white/[0.08]"
+        className="col-span-2 flex min-h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-zinc-300 transition-colors hover:bg-white/[0.05] hover:text-white active:bg-white/[0.08]"
       >
         {t("Sign in to restore from your account")}
       </Link>
@@ -143,15 +145,16 @@ function RestoreFromAccount() {
 
   return (
     <>
-      <Button variant="ghost" className="w-full text-zinc-300" onClick={() => void restore()} disabled={busy} aria-busy={busy}>
+      <Button variant="ghost" className="col-span-2 w-full text-zinc-300" onClick={() => void restore()} disabled={busy} aria-busy={busy}>
         {busy ? t("Checking your account...") : t("Restore from account")}
       </Button>
+      {/* The live region stays in the page, empty, so a result is announced when it arrives. */}
       {result === "error" ? (
-        <p role="alert" className="text-center text-xs text-[#f87171]">
+        <p role="alert" className="col-span-2 text-center text-xs text-[#f87171]">
           {message.error}
         </p>
       ) : (
-        <p role="status" className="min-h-4 text-center text-xs text-zinc-300">
+        <p role="status" className={`col-span-2 text-center text-xs text-zinc-300 ${result ? "" : "sr-only"}`}>
           {result ? message[result] : ""}
         </p>
       )}

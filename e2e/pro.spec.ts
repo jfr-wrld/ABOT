@@ -26,7 +26,7 @@ test("every beta install gets a founder unit, and the paywall shows plans and th
   await expect(page.getByRole("region", { name: /FOUNDER UNIT/ }).getByRole("heading")).toHaveText(code);
   await expectNoHorizontalOverflow(page);
 
-  await plan.getByRole("button", { name: "Upgrade to Black Pro" }).click();
+  await plan.getByRole("button", { name: "Get Black Pro" }).click();
   const pay = page.getByRole("dialog", { name: "Precision engineered for serious lifters." });
   await expect(pay).toBeVisible();
   await expect(pay.getByRole("table")).toContainText("Auto-overload coach");

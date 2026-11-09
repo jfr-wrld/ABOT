@@ -10,7 +10,7 @@ import { useLocationStore } from "@/store/useLocationStore";
 import { buildStoryData, type StoryData } from "@/lib/story-data";
 // Bundled with the page rather than loaded on tap, so the studio still opens with no signal
 // right after a workout.
-import { StoryCardStudio } from "./StoryCardStudio";
+import { StoryCardStudio, type StudioPhoto } from "./StoryCardStudio";
 import { useT } from "@/i18n";
 
 /**
@@ -22,13 +22,13 @@ export function StoryShareButton({
   variant = "secondary",
   className = "",
   label,
-  photo,
+  photos,
 }: {
   makeData: () => StoryData;
   variant?: "primary" | "secondary";
   className?: string;
   label?: string;
-  photo?: Blob;
+  photos?: StudioPhoto[];
 }) {
   const [data, setData] = useState<StoryData | null>(null);
   const t = useT();
@@ -37,7 +37,7 @@ export function StoryShareButton({
       <Button variant={variant} onClick={() => setData(makeData())} className={className}>
         {label ?? t("Share to IG Story")} <span aria-hidden="true">↗</span>
       </Button>
-      {data && <StoryCardStudio open onClose={() => setData(null)} data={data} photo={photo} />}
+      {data && <StoryCardStudio open onClose={() => setData(null)} data={data} photos={photos} />}
     </>
   );
 }
@@ -48,14 +48,14 @@ export function ShareStoryButton({
   variant,
   className,
   label,
-  photo,
+  photos,
 }: {
   session: WorkoutSession;
   variant?: "primary" | "secondary";
   className?: string;
   label?: string;
-  /** The workout's first photo, used as the studio's starting background. */
-  photo?: Blob;
+  /** The workout's photos, offered as story backgrounds. */
+  photos?: StudioPhoto[];
 }) {
   const sessions = useWorkoutStore((s) => s.sessions);
   const { weightUnit } = useSettingsStore();
@@ -66,7 +66,7 @@ export function ShareStoryButton({
       variant={variant}
       className={className}
       label={label}
-      photo={photo}
+      photos={photos}
       makeData={() => buildStoryData(session, sessions, byId, weightUnit, locations)}
     />
   );

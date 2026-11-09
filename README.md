@@ -134,10 +134,12 @@ in with Google, then import or sign in again after installing.
   the optional full catalog download, backup if you sign in, and, in builds with Supabase set
   up, one small read of the public app settings row (`app_remote_config`: plan prices, the
   announcement, algorithm calibration) at most every 6 hours. That read sends nothing about you.
-  Redeeming a code sends the code.
+  Redeeming a code sends the code. "Find gyms near me" sends your position, once per tap, to
+  OpenStreetMap's public Overpass service to list the gyms around you (no key, no account).
 - Signing in copies your data to your own Supabase project, where row level security lets each
   account read only its own rows. Signing out keeps everything on the phone.
-- Story photos are drawn into the PNG on the phone and are never uploaded.
+- Story photos are drawn into the PNG on the phone and are never uploaded. Workout photos stay on
+  the phone and go into backup files only if you include them; they are never synced.
 
 ## Build from source
 

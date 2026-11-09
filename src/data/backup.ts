@@ -3,7 +3,8 @@ import type { GymLocation } from "@/types/workout";
 import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry } from "@/types/workout";
 import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./normalize";
 import type { Repository, RepoSnapshot, StoredSettings } from "./repo";
-import { mergeLog } from "./repo/types";
+import { mergeLog, type WorkoutPhoto } from "./repo/types";
+import { WORKOUT_PHOTO_MAX_BYTES } from "@/lib/photo";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
 
@@ -12,10 +13,29 @@ export interface AbotBackup {
   schemaVersion: 1;
   exportedAt: string;
   data: RepoSnapshot;
+  /**
+   * Workout photos as JPEG data URLs. Optional, so a backup made without them (or by an older
+   * ABOT) still reads, and an older ABOT reading this file simply skips them.
+   */
+  photos?: BackupPhoto[];
 }
+
+export interface BackupPhoto {
+  id: string;
+  sessionId: string;
+  createdAt: number;
+  width: number;
+  height: number;
+  /** data:image/jpeg;base64,... */
+  data: string;
+}
+
+/** Photos per workout, the same limit as the app (components/workout/WorkoutPhotos). */
+const PHOTOS_PER_WORKOUT = 6;
 
 export interface BackupCounts {
   sessions: number;
+  photos: number;
   routines: number;
   exercises: number;
   locations: number;
@@ -30,6 +50,29 @@ export async function exportBackup(repo: Repository, now = new Date()): Promise<
 /** The app exports what it holds in memory, which includes changes that could not be saved yet. */
 export function backupFromSnapshot(data: RepoSnapshot, now = new Date()): AbotBackup {
   return { app: "ABOT", schemaVersion: 1, exportedAt: now.toISOString(), data };
+}
+
+function toBase64(bytes: Uint8Array): string {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+/** The device's workout photos, ready to go into a backup file. */
+export async function photosForBackup(rows: WorkoutPhoto[]): Promise<BackupPhoto[]> {
+  const out: BackupPhoto[] = [];
+  for (const r of rows) {
+    const bytes = new Uint8Array(await r.blob.arrayBuffer());
+    out.push({ id: r.id, sessionId: r.sessionId, createdAt: r.createdAt, width: r.width, height: r.height, data: `data:image/jpeg;base64,${toBase64(bytes)}` });
+  }
+  return out;
+}
+
+function photoFromBackup(p: BackupPhoto): WorkoutPhoto {
+  const bin = atob(p.data.slice(p.data.indexOf(",") + 1));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return { id: p.id, sessionId: p.sessionId, createdAt: p.createdAt, width: p.width, height: p.height, blob: new Blob([bytes], { type: "image/jpeg" }) };
 }
 
 export function backupFileName(now = new Date()): string {
@@ -138,6 +181,22 @@ function normalizeExerciseMedia(raw: unknown): RepoSnapshot["exerciseMedia"] {
   return out;
 }
 
+const JPEG = /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/;
+// Base64 is 4/3 the size of the bytes; a little room for photos kept by an earlier limit.
+const PHOTO_DATA_MAX = Math.ceil((WORKOUT_PHOTO_MAX_BYTES * 4) / 3) + 64_000;
+
+function normalizeBackupPhoto(raw: unknown): BackupPhoto | null {
+  if (!isObj(raw)) return null;
+  const { id, sessionId, createdAt, width, height, data } = raw;
+  if (typeof id !== "string" || !id || typeof sessionId !== "string" || !sessionId) return null;
+  if (typeof data !== "string" || data.length > PHOTO_DATA_MAX || !JPEG.test(data)) return null;
+  const dim = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 && v <= 10_000 ? v : null);
+  const w = dim(width);
+  const h = dim(height);
+  if (w === null || h === null) return null;
+  return { id, sessionId, createdAt: typeof createdAt === "number" && Number.isFinite(createdAt) ? createdAt : 0, width: w, height: h, data };
+}
+
 function cleanList<T>(raw: unknown, fn: (x: unknown) => T | null): { rows: T[]; dropped: number } {
   const input = Array.isArray(raw) ? raw : [];
   const rows = input.map(fn).filter((x): x is T => x !== null);
@@ -163,6 +222,12 @@ export function parseBackup(
   const exercises = cleanList(data.exercises, normalizeStoredExercise);
   const locations = cleanList(data.locations, normalizeLocation);
   const active = data.activeWorkout ? normalizeSession(data.activeWorkout) : null;
+  // Only photos of workouts in the file: a photo without its workout has nowhere to show.
+  const ids = new Set(sessions.rows.map((x) => x.id));
+  const photos = Array.isArray(raw.photos) ? cleanList(raw.photos, (p) => {
+    const ok = normalizeBackupPhoto(p);
+    return ok && ids.has(ok.sessionId) ? ok : null;
+  }) : null;
   const backup: AbotBackup = {
     app: "ABOT",
     schemaVersion: 1,
@@ -177,6 +242,7 @@ export function parseBackup(
       exerciseMedia: normalizeExerciseMedia(data.exerciseMedia),
       bodyweightLog: normalizeBodyweightLog(data.bodyweightLog),
     },
+    ...(photos ? { photos: photos.rows } : {}),
   };
   return {
     ok: true,
@@ -186,7 +252,8 @@ export function parseBackup(
       routines: routines.rows.length,
       exercises: exercises.rows.length,
       locations: locations.rows.length,
-      dropped: sessions.dropped + routines.dropped + exercises.dropped + locations.dropped,
+      photos: photos?.rows.length ?? 0,
+      dropped: sessions.dropped + routines.dropped + exercises.dropped + locations.dropped + (photos?.dropped ?? 0),
     },
   };
 }
@@ -196,12 +263,34 @@ export function parseBackup(
  * removed; the current settings and in-progress workout are kept. Gyms keep the device's own
  * default; the file's default is used only when the device has none. One transaction.
  * replace: the device ends up exactly as the file, in-progress workout included.
+ * Photos: replace keeps exactly the file's photos when it has any field for them, else the
+ * device's photos of workouts that are still there; merge adds the file's photos that are new,
+ * up to 6 per workout. Photos are written after the rest, outside its transaction.
  */
 export async function importBackup(repo: Repository, backup: AbotBackup, mode: "replace" | "merge"): Promise<void> {
   if (mode === "replace") {
     await repo.replaceAll(backup.data);
+    if (backup.photos) {
+      await repo.photos.clear();
+      for (const p of backup.photos) await repo.photos.add(photoFromBackup(p));
+    }
     return;
   }
+  await mergeData(repo, backup);
+  if (!backup.photos?.length) return;
+  const have = await repo.photos.all();
+  const known = new Set(have.map((p) => p.id));
+  const perSession = new Map<string, number>();
+  for (const p of have) perSession.set(p.sessionId, (perSession.get(p.sessionId) ?? 0) + 1);
+  for (const p of backup.photos) {
+    const n = perSession.get(p.sessionId) ?? 0;
+    if (known.has(p.id) || n >= PHOTOS_PER_WORKOUT) continue;
+    await repo.photos.add(photoFromBackup(p));
+    perSession.set(p.sessionId, n + 1);
+  }
+}
+
+async function mergeData(repo: Repository, backup: AbotBackup): Promise<void> {
   const { sessions, routines, exercises, locations, exerciseMedia, bodyweightLog } = backup.data;
   const local = await repo.locations.all();
   const localDefault = local.find((l) => l.isDefault)?.id;

@@ -629,6 +629,7 @@ function thermalMatrix(s: Scene) {
   for (let y = 120; y < H - 120; y += 24) hline(ctx, 0, y % 120 === 0 ? 34 : 18, y, STEEL_LINE, 2);
 
   const x = 84;
+  wordmark(s, x, SAFE_TOP - 40, 56, VOLT);
   caps(s, "Thermal matrix // muscle load", x, SAFE_TOP + 20, { color: VOLT });
   caps(s, dateLabel(data), W - x, SAFE_TOP + 20, { align: "right" });
   text(s, data.title, x, SAFE_TOP + 100, { size: fitSize(s, data.title, W - 2 * x, 64, 44, 800, "sans"), weight: 800, maxWidth: W - 2 * x });
@@ -740,7 +741,16 @@ function brutalistReceipt(s: Scene) {
   const dashed = (y: number) => hline(ctx, x, r, y, INK, 3, [12, 10]);
 
   let y = py + 130;
-  text(s, s.opts.hideWatermark ? "LIFT LOG" : "ABOT", W / 2, y, { size: 84, weight: 900, color: INK, align: "center", tracking: -2 });
+  if (s.opts.hideWatermark) text(s, "LIFT LOG", W / 2, y, { size: 84, weight: 900, color: INK, align: "center", tracking: -2 });
+  else {
+    // Mark and name centred together, like a shop logo at the head of a till slip.
+    const size = 76;
+    setFont(s, 84, 900);
+    const nameW = ctx.measureText("ABOT").width - 2 * 4;
+    const left = W / 2 - (size + 20 + nameW) / 2;
+    mark(ctx, left, y - 66, size, INK, PAPER);
+    text(s, "ABOT", left + size + 20, y, { size: 84, weight: 900, color: INK, tracking: -2 });
+  }
   y += 52;
   text(s, "STRENGTH RECEIPT", W / 2, y, { ...ink, size: 26, align: "center", tracking: 6 });
   y += 64;
@@ -943,7 +953,10 @@ function monochromeSteel(s: Scene) {
   const inner = W - 2 * x;
 
   hline(ctx, x, W - x, SAFE_TOP - 50, "#ffffff", 4);
-  if (!s.opts.hideWatermark) text(s, "ABOT", x, SAFE_TOP, { size: 44, weight: 900, color: "#ffffff", tracking: -1 });
+  if (!s.opts.hideWatermark) {
+    mark(ctx, x, SAFE_TOP - 40, 46, "#ffffff", "#000000");
+    text(s, "ABOT", x + 58, SAFE_TOP, { size: 44, weight: 900, color: "#ffffff", tracking: -1 });
+  }
   caps(s, `Issue ${dateLabel(data)}`, W - x, SAFE_TOP - 4, { color: "#ffffff", align: "right" });
 
   const head = data.title.toUpperCase();
@@ -1051,6 +1064,7 @@ function prTrophyVault(s: Scene) {
   const inner = W - 2 * x;
   const prs = data.prs;
 
+  wordmark(s, x, SAFE_TOP - 64, 52, VOLT);
   caps(s, "PR trophy vault", x, SAFE_TOP, { color: GOLD });
   caps(s, dateLabel(data), W - x, SAFE_TOP, { align: "right" });
 

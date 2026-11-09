@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { GymLocation } from "@/types/workout";
 import { InfoTip } from "@/components/ui/InfoTip";
-import { MapPin } from "lucide-react";
+import { Check, LocateFixed, MapPin } from "lucide-react";
 import { currentPosition, openAppSettings, requestAccess } from "@/lib/native/permissions";
 import { isNativeApp } from "@/lib/native/files";
+import { findNearbyGyms, type NearbyGym } from "@/lib/nearby-gyms";
 import { useT } from "@/i18n";
 
 const BARS = [20, 15, 10, 7];
@@ -24,7 +25,7 @@ export function parsePlates(text: string): number[] | null {
 }
 
 export function LocationsSection() {
-  const { locations, add, setDefault } = useLocationStore();
+  const { locations, add, update, setDefault } = useLocationStore();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const t = useT();
@@ -52,6 +53,15 @@ export function LocationsSection() {
         </ul>
       )}
 
+      <NearbyGymFinder
+        taken={locations}
+        onPick={(g) => {
+          const gym = add(g.name);
+          update(gym.id, { lat: g.lat, lng: g.lng });
+        }}
+      />
+
+      <p className="text-xs text-text-muted">{t("Not on the map? Add it by name:")}</p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -175,6 +185,101 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
         </p>
       </Sheet>
     </li>
+  );
+}
+
+/**
+ * "Find gyms near me": one GPS fix, then the named gyms around it from OpenStreetMap. Picking one
+ * adds it already pinned, so workouts there pick it by themselves. The position goes to the map
+ * service only on this tap, and the button says so.
+ */
+export function NearbyGymFinder({ taken, onPick }: { taken: GymLocation[]; onPick: (g: NearbyGym) => void }) {
+  const t = useT();
+  const [phase, setPhase] = useState<"idle" | "locating" | "searching" | "done">("idle");
+  const [results, setResults] = useState<NearbyGym[]>([]);
+  const [message, setMessage] = useState<{ text: string; denied?: boolean } | null>(null);
+  const busy = phase === "locating" || phase === "searching";
+  const has = (g: NearbyGym) => taken.some((l) => l.name.toLowerCase() === g.name.toLowerCase() && l.lat !== undefined);
+
+  async function search() {
+    setMessage(null);
+    setResults([]);
+    setPhase("locating");
+    try {
+      const access = await requestAccess("location");
+      if (access === "denied") {
+        setMessage({ text: t("Location is off for ABOT, so nearby gyms cannot be found."), denied: true });
+        return setPhase("idle");
+      }
+      let fix;
+      try {
+        fix = await currentPosition();
+      } catch {
+        setMessage({ text: t("Could not find where you are. Try again near a window or outdoors.") });
+        return setPhase("idle");
+      }
+      setPhase("searching");
+      const found = await findNearbyGyms(fix);
+      setResults(found);
+      if (found.length === 0) setMessage({ text: t("No gyms on the map within 2 km. Add yours by name below.") });
+      setPhase("done");
+    } catch (e) {
+      setMessage({ text: e instanceof Error ? t(e.message) : t("Could not reach the map service. Check your connection and try again.") });
+      setPhase("idle");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Button variant="primary" onClick={() => void search()} disabled={busy} aria-busy={busy}>
+        <LocateFixed aria-hidden="true" size={18} />
+        {phase === "locating" ? t("Finding you…") : phase === "searching" ? t("Searching the map…") : t("Find gyms near me")}
+      </Button>
+      <p className="text-xs text-text-muted">{t("Sends your position once to OpenStreetMap to list the gyms around you.")}</p>
+
+      {message && (
+        <div className="flex items-center justify-between gap-3">
+          <p role="status" className="text-sm text-text-muted">
+            {message.text}
+          </p>
+          {message.denied && isNativeApp() && (
+            <Button variant="ghost" onClick={() => void openAppSettings()} className="shrink-0">
+              {t("Open settings")}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <>
+          <ul aria-label={t("Gyms near you")} className="divide-y divide-line overflow-hidden rounded-ctl border border-line bg-surface">
+            {results.map((g) => {
+              const added = has(g);
+              return (
+                <li key={g.id}>
+                  <button
+                    type="button"
+                    disabled={added}
+                    onClick={() => onPick(g)}
+                    aria-label={added ? t("{name}, added", { name: g.name }) : t("Add {name}", { name: g.name })}
+                    className="flex min-h-12 w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    <MapPin aria-hidden="true" size={16} className="shrink-0 text-text-muted" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">{g.name}</span>
+                      {g.address && <span className="block truncate text-xs text-text-muted">{g.address}</span>}
+                    </span>
+                    <span className="num shrink-0 text-xs text-text-muted">{g.distanceM < 1000 ? `${g.distanceM} m` : `${(g.distanceM / 1000).toFixed(1)} km`}</span>
+                    {added && <Check aria-hidden="true" size={16} className="shrink-0 text-accent" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="text-[11px] text-text-muted">{t("Map data © OpenStreetMap contributors")}</p>
+        </>
+      )}
+    </div>
   );
 }
 

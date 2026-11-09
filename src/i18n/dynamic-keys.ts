@@ -85,6 +85,9 @@ export const DYNAMIC_KEYS: string[] = [
   "This browser cannot resize photos.",
   "This photo is too detailed to store. Try another one.",
   "This browser cannot draw photos.",
+  // Nearby gyms (lib/nearby-gyms), shown with t()
+  "The map service is busy. Try again in a minute.",
+  "Could not reach the map service. Check your connection and try again.",
   // Workout photos (components/workout/WorkoutPhotos), shown with t()
   "This workout already has 6 photos. Delete one to add another.",
   "This phone has no room left for photos. Free up space and try again.",
