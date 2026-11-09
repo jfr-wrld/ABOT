@@ -7,6 +7,9 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { useSyncStore } from "@/store/useSyncStore";
 import { useReminderStore } from "@/store/useReminderStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { PHASE_LABEL, mesocycleWeek } from "@/lib/phase-engine";
+import { useNow } from "@/lib/useNow";
 import { useRemoteConfig } from "@/lib/remote-config";
 import { inspectSnapshot, type Finding } from "@/lib/db-inspect";
 import { backupFileName, backupFromSnapshot } from "@/data/backup";
@@ -205,6 +208,8 @@ export function DeviceModule() {
   const reminders = useReminderStore();
   const remote = useRemoteConfig();
   const active = useWorkoutStore((s) => s.active);
+  const phase = useSettingsStore((s) => s.bodyPhase);
+  const now = useNow(60_000);
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
@@ -223,6 +228,11 @@ export function DeviceModule() {
           <Metric label="Notifications" value={reminders.permission.toUpperCase()} tone={reminders.permission === "granted" ? "volt" : "amber"} />
           <Metric label="Cloud sync" value={sync.phase.toUpperCase()} tone="cyan" />
           <Metric label="Reminder days" value={days} />
+          <Metric
+            label="Body phase"
+            value={phase?.isActive ? `${PHASE_LABEL[phase.phaseType].toUpperCase()} W${mesocycleWeek(phase, now).week}/${phase.durationWeeks}` : "NONE"}
+            tone={phase?.isActive ? "volt" : "cyan"}
+          />
         </dl>
         <p className="text-xs text-zinc-400">
           {sync.email ? `Signed in as ${sync.email}` : "Not signed in"} · {active ? `workout running: ${active.name}` : "no workout running"}

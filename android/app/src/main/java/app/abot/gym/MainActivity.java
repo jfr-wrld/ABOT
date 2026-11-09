@@ -1,5 +1,6 @@
 package app.abot.gym;
 
+import android.content.Intent;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
@@ -18,6 +19,20 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         // The rest timer beeps from a timer, not a tap; the WebView would otherwise mute it.
         getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
+        openWorkoutIfAsked(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        openWorkoutIfAsked(intent);
+    }
+
+    /** A tap on the workout notification: the app opens the workout page (NativeShell). */
+    private void openWorkoutIfAsked(Intent intent) {
+        if (intent == null || !intent.getBooleanExtra(LiveWorkoutPlugin.EXTRA_OPEN_WORKOUT, false)) return;
+        intent.removeExtra(LiveWorkoutPlugin.EXTRA_OPEN_WORKOUT);
+        LiveWorkoutPlugin.dispatch(this, "open");
     }
 
     @Override

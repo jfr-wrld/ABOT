@@ -13,6 +13,7 @@ import { ProgressHero, StreakPlates } from "@/components/progress/ProgressHero";
 import { MuscleFocus } from "@/components/progress/MuscleFocus";
 import { SymmetryRadarCard } from "@/components/progress/SymmetryRadarCard";
 import { LiftTrends } from "@/components/progress/LiftTrends";
+import { PhaseCommandCard } from "@/components/phase/PhaseCommandCard";
 import { StoryShareButton } from "@/components/share/ShareStoryButton";
 import { startOfWeek, weekStreak, weeklyBuckets } from "@/lib/analytics";
 import { formatDuration, muscleSplit } from "@/lib/calc";
@@ -107,6 +108,10 @@ export function ProgressPanel() {
       ) : null}
 
       <div className="flex flex-col gap-3">
+        <motion.div custom={0} variants={section} initial="hidden" animate="show">
+          <PhaseCommandCard now={now} />
+        </motion.div>
+
         <motion.div custom={0} variants={section} initial="hidden" animate="show" className="flex items-center gap-2">
           <div className="flex-1">
             <RangeTabs

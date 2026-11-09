@@ -1,7 +1,9 @@
 import { FAQ, LANGUAGE_LABEL, SECTION_TITLE, THEME_LABEL } from "@/components/settings/labels";
 import { SPLITS } from "@/lib/seed-routines";
 import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
-import { KIND_LABEL, WHY } from "@/lib/progressive-overload";
+import { KIND_LABEL, PHASE_PILL_LABEL, WHY } from "@/lib/progressive-overload";
+import { ACTIVITY_LEVELS, PHASE_BLURB, PHASE_CALIBRATION, PHASE_LABEL, RISK_LABEL } from "@/lib/phase-engine";
+import { CATEGORY_LABEL, DIGEST_LABEL, FOODS, LEVEL_LABEL } from "@/lib/nutrition-guide";
 import { FILTER_LABEL } from "@/lib/exercise-swapper";
 import { REDEEM_REASONS } from "@/lib/redeem-service";
 import { CHECKOUT_NOT_CONNECTED, PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
@@ -113,6 +115,18 @@ export const DYNAMIC_KEYS: string[] = [
   ...PRO_MATRIX.flatMap((r) => [r.feature, ...[r.core, r.pro].filter((v): v is string => typeof v === "string")]),
   ...SIMULATOR.map((s) => s.label),
   CHECKOUT_NOT_CONNECTED,
+  // Body phases: names, blurbs, activity levels, calibration lines, coach labels, retention risk
+  ...Object.values(PHASE_LABEL),
+  ...Object.values(PHASE_BLURB),
+  ...ACTIVITY_LEVELS.map((a) => a.label),
+  ...Object.values(PHASE_CALIBRATION).flat(),
+  ...Object.values(PHASE_PILL_LABEL),
+  ...Object.values(RISK_LABEL),
+  // Food guide: categories, levels, and every food's name, portion and note
+  ...Object.values(CATEGORY_LABEL),
+  ...Object.values(LEVEL_LABEL),
+  ...Object.values(DIGEST_LABEL),
+  ...FOODS.flatMap((f) => [f.name, f.servingVisual, f.tacticalNote]),
   ...Object.values(REDEEM_REASONS),
   "Pro",
 ];

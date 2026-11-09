@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertTriangle, TrendingUp, Zap } from "lucide-react";
+import { AlertTriangle, Scissors, Shield, TrendingUp, Zap } from "lucide-react";
 import type { Exercise, SessionExercise, WeightUnit } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { KIND_LABEL, suggestOverload, type OverloadKind } from "@/lib/progressive-overload";
+import { muscleFatigue } from "@/lib/muscle-recovery";
 import { formatWeight } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
@@ -17,7 +18,14 @@ const LOOK: Record<OverloadKind, { color: string; Icon: typeof Zap; label: strin
   load: { color: "#ccff00", Icon: Zap, label: KIND_LABEL.load },
   reps: { color: "#00f0ff", Icon: TrendingUp, label: KIND_LABEL.reps },
   deload: { color: "#f59e0b", Icon: AlertTriangle, label: KIND_LABEL.deload },
+  hold: { color: "#00f0ff", Icon: Shield, label: KIND_LABEL.hold },
+  trim: { color: "#f59e0b", Icon: Scissors, label: KIND_LABEL.trim },
 };
+
+/** Exercises in this workout that already got the lean-bulk extra set (one per exercise). */
+const extras = new Set<string>();
+const extraAdded = (sessionExerciseId: string) => extras.has(sessionExerciseId);
+const markExtraAdded = (sessionExerciseId: string) => extras.add(sessionExerciseId);
 
 /**
  * The Coach Pill under an exercise's name: next target from the last three sessions
@@ -29,25 +37,40 @@ export function OverloadBanner({ item, exercise, unit }: { item: SessionExercise
   const sessions = useWorkoutStore((s) => s.sessions);
   const active = useWorkoutStore((s) => s.active);
   const updateSet = useWorkoutStore((s) => s.updateSet);
+  const addSet = useWorkoutStore((s) => s.addSet);
+  const removeSet = useWorkoutStore((s) => s.removeSet);
   const { byId } = useAllExercises();
   const { canAccessPro, openPaywall } = useEntitlements();
-  const s = useMemo(
-    () => suggestOverload(exercise, sessions, { unit, excludeSessionId: active?.id, variant: { byId, locationId: active?.locationId } }),
-    [exercise, sessions, unit, active?.id, active?.locationId, byId],
-  );
+  const startedAt = active?.startedAt;
+  const s = useMemo(() => {
+    // Lean bulk adds a set only when every muscle the lift trains is fully recovered.
+    const fatigue = exercise ? muscleFatigue(sessions, byId, startedAt ?? 0) : {};
+    const fresh = !!exercise && exercise.primaryMuscles.every((m) => (fatigue[m] ?? 0) < 1);
+    return suggestOverload(exercise, sessions, { unit, excludeSessionId: active?.id, variant: { byId, locationId: active?.locationId }, fresh });
+  }, [exercise, sessions, unit, active?.id, active?.locationId, byId, startedAt]);
   const todo = item.sets.filter((x) => !x.completed && x.type !== "warmup");
   if (!s || todo.length === 0) return null;
-  if (todo.every((x) => x.reps === s.reps && (s.weightKg === null || x.weightKg === s.weightKg))) return null;
+  // Trim needs a set to drop; the extra set is shown until one has been added this session.
+  if (s.kind === "trim" && todo.length < 2) return null;
+  const extraDue = !!s.extraSet && !extraAdded(item.id);
+  if (s.kind !== "trim" && !extraDue && todo.every((x) => x.reps === s.reps && (s.weightKg === null || x.weightKg === s.weightKg))) return null;
 
-  const look = LOOK[s.kind];
+  const look = { ...LOOK[s.kind], label: s.label ?? LOOK[s.kind].label };
   const w = s.weightKg === null ? t("Bodyweight") : formatWeight(s.weightKg, unit);
   const target = `${w} × ${s.reps}`;
-  const delta =
+  const change =
     s.kind === "deload"
       ? "-10%"
-      : s.deltaKg !== 0
-        ? `+${formatWeight(s.deltaKg, unit)}`
-        : t.n(s.deltaReps, "+{n} rep", "+{n} reps");
+      : s.kind === "trim"
+        ? t("−1 set")
+        : s.kind === "hold"
+          ? t("hold")
+          : s.deltaKg !== 0
+            ? `${s.deltaKg > 0 ? "+" : "−"}${formatWeight(Math.abs(s.deltaKg), unit)}`
+            : s.deltaReps !== 0
+              ? t.n(s.deltaReps, "+{n} rep", "+{n} reps")
+              : "";
+  const delta = [change, extraDue ? t("+1 set") : ""].filter(Boolean).join(", ");
 
   function apply() {
     if (!canAccessPro("progressive_overload_coach")) {
@@ -55,7 +78,15 @@ export function OverloadBanner({ item, exercise, unit }: { item: SessionExercise
       return;
     }
     feedback.tick();
+    if (s!.kind === "trim") {
+      removeSet(item.id, todo[todo.length - 1]!.id);
+      return;
+    }
     for (const x of todo) updateSet(item.id, x.id, { reps: s!.reps, ...(s!.weightKg !== null ? { weightKg: s!.weightKg } : {}) });
+    if (extraDue) {
+      addSet(item.id);
+      markExtraAdded(item.id);
+    }
   }
 
   return (

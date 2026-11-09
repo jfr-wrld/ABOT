@@ -46,7 +46,8 @@ export type ProFeatureKey =
   | "story_studio_pro_presets"
   | "remove_story_watermark"
   | "unlimited_routines"
-  | "health_connect_autosync";
+  | "health_connect_autosync"
+  | "body_phase_protocols";
 
 /** Names shown on the paywall's "Unlock feature" banner. */
 export const PRO_FEATURE_LABEL: Record<ProFeatureKey, string> = {
@@ -59,6 +60,7 @@ export const PRO_FEATURE_LABEL: Record<ProFeatureKey, string> = {
   remove_story_watermark: "Story without watermark",
   unlimited_routines: "Unlimited routines",
   health_connect_autosync: "Health Connect auto-sync",
+  body_phase_protocols: "Body phase protocols",
 };
 
 export interface Resolved {
@@ -105,6 +107,7 @@ export const PRO_MATRIX: { feature: string; core: boolean | string; pro: boolean
   { feature: "Hexagon symmetry radar diagnostics", core: "Radar only", pro: true },
   { feature: "Story presets", core: "2", pro: "11 + no watermark" },
   { feature: "Voice logger", core: false, pro: true },
+  { feature: "Body phases: cut, bulk, recomp, peak", core: false, pro: true },
   { feature: "Cloud backup and Health Connect sync", core: true, pro: true },
 ];
 

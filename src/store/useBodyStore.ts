@@ -6,8 +6,11 @@ import { useSettingsStore } from "./useSettingsStore";
 export interface BodyState {
   /** Daily weigh-ins, oldest first. */
   entries: BodyweightEntry[];
-  /** Records today's (or `date`'s) weight; a second weigh-in on the same day replaces it. */
-  logWeight: (weightKg: number, date?: number) => void;
+  /**
+   * Records today's (or `date`'s) weight, with body fat and waist when measured; a second
+   * weigh-in on the same day replaces it.
+   */
+  logWeight: (weightKg: number, date?: number, extra?: Pick<BodyweightEntry, "bodyFatPercent" | "waistCm">) => void;
   remove: (id: string) => void;
 }
 
@@ -19,8 +22,8 @@ function syncCurrent(entries: BodyweightEntry[]) {
 
 export const useBodyStore = create<BodyState>()((set, get) => ({
   entries: [],
-  logWeight: (weightKg, date = Date.now()) => {
-    const entries = upsertEntry(get().entries, { id: dayKey(date), date, weightKg });
+  logWeight: (weightKg, date = Date.now(), extra = {}) => {
+    const entries = upsertEntry(get().entries, { id: dayKey(date), date, weightKg, ...extra });
     set({ entries });
     syncCurrent(entries);
   },

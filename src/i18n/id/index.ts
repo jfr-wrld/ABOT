@@ -4,6 +4,7 @@ import { settings } from "./settings";
 import { exercises } from "./exercises";
 import { plates } from "./plates";
 import { pro } from "./pro";
+import { phase } from "./phase";
 
 /**
  * Indonesian, keyed by the English text. Split by area so several people (or passes) can work
@@ -16,4 +17,5 @@ export const ID: Record<string, string> = {
   ...exercises,
   ...plates,
   ...pro,
+  ...phase,
 };

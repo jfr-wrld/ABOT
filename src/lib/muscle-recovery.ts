@@ -1,6 +1,7 @@
 import type { Exercise, MuscleGroup, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { REGIONS, regionsFor, type Region } from "@/components/anatomy/regions";
 import { tunables } from "./tunables";
+import { recoveryModifier } from "./phase-engine";
 
 /**
  * Muscle fatigue over time, for the recovery map.
@@ -13,7 +14,8 @@ import { tunables } from "./tunables";
  *
  * Last night's sleep, when Health Connect has it, scales that speed: 8 hours is the normal
  * rate, less sleep slows recovery (down to 0.7x at 5h36m or less), more speeds it slightly (at
- * most 1.1x). Sleep that ended over a day ago is ignored.
+ * most 1.1x). Sleep that ended over a day ago is ignored. An active body phase stretches the
+ * recovery time (lib/phase-engine).
  */
 
 /** Shipped defaults; the values in force come from tunables().recovery. */
@@ -23,15 +25,18 @@ export const READY_AT = 20;
 
 const BIG: ReadonlySet<MuscleGroup> = new Set(["chest", "back", "lats", "quads", "hamstrings", "glutes", "lower_back"]);
 
-/** Hours for this muscle to go from 100% fatigue to none (Mission Control can change both). */
+/**
+ * Hours for this muscle to go from 100% fatigue to none (Mission Control can change both),
+ * stretched by the active body phase: 15% slower in a deficit, 10% faster in a surplus.
+ */
 export function recoveryHours(m: MuscleGroup): number {
   const t = tunables().recovery;
-  return BIG.has(m) ? t.bigHours : t.smallHours;
+  return (BIG.has(m) ? t.bigHours : t.smallHours) * recoveryModifier();
 }
 
 const HOUR = 3_600_000;
 /** Older sets cannot matter: even 100% is gone after the longest recovery. Twice that covers any capping. */
-const lookback = () => 2 * Math.max(tunables().recovery.bigHours, tunables().recovery.smallHours) * HOUR;
+const lookback = () => 2 * Math.max(tunables().recovery.bigHours, tunables().recovery.smallHours) * Math.max(1, recoveryModifier()) * HOUR;
 
 export interface Sleep {
   minutes: number;

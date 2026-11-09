@@ -68,7 +68,10 @@ in with Google, then import or sign in again after installing.
   itself: rest counting down, otherwise workout time. It stays up with ABOT closed or the
   screen locked (a foreground service, so battery savers leave it alone).
 - Buttons: **+30s**, **Skip rest** and **Log set** while resting; **Log set** and **Pause**
-  otherwise; **Resume** while paused. Log set ticks the next set with its weight and reps.
+  otherwise; **Resume** while paused. Log set ticks the next set with its weight and reps
+  (mid-superset, the next exercise in the superset).
+- The next exercise's photo, a progress bar of sets done (one segment per exercise, Android
+  16), and "Paused" in the status bar chip while paused. Tapping it opens the workout.
 - Settings: show it for rest and workout, or rest only; second line with the next set's target
   or the total volume.
 - The end of a rest rings and buzzes, even with ABOT in the background.

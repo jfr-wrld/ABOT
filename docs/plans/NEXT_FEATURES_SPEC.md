@@ -233,3 +233,69 @@ console with the `/sync-admin` command (`.claude/commands/sync-admin.md`).
   Device. Every panel is tagged Global or Device.
 - Sidebar on desktop, a module bar on phones; a full-screen layer outside the 640 px app shell.
 
+
+## PRIORITY 13: Body Phase Protocols (Cut, Lean Bulk, Recomp, Strength Peak)
+
+**Objective:** a block of weeks with one goal sets the daily calories and macros, tracks the
+scale's trend and relative strength, and shifts the Coach Pill, the recovery map and the rest
+timer to suit it. PRO feature `body_phase_protocols` (open to everyone during the beta).
+
+### 13.1 and 13.3 Engine and fuel (`src/lib/phase-engine.ts`)
+- `ActivePhaseConfig` (type, title, start day, 4/6/8/12/16 weeks, start and target weight,
+  height, age, sex, activity outside training 1.2 to 1.9, planned weekly rate %, active) lives
+  in settings (`bodyPhase`): IndexedDB and backup files. Settings are not synced to Supabase
+  today, so the phase is not either.
+- Trend weight: `EMA = today × 0.25 + previous EMA × 0.75` over the weigh-in log (which already
+  takes Health Connect weight); weekly rate from the last two weeks.
+- Fuel: Mifflin-St Jeor × activity + training calories per day over 4 weeks
+  (`lib/calorie-estimator`). Cut −350 to −500 kcal (from the planned rate), protein 2.2 g/kg,
+  fat 0.8 g/kg; bulk +250 to +350, 1.8 / 1.0; recomp ±150 on training / rest days, 2.0 / 0.9;
+  peak at maintenance, 2.0 / 0.9; carbs fill the rest.
+- Strength shield: best barbell or Smith compound e1RM (4 weeks) ÷ trend weight, against the 4
+  weeks before. On a cut: holding or rising = muscle-loss risk low, down to −3% moderate, worse
+  high.
+- Mesocycle: week X of N from the start day; every 4th week is a deload week.
+- Every constant is a tunable (`tunables().phase`), so Mission Control > Algorithms edits it.
+
+### 13.2 Calibration
+- Coach Pill (`lib/progressive-overload`): cut, a session at RPE ≥ 8.5 gives
+  `Muscle retention target` (hold the weight), fatigue gives `Fatigue: drop one set` (APPLY
+  removes one set left) instead of a 10% deload; bulk, a clean compound adds a load step at the
+  same reps (`Surplus overload`) and `+1 set` when every primary muscle is fully recovered;
+  peak, compounds go to 3 to 5 reps, above 5 the weight comes from the e1RM.
+- Recovery map (`lib/muscle-recovery`): recovery time × 1.15 cutting, × 0.9 bulking.
+- Rest timer: at least 180 s after a compound set while peaking.
+
+### 13.4 UI (pages, not sheets: `src/app/phase/*`, `src/components/phase/*`)
+Owner brief 2026-11-09: less text, tidier layout, full pages with illustration and motion.
+- Identity motif: the block drawn as a weight plate (`BlockPlate`), one segment per week, lit in
+  order as weeks pass. The plate is ABOT's mark, so the phase belongs to the app.
+- Home and Profile: `PhaseCommandCard`, a glance card linking to `/phase`: phase and week, block
+  bar, trend weight with a sparkline, today's calories with a macro bar, and protein and water
+  rings that fill with a tap. Without a phase, one row with the four phase icons opens setup.
+- `/phase`: plate hero with the week, trend weight and start-to-target bar; today's calories as
+  a counting figure inside a macro donut; protein and water rings; weigh-in stepper (body fat
+  and waist on request) with the scale against trend chart; relative strength with a change
+  meter and muscle-loss risk on a cut.
+- `/phase/setup`: four steps, one decision each (phase, about you, goal, plan), sliding in the
+  direction of travel. Phase cards draw their own weight curve (falling, rising, cycling,
+  stepped). Steppers instead of text fields; the plan step counts the calories up and lists what
+  changes in the coach and recovery map with icons.
+- `/phase/fuel`: meals before and after training as a timeline around a dumbbell, foods as chips
+  with grams; the food grid shows an icon, kcal per 100 g, a macro bar, and opens to the portion
+  and note on tap.
+- Routines > Templates: `Fits your <phase>` on the templates that suit it (`templateFitsPhase`).
+- Motion purpose: plate segments light in order (how far through the block), calories count up,
+  donut and bars draw in, wizard steps slide with the direction; reduced motion shows end states.
+
+### 13.5 Food guide and pacer (`src/lib/nutrition-guide.ts`, `NutritionGuideModal`)
+- 24 foods and drinks, many easy to find in Indonesia (chicken, eggs, tempeh, tofu, tuna,
+  tilapia, salmon, beef, rice, potato, ubi, oats, banana, avocado, coffee, coconut water, whey,
+  soy milk), each with macros per 100 g (USDA FoodData Central typical values), a portion by
+  eye, the phases it suits, satiety, digestion speed and a one-line note. Ikan kembung is left
+  out until a reliable figure for that species is sourced.
+- Meals around training: before, 20% of the day's calories and protein from a lean, quick
+  protein and fast carbs; after, 25% of calories and 30% of protein; portions in 10 g steps,
+  "Other foods" cycles the pairs.
+- Pacer (`store/useFuelPacer`): `+25 g` protein and `+500 ml` water against today's targets
+  (water ≈ 35 ml per kg), per device, reset each day.

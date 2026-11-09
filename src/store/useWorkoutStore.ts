@@ -10,6 +10,15 @@ import { newId } from "@/lib/id";
 import { linkSupersetIn, removeFromList, supersetNext, unlinkSupersetIn, type SupersetHandoff } from "@/lib/superset";
 import { useLocationStore } from "./useLocationStore";
 import { currentT } from "@/i18n";
+import { activePhase, peakRestSec } from "@/lib/phase-engine";
+import { exerciseById } from "./useExerciseStore";
+
+/** Rest after a set: the exercise's own, or at least the strength-peak rest after a compound. */
+function restFor(ex: SessionExercise): number {
+  if (activePhase()?.phaseType !== "STRENGTH_PEAK") return ex.restSeconds;
+  const peak = peakRestSec(exerciseById(ex.exerciseId));
+  return peak === null ? ex.restSeconds : Math.max(ex.restSeconds, peak);
+}
 
 export interface RestTimer {
   /** Epoch ms when the countdown reaches zero. Persisted so a refresh keeps the clock. */
@@ -302,8 +311,8 @@ export const useWorkoutStore = create<WorkoutState>()(
           const restTimer: RestTimer | null = completed
             ? handoff
               ? null
-              : ex.restSeconds > 0
-              ? { endsAt: Date.now() + ex.restSeconds * 1000, totalSec: ex.restSeconds, sessionExerciseId: id }
+              : restFor(ex) > 0
+              ? { endsAt: Date.now() + restFor(ex) * 1000, totalSec: restFor(ex), sessionExerciseId: id }
               : null
             : s.restTimer?.sessionExerciseId === id
               ? null

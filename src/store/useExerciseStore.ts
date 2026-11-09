@@ -55,3 +55,9 @@ export function useAllExercises() {
   const catalog = useExerciseStore((s) => s.catalog);
   return useMemo(() => buildExerciseIndex(custom, catalog), [custom, catalog]);
 }
+
+/** One exercise by id, outside React (seed, catalog or custom); undefined when unknown. */
+export function exerciseById(id: string): Exercise | undefined {
+  const { custom, catalog } = useExerciseStore.getState();
+  return buildExerciseIndex(custom, catalog).byId[id];
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { applyCapsuleAction, capsuleContent, nextTarget, type CapsuleInput } from "./live-capsule";
+import { applyCapsuleAction, capsuleContent, nextTarget, shortName, type CapsuleInput } from "./live-capsule";
 import type { Exercise, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES } from "@/data/exercises";
 
@@ -35,6 +35,21 @@ describe("nextTarget", () => {
     expect(nextTarget(session, [], byId)).toMatchObject({ sessionExerciseId: "b", name: "Overhead Press (Barbell)", set: 2, of: 3, weightKg: 40, reps: 8, restSec: 120 });
   });
 
+  it("follows a superset handoff to the next exercise instead of the next set in list order", () => {
+    const superset: WorkoutSession = {
+      ...session,
+      exercises: [
+        { id: "a1", exerciseId: "bench-press-barbell", restSeconds: 90, supersetId: "g", sets: [set(true), set(false)] },
+        { id: "a2", exerciseId: "bent-over-row-barbell", restSeconds: 90, supersetId: "g", sets: [set(false), set(false)] },
+      ],
+    };
+    expect(nextTarget(superset, [], byId)).toMatchObject({ sessionExerciseId: "a1", set: 2 });
+    expect(nextTarget(superset, [], byId, undefined, { sessionExerciseId: "a2", setIndex: 0 })).toMatchObject({ sessionExerciseId: "a2", set: 1, name: "Bent Over Row (Barbell)" });
+    // A stale handoff (that set already done) falls back to list order.
+    const done = { ...superset, exercises: [superset.exercises[0]!, { ...superset.exercises[1]!, sets: [set(true), set(false)] }] };
+    expect(nextTarget(done, [], byId, undefined, { sessionExerciseId: "a2", setIndex: 0 })).toMatchObject({ sessionExerciseId: "a1" });
+  });
+
   it("borrows weight and reps from the same set last time when the set is blank", () => {
     const blank = { ...session, exercises: [{ ...session.exercises[1]!, sets: [set(true), set(false, null, null)] }] };
     const last: WorkoutSession = { ...session, id: "old", status: "completed", startedAt: start - 86_400_000, exercises: [{ ...session.exercises[1]!, sets: [set(true), set(true, 42.5, 6)] }] };
@@ -42,11 +57,23 @@ describe("nextTarget", () => {
   });
 });
 
+describe("shortName", () => {
+  it("drops the equipment in brackets, the photo shows it", () => {
+    expect(shortName("Bench Press (Barbell)")).toBe("Bench Press");
+    expect(shortName("Push-Up")).toBe("Push-Up");
+    expect(shortName("(Barbell)")).toBe("(Barbell)");
+  });
+});
+
 describe("capsuleContent", () => {
   it("counts the workout up from its start, with the next set's target and a Log set button", () => {
     expect(capsuleContent(input())).toMatchObject({
-      title: "Overhead Press (Barbell), set 2/3",
-      text: "Target: 40 kg × 8",
+      title: "Overhead Press · 2/3",
+      text: "40 kg × 8",
+      photoKey: "overhead-press-barbell",
+      progressSegments: [2, 3],
+      progressDone: 3,
+      pausedChip: "Paused",
       clockStart: start,
       canLog: true,
       logRestSec: 120,
@@ -59,9 +86,9 @@ describe("capsuleContent", () => {
     const endsAt = start + 5 * 60_000;
     expect(capsuleContent(input({ rest: { endsAt }, now: start + 4 * 60_000 }))).toMatchObject({
       restEndsAt: endsAt,
-      restTitle: "Resting · next: Overhead Press (Barbell)",
-      restText: "Set 2: 40 kg × 8",
-      overTitle: "Rest over · Overhead Press (Barbell), set 2/3",
+      restTitle: "Rest · next Overhead Press · 2/3",
+      restText: "40 kg × 8",
+      overTitle: "Rest over · Overhead Press · 2/3",
     });
   });
 
@@ -114,6 +141,19 @@ describe("applyCapsuleAction", () => {
     const target = session.exercises[1]!.sets[1]!;
     expect(w.updateSet).not.toHaveBeenCalled();
     expect(w.completeSet).toHaveBeenCalledWith("b", target.id, true);
+  });
+
+  it("logs the superset handoff's set, not the next one in list order", () => {
+    const superset: WorkoutSession = {
+      ...session,
+      exercises: [
+        { id: "a1", exerciseId: "bench-press-barbell", restSeconds: 90, supersetId: "g", sets: [set(true), set(false)] },
+        { id: "a2", exerciseId: "bent-over-row-barbell", restSeconds: 90, supersetId: "g", sets: [set(false)] },
+      ],
+    };
+    const w = actions({ active: superset, handoff: { sessionExerciseId: "a2", setIndex: 0 } });
+    applyCapsuleAction("log", w, byId);
+    expect(w.completeSet).toHaveBeenCalledWith("a2", superset.exercises[1]!.sets[0]!.id, true);
   });
 
   it("does not log a set with no reps to log", () => {
