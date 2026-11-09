@@ -94,6 +94,7 @@ test("weigh-ins build a history; the same day updates, a mistake can be deleted"
   await recent.getByRole("button", { name: /^Delete weigh-in on/ }).first().click();
   await expect(recent.getByRole("listitem")).toHaveCount(1);
   await page.reload();
+  await page.getByText("History", { exact: true }).click();
   await expect(recent.getByRole("listitem")).toHaveCount(1);
   await expect(recent).toContainText("81 kg");
 });
