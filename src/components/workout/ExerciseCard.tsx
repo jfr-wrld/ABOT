@@ -2,7 +2,7 @@
 
 import { setNumbers } from "@/lib/sets";
 import { Select } from "@/components/ui/Select";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { setGridColumns } from "./setGrid";
 import { ArrowDown, ArrowUp, ArrowUpDown, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
 import type {
@@ -29,6 +29,7 @@ import { useT, type T } from "@/i18n";
 import { muscleText } from "@/lib/home";
 import { PlateCalculatorModal } from "./PlateCalculatorModal";
 import { fromDisplay, toDisplay } from "@/lib/units";
+import { feedback } from "@/lib/feedback";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -63,6 +64,21 @@ export function ExerciseCard({
   const [reorderOpen, setReorderOpen] = useState(false);
   const [supersetOpen, setSupersetOpen] = useState(false);
   const [platesOpen, setPlatesOpen] = useState(false);
+  // A set that turns into a record while you log plays the PR sound once; records already
+  // there when the card appears stay quiet. A lift logged for the first time is a baseline,
+  // not a record (the summary's rule), so it stays quiet too.
+  const hasHistory = (previous?.length ?? 0) > 0;
+  const prSets = hasHistory ? Object.keys(prBySet).filter((id) => (prBySet[id] ?? []).length > 0).sort().join(",") : "";
+  const seenPrs = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    const now = new Set(prSets ? prSets.split(",") : []);
+    if (seenPrs.current && [...now].some((id) => !seenPrs.current!.has(id))) {
+      const t = setTimeout(() => feedback.pr(), 120);
+      seenPrs.current = now;
+      return () => clearTimeout(t);
+    }
+    seenPrs.current = now;
+  }, [prSets]);
   const ssColor = superset ? SUPERSET_COLORS[superset.color] : undefined;
   const locationId = useWorkoutStore((s) => s.active?.locationId);
 

@@ -246,6 +246,8 @@ export interface UserSettings {
   language: AppLanguage;
   /** "system" follows the phone's light or dark mode. */
   theme: AppTheme;
+  /** Tick, latch and PR sounds with matching vibration on taps (Phase 2 tactile feedback). */
+  tapFeedback: boolean;
 }
 
 export type AppLanguage = "auto" | "en" | "id";
@@ -277,6 +279,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   profileHandle: "",
   language: "auto",
   theme: "system",
+  tapFeedback: true,
   bodyweightKg: null,
   heightCm: null,
   profilePhoto: null,

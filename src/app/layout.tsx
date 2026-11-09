@@ -15,6 +15,7 @@ import { AutoGym } from "@/components/layout/AutoGym";
 import { THEME_SCRIPT, ThemeController } from "@/components/layout/ThemeController";
 import { LangAttr } from "@/components/layout/LangAttr";
 import { LoadingStatus } from "@/components/ui/Loading";
+import { AudioUnlock } from "@/components/layout/AudioUnlock";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-full flex-col">
         <ThemeController />
         <LangAttr />
+        <AudioUnlock />
         <MotionProvider>
           <StoreHydrator />
           <TabNotice />

@@ -412,4 +412,8 @@ export const settings: Record<string, string> = {
   "Notifications are off for ABOT, so the rest alarm and the workout status cannot show.":
     "Notifikasi ABOT mati, jadi alarm istirahat dan status latihan tidak bisa muncul.",
   "Turn on in Android settings": "Nyalakan di pengaturan Android",
+  // Tactile feedback
+  "Sounds & vibration": "Suara & getar",
+  "A tick on steppers and chips, a latch when a set is done, a chord for a new record, each with a short vibration. Synthesised on the phone; music keeps playing.":
+    "Bunyi tik di tombol +/- dan chip, bunyi kunci saat set selesai, akor untuk rekor baru, masing-masing dengan getar singkat. Dibuat langsung di HP; musik tetap berjalan.",
 };

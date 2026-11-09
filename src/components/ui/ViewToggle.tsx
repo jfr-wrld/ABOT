@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import { useT } from "@/i18n";
+import { feedback } from "@/lib/feedback";
 
 export type ViewMode = "list" | "grid";
 
@@ -36,7 +37,10 @@ export function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (v:
       type="button"
       aria-pressed={value === v}
       aria-label={label}
-      onClick={() => onChange(v)}
+      onClick={() => {
+        if (value !== v) feedback.tick();
+        onChange(v);
+      }}
       className={`flex size-11 items-center justify-center rounded-[9px] transition-colors ${
         value === v ? "bg-surface text-text shadow-sm" : "text-text-muted hover:text-text"
       }`}

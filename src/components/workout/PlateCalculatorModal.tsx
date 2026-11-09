@@ -15,6 +15,7 @@ import {
   type PlateLoad,
   type PlateUnit,
 } from "@/lib/plate-calculator";
+import { feedback } from "@/lib/feedback";
 
 /**
  * Plate calculator: type or step the target, pick the bar, switch off plates the gym lacks, and
@@ -118,7 +119,10 @@ function Calculator({
       <div className="flex items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => setTarget((v) => Math.max(0, Number((v - set.step).toFixed(2))))}
+          onClick={() => {
+            feedback.tick();
+            setTarget((v) => Math.max(0, Number((v - set.step).toFixed(2))));
+          }}
           aria-label={t("Lighter by {step} {unit}", { step: set.step, unit })}
           className="flex size-12 shrink-0 items-center justify-center rounded-ctl border border-line-strong bg-surface-2 text-text hover:bg-press active:bg-press-strong"
         >
@@ -142,7 +146,10 @@ function Calculator({
         </label>
         <button
           type="button"
-          onClick={() => setTarget((v) => Number((v + set.step).toFixed(2)))}
+          onClick={() => {
+            feedback.tick();
+            setTarget((v) => Number((v + set.step).toFixed(2)));
+          }}
           aria-label={t("Heavier by {step} {unit}", { step: set.step, unit })}
           className="flex size-12 shrink-0 items-center justify-center rounded-ctl border border-line-strong bg-surface-2 text-text hover:bg-press active:bg-press-strong"
         >
@@ -211,7 +218,10 @@ function Calculator({
                 setup.bar === b.weight ? "border-accent bg-accent-tint" : "border-line-strong bg-surface-2"
               }`}
             >
-              <input type="radio" name="plate-bar" checked={setup.bar === b.weight} onChange={() => save({ ...setup, bar: b.weight })} className="sr-only" />
+              <input type="radio" name="plate-bar" checked={setup.bar === b.weight} onChange={() => {
+                  feedback.tick();
+                  save({ ...setup, bar: b.weight });
+                }} className="sr-only" />
               <span className="num text-sm font-semibold text-text">
                 {fmt(b.weight)} {unit}
               </span>
@@ -236,7 +246,10 @@ function Calculator({
                 key={p}
                 type="button"
                 aria-pressed={on}
-                onClick={() => save({ ...setup, plates: on ? setup.plates.filter((x) => x !== p) : [...setup.plates, p] })}
+                onClick={() => {
+                  feedback.tick();
+                  save({ ...setup, plates: on ? setup.plates.filter((x) => x !== p) : [...setup.plates, p] });
+                }}
                 className={`num flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-colors ${
                   on ? "border-line-strong bg-surface-2 text-text" : "border-line bg-transparent text-text-muted line-through"
                 }`}

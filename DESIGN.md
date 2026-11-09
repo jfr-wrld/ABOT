@@ -59,6 +59,22 @@ with a Volt edge, 1.25 Chrome `#71717a`). The sleeve drawing stays dark in both 
 product shot. With a gym on the workout, the bar and plates are that gym's and changes save to
 it; otherwise they are remembered on the device. Figures are tabular (`num`).
 
+## Sound and vibration
+
+Hardware feel, synthesised with Web Audio (`src/lib/sound-effects.ts`, no audio files) and
+paired with graduated vibration (`src/lib/haptics.ts`; Capacitor Haptics in the app):
+
+| Moment | Sound | Vibration |
+| --- | --- | --- |
+| Stepper, filter chip, Story layout, view toggle | tick: 12 ms triangle, 1400 to 300 Hz | 8 ms |
+| Set ticked off | latch: 600 Hz then 900 Hz, 90 ms | 15, 30, 25 ms |
+| New record on a lift logged before | A major arpeggio 440, 554, 659, 880 Hz | 30, 40, 60, 40, 100 ms |
+| Rest timer at zero (Rest alert) | three 1000 Hz pulses | 200, 100, 200 ms |
+
+Settings > Workout > Sounds & vibration switches the tap sounds off (on by default); the rest
+alarm follows Rest alert. A first-ever lift is a baseline, so it plays no record chord. The
+first touch unlocks Web Audio so the timer-driven rest beep can play.
+
 ## Where the accent lands
 
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the

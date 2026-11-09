@@ -13,6 +13,7 @@ import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { routineEditPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { muscleLabel } from "@/components/exercise/MuscleTags";
+import { feedback } from "@/lib/feedback";
 
 /** Photos on a card; the sixth slot shows "+N" when there are more. */
 const PREVIEW = 5;
@@ -43,7 +44,10 @@ export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
               key={s.value}
               type="button"
               aria-pressed={split === s.value}
-              onClick={() => setSplit(s.value)}
+              onClick={() => {
+                if (split !== s.value) feedback.tick();
+                setSplit(s.value);
+              }}
               className={`h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors ${
                 split === s.value
                   ? "border-accent bg-accent text-on-accent"

@@ -12,7 +12,7 @@ import { formatClock, formatDuration, sessionDurationSec } from "@/lib/calc";
 import { useLiveWorkoutNotification } from "@/lib/notifications/useLiveWorkoutNotification";
 import type { WorkoutSession } from "@/types/workout";
 import { usePagePath } from "@/components/layout/usePagePath";
-import { buzz } from "@/lib/native/haptics";
+import { feedback } from "@/lib/feedback";
 import { isNativeApp } from "@/lib/native/files";
 import { notificationPermission } from "@/lib/notifications/reminder-service";
 import { useT } from "@/i18n";
@@ -135,10 +135,7 @@ function RestCapsule() {
     firedFor.current = timer.endsAt;
     // In the app with notifications on, Android's rest-over alert already rings and buzzes.
     const systemRings = isNativeApp() && notificationPermission() === "granted";
-    if (alert && !systemRings) {
-      buzz([200, 100, 200]);
-      beep();
-    }
+    if (alert && !systemRings) feedback.restZero();
     // Hold "Go" for a moment so the lifter sees rest is over, then fold back to compact.
     const id = setTimeout(skip, 2500);
     return () => clearTimeout(id);
@@ -162,12 +159,18 @@ function RestCapsule() {
           <span className="num text-xl font-extrabold text-accent">{done ? t("Go") : formatClock(remainingSec)}</span>
         </div>
         {/* The step is written on the buttons, so it is clear how much each tap changes. */}
-        <IslandButton label={t("Shorten rest by 15 seconds")} onClick={() => adjust(-15)} disabled={done} wide>
+        <IslandButton label={t("Shorten rest by 15 seconds")} onClick={() => {
+            feedback.tick();
+            adjust(-15);
+          }} disabled={done} wide>
           <span aria-hidden="true" className="num text-sm font-semibold">
             −15s
           </span>
         </IslandButton>
-        <IslandButton label={t("Extend rest by 15 seconds")} onClick={() => adjust(15)} disabled={done} wide>
+        <IslandButton label={t("Extend rest by 15 seconds")} onClick={() => {
+            feedback.tick();
+            adjust(15);
+          }} disabled={done} wide>
           <span aria-hidden="true" className="num text-sm font-semibold">
             +15s
           </span>
@@ -214,27 +217,4 @@ function IslandButton({
       {children}
     </button>
   );
-}
-
-let audioCtx: AudioContext | null = null;
-function beep() {
-  try {
-    audioCtx ??= new AudioContext();
-    const ctx = audioCtx;
-    const play = (at: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.exponentialRampToValueAtTime(0.3, at + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.18);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(at);
-      osc.stop(at + 0.2);
-    };
-    play(ctx.currentTime);
-    play(ctx.currentTime + 0.25);
-  } catch {
-    // Audio is a convenience; a blocked AudioContext is not an error worth surfacing.
-  }
 }
