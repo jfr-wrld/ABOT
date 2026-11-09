@@ -69,7 +69,7 @@ test("Free locked: the Coach Pill, the radar and PRO story layouts open the payw
   await expect(pay).toContainText("Unlock feature: Auto-overload coach");
   await expect(pay.getByRole("button", { name: "Activate Annual telemetry" })).toBeVisible();
   await pay.getByRole("button", { name: "Activate Annual telemetry" }).click();
-  await expect(pay).toContainText("Payments are not connected yet");
+  await expect(pay).toContainText("Payments are not set up in this version of ABOT yet.");
   await pay.getByRole("button", { name: "Close" }).click();
   await expect(page.getByLabel("Set 1 reps")).toHaveValue("");
 

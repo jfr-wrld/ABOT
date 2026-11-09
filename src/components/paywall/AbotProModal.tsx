@@ -5,7 +5,7 @@ import { Check, Minus, X, Zap } from "lucide-react";
 import { useEntitlements, usePaywallStore, updateEntitlement, autoClaimFounder } from "@/store/useEntitlements";
 import Link from "next/link";
 import { PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, plansFor, rupiah, type PlanId } from "@/lib/entitlements";
-import { CHECKOUT_MESSAGE, startMidtransCheckout } from "@/lib/checkout";
+import { CHECKOUT_MESSAGE, checkoutBlock, startMidtransCheckout } from "@/lib/checkout";
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { isNativeApp } from "@/lib/native/files";
 import { useRemoteConfig } from "@/lib/remote-config";
@@ -48,6 +48,12 @@ export function AbotProModal() {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
+  // Prices and the checkout switch can change in Mission Control at any time; the background read
+  // runs only every 6 hours, so the paywall reads the row fresh each time it opens.
+  useEffect(() => {
+    if (open) void useRemoteConfig.getState().refresh(true);
+  }, [open]);
+
   useEffect(() => {
     const d = dialog.current;
     if (!d) return;
@@ -63,8 +69,11 @@ export function AbotProModal() {
   async function checkout() {
     feedback.tick();
     setNeedsSignIn(false);
-    if (!checkoutOn || plan === "monthly") {
-      setNote(t(CHECKOUT_MESSAGE.not_connected));
+    // The fresh read may still be on its way: wait for it once before saying payments are off.
+    if (!checkoutOn) await useRemoteConfig.getState().refresh(true);
+    const blocked = checkoutBlock();
+    if (blocked || plan === "monthly") {
+      setNote(t(CHECKOUT_MESSAGE[blocked ?? "checkout_off"]));
       return;
     }
     setBusy(true);

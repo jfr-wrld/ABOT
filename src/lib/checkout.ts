@@ -24,7 +24,7 @@ export type CheckoutFailure =
   | "network";
 
 export const CHECKOUT_MESSAGE: Record<CheckoutFailure, string> = {
-  not_connected: "Payments are not connected yet. During the beta every PRO feature is free.",
+  not_connected: "Payments are not set up in this version of ABOT yet.",
   sign_in: "Sign in first, so the purchase is saved to your account and restores on any phone.",
   checkout_off: "Payments are paused right now. Try again later.",
   not_founder: "The founder price is for founders only. Choose lifetime or annual.",
@@ -34,11 +34,19 @@ export const CHECKOUT_MESSAGE: Record<CheckoutFailure, string> = {
   network: "Could not reach the payment service. Check the connection and try again.",
 };
 
+/**
+ * Why payments are not offered on this device, or null when they are: "not_connected" when the
+ * build has no Supabase, "checkout_off" when Mission Control has the checkout (or Android) off.
+ */
+export function checkoutBlock(): "not_connected" | "checkout_off" | null {
+  if (!isCloudSyncConfigured()) return "not_connected";
+  const c = useRemoteConfig.getState().config;
+  return c.checkoutEnabled && (!isNativeApp() || c.checkoutOnAndroid) ? null : "checkout_off";
+}
+
 /** Payments are offered on this device: set up, switched on, and allowed on this platform. */
 export function checkoutAvailable(): boolean {
-  if (!isCloudSyncConfigured()) return false;
-  const c = useRemoteConfig.getState().config;
-  return c.checkoutEnabled && (!isNativeApp() || c.checkoutOnAndroid);
+  return checkoutBlock() === null;
 }
 
 const PENDING_KEY = "abot.pending-order";
@@ -62,7 +70,8 @@ export function pendingOrder(): string | null {
 
 /** Creates the order and opens Midtrans' payment page (same tab on the web, browser on Android). */
 export async function startMidtransCheckout(plan: WebPlan): Promise<{ ok: true; orderId: string } | { ok: false; reason: CheckoutFailure }> {
-  if (!checkoutAvailable()) return { ok: false, reason: "not_connected" };
+  const blocked = checkoutBlock();
+  if (blocked) return { ok: false, reason: blocked };
   if (!maySignedIn()) return { ok: false, reason: "sign_in" };
   try {
     const supabase = await getSupabase();

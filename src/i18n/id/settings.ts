@@ -522,4 +522,5 @@ export const settings: Record<string, string> = {
   "The payment window closed before it was paid. You can start a new one.": "Batas waktu pembayaran habis sebelum dibayar. Kamu bisa memulai yang baru.",
   "This payment was refunded, so its license was removed.": "Pembayaran ini dikembalikan, jadi lisensinya dihapus.",
   "Could not check the payment yet. Open ABOT again in a moment.": "Pembayaran belum bisa diperiksa. Buka ABOT lagi sebentar lagi.",
+  "Payments are not set up in this version of ABOT yet.": "Pembayaran belum disiapkan di versi ABOT ini.",
 };

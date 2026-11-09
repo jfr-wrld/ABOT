@@ -93,8 +93,6 @@ export const pro: Record<string, string> = {
   "11 + no watermark": "11 + tanpa watermark",
   "Voice logger": "Pencatat suara",
   "Cloud backup and Health Connect sync": "Backup cloud dan sinkron Health Connect",
-  "Payments are not connected yet. During the beta every PRO feature is free.":
-    "Pembayaran belum tersambung. Selama beta semua fitur PRO gratis.",
   // Redeem codes and announcements (Priority 12)
   Activate: "Aktifkan",
   Announcement: "Pengumuman",
