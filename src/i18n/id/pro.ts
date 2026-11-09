@@ -120,4 +120,5 @@ export const pro: Record<string, string> = {
   "72h recovery inspector": "Inspektur pemulihan 72 jam",
   "Story presets, no watermark": "Preset story, tanpa watermark",
   "Payment received": "Pembayaran diterima",
+  "Tap to unlock": "Ketuk untuk membuka",
 };

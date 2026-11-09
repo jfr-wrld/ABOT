@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import { motion, useReducedMotion } from "framer-motion";
 import { Activity, Brain, Mic, Sparkles } from "lucide-react";
 import { AbotMark } from "@/components/brand/AbotMark";
+import { audioReady, unlockAudio } from "@/lib/sound-effects";
+import { feedback } from "@/lib/feedback";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { useT } from "@/i18n";
 
 /** What just became active: pro until a date, or lifetime. */
@@ -30,21 +33,77 @@ const PERKS = [
  * screen appears without the movement.
  */
 export function ProCelebration() {
-  const t = useT();
   const unlocked = useCelebrationStore((s) => s.unlocked);
+  // Keyed, so each purchase starts from "checking" again.
+  return unlocked ? <Celebration key={JSON.stringify(unlocked)} unlocked={unlocked} /> : null;
+}
+
+/**
+ * "checking": is sound allowed yet? "armed": the browser blocks audio on a page nobody has tapped
+ * (the return from the payment page is a fresh load), so the plate waits for one tap, which also
+ * starts the sound. "playing": the animation and the sting, together.
+ */
+function Celebration({ unlocked }: { unlocked: Unlocked }) {
+  const t = useT();
   const close = useCelebrationStore((s) => s.close);
   const reduce = useReducedMotion();
   const button = useRef<HTMLButtonElement>(null);
+  const [phase, setPhase] = useState<"checking" | "armed" | "playing">("checking");
 
   useEffect(() => {
-    if (!unlocked) return;
+    let live = true;
+    const soundOn = useSettingsStore.getState().tapFeedback;
+    void (soundOn ? audioReady() : Promise.resolve(true)).then((ready) => {
+      if (!live) return;
+      if (ready) {
+        feedback.subscribed();
+        setPhase("playing");
+      } else setPhase("armed");
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "playing") return;
     button.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [unlocked, close]);
+  }, [phase, close]);
 
-  if (!unlocked) return null;
+  function reveal() {
+    unlockAudio();
+    feedback.subscribed();
+    setPhase("playing");
+  }
+
+  if (phase !== "playing") {
+    return (
+      <div role="dialog" aria-modal="true" aria-label={t("BLACK PRO unlocked")} className="force-dark fixed inset-0 z-[60] bg-[#09090b] text-text">
+        {phase === "armed" && (
+          <button
+            type="button"
+            autoFocus
+            onClick={reveal}
+            className="flex size-full flex-col items-center justify-center gap-6 focus:outline-none"
+          >
+            <motion.span
+              aria-hidden="true"
+              className="text-[#ccff00]/80"
+              animate={reduce ? undefined : { scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <AbotMark size={112} />
+            </motion.span>
+            <span className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-[#ccff00]">{t("Tap to unlock")}</span>
+          </button>
+        )}
+      </div>
+    );
+  }
+
   const term =
     unlocked.tier === "lifetime"
       ? t("Lifetime license. No end date.")

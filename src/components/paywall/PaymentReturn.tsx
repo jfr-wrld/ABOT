@@ -8,7 +8,6 @@ import { PAYMENT_STATUS_MESSAGE as MESSAGE, pendingOrder, rememberPendingOrder, 
 import { useAppResumed } from "@/lib/native/useAppResumed";
 import { updateEntitlement } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
-import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 import { useCelebrationStore } from "./ProCelebration";
 
@@ -37,7 +36,6 @@ export function PaymentReturn() {
     if (status === "paid") {
       // The full-screen moment replaces the one-line banner.
       const e = useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT;
-      feedback.pr();
       useCelebrationStore.getState().show(e.tier === "lifetime" ? { tier: "lifetime" } : { tier: "pro", until: e.proExpiresAt });
       setShown(null);
     } else setShown(status ?? "unknown");

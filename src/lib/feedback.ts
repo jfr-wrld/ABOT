@@ -4,6 +4,7 @@ import { buzz } from "./native/haptics";
 import {
   playMechanicalTick,
   playPRUnlocked,
+  playProUnlocked,
   playRestCountdown,
   playRestTimerZero,
   playSetComplete,
@@ -35,6 +36,12 @@ export const feedback = {
     if (!on()) return;
     playPRUnlocked();
     hapticPR();
+  },
+  /** A purchase landed: the celebration sting, with a pulse on the plate's impact (0.35 s). */
+  subscribed(): void {
+    if (!on()) return;
+    playProUnlocked();
+    setTimeout(() => buzz([60, 50, 30, 50, 30, 90, 120]), 350);
   },
   /** A workout started. */
   start(): void {

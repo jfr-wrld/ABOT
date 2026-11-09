@@ -12,6 +12,7 @@
  * - rest countdown: an 800 Hz pip at 3, 2 and 1 seconds left
  * - workout start: a 220 to 440 Hz glide, then an 880 Hz click
  * - workout complete: C major rolled upward (523, 659, 784, 1047 Hz; 1319 Hz on top for a record)
+ * - pro unlocked: a three-second sting timed to the celebration screen (see playProUnlocked)
  */
 
 type Wave = OscillatorType;
@@ -122,4 +123,55 @@ export function playWorkoutStart(): boolean {
 export function playWorkoutComplete(record = false): boolean {
   const notes = [523.25, 659.25, 783.99, 1046.5, ...(record ? [1318.51] : [])];
   return play(notes.map((f, i) => ({ wave: "sine" as Wave, from: f, at: i * 0.08, dur: 0.7 - i * 0.05, peak: 0.18 })));
+}
+
+/**
+ * Whether sound can play right now. Browsers keep audio suspended on a page that has not been
+ * tapped yet (the return from a payment page is a fresh load), so the caller can ask for a tap.
+ */
+export async function audioReady(): Promise<boolean> {
+  const ac = audio();
+  if (!ac) return false;
+  if (ac.state === "running") return true;
+  await Promise.race([ac.resume().catch(() => {}), new Promise((r) => setTimeout(r, 150))]);
+  return (ac.state as AudioContextState) === "running";
+}
+
+/**
+ * BLACK PRO unlocked: about three seconds timed to the celebration screen.
+ * 0.00 s a rising whoosh while the plate falls; 0.35 s the impact (low thud, metal clank) and
+ * the app's own lock (600 then 900 Hz); 0.62 s a G-C-E pickup into a C major chord over a low C
+ * as the title lands; 1.10 s four high sparkles with the feature cards; 1.50 s a soft G-B-D
+ * shimmer (C major 9) under the button. Peaks are kept low so the stacked chord never clips.
+ */
+export function playProUnlocked(): boolean {
+  const s = (f: number, at: number, dur: number, peak: number, wave: Wave = "sine"): Tone => ({ wave, from: f, at, dur, peak });
+  return play([
+    // Whoosh.
+    { wave: "sawtooth", from: 90, to: 700, at: 0, dur: 0.34, peak: 0.04 },
+    { wave: "triangle", from: 180, to: 1400, at: 0.05, dur: 0.3, peak: 0.04 },
+    // Impact and lock.
+    { wave: "sine", from: 120, to: 40, at: 0.35, dur: 0.35, peak: 0.4 },
+    { wave: "triangle", from: 1600, to: 700, at: 0.35, dur: 0.07, peak: 0.16 },
+    s(600, 0.43, 0.04, 0.12, "triangle"),
+    s(900, 0.48, 0.05, 0.12, "triangle"),
+    // Pickup and chord.
+    s(392, 0.62, 0.18, 0.14),
+    s(523.25, 0.72, 0.18, 0.14),
+    s(659.25, 0.82, 0.2, 0.14),
+    s(523.25, 0.92, 1.2, 0.09),
+    s(659.25, 0.92, 1.2, 0.09),
+    s(783.99, 0.92, 1.2, 0.09),
+    s(1046.5, 0.92, 1.3, 0.09),
+    s(130.81, 0.92, 1.1, 0.14, "triangle"),
+    // Sparkles.
+    s(2093, 1.1, 0.12, 0.05),
+    s(2637, 1.18, 0.12, 0.05),
+    s(3136, 1.26, 0.12, 0.05),
+    s(4186, 1.34, 0.14, 0.05),
+    // Shimmer.
+    s(783.99, 1.5, 1.4, 0.05),
+    s(987.77, 1.5, 1.4, 0.05),
+    s(1174.66, 1.5, 1.5, 0.05),
+  ]);
 }
