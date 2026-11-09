@@ -218,8 +218,8 @@ console with the `/sync-admin` command (`.claude/commands/sync-admin.md`).
 - `src/lib/tunables.ts`: recovery, MET, Coach Pill, radar, free story layouts and gym radius are
   read at call time from the remote config, bounded field by field.
 - `src/lib/redeem-service.ts`: server first; built-in offline codes `ABOT-FOUNDER-2026` (pro 365
-  days + founder badge), `ABOT-VIP-LIFETIME` and `ABOT-BLACK-LIFE` (lifetime), `ABOT-PRO-30D`
-  and `ABOT-VIP-30D` (30 days), stored as SHA-256 hashes and switchable off remotely; codes made
+  days + founder badge), `ABOT-PRO-30D` and `ABOT-VIP-30D` (30 days), stored as SHA-256 hashes
+  and switchable off remotely (none grants lifetime: the repository is public); codes made
   in local mode work on that device. Generated codes are `ABOT-<KIND>-XXXX-XXXX-XXXX` (60 bits).
 - `RedeemCodeModal`: from the paywall and the founder card; on success the record chord and
   haptic, `LICENSE ACTIVATED: ABOT // BLACK PRO [LIFETIME ACCESS]`, the entitlement saved on the
