@@ -61,6 +61,39 @@ You need the Supabase CLI logged in and linked to the project (`supabase link --
    - `payment_orders` shows `paid` and `payment_events` has the notifications;
    - a refund in the dashboard sets the order to `refunded` and the next sync removes PRO from the phone.
 
+## Sandbox test checklist
+
+Run these signed in with Google, on the web first, then in the APK.
+
+| # | Scenario | How | Expected |
+|---|---|---|---|
+| 1 | QRIS / GoPay paid | Annual → QRIS. Pay the QR image URL in the Sandbox simulator (QRIS menu) | Back on Settings: "Payment received", plan card BLACK PRO, about 365 days |
+| 2 | Bank transfer (VA) | BCA VA → pay the VA number in the simulator | "Waiting for your payment" first, then PRO on |
+| 3 | Card paid | `4811 1111 1111 1114`, any future date, CVV `123`, OTP `112233` | Paid at once |
+| 4 | Card declined | `4911 1111 1111 1113` | "The payment did not go through", PRO stays off |
+| 5 | Expired | Start a VA and do not pay | Order `expired` once Midtrans sends expire |
+| 6 | Refund | Dashboard → Transactions → paid card or GoPay → full refund | Order `refunded`; next Restore or app open removes PRO |
+| 7 | Lifetime | Buy lifetime | Plan card LIFETIME |
+| 8 | Founders | Founder account buys lifetime (Rp 399.000); non-founder tries the same | Founder: lifetime. Non-founder: "for founders only" |
+| 9 | Android | Scenario 1 in the APK; close the browser after paying | Banner appears back in ABOT |
+
+Test cards and simulator menus are from the Midtrans Sandbox docs; follow docs.midtrans.com if they differ.
+
+To check the data, run these in the SQL editor:
+
+```sql
+select order_id, plan, amount_idr, status, payment_type, created_at, paid_at from public.payment_orders order by created_at desc limit 10;
+select order_id, transaction_status, fraud_status, gross_amount, received_at from public.payment_events order by received_at desc limit 20;
+select u.email, e.tier, e.pro_expires_at, e.is_founder, e.source from public.user_entitlements e join auth.users u on u.id = e.user_id order by e.updated_at desc limit 10;
+```
+
+### When something fails
+- **"The payment page could not be opened":** read the `midtrans-checkout` logs. The usual causes are a wrong Server Key or the wrong `MIDTRANS_IS_PRODUCTION`.
+- **Paid but no PRO, and no row in `payment_events`:** the Notification URL is wrong, or `midtrans-notify` was deployed without `--no-verify-jwt`. A `401 bad signature` in the logs means the key does not match.
+- **A row in `payment_events` but the order is still pending:** compare its `gross_amount` with the order's `amount_idr`.
+- **CORS error in the browser:** the site's origin is missing from `ABOT_ALLOWED_ORIGINS`.
+- **Notification arrived before a fix:** the Midtrans dashboard can resend it.
+
 ## Going live
 
 1. Production Server Key: run `supabase secrets set MIDTRANS_SERVER_KEY=Mid-server-xxxx MIDTRANS_IS_PRODUCTION=true`.
