@@ -96,6 +96,19 @@ async function main() {
   screenshot("permissions");
   check("permissions step fits the screen without scrolling", await fits());
 
+  // Diagnostics: what the notification plugin answers when called straight from the page.
+  const diag = await page.evaluate(async () => {
+    const P = window.Capacitor?.Plugins ?? {};
+    const out = { plugins: Object.keys(P), native: window.Capacitor?.isNativePlatform?.() };
+    try {
+      out.check = await P.LocalNotifications.checkPermissions();
+    } catch (e) {
+      out.checkError = String(e?.message ?? e);
+    }
+    return out;
+  });
+  console.log(`DIAG plugin answer: ${JSON.stringify(diag)}`);
+
   // 3. Notifications: Android's dialog appears, Allow grants it, the row says On.
   await page.getByRole("button", { name: "Allow notifications" }).click();
   check("notification dialog shown and allowed", await tapSystem(ALLOW));
@@ -156,6 +169,15 @@ main()
     failures++;
   })
   .finally(() => {
+    try {
+      const log = execFileSync("adb", ["logcat", "-d", "-v", "brief"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+      writeFileSync(join(out, "logcat.txt"), log);
+      const lines = log.split("\n").filter((l) => /Capacitor|LocalNotification|AndroidRuntime|FATAL|Exception|abot/i.test(l));
+      console.log("LOGCAT (filtered, last 80):");
+      console.log(lines.slice(-80).join("\n"));
+    } catch (e) {
+      console.log(`logcat unavailable: ${e}`);
+    }
     console.log(failures ? `${failures} check(s) failed` : "All checks passed");
     process.exit(failures ? 1 : 0);
   });
