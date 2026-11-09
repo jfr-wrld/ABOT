@@ -387,7 +387,7 @@ export const workout: Record<string, string> = {
   "Searching the map…": "Mencari di peta…",
   "Find gyms near me": "Cari gym di dekatku",
   "Sends your position once to OpenStreetMap to list the gyms around you.": "Mengirim posisimu sekali ke OpenStreetMap untuk menampilkan gym di sekitarmu.",
-  "No gyms on the map within 2 km. Add yours by name below.": "Tidak ada gym di peta dalam radius 2 km. Tambahkan gymmu dengan nama di bawah.",
+  "No gyms on the map within 5 km. Add yours by name below.": "Tidak ada gym di peta dalam radius 5 km. Tambahkan gymmu dengan nama di bawah.",
   "Gyms near you": "Gym di dekatmu",
   "{name}, added": "{name}, sudah ditambahkan",
   "Add {name}": "Tambah {name}",
