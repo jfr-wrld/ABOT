@@ -64,11 +64,16 @@ in with Google, then import or sign in again after installing.
 - Pause and resume the workout clock.
 
 ### Workout in the notification panel (Android)
-- While a workout runs, a notification shows the next lift and set, the workout, and a clock
-  Android ticks itself: rest counting down, otherwise workout time.
-- **Pause / Resume** and **Skip rest** buttons on the notification.
+- While a workout runs, a notification shows the next lift and set, and a clock Android ticks
+  itself: rest counting down, otherwise workout time. It stays up with ABOT closed or the
+  screen locked (a foreground service, so battery savers leave it alone).
+- Buttons: **+30s**, **Skip rest** and **Log set** while resting; **Log set** and **Pause**
+  otherwise; **Resume** while paused. Log set ticks the next set with its weight and reps.
+- Settings: show it for rest and workout, or rest only; second line with the next set's target
+  or the total volume.
 - The end of a rest rings and buzzes, even with ABOT in the background.
-- On Android 16 the clock shows as a chip in the status bar (Live Update).
+- On Android 16 the clock shows as a chip in the status bar (Live Update). One UI and HyperOS
+  decide for themselves which apps get their own status bar pill.
 
 ### Routines and templates
 - Your own routines, plus a Template Vault of ready programs (PPL, Upper/Lower, Full Body,

@@ -9,6 +9,7 @@ import { exactAlarmsAllowed, openExactAlarmSettings, testRestAlert } from "@/lib
 import { openNotificationSettings } from "@/lib/native/permissions";
 import { useAppResumed } from "@/lib/native/useAppResumed";
 import { Button } from "@/components/ui/Button";
+import { LiveCapsuleSettings } from "./LiveCapsuleSettings";
 import { useT } from "@/i18n";
 
 /** Settings row: the workout status notification shown while ABOT is in the background. */
@@ -66,13 +67,13 @@ export function LiveStatusSetting() {
         <InfoTip
           title={
             <label htmlFor="live-status" className="text-sm font-semibold">
-              {t("Status outside the app")}
+              {app ? t("Live timer in the status bar") : t("Status outside the app")}
             </label>
           }
-          name={t("status outside the app")}
+          name={app ? t("live timer") : t("status outside the app")}
         >
           {app
-            ? t("While a workout runs and you leave ABOT, a notification shows the workout and your next set, and rings when rest is over.")
+            ? t("While a workout runs, the status bar shows the rest countdown or the workout time, even with ABOT closed or the screen locked. Pull it down to add 30 seconds, skip rest or log the next set. It rings when rest is over.")
             : t("While a workout runs and you leave ABOT, a notification shows the workout, when rest ends and your next set. Phones only give the Dynamic Island and live updates to installed native apps, so this is a notification.")}
           {blocked &&
             " " +
@@ -99,6 +100,7 @@ export function LiveStatusSetting() {
           <span className="sr-only">{on ? t("On") : t("Off")}</span>
         </button>
       </div>
+      {app && on && <LiveCapsuleSettings />}
       {app && blocked && (
         <div className="mt-2 rounded-ctl border border-line bg-surface-2 p-3">
           <p className="text-xs text-text-muted">{t("Notifications are off for ABOT, so the rest alarm and the workout status cannot show.")}</p>

@@ -53,7 +53,7 @@ export function liveContent(
   return { title: `${session.name} · ${t("since {time}", { time: clock(session.startedAt, t) })}`, body: nextText };
 }
 
-/** What the Android app's live notification shows; Android draws and ticks the clock itself. */
+/** What the Android app's live notification shows (built in src/lib/live-capsule.ts). */
 export interface NativeLive {
   title: string;
   text: string;
@@ -62,36 +62,25 @@ export interface NativeLive {
   /** Set while paused: workout time so far, shown frozen under pausedTitle. */
   pausedElapsed?: number;
   pausedTitle: string;
-  /** A running rest: countdown to restEndsAt under restTitle, then overTitle and overText. */
+  /** A running rest: countdown to restEndsAt under restTitle and restText, then overTitle and overText. */
   restEndsAt?: number;
   restTitle?: string;
+  restText?: string;
   overTitle?: string;
   overText?: string;
-}
-
-export function nativeLiveContent(
-  session: WorkoutSession,
-  byId: Record<string, Exercise>,
-  rest: LiveRest | null,
-  now: number,
-  t: T = currentT(),
-): NativeLive {
-  const next = nextUp(session, byId, t);
-  const lift = next ? t("{name}, set {set}/{of}", { name: next.name, set: next.set, of: next.of }) : null;
-  const clockStart = session.startedAt + (session.pausedMs ?? 0);
-  const base: NativeLive = {
-    title: lift ?? t("All sets done"),
-    text: lift ? session.name : `${session.name} · ${t("tap to finish")}`,
-    clockStart,
-    pausedTitle: lift ? `${t("Paused")} · ${lift}` : t("Paused"),
-  };
-  if (session.pausedAt !== undefined) return { ...base, pausedElapsed: Math.max(0, session.pausedAt - clockStart) };
-  if (!rest || rest.endsAt <= now || !lift) return base;
-  return {
-    ...base,
-    restEndsAt: rest.endsAt,
-    restTitle: `${t("Rest")} · ${t("next {lift}", { lift })}`,
-    overTitle: `${t("Rest over")} · ${lift}`,
-    overText: session.name,
-  };
+  /** Rest alert: whether the end of a rest rings. Unset means it rings. */
+  ring?: boolean;
+  /** Shown only while a rest counts down. */
+  restOnly?: boolean;
+  /** The next set has weight and reps, so the Log set button can tick it. */
+  canLog?: boolean;
+  /** The rest Android starts when Log set is tapped while ABOT is frozen. */
+  logRestSec?: number;
+  loggedTitle?: string;
+  loggedText?: string;
+  addLabel?: string;
+  skipLabel?: string;
+  logLabel?: string;
+  pauseLabel?: string;
+  resumeLabel?: string;
 }

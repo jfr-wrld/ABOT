@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { liveContent, nativeLiveContent, nextUp } from "./live-workout";
+import { liveContent, nextUp } from "./live-workout";
 import type { Exercise, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES } from "@/data/exercises";
 
@@ -39,39 +39,5 @@ describe("live workout notification", () => {
   it("says when every set is done", () => {
     const done = { ...session, exercises: [{ ...session.exercises[0] }] };
     expect(liveContent(done, byId, null, start).body).toBe("All sets done. Tap to finish.");
-  });
-});
-
-describe("Android live notification", () => {
-  it("leads with the next lift and lets the clock count up from the start", () => {
-    expect(nativeLiveContent(session, byId, null, start + 60_000)).toEqual({
-      title: "Overhead Press (Barbell), set 2/3",
-      text: "Push A",
-      clockStart: start,
-      pausedTitle: "Paused · Overhead Press (Barbell), set 2/3",
-    });
-  });
-
-  it("counts a running rest down, then says rest is over", () => {
-    const endsAt = start + 5 * 60_000;
-    const c = nativeLiveContent(session, byId, { endsAt }, start + 4 * 60_000);
-    expect(c).toMatchObject({
-      restEndsAt: endsAt,
-      restTitle: "Rest · next Overhead Press (Barbell), set 2/3",
-      overTitle: "Rest over · Overhead Press (Barbell), set 2/3",
-      overText: "Push A",
-    });
-  });
-
-  it("freezes the clock while paused, moved on by earlier pauses", () => {
-    const paused = { ...session, pausedMs: 60_000, pausedAt: start + 10 * 60_000 };
-    const c = nativeLiveContent(paused, byId, null, start + 20 * 60_000);
-    expect(c.clockStart).toBe(start + 60_000);
-    expect(c.pausedElapsed).toBe(9 * 60_000);
-    expect(c.restEndsAt).toBeUndefined();
-  });
-
-  it("drops a rest that already ended", () => {
-    expect(nativeLiveContent(session, byId, { endsAt: start }, start + 1).restEndsAt).toBeUndefined();
   });
 });

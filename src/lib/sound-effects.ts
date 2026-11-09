@@ -9,6 +9,9 @@
  * - set complete: dual-tone lock, 600 Hz then 900 Hz, 90 ms in all
  * - rest timer zero: three 1000 Hz pulses
  * - PR unlocked: A major arpeggio 440, 554, 659, 880 Hz
+ * - rest countdown: an 800 Hz pip at 3, 2 and 1 seconds left
+ * - workout start: a 220 to 440 Hz glide, then an 880 Hz click
+ * - workout complete: C major rolled upward (523, 659, 784, 1047 Hz; 1319 Hz on top for a record)
  */
 
 type Wave = OscillatorType;
@@ -97,4 +100,26 @@ export function playRestTimerZero(): boolean {
 export function playPRUnlocked(): boolean {
   const notes = [440, 554.37, 659.25, 880];
   return play(notes.map((f, i) => ({ wave: "sine" as Wave, from: f, at: i * 0.09, dur: i === notes.length - 1 ? 0.45 : 0.16, peak: 0.24 })));
+}
+
+/** The last three seconds of rest: one short, soft pip per second, below the zero alarm. */
+export function playRestCountdown(): boolean {
+  return play([{ wave: "triangle", from: 800, at: 0, dur: 0.05, peak: 0.12 }]);
+}
+
+/** A workout started: a short rising glide that lands on a click, like power coming on. */
+export function playWorkoutStart(): boolean {
+  return play([
+    { wave: "sine", from: 220, to: 440, at: 0, dur: 0.16, peak: 0.2 },
+    { wave: "triangle", from: 880, at: 0.17, dur: 0.05, peak: 0.2 },
+  ]);
+}
+
+/**
+ * A workout finished: a C major chord rolled upward and left to ring. With a record, one higher
+ * note on top, so it is told apart without reading the screen.
+ */
+export function playWorkoutComplete(record = false): boolean {
+  const notes = [523.25, 659.25, 783.99, 1046.5, ...(record ? [1318.51] : [])];
+  return play(notes.map((f, i) => ({ wave: "sine" as Wave, from: f, at: i * 0.08, dur: 0.7 - i * 0.05, peak: 0.18 })));
 }

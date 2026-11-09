@@ -66,3 +66,32 @@ test("a heavier repeat of a lift plays the record chord; a first-ever lift does 
   await logSet(page, 1, "70", "8");
   await expect.poll(async () => (await tones(page)).slice(before)).toEqual(expect.arrayContaining([440, 554, 659, 880]));
 });
+
+test("starting plays the power-on glide and finishing plays the closing chord", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await expect.poll(() => tones(page)).toEqual(expect.arrayContaining([220, 880]));
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  const before = (await tones(page)).length;
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.waitForURL(/summary/);
+  await expect.poll(async () => (await tones(page)).slice(before)).toEqual(expect.arrayContaining([523, 659, 784, 1047]));
+});
+
+test("the end of a rest pips at 3, 2, 1 and then rings", async ({ page }) => {
+  await page.clock.install();
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await expect(page.getByRole("timer")).toBeVisible();
+  const before = (await tones(page)).length;
+  for (let i = 0; i < 6 * 60; i++) {
+    await page.clock.runFor(500);
+    if ((await tones(page)).slice(before).filter((f) => f === 1000).length >= 3) break;
+  }
+  const rest = (await tones(page)).slice(before);
+  expect(rest.filter((f) => f === 800)).toHaveLength(3);
+  expect(rest.filter((f) => f === 1000)).toHaveLength(3);
+  expect(rest.indexOf(800)).toBeLessThan(rest.indexOf(1000));
+});
