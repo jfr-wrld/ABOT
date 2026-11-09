@@ -108,6 +108,15 @@ in with Google, then import or sign in again after installing.
 - Workout, Notifications (with a test alert), Data & backup, app permissions.
 - FAQ, About, Contact us, social links (coming soon), Sign out.
 
+### Health apps (Android)
+- Settings, Health apps connects ABOT to Android Health Connect. Finished workouts go there as
+  weightlifting with estimated calories (MET method, from volume per minute, RPE and your body
+  weight), on their own with Auto-sync on. Google Fit, Samsung Health and Huawei Health read
+  them once their Health Connect sharing is on. Your latest weigh-in and last night's sleep
+  come back: the weight feeds the calorie estimate, the sleep the recovery map.
+- Every workout summary shows the calorie estimate and can share the workout as a `.tcx` file
+  for Strava, Garmin Connect or Huawei Health. Android 8 or newer is needed.
+
 ### Backup and sync
 - Export and import everything as a JSON file (`ABOT_BACKUP_YYYY_MM_DD.json`), no account
   needed. Restore by merging (nothing local is removed) or by replacing everything.

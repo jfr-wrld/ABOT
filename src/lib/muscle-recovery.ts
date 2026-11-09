@@ -9,6 +9,10 @@ import { REGIONS, regionsFor, type Region } from "@/components/anatomy/regions";
  * 0.75x). Fatigue is capped at 100% and falls in a straight line: a big muscle is back to 0 in
  * 72 hours (about 1.4% an hour), a small one in 48. Nothing is stored; the state is worked out
  * from the history each time, so edited or imported workouts count straight away.
+ *
+ * Last night's sleep, when Health Connect has it, scales that speed: 8 hours is the normal
+ * rate, less sleep slows recovery (down to 0.7x at 5h36m or less), more speeds it slightly (at
+ * most 1.1x). Sleep that ended over a day ago is ignored.
  */
 
 export const PRIMARY_FATIGUE = 15;
@@ -26,6 +30,17 @@ export function recoveryHours(m: MuscleGroup): number {
 const HOUR = 3_600_000;
 /** Older sets cannot matter: even 100% is gone after 72 hours. Twice that covers any capping. */
 const LOOKBACK = 144 * HOUR;
+
+export interface Sleep {
+  minutes: number;
+  endAt: number;
+}
+
+/** How fast muscles recover after this sleep, against an 8 hour night. */
+export function sleepFactor(sleep: Sleep | null | undefined, now: number): number {
+  if (!sleep || now - sleep.endAt > 24 * HOUR || sleep.endAt > now) return 1;
+  return Math.min(1.1, Math.max(0.7, sleep.minutes / 480));
+}
 
 /** RPE scales the load of a set: harder sets tire more. */
 function rpeFactor(rpe: number | null): number {
@@ -87,18 +102,25 @@ function hits(sessions: WorkoutSession[], byId: Record<string, Exercise>, now: n
 }
 
 /** Fatigue per muscle (0 to 100) at `now`. */
-export function muscleFatigue(sessions: WorkoutSession[], byId: Record<string, Exercise>, now: number): Partial<Record<MuscleGroup, number>> {
+export function muscleFatigue(
+  sessions: WorkoutSession[],
+  byId: Record<string, Exercise>,
+  now: number,
+  sleep?: Sleep | null,
+): Partial<Record<MuscleGroup, number>> {
+  const speed = sleepFactor(sleep, now);
+  const rate = (m: MuscleGroup) => (100 / recoveryHours(m)) * speed;
   const level = new Map<MuscleGroup, { f: number; at: number }>();
   for (const h of hits(sessions, byId, now)) {
     for (const [m, v] of h.loads) {
       const prev = level.get(m);
-      const decayed = prev ? Math.max(0, prev.f - ((h.at - prev.at) / HOUR) * (100 / recoveryHours(m))) : 0;
+      const decayed = prev ? Math.max(0, prev.f - ((h.at - prev.at) / HOUR) * rate(m)) : 0;
       level.set(m, { f: Math.min(100, decayed + v), at: h.at });
     }
   }
   const out: Partial<Record<MuscleGroup, number>> = {};
   for (const [m, { f, at }] of level) {
-    const v = Math.max(0, f - ((now - at) / HOUR) * (100 / recoveryHours(m)));
+    const v = Math.max(0, f - ((now - at) / HOUR) * rate(m));
     if (v > 0) out[m] = v;
   }
   return out;
@@ -128,8 +150,14 @@ export interface RegionTelemetry {
 }
 
 /** What each drawn shape shows: its fatigue, stage, last session and time to ready. */
-export function regionTelemetry(sessions: WorkoutSession[], byId: Record<string, Exercise>, now: number): Record<Region, RegionTelemetry> {
-  const fatigue = muscleFatigue(sessions, byId, now);
+export function regionTelemetry(
+  sessions: WorkoutSession[],
+  byId: Record<string, Exercise>,
+  now: number,
+  sleep?: Sleep | null,
+): Record<Region, RegionTelemetry> {
+  const speed = sleepFactor(sleep, now);
+  const fatigue = muscleFatigue(sessions, byId, now, sleep);
   const all = hits(sessions, byId, now);
   const out = {} as Record<Region, RegionTelemetry>;
   for (const region of REGIONS) {
@@ -139,7 +167,7 @@ export function regionTelemetry(sessions: WorkoutSession[], byId: Record<string,
     for (const m of muscles) {
       const v = fatigue[m] ?? 0;
       f = Math.max(f, v);
-      if (v > READY_AT) ready = Math.max(ready, Math.ceil((v - READY_AT) / (100 / recoveryHours(m))));
+      if (v > READY_AT) ready = Math.max(ready, Math.ceil((v - READY_AT) / ((100 / recoveryHours(m)) * speed)));
     }
     const touching = all.filter((h) => h.loads.some(([m]) => muscles.includes(m)));
     const last = touching[touching.length - 1];

@@ -7,12 +7,14 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SECTION_TITLE, SettingsHome, type SettingsSection } from "@/components/settings/SettingsHome";
 import { DataSection, GeneralSection, NotificationsSection, WorkoutSection } from "@/components/settings/sections";
 import { AboutSection, FaqSection } from "@/components/settings/SupportSections";
+import { HealthSyncCard } from "@/components/settings/HealthSyncCard";
 import { useT } from "@/i18n";
 
 const SECTIONS: Record<SettingsSection, () => React.ReactNode> = {
   general: GeneralSection,
   workout: WorkoutSection,
   notifications: NotificationsSection,
+  health: HealthSyncCard,
   data: DataSection,
   faq: FaqSection,
   about: AboutSection,

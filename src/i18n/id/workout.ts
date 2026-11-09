@@ -273,4 +273,18 @@ export const workout: Record<string, string> = {
   Recovering: "Pemulihan",
   "High load": "Beban tinggi",
   Exhausted: "Kelelahan",
+  // Calories and health sync on the summary
+  "Saved the .tcx file to Downloads.": "File .tcx disimpan ke Download.",
+  "Could not share the file: {error}": "File tidak bisa dibagikan: {error}",
+  "Calories (estimate)": "Kalori (estimasi)",
+  "MET {met} for {kg} kg body weight and {min} minutes.": "MET {met} untuk berat badan {kg} kg selama {min} menit.",
+  "Worked out for 75 kg. Set your body weight for a closer figure.": "Dihitung untuk 75 kg. Isi berat badanmu agar lebih akurat.",
+  "Set body weight": "Isi berat badan",
+  "Sending to Health Connect...": "Mengirim ke Health Connect...",
+  "Sent to Health Connect.": "Terkirim ke Health Connect.",
+  "Not sent to Health Connect: {error}": "Tidak terkirim ke Health Connect: {error}",
+  "Share as .tcx (Strava, Garmin, Huawei)": "Bagikan sebagai .tcx (Strava, Garmin, Huawei)",
+  "Last night's sleep ({h}h {m}m) slows recovery to {pct}% of the usual rate.": "Tidur semalam ({h} j {m} m) memperlambat pemulihan menjadi {pct}% dari biasanya.",
+  "Last night's sleep ({h}h {m}m) speeds recovery to {pct}% of the usual rate.": "Tidur semalam ({h} j {m} m) mempercepat pemulihan menjadi {pct}% dari biasanya.",
+  estimated: "estimasi",
 };

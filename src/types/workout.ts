@@ -248,6 +248,10 @@ export interface UserSettings {
   theme: AppTheme;
   /** Tick, latch and PR sounds with matching vibration on taps (Phase 2 tactile feedback). */
   tapFeedback: boolean;
+  /** Send each finished workout to Health Connect (Android app). */
+  healthAutoSync: boolean;
+  /** Last night's sleep from Health Connect; scales the recovery map. */
+  lastSleep: { minutes: number; endAt: number } | null;
 }
 
 export type AppLanguage = "auto" | "en" | "id";
@@ -280,6 +284,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   language: "auto",
   theme: "system",
   tapFeedback: true,
+  healthAutoSync: false,
+  lastSleep: null,
   bodyweightKg: null,
   heightCm: null,
   profilePhoto: null,

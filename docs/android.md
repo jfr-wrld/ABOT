@@ -63,6 +63,16 @@ installs over the old one and keeps the workouts. That key is for side-loaded te
 - `src/components/layout/NativeShell.tsx`: back button and swipe, notification taps, and the
   Google sign-in return (`app.abot.gym://auth/callback`; setup in `docs/cloud-sync-setup.md`).
 - The system splash is plain black with no icon, so the app's animated splash is the only one.
+- Health Connect (`HealthConnectPlugin.kt`, `src/lib/health-sync.ts`, Settings, Health apps):
+  finished workouts are written as weightlifting sessions with their estimated active calories
+  (`src/lib/calorie-estimator.ts`); the latest weight and last night's sleep are read back.
+  Samsung Health and Huawei Health see them once their own Health Connect sharing is on. Records
+  use the workout id as client record id, so a re-sync updates. `@capgo/capacitor-health` was
+  not used: it cannot write exercise sessions, and its manifest adds about 50 health
+  permissions. The app module builds Kotlin for this (connect-client is coroutine based) and
+  needs minSdk 26. `HealthPermissionsRationaleActivity` answers Health Connect's "why" link;
+  without an activity for `ACTION_SHOW_PERMISSIONS_RATIONALE` no permission dialog appears.
+  The emulator smoke test grants the permissions and writes a workout twice.
 
 ## Not yet native
 

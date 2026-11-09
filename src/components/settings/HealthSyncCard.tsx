@@ -45,7 +45,9 @@ export function HealthSyncCard() {
   const [busy, setBusy] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [lines, setLines] = useState<{ text: string; error?: boolean }[]>([]);
-  const [weightText, setWeightText] = useState(bodyweightKg ? String(toDisplay(bodyweightKg, unit)) : "");
+  // What is being typed; null shows the saved body weight.
+  const [draft, setDraft] = useState<string | null>(null);
+  const weightText = draft ?? (bodyweightKg ? String(toDisplay(bodyweightKg, unit)) : "");
 
   const refresh = useCallback(() => {
     HealthSyncService.status()
@@ -55,7 +57,6 @@ export function HealthSyncCard() {
   useEffect(refresh, [refresh]);
   // Coming back from Health Connect's permission screen or its settings.
   useAppResumed(refresh);
-  useEffect(() => setWeightText(bodyweightKg ? String(toDisplay(bodyweightKg, unit)) : ""), [bodyweightKg, unit]);
 
   const say = (text: string, error = false) => setLines((l) => [...l, { text, error }]);
 
@@ -104,8 +105,10 @@ export function HealthSyncCard() {
   }
 
   function saveWeight() {
-    const v = Number(weightText.replace(",", "."));
-    if (!weightText.trim()) return;
+    if (draft === null) return;
+    setDraft(null);
+    const v = Number(draft.replace(",", "."));
+    if (!draft.trim()) return;
     const kg = fromDisplay(v, unit);
     const [min, max] = PROFILE_LIMITS.bodyweightKg;
     if (!Number.isFinite(kg) || kg < min || kg > max) {
@@ -131,7 +134,7 @@ export function HealthSyncCard() {
     <section aria-labelledby="health-heading" className="flex flex-col gap-4">
       <div className="force-dark flex flex-col gap-3 rounded-card border border-line-strong bg-bg p-4 text-text">
         <h2 id="health-heading" className="text-sm font-semibold">
-          {t("Health apps")}
+          Health Connect
         </h2>
         <p role="status" className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.14em]">
           {line ? (
@@ -178,7 +181,7 @@ export function HealthSyncCard() {
           id="health-weight"
           inputMode="decimal"
           value={weightText}
-          onChange={(e) => setWeightText(e.target.value)}
+          onChange={(e) => setDraft(e.target.value)}
           onBlur={saveWeight}
           onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
           placeholder={unit === "kg" ? "75" : "165"}

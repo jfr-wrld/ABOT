@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { Bell, ChevronRight, CircleHelp, Cloud, Dumbbell, Info, LogOut, Mail, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import { Bell, ChevronRight, CircleHelp, Cloud, Dumbbell, HeartPulse, Info, LogOut, Mail, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useSyncStore } from "@/store/useSyncStore";
 import { useReminderStore } from "@/store/useReminderStore";
@@ -52,6 +52,7 @@ export function SettingsHome() {
           title={t(SECTION_TITLE.notifications)}
           value={notify === "granted" ? t("On") : notify === "denied" ? t("Off") : t("Not set")}
         />
+        <Row to={href("health")} icon={HeartPulse} title={t(SECTION_TITLE.health)} value={s.healthAutoSync ? t("Auto-sync on") : "Health Connect"} />
       </Group>
 
       <Group title={t("Support")}>

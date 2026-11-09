@@ -20,6 +20,7 @@ import { supersetLabels } from "@/lib/superset";
 import { scrollToExercise } from "@/lib/scroll-to-exercise";
 import type { PRKind } from "@/types/workout";
 import { summaryPath } from "@/lib/routes";
+import { autoSyncFinished } from "@/store/useHealthSyncStore";
 import { useT } from "@/i18n";
 
 export default function WorkoutPage() {
@@ -158,6 +159,7 @@ function WorkoutScreen() {
         onMarkRemaining={() => completeAllRemaining()}
         onConfirm={() => {
           const done = finishActive();
+          if (done) autoSyncFinished(done, byId);
           setFinishOpen(false);
           router.push(done ? summaryPath(done.id) : "/");
         }}

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, ChevronRight, Dumbbell, Layers, Play, Plus, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { Check, ChevronRight, Dumbbell, Flame, Layers, Play, Plus, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -17,7 +17,8 @@ import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
 import { REGIONS, type Region } from "@/components/anatomy/regions";
 import { Sheet } from "@/components/ui/Sheet";
-import { regionTelemetry, type RegionTelemetry } from "@/lib/muscle-recovery";
+import { regionTelemetry, sleepFactor, type RegionTelemetry, type Sleep } from "@/lib/muscle-recovery";
+import { estimateCalories } from "@/lib/calorie-estimator";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume, toDisplay } from "@/lib/units";
@@ -317,7 +318,11 @@ function ThisWeek({ now }: { now: number }) {
   const freq = weeklyFrequency(sessions, schedule, now, firstDayOfWeek);
   const active = useWorkoutStore((s) => s.active);
   // Sets ticked in a workout still running tire the muscles too.
-  const recovery = useMemo(() => regionTelemetry(active ? [...sessions, active] : sessions, byId, now), [sessions, active, byId, now]);
+  const sleep = useSettingsStore((s) => s.lastSleep);
+  const recovery = useMemo(
+    () => regionTelemetry(active ? [...sessions, active] : sessions, byId, now, sleep),
+    [sessions, active, byId, now, sleep],
+  );
 
   return (
     <section aria-label={t("This week")} className="grid grid-cols-2 gap-2">
@@ -330,7 +335,7 @@ function ThisWeek({ now }: { now: number }) {
         unit={weightUnit}
       />
       <SessionsRing done={freq.done} target={freq.target ?? 7} perWeek={freq.target !== null} />
-      <RecoveryCard data={recovery} now={now} />
+      <RecoveryCard data={recovery} now={now} sleep={sleep} />
     </section>
   );
 }
@@ -436,8 +441,9 @@ function SessionsRing({ done, target, perWeek }: { done: number; target: number;
  * The body, front and back, coloured by how tired each muscle is. Tapping opens the full map:
  * one side at a time, each muscle with its recovery and time to ready.
  */
-function RecoveryCard({ data, now }: { data: Record<Region, RegionTelemetry>; now: number }) {
+function RecoveryCard({ data, now, sleep }: { data: Record<Region, RegionTelemetry>; now: number; sleep: Sleep | null }) {
   const t = useT();
+  const speed = sleepFactor(sleep, now);
   const [open, setOpen] = useState(false);
   const ready = REGIONS.filter((r) => data[r].stage === "fresh").length;
   return (
@@ -459,6 +465,13 @@ function RecoveryCard({ data, now }: { data: Record<Region, RegionTelemetry>; no
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={t("Muscle recovery")}>
         <RecoveryMap data={data} now={now} />
+        {speed !== 1 && sleep && (
+          <p className="mt-3 text-xs font-semibold tabular-nums">
+            {speed < 1
+              ? t("Last night's sleep ({h}h {m}m) slows recovery to {pct}% of the usual rate.", { h: Math.floor(sleep.minutes / 60), m: sleep.minutes % 60, pct: Math.round(speed * 100) })
+              : t("Last night's sleep ({h}h {m}m) speeds recovery to {pct}% of the usual rate.", { h: Math.floor(sleep.minutes / 60), m: sleep.minutes % 60, pct: Math.round(speed * 100) })}
+          </p>
+        )}
         <p className="mt-3 text-xs text-text-muted">
           {t(
             "Each working set adds fatigue: 15% to the main muscles, 7.5% to the helpers, more at a high RPE. It fades by itself: big muscles are fresh again in 72 hours, small ones in 48.",
@@ -522,7 +535,11 @@ function RecentCard({
 }) {
   const t = useT();
   const controls = useEntrance();
+  const bodyweightKg = useSettingsStore((st) => st.bodyweightKg);
   const { completed } = countSets(s);
+  const est = estimateCalories(s, { bodyweightKg, byId });
+  // Under a minute (a test tap, a mistake) the figure means nothing.
+  const kcal = est.minutes >= 1 ? est.kcal : 0;
   const stats = (
     <p className="num flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-zinc-400">
       <span className="inline-flex items-center gap-1 whitespace-nowrap">
@@ -533,6 +550,13 @@ function RecentCard({
         <Dumbbell aria-hidden="true" size={12} />
         {formatVolume(sessionVolume(s, byId), unit)}
       </span>
+      {kcal > 0 && (
+        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+          <Flame aria-hidden="true" size={12} />
+          {kcal} kcal
+          <span className="sr-only"> {t("estimated")}</span>
+        </span>
+      )}
       <span className="inline-flex items-center gap-1 whitespace-nowrap">
         <Layers aria-hidden="true" size={12} />
         {completed}

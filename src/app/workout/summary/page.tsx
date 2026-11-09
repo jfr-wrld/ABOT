@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDownRight, ArrowUpRight, Dumbbell, House, Layers, ListOrdered, Sparkles, Timer, Trophy } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Sparkles, Timer, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -22,6 +22,10 @@ import { MUSCLE_GROUP_LABELS, type Exercise, type PersonalRecord, type WeightUni
 import { historyPath } from "@/lib/routes";
 import { buzz } from "@/lib/native/haptics";
 import { useT } from "@/i18n";
+import { estimateCalories } from "@/lib/calorie-estimator";
+import { HealthSyncService } from "@/lib/health-sync";
+import { useHealthSyncStore } from "@/store/useHealthSyncStore";
+import type { WorkoutSession } from "@/types/workout";
 import { muscleText } from "@/lib/home";
 
 export default function WorkoutSummaryPage() {
@@ -108,6 +112,10 @@ function Summary() {
               format={(n) => String(Math.round(n))}
             />
           </dl>
+        </Rise>
+
+        <Rise order={8}>
+          <Calories session={session} byId={byId} unit={weightUnit} />
         </Rise>
 
         {prev && prevVolume > 0 && (
@@ -282,6 +290,84 @@ function Celebration({ record }: { record: boolean }) {
         />
       </svg>
     </div>
+  );
+}
+
+/**
+ * The estimated calories (MET method, see lib/calorie-estimator), whether the workout reached
+ * Health Connect, and the .tcx file for Strava, Garmin or Huawei Health.
+ */
+function Calories({ session, byId, unit }: { session: WorkoutSession; byId: Record<string, Exercise>; unit: WeightUnit }) {
+  const t = useT();
+  const bodyweightKg = useSettingsStore((s) => s.bodyweightKg);
+  const sync = useHealthSyncStore((s) => s.bySession[session.id]);
+  const send = useHealthSyncStore((s) => s.send);
+  const [fileNote, setFileNote] = useState<string | null>(null);
+  const est = estimateCalories(session, { bodyweightKg, byId });
+
+  async function shareTcx() {
+    setFileNote(null);
+    try {
+      const r = await HealthSyncService.shareWorkoutTCX(session, { byId, unit });
+      if (r === "saved") setFileNote(t("Saved the .tcx file to Downloads."));
+    } catch (e) {
+      setFileNote(t("Could not share the file: {error}", { error: e instanceof Error ? e.message : String(e) }));
+    }
+  }
+
+  return (
+    <section aria-labelledby="summary-kcal" className="panel flex flex-col gap-2 p-3">
+      <div className="flex items-center gap-3">
+        <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted">
+          <Flame size={16} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 id="summary-kcal" className="label-caps">
+            {t("Calories (estimate)")}
+          </h2>
+          <p className="num text-lg font-bold tabular-nums">{est.kcal} kcal</p>
+        </div>
+      </div>
+      <p className="text-xs text-text-muted tabular-nums">
+        {est.bodyweightKnown ? (
+          t("MET {met} for {kg} kg body weight and {min} minutes.", { met: est.met, kg: est.bodyweightKg, min: Math.round(est.minutes) })
+        ) : (
+          <>
+            {t("Worked out for 75 kg. Set your body weight for a closer figure.")}{" "}
+            <Link href="/settings?section=health" className="font-semibold text-text underline underline-offset-4">
+              {t("Set body weight")}
+            </Link>
+          </>
+        )}
+      </p>
+      {sync && (
+        <p role="status" className={`text-xs ${sync.state === "failed" ? "text-failure" : "text-text-muted"}`}>
+          {sync.state === "sending"
+            ? t("Sending to Health Connect...")
+            : sync.state === "sent"
+              ? t("Sent to Health Connect.")
+              : t("Not sent to Health Connect: {error}", { error: t(sync.reason) })}
+          {sync.state === "failed" && (
+            <button type="button" onClick={() => send(session, byId)} className="ml-2 min-h-11 font-semibold text-text underline underline-offset-4">
+              {t("Try again")}
+            </button>
+          )}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={shareTcx}
+        className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-ink/[0.12] bg-surface-2 px-3 text-sm font-semibold text-text hover:border-ink/25"
+      >
+        <FileDown aria-hidden="true" size={16} />
+        {t("Share as .tcx (Strava, Garmin, Huawei)")}
+      </button>
+      {fileNote && (
+        <p role="status" className="text-xs text-text-muted">
+          {fileNote}
+        </p>
+      )}
+    </section>
   );
 }
 

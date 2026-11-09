@@ -43,6 +43,8 @@ function pickSettings(s: SettingsState): StoredSettings {
     language: s.language,
     theme: s.theme,
     tapFeedback: s.tapFeedback,
+    healthAutoSync: s.healthAutoSync,
+    lastSleep: s.lastSleep,
     bodyweightKg: s.bodyweightKg,
     heightCm: s.heightCm,
     profilePhoto: s.profilePhoto,

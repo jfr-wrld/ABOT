@@ -91,6 +91,8 @@ describe.each([
         language: "id",
         theme: "light",
         tapFeedback: false,
+        healthAutoSync: true,
+        lastSleep: { minutes: 430, endAt: 1_700_000_000_000 },
         bodyweightKg: 72.5,
         heightCm: 170,
         profilePhoto: null,

@@ -444,4 +444,48 @@ export const settings: Record<string, string> = {
   "This CSV does not look like a workout export. It needs date, exercise name and weight or reps columns.":
     "CSV ini tidak terlihat seperti ekspor workout. Perlu kolom tanggal, nama latihan, dan berat atau repetisi.",
   "No workouts were found in this file": "Tidak ada workout di file ini",
+  // Health apps (Health Connect)
+  "Health apps": "Aplikasi kesehatan",
+  "Auto-sync on": "Sinkron otomatis aktif",
+  "Health Connect // Active": "Health Connect // Aktif",
+  "Health Connect // Partial access": "Health Connect // Akses sebagian",
+  Disconnected: "Tidak terhubung",
+  "Health Connect not installed": "Health Connect belum terpasang",
+  "Health Connect needs an update": "Health Connect perlu diperbarui",
+  "Android app only": "Hanya di aplikasi Android",
+  "Health Connect is only in the Android app": "Health Connect hanya ada di aplikasi Android",
+  "Only finished workouts are synced": "Hanya workout yang sudah selesai yang disinkronkan",
+  "No access was given. Tap Connect again, or allow ABOT in Health Connect.": "Akses belum diberikan. Ketuk Hubungkan lagi, atau izinkan ABOT di Health Connect.",
+  "Health Connect did not answer: {error}": "Health Connect tidak merespons: {error}",
+  'Sent "{name}" ({kcal} kcal) to Health Connect.': '"{name}" ({kcal} kkal) terkirim ke Health Connect.',
+  "Could not send the workout: {error}": "Workout tidak bisa dikirim: {error}",
+  "No finished workout to send yet.": "Belum ada workout selesai untuk dikirim.",
+  "Latest weight: {w} {unit}.": "Berat terbaru: {w} {unit}.",
+  "No weigh-in in Health Connect in the last 30 days.": "Tidak ada data timbang di Health Connect dalam 30 hari terakhir.",
+  "Last night's sleep: {time}.": "Tidur semalam: {time}.",
+  "No sleep recorded last night.": "Tidak ada data tidur semalam.",
+  "Enter a body weight between {min} and {max} {unit}.": "Masukkan berat badan antara {min} dan {max} {unit}.",
+  "Install Health Connect": "Pasang Health Connect",
+  "Update Health Connect": "Perbarui Health Connect",
+  "Manage access in Health Connect": "Atur akses di Health Connect",
+  "Connect Google / Huawei / Samsung Health": "Hubungkan Google / Huawei / Samsung Health",
+  "Checking...": "Memeriksa...",
+  "Finished workouts go to Health Connect as weightlifting with their calories, where Google Fit, Samsung Health and Huawei Health can read them. Weight and sleep come back. All on this phone.":
+    "Workout yang selesai masuk ke Health Connect sebagai angkat beban beserta kalorinya, lalu bisa dibaca Google Fit, Samsung Health, dan Huawei Health. Berat badan dan tidur dibaca balik. Semua tetap di HP ini.",
+  "Health sync needs the ABOT Android app. Here you can still share any workout as a .tcx file from its summary.":
+    "Sinkron kesehatan butuh aplikasi Android ABOT. Di sini kamu tetap bisa membagikan workout sebagai file .tcx dari ringkasannya.",
+  "How to link Huawei or Samsung Health": "Cara menghubungkan Huawei atau Samsung Health",
+  "Auto-sync completed workouts": "Sinkron otomatis workout selesai",
+  "Each workout is sent to Health Connect when you tap Finish. Sending it again later updates it, it never adds a copy.":
+    "Setiap workout dikirim ke Health Connect saat kamu menekan Selesai. Mengirim ulang akan memperbarui datanya, tidak membuat salinan.",
+  "Body weight ({unit})": "Berat badan ({unit})",
+  "Used for the calorie estimate. A newer weigh-in from Health Connect replaces it.": "Dipakai untuk estimasi kalori. Data timbang yang lebih baru dari Health Connect akan menggantikannya.",
+  "Last sleep from Health Connect: {time}. The recovery map uses it.": "Tidur terakhir dari Health Connect: {time}. Peta pemulihan memakainya.",
+  "Test sync now": "Tes sinkron sekarang",
+  "Link other health apps": "Hubungkan aplikasi kesehatan lain",
+  "Me > Privacy management > Health Connect, then turn on sharing so it can read ABOT's workouts.":
+    "Saya > Manajemen privasi > Health Connect, lalu aktifkan berbagi agar bisa membaca workout ABOT.",
+  "Settings > Health Connect, then allow it to read exercise and calories.": "Pengaturan > Health Connect, lalu izinkan membaca olahraga dan kalori.",
+  "Apple Health needs an iPhone app, which ABOT does not have yet. Strava and Garmin take the .tcx file from a workout's summary.":
+    "Apple Health butuh aplikasi iPhone, yang belum dimiliki ABOT. Strava dan Garmin bisa menerima file .tcx dari ringkasan workout.",
 };
