@@ -104,6 +104,7 @@ describe.each([
         bodyweightKg: 72.5,
         heightCm: 170,
         profilePhoto: null,
+        bodyPhase: null,
       },
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },
       exerciseMedia: { "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" } },

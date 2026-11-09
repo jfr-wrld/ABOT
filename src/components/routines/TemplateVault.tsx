@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Copy, ListOrdered, Play, Timer } from "lucide-react";
+import { Check, Copy, ListOrdered, Play, Timer, Zap } from "lucide-react";
 import type { MuscleGroup, Routine } from "@/types/workout";
 import { useRoutineStore } from "@/store/useRoutineStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { PHASE_LABEL, templateFitsPhase } from "@/lib/phase-engine";
 import { SEED_EXERCISES_BY_ID } from "@/data/exercises";
 import { ROUTINE_TEMPLATES, SPLITS, estimateMinutes, templateToRoutine, type RoutineTemplate, type Split } from "@/lib/seed-routines";
 import { Button } from "@/components/ui/Button";
@@ -97,6 +99,7 @@ function TemplateCard({
   onSave: () => void;
 }) {
   const t = useT();
+  const phase = useSettingsStore((s) => (s.bodyPhase?.isActive ? s.bodyPhase.phaseType : null));
   const splitLabel = SPLITS.find((s) => s.value === tpl.split)?.label;
   const shown = tpl.exercises.slice(0, PREVIEW);
   const more = tpl.exercises.length - shown.length;
@@ -126,6 +129,12 @@ function TemplateCard({
           <h3 id={`${tpl.id}-title`} className="num mt-2 line-clamp-2 text-sm font-bold tracking-tight text-text">
             {tpl.code}
           </h3>
+          {phase && templateFitsPhase(tpl, phase) && (
+            <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-accent-tint px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
+              <Zap aria-hidden="true" size={11} />
+              {t("Fits your {phase}", { phase: t(PHASE_LABEL[phase]).toLowerCase() })}
+            </p>
+          )}
         </div>
         <ul aria-label={t("Muscles worked")} className="-mr-1 flex shrink-0">
           {muscles.map((m) => (

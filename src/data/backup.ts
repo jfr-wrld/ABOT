@@ -1,3 +1,4 @@
+import { normalizePhase } from "@/lib/phase-engine";
 import { normalizeHandle } from "@/lib/profile";
 import type { GymLocation } from "@/types/workout";
 import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry } from "@/types/workout";
@@ -116,6 +117,7 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     healthAutoSync: raw.healthAutoSync === true,
     lastSleep: normalizeSleep(raw.lastSleep),
     entitlement: normalizeEntitlement(raw.entitlement),
+    bodyPhase: normalizePhase(raw.bodyPhase),
     bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
     profilePhoto: normalizePhoto(raw.profilePhoto),
@@ -154,13 +156,18 @@ function normalizePhoto(v: unknown): string | null {
 }
 
 const DAY_ID = /^\d{4}-\d{2}-\d{2}$/;
+const BODY_FAT_RANGE = [2, 70] as const;
+const WAIST_RANGE = [40, 250] as const;
 function normalizeBodyweightLog(raw: unknown): BodyweightEntry[] {
   if (!Array.isArray(raw)) return [];
   const out: BodyweightEntry[] = [];
   for (const e of raw) {
     if (!isObj(e) || typeof e.id !== "string" || !DAY_ID.test(e.id) || typeof e.date !== "number") continue;
     const weightKg = inRange(e.weightKg, PROFILE_LIMITS.bodyweightKg);
-    if (weightKg !== null) out.push({ id: e.id, date: e.date, weightKg });
+    if (weightKg === null) continue;
+    const bodyFatPercent = inRange(e.bodyFatPercent, BODY_FAT_RANGE);
+    const waistCm = inRange(e.waistCm, WAIST_RANGE);
+    out.push({ id: e.id, date: e.date, weightKg, ...(bodyFatPercent !== null ? { bodyFatPercent } : {}), ...(waistCm !== null ? { waistCm } : {}) });
   }
   return mergeLog([], out);
 }

@@ -46,6 +46,7 @@ function pickSettings(s: SettingsState): StoredSettings {
     healthAutoSync: s.healthAutoSync,
     lastSleep: s.lastSleep,
     entitlement: s.entitlement,
+    bodyPhase: s.bodyPhase,
     bodyweightKg: s.bodyweightKg,
     heightCm: s.heightCm,
     profilePhoto: s.profilePhoto,

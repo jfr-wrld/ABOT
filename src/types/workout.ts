@@ -12,6 +12,7 @@
  */
 
 import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
+import type { ActivePhaseConfig } from "@/lib/phase-engine";
 
 export type WeightUnit = "kg" | "lbs";
 
@@ -256,6 +257,8 @@ export interface UserSettings {
   lastSleep: { minutes: number; endAt: number } | null;
   /** ABOT // BLACK PRO tier, founder pass and the monetization simulator (lib/entitlements). */
   entitlement: EntitlementState;
+  /** Cut, lean bulk, recomp or strength peak, with its targets (lib/phase-engine); null for none. */
+  bodyPhase: ActivePhaseConfig | null;
 }
 
 export type AppLanguage = "auto" | "en" | "id";
@@ -266,6 +269,9 @@ export interface BodyweightEntry {
   id: string;
   date: number;
   weightKg: number;
+  /** Optional measurements taken with the weigh-in. */
+  bodyFatPercent?: number;
+  waistCm?: number;
 }
 
 export const PROFILE_LIMITS = {
@@ -291,6 +297,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   healthAutoSync: false,
   lastSleep: null,
   entitlement: DEFAULT_ENTITLEMENT,
+  bodyPhase: null,
   bodyweightKg: null,
   heightCm: null,
   profilePhoto: null,

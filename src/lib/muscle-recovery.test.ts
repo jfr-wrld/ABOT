@@ -135,3 +135,17 @@ describe("regionTelemetry", () => {
     expect(r["upper-back"]).toMatchObject({ stage: "fresh", lastTrainedAt: null, lastSets: 0, readyInHours: 0 });
   });
 });
+
+describe("body phase", () => {
+  it("stretches recovery 15% while cutting and shortens it 10% while bulking", async () => {
+    const { setPhaseSource } = await import("./phase-engine");
+    const { recoveryHours } = await import("./muscle-recovery");
+    const base = recoveryHours("chest");
+    const p = { id: "p", title: "", startDate: "2026-11-01", durationWeeks: 8, startWeightKg: 80, targetWeightKg: 80, heightCm: 180, age: 30, biologicalSex: "male" as const, activityMultiplier: 1.375, weeklyRatePercent: 0, isActive: true };
+    setPhaseSource(() => ({ ...p, phaseType: "CUTTING" }));
+    expect(recoveryHours("chest")).toBeCloseTo(base * 1.15, 5);
+    setPhaseSource(() => ({ ...p, phaseType: "BULKING" }));
+    expect(recoveryHours("chest")).toBeCloseTo(base * 0.9, 5);
+    setPhaseSource(() => null);
+  });
+});

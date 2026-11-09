@@ -16,6 +16,7 @@ import { AbotWordmark } from "@/components/brand/AbotMark";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
+import { PhaseCommandCard } from "@/components/phase/PhaseCommandCard";
 import { AnnouncementBanner } from "@/components/remote/AnnouncementBanner";
 import { REGIONS, type Region } from "@/components/anatomy/regions";
 import { Sheet } from "@/components/ui/Sheet";
@@ -80,6 +81,10 @@ export function HomeDashboard() {
       </header>
 
       <Rise step={0.07} order={1}>{active ? <ActiveCard now={now} /> : <ProtocolHero next={next} byId={byId} />}</Rise>
+
+      <Rise step={0.07} order={2}>
+        <PhaseCommandCard now={now} />
+      </Rise>
 
       <Rise step={0.07} order={2}>
         <ThisWeek now={now} />

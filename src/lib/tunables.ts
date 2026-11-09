@@ -20,6 +20,24 @@ export interface Tunables {
   symmetry: { pushOverPull: number; quadHamMin: number; legsMinShare: number; minSets: number };
   story: { freePresets: number };
   gyms: { nearbyM: number };
+  phase: {
+    cutRecovery: number;
+    bulkRecovery: number;
+    cutDeficitMin: number;
+    cutDeficitMax: number;
+    bulkSurplusMin: number;
+    bulkSurplusMax: number;
+    recompCycle: number;
+    cutProtein: number;
+    bulkProtein: number;
+    recompProtein: number;
+    peakProtein: number;
+    cutFat: number;
+    bulkFat: number;
+    recompFat: number;
+    peakRestSec: number;
+    deloadEvery: number;
+  };
 }
 
 export const DEFAULT_TUNABLES: Tunables = {
@@ -29,6 +47,24 @@ export const DEFAULT_TUNABLES: Tunables = {
   symmetry: { pushOverPull: 1.25, quadHamMin: 0.75, legsMinShare: 0.25, minSets: 6 },
   story: { freePresets: 2 },
   gyms: { nearbyM: 300 },
+  phase: {
+    cutRecovery: 1.15,
+    bulkRecovery: 0.9,
+    cutDeficitMin: 350,
+    cutDeficitMax: 500,
+    bulkSurplusMin: 250,
+    bulkSurplusMax: 350,
+    recompCycle: 150,
+    cutProtein: 2.2,
+    bulkProtein: 1.8,
+    recompProtein: 2.0,
+    peakProtein: 2.0,
+    cutFat: 0.8,
+    bulkFat: 1.0,
+    recompFat: 0.9,
+    peakRestSec: 180,
+    deloadEvery: 4,
+  },
 };
 
 export interface TunableSpec {
@@ -92,6 +128,27 @@ export const TUNABLE_SPECS: { [G in keyof Tunables]: { title: string; fields: { 
       nearbyM: { label: "Gym counts as here within", min: 50, max: 2000, step: 10, unit: "m" },
     },
   },
+  phase: {
+    title: "Body phase protocols",
+    fields: {
+      cutRecovery: { label: "Recovery time while cutting", min: 0.5, max: 2, step: 0.05, unit: "x" },
+      bulkRecovery: { label: "Recovery time while bulking", min: 0.5, max: 2, step: 0.05, unit: "x" },
+      cutDeficitMin: { label: "Cut: smallest daily deficit", min: 0, max: 1500, step: 10, unit: "kcal" },
+      cutDeficitMax: { label: "Cut: largest daily deficit", min: 0, max: 1500, step: 10, unit: "kcal" },
+      bulkSurplusMin: { label: "Bulk: smallest daily surplus", min: 0, max: 1500, step: 10, unit: "kcal" },
+      bulkSurplusMax: { label: "Bulk: largest daily surplus", min: 0, max: 1500, step: 10, unit: "kcal" },
+      recompCycle: { label: "Recomp: training day + / rest day −", min: 0, max: 500, step: 10, unit: "kcal" },
+      cutProtein: { label: "Cut: protein per kg", min: 0.8, max: 3.5, step: 0.1, unit: "g" },
+      bulkProtein: { label: "Bulk: protein per kg", min: 0.8, max: 3.5, step: 0.1, unit: "g" },
+      recompProtein: { label: "Recomp: protein per kg", min: 0.8, max: 3.5, step: 0.1, unit: "g" },
+      peakProtein: { label: "Strength peak: protein per kg", min: 0.8, max: 3.5, step: 0.1, unit: "g" },
+      cutFat: { label: "Cut: fat per kg", min: 0.3, max: 2, step: 0.05, unit: "g" },
+      bulkFat: { label: "Bulk: fat per kg", min: 0.3, max: 2, step: 0.05, unit: "g" },
+      recompFat: { label: "Recomp and peak: fat per kg", min: 0.3, max: 2, step: 0.05, unit: "g" },
+      peakRestSec: { label: "Strength peak: rest after compounds", min: 60, max: 600, step: 15, unit: "s" },
+      deloadEvery: { label: "Deload every", min: 2, max: 12, step: 1, unit: "weeks" },
+    },
+  },
 };
 
 const clamp = (v: unknown, s: TunableSpec, fallback: number) => {
@@ -114,6 +171,8 @@ export function normalizeTunables(raw: unknown): Tunables {
   if (t.calories.metMax < t.calories.metMin) t.calories.metMax = t.calories.metMin;
   if (t.calories.densityHigh <= t.calories.densityLow) t.calories.densityHigh = t.calories.densityLow + 10;
   if (t.coach.repFloor >= t.coach.repCeiling) t.coach.repFloor = Math.max(1, t.coach.repCeiling - 1);
+  if (t.phase.cutDeficitMax < t.phase.cutDeficitMin) t.phase.cutDeficitMax = t.phase.cutDeficitMin;
+  if (t.phase.bulkSurplusMax < t.phase.bulkSurplusMin) t.phase.bulkSurplusMax = t.phase.bulkSurplusMin;
   return t;
 }
 
