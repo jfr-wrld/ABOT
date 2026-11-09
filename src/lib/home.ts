@@ -3,9 +3,9 @@
  * can be tested and none is invented: a week strip, the next routine, weekly volume and
  * frequency, muscle recovery, and the per-session tags on recent workouts.
  */
-import type { Exercise, MuscleGroup, Routine, WorkoutSession } from "@/types/workout";
+import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
 import type { WorkoutSchedule, Weekday } from "@/lib/notifications/schedule";
-import { detectSessionPRs, isWorkingSet, sessionVolume } from "./calc";
+import { detectSessionPRs, sessionVolume } from "./calc";
 import { startOfDay, startOfWeek } from "./analytics";
 import type { T } from "@/i18n";
 
@@ -135,60 +135,6 @@ export function nextProtocol(
   return { routine: startable[0], reason: "Your routine" };
 }
 
-/* ---------------------------------------------------------------- recovery */
-
-export type RecoveryGroup = "Chest" | "Back" | "Shoulders" | "Arms" | "Legs" | "Core";
-
-const GROUP_OF: Partial<Record<MuscleGroup, RecoveryGroup>> = {
-  chest: "Chest",
-  back: "Back",
-  lats: "Back",
-  traps: "Back",
-  lower_back: "Back",
-  shoulders: "Shoulders",
-  biceps: "Arms",
-  triceps: "Arms",
-  forearms: "Arms",
-  quads: "Legs",
-  hamstrings: "Legs",
-  glutes: "Legs",
-  calves: "Legs",
-  adductors: "Legs",
-  abductors: "Legs",
-  abs: "Core",
-};
-
-export const RECOVERY_GROUPS: RecoveryGroup[] = ["Chest", "Back", "Shoulders", "Arms", "Legs", "Core"];
-
-/** The common rule of thumb: a muscle trained hard is ready again after about 48 hours. */
-export const RECOVERY_HOURS = 48;
-
-export interface Recovery {
-  group: RecoveryGroup;
-  /** Hours until ready; 0 when ready (or never trained). */
-  hoursLeft: number;
-}
-
-/** Hours left per group, from the last finished session that worked it as a primary muscle. */
-export function muscleRecovery(sessions: WorkoutSession[], byId: Record<string, Exercise>, now: number): Recovery[] {
-  const last: Partial<Record<RecoveryGroup, number>> = {};
-  for (const s of completed(sessions)) {
-    const at = s.finishedAt ?? s.startedAt;
-    for (const ex of s.exercises) {
-      if (!ex.sets.some(isWorkingSet)) continue;
-      for (const m of byId[ex.exerciseId]?.primaryMuscles ?? []) {
-        const g = GROUP_OF[m];
-        if (g && at > (last[g] ?? 0)) last[g] = at;
-      }
-    }
-  }
-  return RECOVERY_GROUPS.map((group) => {
-    const at = last[group];
-    const left = at === undefined ? 0 : Math.ceil((at + RECOVERY_HOURS * HOUR - now) / HOUR);
-    return { group, hoursLeft: Math.max(0, left) };
-  });
-}
-
 /* ---------------------------------------------------------------- recent cards */
 
 /**
@@ -232,20 +178,6 @@ export function weekDayVolumes(
     if (i >= 0) out[i] += sessionVolume(s, byId);
   }
   return out;
-}
-
-/** Muscles worked as a primary muscle in the last 48 hours: the ones still recovering. */
-export function restingMuscles(sessions: WorkoutSession[], byId: Record<string, Exercise>, now: number): MuscleGroup[] {
-  const out = new Set<MuscleGroup>();
-  for (const s of completed(sessions)) {
-    const at = s.finishedAt ?? s.startedAt;
-    if (now - at >= RECOVERY_HOURS * HOUR) continue;
-    for (const ex of s.exercises) {
-      if (!ex.sets.some(isWorkingSet)) continue;
-      for (const m of byId[ex.exerciseId]?.primaryMuscles ?? []) if (GROUP_OF[m]) out.add(m);
-    }
-  }
-  return [...out];
 }
 
 /**

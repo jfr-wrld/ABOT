@@ -9,7 +9,7 @@ test("an empty device gets a working dashboard, not a blank page", async ({ page
   const week = page.getByRole("region", { name: "This week" });
   await expect(week.getByText("Volume")).toBeVisible();
   await expect(week.getByText("0 of 7 days this week")).toBeAttached();
-  await expect(week.getByText(/^6\/6/)).toBeVisible();
+  await expect(week.getByRole("button", { name: "Muscle recovery: 17 of 17 muscles ready. Open the map." })).toBeVisible();
   await expect(page.getByText("No workouts yet.")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
@@ -28,8 +28,8 @@ test("a finished workout lights today, fills the week and lists the session", as
   // The figure counts up, so wait for its final value (the screen-reader copy is final at once).
   await expect(week.getByText("400", { exact: true }).first()).toBeAttached();
   await expect(week.getByText("1 of 7 days this week")).toBeAttached();
-  await expect(week.getByText(/^5\/6/)).toBeVisible();
-  await expect(week.getByRole("img", { name: /Primary: Chest/ })).toBeVisible();
+  // One set adds 15% to the chest: still fresh (20% or less), so every muscle reads ready.
+  await expect(week.getByRole("button", { name: "Muscle recovery: 17 of 17 muscles ready. Open the map." })).toBeVisible();
 
   const card = page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first();
   await expect(card).toContainText("400 kg");

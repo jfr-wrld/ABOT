@@ -88,6 +88,20 @@ first touch unlocks Web Audio so the timer-driven rest beep can play.
   card. Rest starts after the last exercise with work left.
 - On white the group colours are darkened (`.ss-text`) to stay above 4.5:1.
 
+## Recovery map
+
+- Fatigue model (`src/lib/muscle-recovery.ts`): each working set adds 15% to primary muscles and
+  7.5% to secondary ones, scaled by RPE (8 = 1x, 10 = 1.25x, 6 = 0.75x), capped at 100%. It
+  falls in a straight line: big muscles (chest, back, lats, quads, hamstrings, glutes, lower
+  back) clear in 72 hours, about 1.4% an hour; the rest in 48. Worked out from history on every
+  render, so imported or edited workouts count at once.
+- Four stages on Carbon (the map is always dark, like the island): Fresh 0-20% `#27272a` with a
+  thin light edge, Recovering 21-50% Volt at 50%, High load 51-80% Amber `#f59e0b`, Exhausted
+  81-100% Crimson `#ef4444`. Head, hands and joints sit darker than any muscle so the colours read.
+- Home tile: both sides small, "n/17 ready". Tap opens a sheet with one side at a time
+  (Anterior / Front, Posterior / Back) and a telemetry line per muscle: recovery %, last
+  trained and sets in that session, hours to ready (20% or less). Muscles are keyboard focusable.
+
 ## Where the accent lands
 
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the
