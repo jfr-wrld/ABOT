@@ -18,26 +18,26 @@ export function FounderPassCard() {
   return (
     <section
       aria-labelledby="founder-heading"
-      className="force-dark relative overflow-hidden rounded-card border border-[#ccff00]/40 bg-gradient-to-br from-[#141418] to-[#09090b] p-4 text-text shadow-[0_0_24px_rgb(204_255_0/0.08)]"
+      className="force-dark relative overflow-hidden rounded-card border border-[#ccff00]/40 bg-gradient-to-br from-[#141418] to-[#09090b] px-4 py-3 text-text shadow-[0_0_24px_rgb(204_255_0/0.08)]"
     >
       {/* Rivets, like a plate bolted to the machine. */}
       {["left-2 top-2", "right-2 top-2", "bottom-2 left-2", "bottom-2 right-2"].map((p) => (
         <span key={p} aria-hidden="true" className={`absolute ${p} size-1.5 rounded-full bg-zinc-600`} />
       ))}
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-[#ccff00]">ABOT // FOUNDER TELEMETRY PASS</p>
-      <h2 id="founder-heading" className="mt-2 font-mono text-xl font-black tabular-nums tracking-[0.06em] text-white">
+      {/* Pass name and join date on one line, the unit number under them: the plate reads in one glance. */}
+      <div className="flex items-baseline justify-between gap-3 font-mono text-[10px] uppercase">
+        <p className="font-bold tracking-[0.18em] text-[#ccff00]">FOUNDER PASS</p>
+        {joined && <p className="shrink-0 tabular-nums tracking-[0.08em] text-zinc-300">{t("Since {date}", { date: joined })}</p>}
+      </div>
+      <h2 id="founder-heading" className="mt-1 font-mono text-lg font-black tabular-nums tracking-[0.06em] text-white">
         {isFounder && founderUnitCode ? founderUnitCode.replace("FOUNDER //", "FOUNDER UNIT //") : t("No founder unit")}
       </h2>
-      <dl className="mt-3 font-mono text-[11px] uppercase tracking-[0.08em]">
-        <dt className="text-zinc-400">{t("Activated")}</dt>
-        <dd className="tabular-nums text-zinc-200">{joined ?? "-"}</dd>
-      </dl>
 
-      <div className="mt-4 border-t border-[#27272a] pt-3">
-        <p id="sim-label" className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+      <div className="mt-2">
+        <p id="sim-label" className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">
           {t("Monetization simulator")}
         </p>
-        <div role="radiogroup" aria-labelledby="sim-label" className="mt-2 grid grid-cols-3 gap-1 rounded-ctl border border-[#27272a] bg-black p-1">
+        <div role="radiogroup" aria-labelledby="sim-label" className="mt-1 grid grid-cols-3 gap-1 rounded-ctl border border-[#27272a] bg-black p-0.5">
           {SIMULATOR.map((s) => {
             const on = devOverrideMode === s.mode || (s.mode === "AUTO" && devOverrideMode === "FORCE_BETA");
             return (

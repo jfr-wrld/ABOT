@@ -106,8 +106,9 @@ function SessionDetail() {
       <Hero session={session} byId={byId} cover={photos.photos[0]?.url} onMenu={() => setMenu(true)} />
 
       <div className="flex flex-col gap-3 px-4 pt-4">
+        {/* The four figures in one strip, so the photos and the lifts start higher. */}
         <Rise order={1}>
-          <dl className="grid grid-cols-2 gap-2">
+          <dl className="panel grid grid-cols-4 divide-x divide-line py-2">
             <Stat icon={<Timer size={16} />} label={t("Duration")} value={sessionDurationSec(session)} format={(n) => formatDuration(Math.round(n))} />
             <Stat icon={<Dumbbell size={16} />} label={t("Volume")} value={total} format={(n) => formatVolume(n, weightUnit)} />
             <Stat icon={<Layers size={16} />} label={t("Sets")} value={sets} format={(n) => String(Math.round(n))} />
@@ -115,6 +116,9 @@ function SessionDetail() {
           </dl>
         </Rise>
 
+        <Rise order={2}>
+          <WorkoutPhotos state={photos} sessionName={session.name} />
+        </Rise>
 
 
         {muscles.primary.length > 0 && (
@@ -150,7 +154,6 @@ function SessionDetail() {
           </Rise>
         ))}
 
-        <WorkoutPhotos state={photos} sessionName={session.name} />
       </div>
 
       {/* Room for the action bar, so the last card can scroll clear of it. */}
@@ -262,7 +265,7 @@ function Hero({
       <div aria-hidden="true" className="absolute inset-0 bg-bg/70 backdrop-blur-xl" />
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-bg to-transparent" />
 
-      <div className="relative flex flex-col gap-4 px-4 pb-4 pt-3">
+      <div className="relative flex flex-col gap-3 px-4 pb-3 pt-3">
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -285,15 +288,15 @@ function Hero({
           <ul aria-hidden="true" className="flex gap-1.5">
             {defs.slice(0, 5).map((d, i) => (
               <li key={`${d.id}-${i}`}>
-                <ExerciseThumb exercise={d} size={52} />
+                <ExerciseThumb exercise={d} size={40} />
               </li>
             ))}
           </ul>
-          <p className="num mt-3 text-xs uppercase tracking-wider text-text-muted">
+          <p className="num mt-2 text-xs uppercase tracking-wider text-text-muted">
             {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })} ·{" "}
             {date.toLocaleTimeString(t.locale, { hour: "2-digit", minute: "2-digit" })}
           </p>
-          <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight">{session.name}</h1>
+          <h1 className="mt-0.5 text-2xl font-bold leading-tight tracking-tight">{session.name}</h1>
           <GymTag session={session} />
         </Rise>
       </div>
@@ -315,16 +318,16 @@ function Stat({
   pr?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
-      <span aria-hidden="true" className={`hidden size-9 shrink-0 items-center justify-center rounded-lg min-[360px]:flex ${pr ? "bg-pr/10 text-pr" : "bg-surface-2 text-text-muted"}`}>
-        {icon}
-      </span>
-      <div className="min-w-0">
-        <dt className="label-caps">{label}</dt>
-        <dd className={`num truncate text-base font-bold tabular-nums min-[360px]:text-lg ${pr ? "text-pr" : ""}`}>
-          <CountFromZero value={value} format={format} />
-        </dd>
-      </div>
+    <div className="flex min-w-0 flex-col items-center gap-0.5 px-1 text-center">
+      <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
+        <span aria-hidden="true" className={`[&>svg]:size-3 ${pr ? "text-pr" : ""}`}>
+          {icon}
+        </span>
+        <span className="truncate">{label}</span>
+      </dt>
+      <dd className={`num w-full truncate text-sm font-bold tabular-nums min-[380px]:text-base ${pr ? "text-pr" : ""}`}>
+        <CountFromZero value={value} format={format} />
+      </dd>
     </div>
   );
 }

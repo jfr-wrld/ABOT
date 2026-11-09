@@ -58,7 +58,7 @@ test("hidden entry, PIN gate, and the monetization switch with prices and banner
   await page.goto("/settings");
   const card = page.getByRole("region", { name: "Plan & billing" });
   await expect(card).toContainText("PRO features are locked on this phone.");
-  await card.getByRole("button", { name: "Upgrade to Black Pro" }).click();
+  await card.getByRole("button", { name: "Get Black Pro" }).click();
   await expect(page.getByRole("dialog", { name: "Precision engineered for serious lifters." })).toContainText("Rp 35.000");
 });
 
@@ -78,7 +78,7 @@ test("a code made in the console is redeemed on the device; built-in codes work 
   await page.goto("/settings");
   const card = page.getByRole("region", { name: "Plan & billing" });
   await expect(card).toContainText("PRO features are locked on this phone.");
-  await card.getByRole("button", { name: "Redeem VIP / activation code" }).click();
+  await card.getByRole("button", { name: "Redeem code" }).click();
   const redeem = page.getByRole("dialog", { name: "Redeem license code" });
   await redeem.getByLabel("VIP, influencer or promo code").fill("ABOT-NOPE-0000");
   await redeem.getByRole("button", { name: "Activate" }).click();
@@ -92,7 +92,7 @@ test("a code made in the console is redeemed on the device; built-in codes work 
   await expect(card.getByText("Days left")).toBeVisible();
 
   // Used once: a second redeem of the same code is refused.
-  await card.getByRole("button", { name: "Redeem VIP / activation code" }).click();
+  await card.getByRole("button", { name: "Redeem code" }).click();
   await redeem.getByLabel("VIP, influencer or promo code").fill(code);
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("alert")).toBeVisible();

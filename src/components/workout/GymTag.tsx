@@ -7,6 +7,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { useLocationStore } from "@/store/useLocationStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import type { WorkoutSession } from "@/types/workout";
+import { NearbyGymFinder } from "@/components/settings/LocationsSection";
 import { useT } from "@/i18n";
 
 /**
@@ -16,6 +17,8 @@ import { useT } from "@/i18n";
 export function GymTag({ session }: { session: WorkoutSession }) {
   const t = useT();
   const locations = useLocationStore((s) => s.locations);
+  const addGym = useLocationStore((s) => s.add);
+  const updateGym = useLocationStore((s) => s.update);
   const setSessionLocation = useWorkoutStore((s) => s.setSessionLocation);
   const [open, setOpen] = useState(false);
   const gym = locations.find((l) => l.id === session.locationId);
@@ -74,30 +77,26 @@ export function GymTag({ session }: { session: WorkoutSession }) {
         onClose={() => setOpen(false)}
         title={t("Where did you train?")}
       >
-        {locations.length === 0 ? (
-          <div className="flex flex-col gap-3 pb-2">
-            <p className="text-sm text-text-muted">
-              {t(
-                "No gyms yet. Add one with its bar and plates, then tag your workouts.",
-              )}
-            </p>
-            <Link
-              href="/settings?section=workout"
-              className="flex min-h-11 items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 text-sm font-semibold hover:border-ink/25"
-            >
-              {t("Add a gym in Settings")}
-            </Link>
-          </div>
-        ) : (
-          <div
-            role="radiogroup"
-            aria-label={t("Gym")}
-            className="flex flex-col pb-2"
-          >
-            {locations.map((l) => option(l.id, l.name))}
-            {option(undefined, t("No gym"))}
-          </div>
-        )}
+        <div className="flex flex-col gap-3 pb-2">
+          {locations.length > 0 && (
+            <div role="radiogroup" aria-label={t("Gym")} className="flex flex-col">
+              {locations.map((l) => option(l.id, l.name))}
+              {option(undefined, t("No gym"))}
+            </div>
+          )}
+          <NearbyGymFinder
+            taken={locations}
+            onPick={(g) => {
+              const existing = locations.find((l) => l.name.toLowerCase() === g.name.toLowerCase());
+              const gym = existing ?? addGym(g.name);
+              if (!existing) updateGym(gym.id, { lat: g.lat, lng: g.lng });
+              pick(gym.id);
+            }}
+          />
+          <Link href="/settings?section=workout" className="flex min-h-11 items-center justify-center text-sm font-semibold text-text-muted hover:text-text">
+            {t("Manage gyms in Settings")}
+          </Link>
+        </div>
       </Sheet>
     </>
   );

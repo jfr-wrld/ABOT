@@ -61,8 +61,8 @@ test("a finished workout can be tagged with a gym, and the gym shows on Home", a
   await page.goto(detailUrl);
   await page.getByRole("button", { name: "Tag a gym" }).click();
   const sheet = page.getByRole("dialog", { name: "Where did you train?" });
-  await expect(sheet).toContainText("No gyms yet.");
-  await sheet.getByRole("link", { name: "Add a gym in Settings" }).click();
+  await expect(sheet.getByRole("button", { name: "Find gyms near me" })).toBeVisible();
+  await sheet.getByRole("link", { name: "Manage gyms in Settings" }).click();
   await page.getByLabel("New gym name").fill("Iron Temple");
   await page.getByRole("button", { name: "Add gym" }).click();
   await expect(page.getByRole("heading", { name: "Iron Temple", exact: true })).toBeVisible();
@@ -147,4 +147,62 @@ test("Story Studio offers every photo of the workout as a background", async ({ 
       ),
     )
     .toBe(true);
+});
+
+test.describe("gyms from the map", () => {
+  // Kemang, Jakarta; the map service is answered by the test, so nothing leaves the machine.
+  test.use({ geolocation: { latitude: -6.2607, longitude: 106.8137 }, permissions: ["geolocation"] });
+
+  async function answerMap(page: Page) {
+    const queries: string[] = [];
+    await page.route("https://overpass-api.de/api/interpreter", async (route) => {
+      queries.push(decodeURIComponent(route.request().postData() ?? ""));
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          elements: [
+            { type: "node", id: 2, lat: -6.2700, lon: 106.8137, tags: { name: "Gold's Corner" } },
+            { type: "way", id: 1, center: { lat: -6.2609, lon: 106.8139 }, tags: { name: "Iron Temple Kemang", "addr:street": "Jl. Kemang Raya", "addr:housenumber": "12" } },
+          ],
+        }),
+      });
+    });
+    return queries;
+  }
+
+  test("Settings lists the gyms around you, nearest first, and adds one already pinned", async ({ page }) => {
+    const queries = await answerMap(page);
+    await page.goto("/settings?section=workout");
+    await page.getByRole("button", { name: "Find gyms near me" }).click();
+    const list = page.getByRole("list", { name: "Gyms near you" });
+    await expect(list.getByRole("button")).toHaveCount(2);
+    await expect(list.getByRole("button").first()).toContainText("Iron Temple Kemang");
+    await expect(list.getByRole("button").first()).toContainText("Jl. Kemang Raya 12");
+    await expect(page.getByText("Map data © OpenStreetMap contributors")).toBeVisible();
+    expect(queries[0]).toContain("around:2000,-6.260700,106.813700");
+    await expectNoHorizontalOverflow(page);
+
+    await list.getByRole("button", { name: "Add Iron Temple Kemang" }).click();
+    await expect(page.getByRole("heading", { name: "Iron Temple Kemang", exact: true })).toBeVisible();
+    await expect(page.getByText("Picked by itself when a workout starts here.")).toBeVisible();
+    await expect(list.getByRole("button", { name: "Iron Temple Kemang, added" })).toBeDisabled();
+  });
+
+  test("a finished workout is tagged straight from the map", async ({ page }) => {
+    await answerMap(page);
+    await finishToSummary(page);
+    await page.goto(page.url().replace(/\/workout\/summary\?/, "/history?"));
+    await page.getByRole("button", { name: "Tag a gym" }).click();
+    const sheet = page.getByRole("dialog", { name: "Where did you train?" });
+    await sheet.getByRole("button", { name: "Find gyms near me" }).click();
+    await sheet.getByRole("button", { name: "Add Iron Temple Kemang" }).click();
+    await expect(page.getByRole("button", { name: "Gym: Iron Temple Kemang. Change" })).toBeVisible();
+  });
+
+  test("an unreachable map service says so", async ({ page }) => {
+    await page.route("https://overpass-api.de/api/interpreter", (route) => route.abort());
+    await page.goto("/settings?section=workout");
+    await page.getByRole("button", { name: "Find gyms near me" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Could not reach the map service." })).toBeVisible();
+  });
 });
