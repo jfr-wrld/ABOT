@@ -102,6 +102,9 @@ export function createMemoryRepository(): Repository {
       },
     },
     photos: {
+      async all() {
+        return [...photos.values()].sort((a, b) => a.createdAt - b.createdAt).map((p) => ({ ...p }));
+      },
       async list(sessionId) {
         return [...photos.values()].filter((p) => p.sessionId === sessionId).sort((a, b) => a.createdAt - b.createdAt).map((p) => ({ ...p }));
       },
@@ -118,6 +121,9 @@ export function createMemoryRepository(): Repository {
         const orphans = [...photos.values()].filter((p) => !tables.sessions.has(p.sessionId));
         for (const p of orphans) photos.delete(p.id);
         return orphans.length;
+      },
+      async clear() {
+        photos.clear();
       },
     },
     routines: table("routines"),

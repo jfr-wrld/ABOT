@@ -75,16 +75,18 @@ export interface Repository {
     remove(key: KvKey): Promise<void>;
   };
   /**
-   * Photos the lifter attached to a workout. Kept on this device only: not in snapshots,
-   * backups or sync. Removing a session removes its photos.
+   * Photos the lifter attached to a workout. Kept on this device and in backup files (see
+   * data/backup), never in snapshots or sync. Removing a session removes its photos.
    */
   photos: {
+    all(): Promise<WorkoutPhoto[]>;
     list(sessionId: string): Promise<WorkoutPhoto[]>;
     add(photo: WorkoutPhoto): Promise<void>;
     remove(id: string): Promise<void>;
     removeForSession(sessionId: string): Promise<void>;
     /** Deletes photos whose workout no longer exists; returns how many. */
     prune(): Promise<number>;
+    clear(): Promise<void>;
   };
   /**
    * Saves a finished workout and clears the in-progress workout and rest timer in one

@@ -47,17 +47,23 @@ type Status =
  * Share. The @username comes from the profile. Download sits in the top bar. Opened as a modal
  * <dialog>, so Escape and Android's back close it.
  */
+/** A workout photo and an object URL for it that its owner keeps alive while the studio is open. */
+export interface StudioPhoto {
+  blob: Blob;
+  url: string;
+}
+
 export function StoryCardStudio({
   open,
   onClose,
   data,
-  photo,
+  photos,
 }: {
   open: boolean;
   onClose: () => void;
   data: StoryData | null;
-  /** The workout's own photo, if it has one: the studio starts with it as the background. */
-  photo?: Blob;
+  /** The workout's own photos: offered as backgrounds, and the first one is used to start with. */
+  photos?: StudioPhoto[];
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -82,7 +88,7 @@ export function StoryCardStudio({
       }}
       className="force-dark m-0 h-dvh max-h-dvh w-full max-w-none bg-bg p-0 text-text backdrop:bg-black/80"
     >
-      {open && data && <Studio data={data} initialPhoto={photo} status={status} setStatus={setStatus} shareable={shareable} onClose={() => ref.current?.close()} />}
+      {open && data && <Studio data={data} workoutPhotos={photos} status={status} setStatus={setStatus} shareable={shareable} onClose={() => ref.current?.close()} />}
     </dialog>
   );
 }
@@ -161,14 +167,14 @@ function reason(err: unknown): string {
 
 function Studio({
   data,
-  initialPhoto,
+  workoutPhotos = [],
   status,
   setStatus,
   shareable,
   onClose,
 }: {
   data: StoryData;
-  initialPhoto?: Blob;
+  workoutPhotos?: StudioPhoto[];
   status: Status;
   setStatus: (s: Status) => void;
   shareable: boolean;
@@ -233,8 +239,9 @@ function Studio({
   }, [card, opts, fonts, setStatus, t]);
 
   // Thumbnails show each layout with the same data and photo, so the choice is made on the real thing.
+  // The Layout panel unmounts on the other tabs, so its fresh canvases are drawn again on return.
   useEffect(() => {
-    if (!fonts) return;
+    if (!fonts || tab !== "layout") return;
     const raf = requestAnimationFrame(() => {
       for (const p of STORY_PRESETS) {
         const c = thumbs.current[p.id];
@@ -248,7 +255,7 @@ function Studio({
     return () => cancelAnimationFrame(raf);
     // The preset itself does not change any thumbnail.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card, photo, overlay, grayscale, fonts]);
+  }, [card, photo, overlay, grayscale, fonts, tab]);
 
   // The PNG is made ahead of the tap: Safari only opens the share sheet inside the tap itself.
   useEffect(() => {
@@ -284,13 +291,26 @@ function Studio({
     }
   }, [setStatus, t]);
 
-  // Once per opening: the workout's first photo, so a photo layout shows it without picking again.
+  // The workout's own photos as background choices; the first is used on opening, so a photo
+  // layout shows it without picking again. `chosen` is null once the photo comes from elsewhere.
+  const [chosen, setChosen] = useState<number | null>(null);
+  // The page that opened the studio owns these object URLs (useWorkoutPhotos) and keeps them alive.
+  const photoThumbs = workoutPhotos.map((p) => p.url);
+  const pickWorkoutPhoto = useCallback(
+    (i: number) => {
+      const blob = workoutPhotos[i]?.blob;
+      if (!blob) return;
+      setChosen(i);
+      void pickPhoto(new File([blob], "workout.jpg", { type: blob.type || "image/jpeg" }));
+    },
+    [workoutPhotos, pickPhoto],
+  );
   const usedInitial = useRef(false);
   useEffect(() => {
-    if (!initialPhoto || usedInitial.current) return;
+    if (workoutPhotos.length === 0 || usedInitial.current) return;
     usedInitial.current = true;
-    void pickPhoto(new File([initialPhoto], "workout.jpg", { type: initialPhoto.type || "image/jpeg" }));
-  }, [initialPhoto, pickPhoto]);
+    pickWorkoutPhoto(0);
+  }, [workoutPhotos, pickWorkoutPhoto]);
 
   const current = STORY_PRESETS.find((p) => p.id === preset) ?? STORY_PRESETS[0];
   const forcedGray = preset === "monochrome-steel";
@@ -454,17 +474,54 @@ function Studio({
 
         {tab === "photo" && (
           <div className="flex h-full flex-col justify-center gap-2">
-            <div className="flex gap-2">
-              <Button onClick={() => openPhotoInput(fileInput.current, "camera")} disabled={photoBusy} className="flex-1">
+            <div className="-mx-4 flex gap-2 overflow-x-auto px-4">
+              {photoThumbs.length > 0 && (
+                <div role="radiogroup" aria-label={t("Photos from this workout")} className="flex shrink-0 gap-2">
+                  {photoThumbs.map((url, i) => (
+                    <button
+                      key={url}
+                      type="button"
+                      role="radio"
+                      aria-checked={chosen === i}
+                      aria-label={t("Workout photo {n}", { n: i + 1 })}
+                      onClick={() => pickWorkoutPhoto(i)}
+                      disabled={photoBusy}
+                      className={`size-11 shrink-0 overflow-hidden rounded-ctl border-2 disabled:cursor-not-allowed ${
+                        chosen === i ? "border-accent" : "border-transparent hover:border-line-hover"
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- a local blob URL */}
+                      <img src={url} alt="" width={44} height={44} className="size-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+              <Button
+                onClick={() => openPhotoInput(fileInput.current, "camera")}
+                disabled={photoBusy}
+                className={photoThumbs.length > 0 ? "shrink-0 px-3" : "flex-1"}
+              >
                 <Camera aria-hidden="true" size={18} />
                 {t("Camera")}
               </Button>
-              <Button onClick={() => openPhotoInput(fileInput.current, "gallery")} disabled={photoBusy} className="flex-1">
+              <Button
+                onClick={() => openPhotoInput(fileInput.current, "gallery")}
+                disabled={photoBusy}
+                className={photoThumbs.length > 0 ? "shrink-0 px-3" : "flex-1"}
+              >
                 <ImagePlus aria-hidden="true" size={18} />
                 {photoBusy ? t("Reading…") : t("Gallery")}
               </Button>
               {photo && (
-                <Button variant="ghost" onClick={() => setPhoto(null)} aria-label={t("Remove background photo")} className="px-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setPhoto(null);
+                    setChosen(null);
+                  }}
+                  aria-label={t("Remove background photo")}
+                  className="shrink-0 px-3"
+                >
                   <Trash2 aria-hidden="true" size={18} />
                 </Button>
               )}
@@ -515,6 +572,7 @@ function Studio({
         className="sr-only"
         onChange={(e) => {
           setTab("photo");
+          if (e.target.files?.[0]) setChosen(null);
           void pickPhoto(e.target.files?.[0]);
         }}
       />

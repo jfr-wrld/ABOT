@@ -153,6 +153,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
     exercises: table<Exercise>("exercises"),
     locations: table<GymLocation>("locations"),
     photos: {
+      all: () => db.photos.orderBy("createdAt").toArray(),
       list: (sessionId) => db.photos.where("sessionId").equals(sessionId).sortBy("createdAt"),
       add: async (photo) => {
         await db.photos.put(photo);
@@ -168,6 +169,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
           await db.photos.bulkDelete(orphans);
           return orphans.length;
         }),
+      clear: () => db.photos.clear(),
     },
     catalog: {
       all: () => db.catalog.toArray(),

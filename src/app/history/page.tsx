@@ -180,7 +180,7 @@ function SessionDetail() {
               {t("Repeat")}
             </Button>
           )}
-          <ShareStoryButton session={session} photo={photos.photos[0]?.blob} label={t("Share story")} className="min-h-12 w-full" />
+          <ShareStoryButton session={session} photos={photos.photos} label={t("Share story")} className="min-h-12 w-full" />
         </div>
       </div>
 

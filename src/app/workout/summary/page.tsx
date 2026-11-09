@@ -195,7 +195,7 @@ function Summary() {
       <div className="h-40" aria-hidden="true" />
 
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-[640px] flex-col gap-2 border-t border-line bg-bg/85 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
-        <ShareStoryButton session={session} photo={photos.photos[0]?.blob} variant="primary" className="min-h-12 w-full text-base" />
+        <ShareStoryButton session={session} photos={photos.photos} variant="primary" className="min-h-12 w-full text-base" />
         <div className="grid grid-cols-2 gap-2">
           <Link
             href={historyPath(session.id)}

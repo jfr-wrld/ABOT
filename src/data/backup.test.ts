@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createMemoryRepository, type RepoSnapshot } from "./repo";
-import { exportBackup, importBackup, parseBackup } from "./backup";
+import { exportBackup, importBackup, parseBackup, photosForBackup } from "./backup";
 import type { WorkoutSession } from "@/types/workout";
 
 const session = (id: string, name = id): WorkoutSession => ({
@@ -37,7 +37,7 @@ describe("export and parse", () => {
     const parsed = parseBackup(JSON.stringify(backup));
     if (!parsed.ok) throw new Error(parsed.error);
     expect(parsed.backup.data).toEqual(await repo.snapshot());
-    expect(parsed.counts).toEqual({ sessions: 1, routines: 1, exercises: 0, locations: 0, dropped: 0 });
+    expect(parsed.counts).toEqual({ sessions: 1, routines: 1, exercises: 0, locations: 0, photos: 0, dropped: 0 });
   });
 
   it("keeps language and theme, and falls back for unknown values", async () => {
@@ -243,5 +243,77 @@ describe("bodyweight log and photo in backups", () => {
       if (!p.ok) throw new Error(p.error);
       expect(p.backup.data.settings?.profilePhoto).toBeNull();
     }
+  });
+});
+
+describe("workout photos in backups", () => {
+  const jpeg = (text: string) => new Blob([text], { type: "image/jpeg" });
+  const photo = (id: string, sessionId: string, createdAt = 1) => ({ id, sessionId, createdAt, width: 4, height: 3, blob: jpeg(`bytes-${id}`) });
+
+  async function withPhotos() {
+    const repo = await seeded();
+    await repo.photos.add(photo("p1", "a", 1));
+    await repo.photos.add(photo("p2", "a", 2));
+    return repo;
+  }
+
+  it("round trips photos with their bytes, and counts them", async () => {
+    const src = await withPhotos();
+    const backup = { ...(await exportBackup(src)), photos: await photosForBackup(await src.photos.all()) };
+    const parsed = parseBackup(JSON.stringify(backup));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.counts.photos).toBe(2);
+
+    const dest = createMemoryRepository();
+    await importBackup(dest, parsed.backup, "replace");
+    const got = await dest.photos.list("a");
+    expect(got.map((p) => p.id)).toEqual(["p1", "p2"]);
+    expect(await got[0]!.blob.text()).toBe("bytes-p1");
+    expect(got[0]!.blob.type).toBe("image/jpeg");
+  });
+
+  it("skips photos of workouts not in the file, and malformed ones", async () => {
+    const backup = { ...(await exportBackup(await seeded())), photos: [] as unknown[] };
+    const good = (await photosForBackup([photo("ok", "a")]))[0]!;
+    backup.photos.push(good, { ...good, id: "orphan", sessionId: "missing" }, { ...good, id: "bad", data: "data:text/html;base64,PGI+" }, { ...good, id: "big", width: -1 });
+    const parsed = parseBackup(JSON.stringify(backup));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.photos!.map((p) => p.id)).toEqual(["ok"]);
+    expect(parsed.counts.photos).toBe(1);
+    expect(parsed.counts.dropped).toBe(3);
+  });
+
+  it("merge adds new photos up to 6 per workout and keeps the ones here", async () => {
+    const dest = await withPhotos();
+    const src = await seeded();
+    for (let i = 0; i < 6; i++) await src.photos.add(photo(`n${i}`, "a", 10 + i));
+    await src.photos.add(photo("p1", "a", 1));
+    const backup = { ...(await exportBackup(src)), photos: await photosForBackup(await src.photos.all()) };
+    const parsed = parseBackup(JSON.stringify(backup));
+    if (!parsed.ok) throw new Error(parsed.error);
+    await importBackup(dest, parsed.backup, "merge");
+    const ids = (await dest.photos.list("a")).map((p) => p.id);
+    expect(ids).toHaveLength(6);
+    expect(ids.slice(0, 2)).toEqual(["p1", "p2"]);
+  });
+
+  it("a backup without photos replaces the data but keeps photos of workouts still here", async () => {
+    const dest = await withPhotos();
+    const parsed = parseBackup(JSON.stringify(await exportBackup(await seeded())));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.photos).toBeUndefined();
+    await importBackup(dest, parsed.backup, "replace");
+    expect((await dest.photos.list("a")).map((p) => p.id)).toEqual(["p1", "p2"]);
+  });
+
+  it("a backup with photos replaces the photos too", async () => {
+    const dest = await withPhotos();
+    const src = await seeded();
+    await src.photos.add(photo("only", "a"));
+    const backup = { ...(await exportBackup(src)), photos: await photosForBackup(await src.photos.all()) };
+    const parsed = parseBackup(JSON.stringify(backup));
+    if (!parsed.ok) throw new Error(parsed.error);
+    await importBackup(dest, parsed.backup, "replace");
+    expect((await dest.photos.list("a")).map((p) => p.id)).toEqual(["only"]);
   });
 });

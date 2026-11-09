@@ -191,7 +191,7 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
           {t(state.error)}
         </p>
       )}
-      <p className="mt-2 text-xs text-text-muted">{t("Photos stay on this phone. They are not in backups or sync.")}</p>
+      <p className="mt-2 text-xs text-text-muted">{t("Photos stay on this phone and go into backup files. They are not synced.")}</p>
 
       <input
         ref={input}

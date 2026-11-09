@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
-import { backupFileName, backupFromSnapshot, importBackup, parseBackup, type AbotBackup, type BackupCounts } from "@/data/backup";
+import { backupFileName, backupFromSnapshot, importBackup, parseBackup, photosForBackup, type AbotBackup, type BackupCounts } from "@/data/backup";
 import { getActivePersistence, getActiveRepository, hydrateStores, snapshotFromStores } from "@/store/persistence";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { saveFile } from "@/lib/native/files";
@@ -19,11 +19,30 @@ export function BackupSection() {
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const t = useT();
+  // Workout photos on this device: how many, and roughly how much they add to the file.
+  const [photoStats, setPhotoStats] = useState<{ count: number; bytes: number } | null>(null);
+  const [withPhotos, setWithPhotos] = useState(true);
+
+  useEffect(() => {
+    const repo = getActiveRepository();
+    if (!repo) return;
+    let live = true;
+    repo.photos
+      .all()
+      .then((rows) => live && setPhotoStats({ count: rows.length, bytes: rows.reduce((n, r) => n + r.blob.size, 0) }))
+      .catch(() => live && setPhotoStats(null));
+    return () => {
+      live = false;
+    };
+  }, [status]);
 
   async function doExport() {
     setError(null);
     try {
-      const backup = backupFromSnapshot(snapshotFromStores());
+      const repo = getActiveRepository();
+      const base = backupFromSnapshot(snapshotFromStores());
+      const photos = withPhotos && repo && photoStats?.count ? await photosForBackup(await repo.photos.all()) : undefined;
+      const backup: AbotBackup = photos ? { ...base, photos } : base;
       const saved = await saveFile(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }), backupFileName());
       const n = backup.data.sessions.length;
       setStatus(
@@ -98,8 +117,18 @@ export function BackupSection() {
         }
         name={t("backup file")}
       >
-        {t("A copy of every workout, routine, custom exercise, gym and setting on this device.")}
+        {t("A copy of every workout, routine, custom exercise, gym and setting on this device, and its workout photos if you include them.")}
       </InfoTip>
+
+      {photoStats && photoStats.count > 0 && (
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
+          <input type="checkbox" checked={withPhotos} onChange={(e) => setWithPhotos(e.target.checked)} className="size-5 shrink-0 accent-[var(--color-accent)]" />
+          <span>
+            {t.n(photoStats.count, "Include {n} workout photo", "Include {n} workout photos")}{" "}
+            <span className="num text-text-muted">({t("about {mb} MB", { mb: Math.max(0.1, Math.round((photoStats.bytes * 4) / 3 / 100_000) / 10) })})</span>
+          </span>
+        </label>
+      )}
 
       <Button onClick={doExport}>{t("Export backup")}</Button>
 
@@ -133,6 +162,7 @@ export function BackupSection() {
                 t.n(pending.counts.routines, "{n} routine", "{n} routines"),
                 t.n(pending.counts.exercises, "{n} custom exercise", "{n} custom exercises"),
                 ...(pending.counts.locations > 0 ? [t.n(pending.counts.locations, "{n} gym", "{n} gyms")] : []),
+                ...(pending.counts.photos > 0 ? [t.n(pending.counts.photos, "{n} photo", "{n} photos")] : []),
               ].join(", "),
             })}
           </p>

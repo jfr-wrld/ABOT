@@ -169,8 +169,13 @@ export const settings: Record<string, string> = {
     "Backup sudah diimpor, tapi ABOT tidak bisa memuatnya ulang ({error}). Muat ulang halaman untuk melihatnya.",
   "Backup file": "File backup",
   "backup file": "file backup",
-  "A copy of every workout, routine, custom exercise, gym and setting on this device.":
-    "Salinan semua latihan, rutinitas, gerakan buatanmu, gym, dan pengaturan di perangkat ini.",
+  "A copy of every workout, routine, custom exercise, gym and setting on this device, and its workout photos if you include them.":
+    "Salinan semua latihan, rutinitas, gerakan buatan sendiri, gym dan pengaturan di perangkat ini, beserta foto latihannya kalau kamu sertakan.",
+  "Include {n} workout photo": "Sertakan {n} foto latihan",
+  "Include {n} workout photos": "Sertakan {n} foto latihan",
+  "about {mb} MB": "sekitar {mb} MB",
+  "{n} photo": "{n} foto",
+  "{n} photos": "{n} foto",
   "Export backup": "Ekspor backup",
   "Import backup": "Impor backup",
   "contains {list}.": "berisi {list}.",
