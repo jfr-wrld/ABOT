@@ -255,7 +255,9 @@ public class LiveWorkoutPlugin extends Plugin {
             if (!resting) b.addAction(button(ctx, "pause", s.pauseLabel, 2, R.drawable.ic_action_pause));
         }
         if (Build.VERSION.SDK_INT >= 36) {
-            Notification.ProgressStyle progress = progress(s);
+            // In its own class: Capacitor reflects over this plugin's methods at start-up, and a
+            // ProgressStyle in any signature here crashed Android 15 and older (class not found).
+            Notification.Style progress = LiveProgress.style(s, ACCENT);
             if (progress != null) b.setStyle(progress);
         }
         // Android 16 Live Update (a clock chip on the status bar). These are the extras that
@@ -267,31 +269,6 @@ public class LiveWorkoutPlugin extends Plugin {
         if (s.paused && s.pausedChip != null) promoted.putString("android.shortCriticalText", s.pausedChip);
         b.addExtras(promoted);
         return b.build();
-    }
-
-    /**
-     * Workout progress, one segment per exercise sized by its sets, filled up to the sets done.
-     * It changes only when a set is ticked, so it stays true while ABOT is frozen.
-     */
-    private static Notification.ProgressStyle progress(LiveState s) {
-        if (s.progressSegments == null || s.progressSegments.isEmpty()) return null;
-        java.util.List<Notification.ProgressStyle.Segment> segments = new java.util.ArrayList<>();
-        int total = 0;
-        for (String part : s.progressSegments.split(",")) {
-            try {
-                int n = Integer.parseInt(part.trim());
-                if (n <= 0) continue;
-                segments.add(new Notification.ProgressStyle.Segment(n).setColor(ACCENT));
-                total += n;
-            } catch (NumberFormatException e) {
-                // A bad entry only drops that segment.
-            }
-        }
-        if (segments.isEmpty()) return null;
-        return new Notification.ProgressStyle()
-            .setStyledByProgress(true)
-            .setProgressSegments(segments)
-            .setProgress(Math.min(Math.max(0, s.progressDone), total));
     }
 
     /** The next exercise's photo when the app sent one, else the app icon in colour. */
