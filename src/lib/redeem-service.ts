@@ -8,9 +8,9 @@ import type { Tier } from "./entitlements";
  *
  * 1. With Supabase set up and online, the code goes to the `redeem_code` function, which checks
  *    and counts uses atomically and, when signed in, records the grant on the account.
- * 2. Built-in codes (ABOT-FOUNDER-2026, ABOT-BLACK-LIFE, ...) also work offline. They are in every
- *    copy of the app, kept only as SHA-256 hashes, and Mission Control can turn them off for
- *    everyone (remote config). Treat them as public promo codes, not secrets.
+ * 2. Built-in codes (ABOT-FOUNDER-2026, ABOT-PRO-30D, ...) also work offline. They are in every
+ *    copy of the app and this repository is public, so treat them as public promo codes: none of
+ *    them grants lifetime. Mission Control can turn them off for everyone (remote config).
  * 3. Codes made in Mission Control on a build without Supabase are kept on that device only.
  * Codes made in Mission Control with Supabase are checked online only: a code that can be
  * verified with no server would have to ship its secret inside the app.
@@ -37,10 +37,6 @@ export function normalizeCode(input: string): string {
 const BUILT_IN: Record<string, Grant> = {
   // ABOT-FOUNDER-2026
   "7ede389f83e8adffa9ea1bea43d2f01630ab1015d4bb9aad1bb008d68af8ddf8": { tier: "pro", days: 365, founder: true },
-  // ABOT-VIP-LIFETIME
-  "3fb43f0b8c747062757e69ab77578022a4ab6ba4cbb96ab783b51e802f848824": { tier: "lifetime", days: null, founder: false },
-  // ABOT-BLACK-LIFE
-  "2a4ff8dc861586acbcbfd37782181b6112a3b2ae7e2d0f2b62f639ce1a6f3aa0": { tier: "lifetime", days: null, founder: false },
   // ABOT-PRO-30D
   ab5cb157fdd264617bdf265edbddb640ab63af7c54ff448458627c150c33d69e: { tier: "pro", days: 30, founder: false },
   // ABOT-VIP-30D

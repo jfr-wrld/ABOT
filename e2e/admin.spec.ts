@@ -96,11 +96,11 @@ test("a code made in the console is redeemed on the device; built-in codes work 
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("alert")).toBeVisible();
   // A built-in code, no server needed.
-  await redeem.getByLabel("VIP, influencer or promo code").fill("abot black life");
+  await redeem.getByLabel("VIP, influencer or promo code").fill("abot pro 30d");
   await redeem.getByRole("button", { name: "Activate" }).click();
-  await expect(redeem.getByRole("status")).toContainText("Lifetime access");
+  await expect(redeem.getByRole("status")).toContainText("30 days access");
   await redeem.getByRole("button", { name: "Done" }).click();
-  await expect(card).toContainText("Lifetime license active");
+  await expect(card).toContainText("Black Pro active");
 });
 
 test("algorithm calibration, exercise CMS and database tools change the app for real", async ({ page }) => {

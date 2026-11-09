@@ -35,20 +35,25 @@ describe("codes", () => {
   });
 
   it("hashes like the built-in table expects", async () => {
-    expect(await sha256Hex("ABOT-BLACK-LIFE")).toBe("2a4ff8dc861586acbcbfd37782181b6112a3b2ae7e2d0f2b62f639ce1a6f3aa0");
+    expect(await sha256Hex("ABOT-PRO-30D")).toBe("ab5cb157fdd264617bdf265edbddb640ab63af7c54ff448458627c150c33d69e");
   });
 });
 
 describe("redeemLicenseCode without Supabase", () => {
   it("built-in codes work offline", async () => {
-    expect(await redeemLicenseCode("abot-black-life")).toMatchObject({ ok: true, source: "offline", grant: { tier: "lifetime", days: null } });
+    expect(await redeemLicenseCode("abot-pro-30d")).toMatchObject({ ok: true, source: "offline", grant: { tier: "pro", days: 30 } });
     expect(await redeemLicenseCode("ABOT VIP 30D")).toMatchObject({ ok: true, grant: { tier: "pro", days: 30 } });
     expect(await redeemLicenseCode("ABOT-FOUNDER-2026")).toMatchObject({ ok: true, grant: { founder: true } });
   });
 
+  it("the retired lifetime codes, public in this repository, grant nothing", async () => {
+    expect(await redeemLicenseCode("ABOT-BLACK-LIFE")).toMatchObject({ ok: false });
+    expect(await redeemLicenseCode("ABOT-VIP-LIFETIME")).toMatchObject({ ok: false });
+  });
+
   it("Mission Control can switch built-in codes off", async () => {
     useRemoteConfig.setState({ config: { ...DEFAULT_REMOTE_CONFIG, offlineCodesEnabled: false } });
-    expect(await redeemLicenseCode("ABOT-BLACK-LIFE")).toMatchObject({ ok: false });
+    expect(await redeemLicenseCode("ABOT-PRO-30D")).toMatchObject({ ok: false });
   });
 
   it("this device's own codes count their uses", async () => {

@@ -90,7 +90,7 @@ export function DatabaseModule() {
   }, []);
 
   const findings: Finding[] = useMemo(() => (snap ? inspectSnapshot(snap, byId) : []), [snap, byId]);
-  const json = snap ? JSON.stringify(snap[table], null, 2) : "";
+  const json = useMemo(() => (snap ? JSON.stringify(snap[table], null, 2) : ""), [snap, table]);
 
   async function exportBackup() {
     try {

@@ -12,8 +12,11 @@ In the Supabase dashboard, open **SQL Editor** and run, in order:
    (each user sees only their own rows), the `server_updated_at` trigger and the
    `upsert_if_newer` function.
 2. `supabase/migrations/0002_bodyweight_and_media.sql`: allows weigh-ins and custom videos.
+3. For Mission Control (`/admin`) and redeem codes: `20261109_admin_and_redeem.sql`, then
+   `20261110_lock_down_grants.sql`. Run the second one too on a project that already has the
+   first: before it, anyone with the anon key could give any account lifetime access.
 
-Both files are safe to run again. `npm run check:schema` runs the same checks the app relies on
+Every file is safe to run again. `npm run check:schema` runs the same checks the app relies on
 against a throwaway local Postgres.
 
 ## 2. Google sign-in

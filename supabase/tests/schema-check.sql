@@ -5,7 +5,7 @@ set client_min_messages = warning;
 
 -- Minimal stand-in for what Supabase provides: the auth schema, auth.uid() and the API role.
 create schema if not exists auth;
-create table if not exists auth.users (id uuid primary key, email text);
+create table if not exists auth.users (id uuid primary key, email text, email_confirmed_at timestamptz);
 create or replace function auth.uid() returns uuid language sql stable as
   $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 create or replace function auth.jwt() returns jsonb language sql stable as
@@ -16,19 +16,28 @@ do $$ begin
 end $$;
 grant usage on schema auth, public to authenticated, anon;
 grant execute on function auth.uid(), auth.jwt() to authenticated, anon;
+-- A Supabase project grants execute on every new public function to these roles; revoking
+-- from public does not undo it.
+alter default privileges for role postgres in schema public grant execute on functions to anon, authenticated;
 
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
 \i supabase/migrations/20261109_admin_and_redeem.sql
+\i supabase/migrations/20261110_lock_down_grants.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
 \i supabase/migrations/20261109_admin_and_redeem.sql
+\i supabase/migrations/20261110_lock_down_grants.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
-insert into auth.users values ('00000000-0000-0000-0000-00000000000a', 'a@example.com'), ('00000000-0000-0000-0000-00000000000b', 'boss@example.com');
--- B is the admin; seeded as the owner, the way the migration says to.
-insert into public.app_admins (email) values ('boss@example.com');
+insert into auth.users values
+  ('00000000-0000-0000-0000-00000000000a', 'a@example.com', now()),
+  ('00000000-0000-0000-0000-00000000000b', 'boss@example.com', now()),
+  ('00000000-0000-0000-0000-00000000000c', 'boss2@example.com', null);
+-- B is the admin; seeded as the owner, the way the migration says to. C is listed too but never
+-- confirmed their email.
+insert into public.app_admins (email) values ('boss@example.com'), ('boss2@example.com');
 
 set role authenticated;
 
@@ -118,6 +127,11 @@ begin
   end;
   select * into g from public.redeem_code('NOPE-NOPE');
   if found then raise exception 'unknown code redeemed'; end if;
+  begin
+    perform public.abot_apply_grant('00000000-0000-0000-0000-00000000000a', 'lifetime', null, true, 'anon');
+    raise exception 'anon called abot_apply_grant';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 
 reset role;
@@ -144,6 +158,26 @@ do $$ begin
     raise exception 'user wrote their own tier';
   exception when insufficient_privilege then null;
   end;
+  begin
+    perform public.abot_apply_grant('00000000-0000-0000-0000-00000000000a', 'lifetime', null, true, 'self');
+    raise exception 'user called abot_apply_grant';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- C has an admin's email in the token and in app_admins, but it was never confirmed.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000c';
+set request.jwt.claim.email = 'boss2@example.com';
+do $$ begin
+  if public.is_abot_admin() then raise exception 'unconfirmed email counted as admin'; end if;
+  if (select count(*) from public.redeem_codes) <> 0 then raise exception 'unconfirmed admin sees codes'; end if;
+end $$;
+
+-- A token that claims the admin's email for another account is not an admin either.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+set request.jwt.claim.email = 'boss@example.com';
+do $$ begin
+  if public.is_abot_admin() then raise exception 'email claim alone counted as admin'; end if;
 end $$;
 
 -- B, the admin: changes the config, makes codes, reads stats.
@@ -162,7 +196,7 @@ begin
   exception when check_violation then null;
   end;
   select * into s from public.admin_stats();
-  if s.total_users <> 2 or s.active_codes <> 2 then raise exception 'stats wrong: %', s; end if;
+  if s.total_users <> 3 or s.active_codes <> 2 then raise exception 'stats wrong: %', s; end if;
 end $$;
 
 -- A redeems: the grant lands in their row, a second try does not spend another use, a used-up
