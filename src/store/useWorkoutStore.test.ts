@@ -215,6 +215,44 @@ describe("supersets", () => {
     useWorkoutStore.getState().completeSet(b, ex[1]!.sets[0]!.id, true);
     expect(useWorkoutStore.getState().restTimer).toMatchObject({ sessionExerciseId: b, totalSec: 90 });
   });
+
+  it("a giant set hands off A1 to A2 to A3 with no rest, then rests", () => {
+    const [a, b, c] = three();
+    useWorkoutStore.getState().linkSuperset(a, b);
+    useWorkoutStore.getState().linkSuperset(b, c);
+    const ex = () => useWorkoutStore.getState().active!.exercises;
+    const tick = (i: number, k = 0) => useWorkoutStore.getState().completeSet(ex()[i]!.id, ex()[i]!.sets[k]!.id, true);
+
+    tick(0);
+    expect(useWorkoutStore.getState()).toMatchObject({ restTimer: null, handoff: { sessionExerciseId: b, setIndex: 0 } });
+    tick(1);
+    expect(useWorkoutStore.getState()).toMatchObject({ restTimer: null, handoff: { sessionExerciseId: c, setIndex: 0 } });
+    tick(2);
+    expect(useWorkoutStore.getState().handoff).toBeNull();
+    expect(useWorkoutStore.getState().restTimer).toMatchObject({ sessionExerciseId: c });
+    // Round two points at set 2 of A2.
+    tick(0, 1);
+    expect(useWorkoutStore.getState().handoff).toEqual({ sessionExerciseId: b, setIndex: 1 });
+  });
+
+  it("an extra set on A1 with nothing left on A2 rests straight away", () => {
+    const [a, b] = three();
+    useWorkoutStore.getState().linkSuperset(a, b);
+    const ex = () => useWorkoutStore.getState().active!.exercises;
+    for (const st of ex()[1]!.sets) useWorkoutStore.getState().completeSet(b, st.id, true);
+    useWorkoutStore.getState().completeSet(a, ex()[0]!.sets[0]!.id, true);
+    expect(useWorkoutStore.getState().handoff).toBeNull();
+    expect(useWorkoutStore.getState().restTimer).toMatchObject({ sessionExerciseId: a });
+  });
+
+  it("removing the exercise waiting next clears the handoff", () => {
+    const [a, b] = three();
+    useWorkoutStore.getState().linkSuperset(a, b);
+    useWorkoutStore.getState().completeSet(a, useWorkoutStore.getState().active!.exercises[0]!.sets[0]!.id, true);
+    expect(useWorkoutStore.getState().handoff?.sessionExerciseId).toBe(b);
+    useWorkoutStore.getState().removeExercise(b);
+    expect(useWorkoutStore.getState().handoff).toBeNull();
+  });
 });
 
 describe("starting from a routine", () => {

@@ -7,7 +7,7 @@ import type {
   WorkoutSet,
 } from "@/types/workout";
 import { newId } from "@/lib/id";
-import { linkSupersetIn, removeFromList, unlinkSupersetIn } from "@/lib/superset";
+import { linkSupersetIn, removeFromList, supersetNext, unlinkSupersetIn, type SupersetHandoff } from "@/lib/superset";
 import { useLocationStore } from "./useLocationStore";
 import { currentT } from "@/i18n";
 
@@ -22,6 +22,11 @@ interface WorkoutState {
   sessions: WorkoutSession[];
   active: WorkoutSession | null;
   restTimer: RestTimer | null;
+  /**
+   * Set after a superset set is ticked and the next exercise of the group is waiting, with no
+   * rest in between. Shown in the island; not persisted, since it only lives between two sets.
+   */
+  handoff: SupersetHandoff | null;
 
   startEmpty: (defaultRest: number) => void;
   startFromRoutine: (routine: Routine) => void;
@@ -91,7 +96,7 @@ export const useWorkoutStore = create<WorkoutState>()(
     (set, get) => ({
       sessions: [],
       active: null,
-      restTimer: null,
+      restTimer: null, handoff: null,
 
       startEmpty: () => {
         if (get().active) return;
@@ -104,7 +109,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             status: "active",
             exercises: [],
           },
-          restTimer: null,
+          restTimer: null, handoff: null,
         });
       },
 
@@ -129,7 +134,7 @@ export const useWorkoutStore = create<WorkoutState>()(
               ),
             })),
           },
-          restTimer: null,
+          restTimer: null, handoff: null,
         });
       },
 
@@ -152,6 +157,7 @@ export const useWorkoutStore = create<WorkoutState>()(
         set((s) => ({
           ...patchActive(s, (a) => ({ ...a, exercises: removeFromList(a.exercises, id) })),
           restTimer: s.restTimer?.sessionExerciseId === id ? null : s.restTimer,
+          handoff: s.handoff?.sessionExerciseId === id ? null : s.handoff,
         })),
 
       moveExercise: (id, dir) =>
@@ -188,7 +194,7 @@ export const useWorkoutStore = create<WorkoutState>()(
       pauseActive: () =>
         set((s) => {
           if (!s.active || s.active.pausedAt !== undefined) return {};
-          return { active: { ...s.active, pausedAt: Date.now() }, restTimer: null };
+          return { active: { ...s.active, pausedAt: Date.now() }, restTimer: null, handoff: null };
         }),
 
       linkSuperset: (id, withId) =>
@@ -258,12 +264,11 @@ export const useWorkoutStore = create<WorkoutState>()(
                 : st,
             ),
           }));
-          // In a superset the lifter moves straight to the next exercise; rest comes after the last.
-          const idx = s.active.exercises.findIndex((e) => e.id === id);
-          const moreInSuperset =
-            ex.supersetId !== undefined && s.active.exercises.slice(idx + 1).some((e) => e.supersetId === ex.supersetId);
+          // In a superset the lifter moves straight to the next exercise with a set left; rest comes
+          // after the last one.
+          const handoff = completed ? supersetNext(active.exercises, id) : null;
           const restTimer: RestTimer | null = completed
-            ? moreInSuperset
+            ? handoff
               ? null
               : ex.restSeconds > 0
               ? { endsAt: Date.now() + ex.restSeconds * 1000, totalSec: ex.restSeconds, sessionExerciseId: id }
@@ -271,7 +276,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             : s.restTimer?.sessionExerciseId === id
               ? null
               : s.restTimer;
-          return { active, restTimer };
+          return { active, restTimer, handoff };
         }),
 
       completeAllRemaining: () => {
@@ -328,11 +333,11 @@ export const useWorkoutStore = create<WorkoutState>()(
             .map((ex) => ({ ...ex, sets: ex.sets.filter((st) => st.completed) }))
             .filter((ex) => ex.sets.length > 0),
         };
-        set((s) => ({ sessions: [...s.sessions, done], active: null, restTimer: null }));
+        set((s) => ({ sessions: [...s.sessions, done], active: null, restTimer: null, handoff: null }));
         return done;
       },
 
-      discardActive: () => set({ active: null, restTimer: null }),
+      discardActive: () => set({ active: null, restTimer: null, handoff: null }),
 
       deleteSession: (id) => set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) })),
     }),

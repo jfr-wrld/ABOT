@@ -22,7 +22,7 @@ import { ExerciseHowToSheet } from "./ExerciseHowToSheet";
 import { ExercisePicker } from "./ExercisePicker";
 import { ReorderSheet } from "./ReorderSheet";
 import { SupersetSheet } from "./SupersetSheet";
-import { SUPERSET_COLORS } from "@/lib/superset";
+import { SUPERSET_COLORS, type SupersetLabel } from "@/lib/superset";
 import { Button } from "@/components/ui/Button";
 import { formatClock } from "@/lib/calc";
 import { useT, type T } from "@/i18n";
@@ -43,9 +43,15 @@ export function ExerciseCard({
   canMoveUp,
   canMoveDown,
   superset,
+  joinedAbove,
+  joinedBelow,
 }: {
-  /** Letter and colour when this exercise is in a superset (see lib/superset). */
-  superset?: { letter: string; color: number };
+  /** Letter, colour and A1/A2 place when this exercise is in a superset (see lib/superset). */
+  superset?: SupersetLabel;
+  /** The card above is in the same superset: the bracket runs up through the gap to it. */
+  joinedAbove?: boolean;
+  /** The card below is in the same superset: the bottom-left corner stays square for the bracket. */
+  joinedBelow?: boolean;
   item: SessionExercise;
   exercise: Exercise | undefined;
   previous: WorkoutSet[] | null;
@@ -100,17 +106,23 @@ export function ExerciseCard({
 
   return (
     <section
+      id={`card-${item.id}`}
       aria-labelledby={`ex-${item.id}`}
       // The coloured left edge is information: it marks which cards are done back to back.
       style={ssColor ? { borderLeftColor: ssColor } : undefined}
-      className={`rounded-card border border-ink/[0.08] bg-surface px-2 py-3 ${ssColor ? "border-l-[3px]" : ""}`}
+      className={`relative scroll-mt-[calc(env(safe-area-inset-top)+12px)] rounded-card border border-ink/[0.08] bg-surface px-2 py-3 ${ssColor ? "border-l-[3px]" : ""} ${ssColor && joinedAbove ? "rounded-tl-sm" : ""} ${ssColor && joinedBelow ? "rounded-bl-sm" : ""}`}
     >
+      {joinedAbove && ssColor && (
+        // Bridges the gap to the card above, so a superset reads as one bracket.
+        <span aria-hidden="true" className="absolute -left-[3px] -top-[13px] h-[14px] w-[3px]" style={{ backgroundColor: ssColor }} />
+      )}
       <header className="flex items-start justify-between gap-2 px-1">
         {exercise && <ExerciseThumb exercise={exercise} size={44} />}
         <div className="min-w-0 flex-1">
           {superset && (
-            <p className="label-caps !text-[10px]" style={{ color: ssColor }}>
-              {t("Superset {letter}", { letter: superset.letter })}
+            <p className="label-caps ss-text !text-[10px]" style={{ "--ss": ssColor } as React.CSSProperties}>
+              {superset.size > 2 ? t("Giant set") : t("Superset")} {"//"}{" "}
+              <span className="num">{`${superset.letter}${superset.order}`}</span>
             </p>
           )}
           <h2 id={`ex-${item.id}`} className="text-base font-semibold tracking-tight text-zinc-100">

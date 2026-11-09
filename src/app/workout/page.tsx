@@ -17,6 +17,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { RoutineLibrary } from "@/components/routines/RoutineLibrary";
 import { detectSessionPRs, previousSets } from "@/lib/calc";
 import { supersetLabels } from "@/lib/superset";
+import { scrollToExercise } from "@/lib/scroll-to-exercise";
 import type { PRKind } from "@/types/workout";
 import { summaryPath } from "@/lib/routes";
 import { useT } from "@/i18n";
@@ -68,6 +69,15 @@ function WorkoutScreen() {
     if (activeId) router.prefetch(summaryPath(activeId));
   }, [activeId, router]);
 
+  // Mid-superset there is no rest: bring the next exercise of the group up to the thumb.
+  const handoffTo = useWorkoutStore((s) => (s.handoff ? `${s.handoff.sessionExerciseId}:${s.handoff.setIndex}` : null));
+  useEffect(() => {
+    if (!handoffTo) return;
+    // After the tick's re-render, so the card is laid out where it will stay.
+    const id = requestAnimationFrame(() => scrollToExercise(handoffTo.split(":")[0]!));
+    return () => cancelAnimationFrame(id);
+  }, [handoffTo]);
+
   const prs = useMemo(() => (active ? detectSessionPRs(active, sessions, byId) : []), [active, sessions, byId]);
   const prBySet = useMemo(() => {
     const m: Record<string, PRKind[]> = {};
@@ -104,6 +114,8 @@ function WorkoutScreen() {
             canMoveUp={i > 0}
             canMoveDown={i < active.exercises.length - 1}
             superset={supersets[item.id]}
+            joinedAbove={!!item.supersetId && active.exercises[i - 1]?.supersetId === item.supersetId}
+            joinedBelow={!!item.supersetId && active.exercises[i + 1]?.supersetId === item.supersetId}
           />
         ))}
 

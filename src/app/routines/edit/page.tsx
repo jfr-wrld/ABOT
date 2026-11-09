@@ -178,8 +178,8 @@ function Editor() {
 
               {ss ? (
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <span className="label-caps" style={{ color: SUPERSET_COLORS[ss.color] }}>
-                    {t("Superset {letter}", { letter: ss.letter })}
+                  <span className="label-caps ss-text" style={{ "--ss": SUPERSET_COLORS[ss.color] } as React.CSSProperties}>
+                    {ss.size > 2 ? t("Giant set") : t("Superset")} {"//"} <span className="num">{`${ss.letter}${ss.order}`}</span>
                   </span>
                   <button
                     type="button"
