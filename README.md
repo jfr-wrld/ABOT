@@ -109,7 +109,11 @@ in with Google, then import or sign in again after installing.
 - FAQ, About, Contact us, social links (coming soon), Sign out.
 
 ### Backup and sync
-- Export and import everything as a JSON file, no account needed.
+- Export and import everything as a JSON file (`ABOT_BACKUP_YYYY_MM_DD.json`), no account
+  needed. Restore by merging (nothing local is removed) or by replacing everything.
+- Bring your history from Hevy or Strong: pick their CSV export in Settings, Data & backup.
+  Exercise names are matched to the library and unknown ones become custom exercises; records
+  include the imported sets straight away. Importing the same file twice adds nothing.
 - Optional Google sign-in backs up to your own space and keeps two phones in step. The newer
   edit wins per item; an older version replaced by another phone is kept on the device.
   Setup for your own project: [`docs/cloud-sync-setup.md`](docs/cloud-sync-setup.md).

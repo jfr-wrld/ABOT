@@ -416,4 +416,32 @@ export const settings: Record<string, string> = {
   "Sounds & vibration": "Suara & getar",
   "A tick on steppers and chips, a latch when a set is done, a chord for a new record, each with a short vibration. Synthesised on the phone; music keeps playing.":
     "Bunyi tik di tombol +/- dan chip, bunyi kunci saat set selesai, akor untuk rekor baru, masing-masing dengan getar singkat. Dibuat langsung di HP; musik tetap berjalan.",
+  // Import from Hevy or Strong
+  "Import from Hevy or Strong": "Impor dari Hevy atau Strong",
+  "importing from Hevy or Strong": "impor dari Hevy atau Strong",
+  "In Hevy or Strong, export your workout data as a CSV file, then pick it here. The file is read on this phone and never uploaded. Your current data stays; workouts already here are skipped.":
+    "Di Hevy atau Strong, ekspor data workout sebagai file CSV, lalu pilih di sini. File dibaca di HP ini dan tidak pernah diunggah. Data yang ada tetap aman; workout yang sudah ada dilewati.",
+  "CSV file": "File CSV",
+  "{app} export": "Ekspor {app}",
+  "{from} to {to}": "{from} sampai {to}",
+  "Weights in this file are in": "Satuan berat di file ini",
+  "The file does not say. Pick the unit the other app was set to.": "File tidak menyebutkannya. Pilih satuan yang dipakai di aplikasi asal.",
+  "and {n} more": "dan {n} lainnya",
+  "Nothing new to import": "Tidak ada yang baru untuk diimpor",
+  "Imported {n} workout. Your records now count it.": "{n} workout diimpor. Rekor kamu sudah menghitungnya.",
+  "Imported {n} workouts. Your records now count them.": "{n} workout diimpor. Rekor kamu sudah menghitungnya.",
+  "{n} exercise name matched to the library.": "{n} nama latihan cocok dengan pustaka.",
+  "{n} exercise names matched to the library.": "{n} nama latihan cocok dengan pustaka.",
+  "{n} new custom exercise:": "{n} latihan custom baru:",
+  "{n} new custom exercises:": "{n} latihan custom baru:",
+  "{n} workout is already on this phone and will be skipped.": "{n} workout sudah ada di HP ini dan akan dilewati.",
+  "{n} workouts are already on this phone and will be skipped.": "{n} workout sudah ada di HP ini dan akan dilewati.",
+  "{n} row is not a set (a rest timer or a blank) and will be skipped.": "{n} baris bukan set (timer rest atau kosong) dan akan dilewati.",
+  "{n} rows are not sets (rest timers or blanks) and will be skipped.": "{n} baris bukan set (timer rest atau kosong) dan akan dilewati.",
+  "Import {n} workout": "Impor {n} workout",
+  "Import {n} workouts": "Impor {n} workout",
+  "This file is empty": "File ini kosong",
+  "This CSV does not look like a workout export. It needs date, exercise name and weight or reps columns.":
+    "CSV ini tidak terlihat seperti ekspor workout. Perlu kolom tanggal, nama latihan, dan berat atau repetisi.",
+  "No workouts were found in this file": "Tidak ada workout di file ini",
 };
