@@ -4,7 +4,7 @@ import { setNumbers } from "@/lib/sets";
 import { Select } from "@/components/ui/Select";
 import { useEffect, useRef, useState } from "react";
 import { setGridColumns } from "./setGrid";
-import { ArrowDown, ArrowUp, ArrowUpDown, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
 import type {
   Exercise,
   PRKind,
@@ -28,6 +28,8 @@ import { formatClock } from "@/lib/calc";
 import { useT, type T } from "@/i18n";
 import { muscleText } from "@/lib/home";
 import { PlateCalculatorModal } from "./PlateCalculatorModal";
+import { OverloadBanner } from "./OverloadBanner";
+import { ExerciseSwapModal } from "./ExerciseSwapModal";
 import { fromDisplay, toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 
@@ -67,6 +69,7 @@ export function ExerciseCard({
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [howToOpen, setHowToOpen] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
+  const [swapOpen, setSwapOpen] = useState(false);
   const [reorderOpen, setReorderOpen] = useState(false);
   const [supersetOpen, setSupersetOpen] = useState(false);
   const [platesOpen, setPlatesOpen] = useState(false);
@@ -166,6 +169,8 @@ export function ExerciseCard({
         </button>
       </header>
 
+      <OverloadBanner item={item} exercise={exercise} unit={unit} />
+
       <div className="mt-2 flex items-center gap-1 px-1 text-xs text-text-muted">
         <Timer aria-hidden="true" size={14} />
         <span>
@@ -183,7 +188,20 @@ export function ExerciseCard({
             {t("Plates")}
           </button>
         )}
+        {exercise && (
+          <button
+            type="button"
+            onClick={() => setSwapOpen(true)}
+            aria-haspopup="dialog"
+            aria-label={t("Swap {name} for another exercise", { name })}
+            className={`-mr-1 flex min-h-11 items-center gap-1.5 rounded-ctl px-2 font-semibold text-text-muted hover:bg-surface-2 hover:text-text ${loadsPlates ? "" : "ml-auto"}`}
+          >
+            <ArrowLeftRight aria-hidden="true" size={14} />
+            {t("Swap")}
+          </button>
+        )}
       </div>
+      {exercise && swapOpen && <ExerciseSwapModal open={swapOpen} onClose={() => setSwapOpen(false)} item={item} exercise={exercise} unit={unit} />}
       {loadsPlates && (
         <PlateCalculatorModal
           open={platesOpen}

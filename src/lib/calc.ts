@@ -82,7 +82,7 @@ export interface VariantOptions {
   allGyms?: boolean;
 }
 
-function matchesVariant(exerciseId: string, session: WorkoutSession, opts?: VariantOptions): boolean {
+export function matchesVariant(exerciseId: string, session: WorkoutSession, opts?: VariantOptions): boolean {
   if (!opts?.byId || opts.allGyms) return true;
   const target = variantKey(exerciseId, opts.byId[exerciseId], opts.locationId);
   return keyFor(exerciseId, session, opts.byId) === target;

@@ -11,6 +11,7 @@ import { WorkoutCalendar } from "@/components/analytics/WorkoutCalendar";
 import { RangeTabs } from "@/components/progress/RangeTabs";
 import { ProgressHero, StreakPlates } from "@/components/progress/ProgressHero";
 import { MuscleFocus } from "@/components/progress/MuscleFocus";
+import { SymmetryRadarCard } from "@/components/progress/SymmetryRadarCard";
 import { LiftTrends } from "@/components/progress/LiftTrends";
 import { StoryShareButton } from "@/components/share/ShareStoryButton";
 import { startOfWeek, weekStreak, weeklyBuckets } from "@/lib/analytics";
@@ -168,6 +169,10 @@ export function ProgressPanel() {
         </motion.div>
 
         <motion.div custom={6} variants={section} initial="hidden" animate="show">
+          <SymmetryRadarCard sessions={sessions} byId={byId} now={now} />
+        </motion.div>
+
+        <motion.div custom={7} variants={section} initial="hidden" animate="show">
           <WorkoutCalendar sessions={sessions} firstDay={firstDayOfWeek} now={now} />
         </motion.div>
       </div>
