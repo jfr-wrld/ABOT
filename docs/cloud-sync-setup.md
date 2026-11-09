@@ -49,6 +49,10 @@ The anon key is public by design: row level security limits it to the signed-in 
 2. In GitHub, **Settings > Secrets and variables > Actions > Variables**, add
    `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` with the same values as `.env`.
    The "Android APK" workflow builds them into the APK; without them it is local-only.
+3. Add `NEXT_PUBLIC_ABOT_ADMIN_PIN` there too, with the same PIN as on the web host (Vercel:
+   Settings > Environment Variables, type Config). Without it the APK's Mission Control opens
+   with the default PIN, which anyone can read in this repository. The PIN only hides the page:
+   Supabase's `app_admins` decides who can change anything for everyone.
 
 In the app, sign-in opens Google in the phone's browser (a Custom Tab): Google does not allow
 sign-in inside an app's WebView. Nothing changes in Google Cloud.
