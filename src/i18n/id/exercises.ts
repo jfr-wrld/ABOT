@@ -208,7 +208,6 @@ export const exercises: Record<string, string> = {
     "Selesaikan atau buang latihan yang sedang berjalan sebelum mulai {name}.",
   "Filter templates by split": "Filter template berdasarkan split",
   Templates: "Template",
-  Template: "Template",
   "Estimated time": "Perkiraan waktu",
   minutes: "menit",
   exercises: "gerakan",
@@ -218,18 +217,6 @@ export const exercises: Record<string, string> = {
   "Saved, edit": "Tersimpan, ubah",
   Saved: "Tersimpan",
   "Save to My Routines: {name}": "Simpan ke Rutinitasku: {name}",
-  "{name} added to your routines, in {program}.": "{name} sudah masuk ke rutinitasmu, di {program}.",
-  "Common training splits with target sets and reps. Add one, then set your weights as you log.":
-    "Split latihan yang umum, lengkap dengan target set dan rep. Tambahkan satu, lalu isi bebanmu saat mencatat.",
-  Added: "Ditambahkan",
-  "See exercises: {name}": "Lihat gerakan: {name}",
-  "See exercises": "Lihat gerakan",
-  "Add again": "Tambah lagi",
-  "Add to routines": "Tambah ke rutinitas",
-  "Add and start": "Tambah dan mulai",
-  "Finish or discard the workout in progress to start this one.":
-    "Selesaikan atau buang latihan yang sedang berjalan untuk memulai yang ini.",
-  "Rest {n} min": "Istirahat {n} mnt",
 
   // Story Studio (the card itself stays English)
   "Share to IG Story": "Bagikan ke IG Story",
