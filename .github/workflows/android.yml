@@ -31,13 +31,20 @@ jobs:
         if: ${{ vars.NEXT_PUBLIC_SUPABASE_URL == '' || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY == '' }}
         run: echo "::warning::NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set in the repository's Actions variables. This APK runs local-only (no Google sign-in)."
 
+      - name: Check the Mission Control PIN
+        if: ${{ vars.NEXT_PUBLIC_ABOT_ADMIN_PIN == '' }}
+        run: echo "::warning::NEXT_PUBLIC_ABOT_ADMIN_PIN is not set in the repository's Actions variables. This APK opens /admin with the default PIN, which is public in this repository."
+
       - name: Export the web app and copy it into the Android project
         run: npm run build:android
         # Cloud sync: the project URL and anon key (public by design), from the repository's
         # Actions variables. Without them the APK runs local-only. See docs/cloud-sync-setup.md.
+        # The Mission Control PIN only hides /admin (it ships inside the APK); Supabase's
+        # app_admins decides who can change anything for everyone.
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_ABOT_ADMIN_PIN: ${{ vars.NEXT_PUBLIC_ABOT_ADMIN_PIN }}
 
       - name: Build the debug APK
         working-directory: android
