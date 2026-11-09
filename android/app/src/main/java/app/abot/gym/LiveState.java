@@ -18,6 +18,8 @@ class LiveState {
     String restTitle;
     String overTitle;
     String overText;
+    /** Rest alert: ring when a rest ends. */
+    boolean ring = true;
 
     void save(Context ctx) {
         LiveWorkoutPlugin.prefs(ctx)
@@ -32,6 +34,7 @@ class LiveState {
             .putString("restTitle", restTitle)
             .putString("overTitle", overTitle)
             .putString("overText", overText)
+            .putBoolean("ring", ring)
             .apply();
     }
 
@@ -50,6 +53,7 @@ class LiveState {
         s.restTitle = p.getString("restTitle", s.title);
         s.overTitle = p.getString("overTitle", s.title);
         s.overText = p.getString("overText", s.text);
+        s.ring = p.getBoolean("ring", true);
         return s;
     }
 }

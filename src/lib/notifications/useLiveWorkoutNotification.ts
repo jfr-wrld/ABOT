@@ -6,6 +6,7 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { LIVE_TAG, liveContent, nativeLiveContent } from "./live-workout";
 import { notificationPermission, registerReminderWorker } from "./reminder-service";
 import { useReminderStore } from "@/store/useReminderStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { isNativeApp } from "@/lib/native/files";
 import { clearNativeLive, showNativeLive } from "@/lib/native/notify";
 
@@ -41,14 +42,15 @@ async function clearLive(): Promise<void> {
  * the first notification already says when rest ends.
  *
  * Android app: the notification stays up for the whole workout and follows every change (next
- * set, rest, pause). Android ticks its clock and rings the end of a rest itself, so nothing
- * depends on the app still running once it is left.
+ * set, rest, pause). Android ticks its clock and rings the end of a rest itself (when Rest alert
+ * is on and ABOT is not on screen), so nothing depends on the app still running once it is left.
  */
 export function useLiveWorkoutNotification(): void {
   const active = useWorkoutStore((s) => s.active);
   const timer = useWorkoutStore((s) => s.restTimer);
   const { byId } = useAllExercises();
   const permission = useReminderStore((s) => s.permission);
+  const ring = useSettingsStore((s) => s.restTimerAlert);
   const latest = useRef({ active, timer, byId });
   useEffect(() => {
     latest.current = { active, timer, byId };
@@ -62,9 +64,9 @@ export function useLiveWorkoutNotification(): void {
       void clearNativeLive().catch(() => {});
       return;
     }
-    const t = setTimeout(() => void showNativeLive(nativeLiveContent(active, byId, timer, Date.now())).catch(() => {}), 300);
+    const t = setTimeout(() => void showNativeLive({ ...nativeLiveContent(active, byId, timer, Date.now()), ring }).catch(() => {}), 300);
     return () => clearTimeout(t);
-  }, [active, timer, byId, permission]);
+  }, [active, timer, byId, permission, ring]);
 
   // Browser only.
   useEffect(() => {

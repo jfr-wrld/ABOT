@@ -5,6 +5,9 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
 
+    /** ABOT is on screen. Read by LiveWorkoutReceiver, which rings the rest-over alarm only when not. */
+    static volatile boolean inForeground = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // App-local plugins register before the bridge starts.
@@ -15,5 +18,17 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         // The rest timer beeps from a timer, not a tap; the WebView would otherwise mute it.
         getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        inForeground = true;
+    }
+
+    @Override
+    public void onPause() {
+        inForeground = false;
+        super.onPause();
     }
 }

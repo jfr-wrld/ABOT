@@ -17,6 +17,7 @@ import { Choice, Toggle } from "./controls";
 import { useT } from "@/i18n";
 import { LANGUAGE_LABEL, THEME_LABEL } from "./labels";
 import { playSetComplete } from "@/lib/sound-effects";
+import { feedback } from "@/lib/feedback";
 import { hapticLock } from "@/lib/haptics";
 
 const REST_OPTIONS = [30, 45, 60, 90, 120, 150, 180, 240, 300];
@@ -107,9 +108,13 @@ export function WorkoutSection() {
       <Toggle
         id="rest-alert"
         label={t("Rest alert")}
-        info={t("Vibrate and beep when the rest countdown reaches zero.")}
+        info={t("Three short pips at 3, 2, 1, then a beep and a vibration when rest reaches zero.")}
         checked={s.restTimerAlert}
-        onChange={(v) => s.update({ restTimerAlert: v })}
+        onChange={(v) => {
+          s.update({ restTimerAlert: v });
+          // Let the lifter hear what the end of a rest sounds like.
+          if (v) feedback.restZero();
+        }}
       />
       <Toggle
         id="show-rpe"
@@ -121,7 +126,7 @@ export function WorkoutSection() {
       <Toggle
         id="tap-feedback"
         label={t("Sounds & vibration")}
-        info={t("A tick on steppers and chips, a latch when a set is done, a chord for a new record, each with a short vibration. Synthesised on the phone; music keeps playing.")}
+        info={t("A tick on steppers and chips, a latch when a set is done, a chord for a new record, plus a sound when a workout starts and finishes, each with a short vibration. Synthesised on the phone; music keeps playing.")}
         checked={s.tapFeedback}
         onChange={(v) => {
           s.update({ tapFeedback: v });

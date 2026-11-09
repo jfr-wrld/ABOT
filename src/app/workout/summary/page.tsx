@@ -21,7 +21,7 @@ import { PR_KIND_LABEL } from "@/lib/story-data";
 import { previousComparable, sessionRecords, workedMuscles } from "@/lib/session-insights";
 import { MUSCLE_GROUP_LABELS, type Exercise, type PersonalRecord, type WeightUnit } from "@/types/workout";
 import { historyPath } from "@/lib/routes";
-import { buzz } from "@/lib/native/haptics";
+import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 import { estimateCalories } from "@/lib/calorie-estimator";
 import { HealthSyncService } from "@/lib/health-sync";
@@ -46,7 +46,7 @@ function Summary() {
   const t = useT();
   const id = useSearchParams().get("id") ?? "";
   const sessions = useWorkoutStore((s) => s.sessions);
-  const { weightUnit, restTimerAlert } = useSettingsStore();
+  const { weightUnit } = useSettingsStore();
   const { byId } = useAllExercises();
   const session = sessions.find((s) => s.id === id);
 
@@ -66,10 +66,10 @@ function Summary() {
   const recordLifts = insights ? Object.keys(insights.byLift).length : 0;
   const photos = useWorkoutPhotos(session?.id);
 
-  // One short buzz to mark the finish, on phones that vibrate and only if the lifter keeps alerts on.
+  // The finish chord and a buzz, behind Sounds & vibration. Finish was just tapped, so audio is unlocked.
   useEffect(() => {
-    if (!session || !restTimerAlert) return;
-    buzz(recordLifts > 0 ? [30, 60, 30, 60, 60] : [30]);
+    if (!session) return;
+    feedback.finish(recordLifts > 0);
     // Once per opening of the page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

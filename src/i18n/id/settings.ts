@@ -46,7 +46,7 @@ export const settings: Record<string, string> = {
   "The rest timer an exercise starts with when you add it. Each exercise can change its own.":
     "Timer istirahat awal untuk gerakan yang baru kamu tambahkan. Tiap gerakan bisa mengubahnya sendiri.",
   "Rest alert": "Alarm istirahat",
-  "Vibrate and beep when the rest countdown reaches zero.": "Getar dan bunyi saat hitung mundur istirahat habis.",
+  "Three short pips at 3, 2, 1, then a beep and a vibration when rest reaches zero.": "Tiga bunyi pendek di 3, 2, 1, lalu bunyi dan getar saat istirahat habis.",
   "RPE column": "Kolom RPE",
   "Rate of perceived exertion, 1 to 10: how hard each set felt. Shown in the logger next to weight and reps.":
     "Tingkat usaha yang dirasakan, 1 sampai 10: seberat apa tiap set terasa. Tampil di pencatat, di samping berat dan rep.",
@@ -419,8 +419,8 @@ export const settings: Record<string, string> = {
   "Turn on in Android settings": "Nyalakan di pengaturan Android",
   // Tactile feedback
   "Sounds & vibration": "Suara & getar",
-  "A tick on steppers and chips, a latch when a set is done, a chord for a new record, each with a short vibration. Synthesised on the phone; music keeps playing.":
-    "Bunyi tik di tombol +/- dan chip, bunyi kunci saat set selesai, akor untuk rekor baru, masing-masing dengan getar singkat. Dibuat langsung di HP; musik tetap berjalan.",
+  "A tick on steppers and chips, a latch when a set is done, a chord for a new record, plus a sound when a workout starts and finishes, each with a short vibration. Synthesised on the phone; music keeps playing.":
+    "Bunyi tik di tombol +/- dan chip, bunyi kunci saat set selesai, akor untuk rekor baru, plus bunyi saat latihan dimulai dan selesai, masing-masing dengan getar singkat. Dibuat langsung di HP; musik tetap berjalan.",
   // Import from Hevy or Strong
   "Import from Hevy or Strong": "Impor dari Hevy atau Strong",
   "importing from Hevy or Strong": "impor dari Hevy atau Strong",

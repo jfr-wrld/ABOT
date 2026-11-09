@@ -74,10 +74,15 @@ paired with graduated vibration (`src/lib/haptics.ts`; Capacitor Haptics in the 
 | Set ticked off | latch: 600 Hz then 900 Hz, 90 ms | 15, 30, 25 ms |
 | New record on a lift logged before | A major arpeggio 440, 554, 659, 880 Hz | 30, 40, 60, 40, 100 ms |
 | Rest timer at zero (Rest alert) | three 1000 Hz pulses | 200, 100, 200 ms |
+| Rest at 3, 2, 1 seconds left (Rest alert) | 50 ms 800 Hz triangle pip | none |
+| Workout started | 220 to 440 Hz glide, then an 880 Hz click | 15, 40, 15 ms |
+| Finish summary opens | C major rolled upward, 523 to 1047 Hz (1319 Hz on top for a record) | 30 ms (30, 60, 30, 60, 60 with a record) |
 
 Settings > Workout > Sounds & vibration switches the tap sounds off (on by default); the rest
-alarm follows Rest alert. A first-ever lift is a baseline, so it plays no record chord. The
-first touch unlocks Web Audio so the timer-driven rest beep can play.
+countdown and alarm follow Rest alert. A first-ever lift is a baseline, so it plays no record
+chord. The first touch unlocks Web Audio so the timer-driven rest beep can play. In the Android
+app the page beeps while ABOT is on screen and the system notification rings while it is not
+(`LiveWorkoutReceiver` checks `MainActivity.inForeground`), so a rest ends with one alarm, not two.
 
 ## Supersets and giant sets
 

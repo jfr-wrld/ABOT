@@ -1,11 +1,19 @@
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { hapticLock, hapticPR, hapticTick } from "./haptics";
 import { buzz } from "./native/haptics";
-import { playMechanicalTick, playPRUnlocked, playRestTimerZero, playSetComplete } from "./sound-effects";
+import {
+  playMechanicalTick,
+  playPRUnlocked,
+  playRestCountdown,
+  playRestTimerZero,
+  playSetComplete,
+  playWorkoutComplete,
+  playWorkoutStart,
+} from "./sound-effects";
 
 /**
  * Sound plus vibration for each tactile moment, behind Settings > Workout > Sounds & vibration
- * (the rest-over alarm follows Rest alert instead). Call these from the tap itself.
+ * (the rest countdown and rest-over alarm follow Rest alert instead). Call these from the tap itself.
  */
 const on = () => useSettingsStore.getState().tapFeedback;
 
@@ -27,6 +35,22 @@ export const feedback = {
     if (!on()) return;
     playPRUnlocked();
     hapticPR();
+  },
+  /** A workout started. */
+  start(): void {
+    if (!on()) return;
+    playWorkoutStart();
+    buzz([15, 40, 15]);
+  },
+  /** The finish summary opened; `record` when a record fell in the workout. */
+  finish(record: boolean): void {
+    if (!on()) return;
+    playWorkoutComplete(record);
+    buzz(record ? [30, 60, 30, 60, 60] : [30]);
+  },
+  /** 3, 2, 1 seconds of rest left; the caller checks Rest alert. Sound only. */
+  restCountdown(): void {
+    playRestCountdown();
   },
   /** Rest timer reached zero; the caller checks Rest alert. */
   restZero(): void {

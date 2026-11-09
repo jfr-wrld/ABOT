@@ -14,7 +14,7 @@ import type { WorkoutSession } from "@/types/workout";
 import { usePagePath } from "@/components/layout/usePagePath";
 import { feedback } from "@/lib/feedback";
 import { isNativeApp } from "@/lib/native/files";
-import { notificationPermission } from "@/lib/notifications/reminder-service";
+import { pageRingsRestOver } from "@/lib/rest-alert";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { supersetLabels, type SupersetHandoff } from "@/lib/superset";
 import { setNumbers } from "@/lib/sets";
@@ -50,6 +50,7 @@ function Island() {
   const pathname = usePagePath();
   const handoff = active && rawHandoff && liveHandoff(active, rawHandoff) ? rawHandoff : null;
   useLiveWorkoutNotification();
+  useStartSound(hydrated);
   // The intro and sign-in have no dock, so there is nothing to sit above.
   const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login" && pathname !== "/permissions" && !pathname.startsWith("/workout/summary");
 
@@ -76,6 +77,22 @@ function Island() {
       </div>
     </MotionConfig>
   );
+}
+
+/**
+ * The start sound, from one place for every Start button: a workout that appears while the app
+ * runs and began just now. Restoring one on launch, or one that sync brought in, stays quiet.
+ */
+function useStartSound(hydrated: boolean) {
+  const id = useWorkoutStore((s) => s.active?.id ?? null);
+  const startedAt = useWorkoutStore((s) => s.active?.startedAt ?? 0);
+  const seen = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (!hydrated) return;
+    const before = seen.current;
+    seen.current = id;
+    if (before === null && id !== null && Date.now() - startedAt < 10_000) feedback.start();
+  }, [hydrated, id, startedAt]);
 }
 
 const capsule =
@@ -188,6 +205,15 @@ function RestCapsule() {
   const remainingSec = Math.ceil(remainingMs / 1000);
   const fraction = timer ? remainingMs / (timer.totalSec * 1000) : 0;
 
+  // 3, 2, 1: one pip per second, so the lifter can get under the bar before zero.
+  const pipped = useRef<number | null>(null);
+  useEffect(() => {
+    if (!timer || !alert || remainingSec < 1 || remainingSec > 3 || timer.totalSec < 10) return;
+    if (pipped.current === remainingSec || document.visibilityState !== "visible") return;
+    pipped.current = remainingSec;
+    feedback.restCountdown();
+  }, [timer, alert, remainingSec]);
+
   useEffect(() => {
     if (!timer) {
       firedFor.current = null;
@@ -195,9 +221,7 @@ function RestCapsule() {
     }
     if (remainingMs > 0 || firedFor.current === timer.endsAt) return;
     firedFor.current = timer.endsAt;
-    // In the app with notifications on, Android's rest-over alert already rings and buzzes.
-    const systemRings = isNativeApp() && notificationPermission() === "granted";
-    if (alert && !systemRings) feedback.restZero();
+    if (pageRingsRestOver({ alert, native: isNativeApp(), visible: document.visibilityState === "visible", overdueMs: Date.now() - timer.endsAt })) feedback.restZero();
     // Hold "Go" for a moment so the lifter sees rest is over, then fold back to compact.
     const id = setTimeout(skip, 2500);
     return () => clearTimeout(id);

@@ -27,8 +27,9 @@ import com.getcapacitor.annotation.CapacitorPlugin;
  * the next lift, the workout name, and a clock Android ticks itself (rest counting down, or the
  * workout time). Pause / Resume and Skip rest work from the notification even while ABOT is
  * frozen: LiveWorkoutReceiver updates the notification at once and hands the tap to the app.
- * The end of a rest is an alarm owned here, so it rings with sound and swaps the notification to
- * "rest over" whether or not the app is running. On Android 16 the notification asks to be a
+ * The end of a rest is an alarm owned here, so it swaps the notification to "rest over" whether
+ * or not the app is running, and rings unless ABOT is on screen (the page beeps then) or Rest
+ * alert is off. On Android 16 the notification asks to be a
  * Live Update, which puts the clock in a chip on the status bar.
  */
 @CapacitorPlugin(name = "LiveWorkout")
@@ -73,6 +74,7 @@ public class LiveWorkoutPlugin extends Plugin {
         s.restTitle = call.getString("restTitle", s.title);
         s.overTitle = call.getString("overTitle", s.title);
         s.overText = call.getString("overText", s.text);
+        s.ring = call.getBoolean("ring", true);
         s.save(ctx);
         cancelAlarm(ctx);
         if (s.restEndsAt > System.currentTimeMillis()) scheduleAlarm(ctx, s.restEndsAt);

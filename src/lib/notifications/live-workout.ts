@@ -67,6 +67,8 @@ export interface NativeLive {
   restTitle?: string;
   overTitle?: string;
   overText?: string;
+  /** Rest alert: whether the end of a rest rings. Unset means it rings. */
+  ring?: boolean;
 }
 
 export function nativeLiveContent(

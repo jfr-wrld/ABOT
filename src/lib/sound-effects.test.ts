@@ -75,6 +75,27 @@ describe("sound profiles (Phase 2 spec)", () => {
     expect(oscs.map((o) => o.start)).toEqual([...oscs.map((o) => o.start)].sort((a, b) => a - b));
   });
 
+  it("rest countdown: a single soft 800 Hz pip", async () => {
+    (await load()).playRestCountdown();
+    expect(oscs.map((o) => o.set[0][0])).toEqual([800]);
+  });
+
+  it("workout start: a 220 to 440 Hz glide, then an 880 Hz click", async () => {
+    (await load()).playWorkoutStart();
+    expect(oscs.map((o) => o.set[0][0])).toEqual([220, 880]);
+    expect(oscs[0].ramp[0][0]).toBe(440);
+  });
+
+  it("workout complete: C major rolled upward, one higher note for a record", async () => {
+    const { playWorkoutComplete } = await load();
+    playWorkoutComplete();
+    expect(oscs.map((o) => Math.round(o.set[0][0]))).toEqual([523, 659, 784, 1047]);
+    expect(oscs.map((o) => o.start)).toEqual([...oscs.map((o) => o.start)].sort((a, b) => a - b));
+    oscs = [];
+    playWorkoutComplete(true);
+    expect(oscs.map((o) => Math.round(o.set[0][0]))).toEqual([523, 659, 784, 1047, 1319]);
+  });
+
   it("stays silent without Web Audio instead of throwing", async () => {
     vi.stubGlobal("window", {});
     expect((await load()).playMechanicalTick()).toBe(false);
@@ -96,10 +117,18 @@ describe("feedback gate and vibration patterns", () => {
     const played = oscs.length;
     expect(played).toBe(1 + 2 + 4);
 
+    feedback.start();
+    feedback.finish(true);
+    expect(vibrate.mock.calls.slice(3).map((c) => c[0])).toEqual([[15, 40, 15], [30, 60, 30, 60, 60]]);
+    expect(oscs.length).toBe(played + 2 + 5);
+
     useSettingsStore.setState({ tapFeedback: false });
+    const before = oscs.length;
     feedback.tick();
     feedback.pr();
-    expect(oscs.length).toBe(played);
-    expect(vibrate).toHaveBeenCalledTimes(3);
+    feedback.start();
+    feedback.finish(false);
+    expect(oscs.length).toBe(before);
+    expect(vibrate).toHaveBeenCalledTimes(5);
   });
 });

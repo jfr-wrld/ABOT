@@ -23,7 +23,8 @@ public class LiveWorkoutReceiver extends BroadcastReceiver {
             s.text = s.overText;
             s.save(ctx);
             LiveWorkoutPlugin.render(ctx, s);
-            LiveWorkoutPlugin.postAlert(ctx, s.overTitle, s.overText);
+            // On screen, the page plays its own rest-over beep; ringing here too would double it.
+            if (s.ring && !MainActivity.inForeground) LiveWorkoutPlugin.postAlert(ctx, s.overTitle, s.overText);
             return;
         }
 
