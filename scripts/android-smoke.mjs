@@ -138,11 +138,13 @@ async function main() {
   await sleep(1200);
   await openApp();
   page = await attach();
-  const settingsButton = page.getByRole("button", { name: /Notifications is off\. Open Android settings/ });
-  const shown = await settingsButton.waitFor({ timeout: 20000 }).then(() => true, () => false);
-  check("denied notifications show a Settings button after coming back", shown, page.url());
+  // The row offers Allow or Settings; either way the tap must land in Android's settings, since
+  // Android will not show its dialog again.
+  const row = page.getByRole("button", { name: /^(Allow notifications|Notifications is off\. Open Android settings)$/ });
+  const shown = await row.waitFor({ timeout: 20000 }).then(() => true, () => false);
+  check("the notifications row offers a way back after coming back", shown, page.url());
   screenshot("notifications-denied");
-  await settingsButton.click().catch(() => {});
+  await row.click().catch(() => {});
   await sleep(2500);
   const top = resumedActivity();
   check("Settings opens Android's settings app", /com\.android\.settings/.test(top), top.trim());

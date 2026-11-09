@@ -50,7 +50,10 @@ export function LiveStatusSetting() {
       setEnabled(false);
       return;
     }
+    const asked = Date.now();
     if (permission !== "granted") await requestPermission();
+    // No dialog (an instant no): only Android settings can turn notifications back on.
+    if (app && useReminderStore.getState().permission !== "granted" && Date.now() - asked < 500) return openSettings();
     if (useReminderStore.getState().permission === "granted") {
       setLiveStatusEnabled(true);
       setEnabled(true);

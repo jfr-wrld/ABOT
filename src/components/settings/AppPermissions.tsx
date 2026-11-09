@@ -7,6 +7,7 @@ import { syncPermission, useReminderStore } from "@/store/useReminderStore";
 import { useT, type T } from "@/i18n";
 import { checkAccess, openAppSettings, openNotificationSettings, requestAccess, type Access, type AccessKind } from "@/lib/native/permissions";
 import { useAppResumed } from "@/lib/native/useAppResumed";
+import { isNativeApp } from "@/lib/native/files";
 
 type Kind = "notifications" | AccessKind;
 
@@ -21,6 +22,9 @@ function rowText(kind: Kind, t: T): { title: string; why: string } {
   if (kind === "camera") return { title: t("Camera"), why: t("Take a profile photo or a story background.") };
   return { title: t("Location"), why: t("Picks the gym you are at when a workout starts.") };
 }
+
+/** Faster than anyone could answer a permission dialog. */
+const INSTANT_REFUSAL_MS = 500;
 
 const fromNotify = (p: string): Access => (p === "granted" ? "granted" : p === "denied" ? "denied" : "prompt");
 
@@ -48,20 +52,6 @@ export function useAppPermissions() {
   const fail = (kind: Kind, err: unknown) =>
     setErrors((e) => ({ ...e, [kind]: err instanceof Error && err.message ? err.message : String(err) }));
 
-  const allow = useCallback(
-    async (kind: Kind) => {
-      setErrors((e) => ({ ...e, [kind]: undefined }));
-      try {
-        if (kind === "notifications") return await requestNotify();
-        const next = await requestAccess(kind);
-        setState((s) => ({ ...s, [kind]: next }));
-      } catch (err) {
-        fail(kind, err);
-      }
-    },
-    [requestNotify],
-  );
-
   /** Android settings for an access it will no longer ask about. */
   const openSettings = useCallback(async (kind: Kind) => {
     setErrors((e) => ({ ...e, [kind]: undefined }));
@@ -71,6 +61,30 @@ export function useAppPermissions() {
       fail(kind, err);
     }
   }, []);
+
+  const allow = useCallback(
+    async (kind: Kind) => {
+      setErrors((e) => ({ ...e, [kind]: undefined }));
+      const asked = Date.now();
+      try {
+        let granted: boolean;
+        if (kind === "notifications") {
+          await requestNotify();
+          granted = useReminderStore.getState().permission === "granted";
+        } else {
+          const next = await requestAccess(kind);
+          setState((s) => ({ ...s, [kind]: next }));
+          granted = next === "granted";
+        }
+        // An answer this fast means Android showed no dialog: it was turned off for good, and
+        // only Android settings can turn it back on. Take the lifter there instead of doing nothing.
+        if (!granted && isNativeApp() && Date.now() - asked < INSTANT_REFUSAL_MS) await openSettings(kind);
+      } catch (err) {
+        fail(kind, err);
+      }
+    },
+    [requestNotify, openSettings],
+  );
 
   /** Asks for each access not yet decided, one system prompt after another. */
   const allowAll = async () => {
