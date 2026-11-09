@@ -109,7 +109,7 @@ export function ProgressPanel() {
 
       <div className="flex flex-col gap-3">
         <motion.div custom={0} variants={section} initial="hidden" animate="show">
-          <PhaseCommandCard now={now} full />
+          <PhaseCommandCard now={now} />
         </motion.div>
 
         <motion.div custom={0} variants={section} initial="hidden" animate="show" className="flex items-center gap-2">

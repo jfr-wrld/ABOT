@@ -15,7 +15,10 @@ const [apk, out = "smoke-out"] = process.argv.slice(2);
 const PKG = "app.abot.gym";
 mkdirSync(out, { recursive: true });
 
-const adb = (...args) => execFileSync("adb", args, { encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
+// Every adb call has a time limit: a wedged emulator must fail the run, not hang it until the job
+// times out with nothing in the log.
+const ADB_TIMEOUT_MS = 90_000;
+const adb = (...args) => execFileSync("adb", args, { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, timeout: ADB_TIMEOUT_MS });
 const shell = (cmd) => adb("shell", cmd);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
@@ -28,7 +31,8 @@ function check(name, ok, detail = "") {
 
 function screenshot(name) {
   step++;
-  const png = execFileSync("adb", ["exec-out", "screencap", "-p"], { maxBuffer: 64 * 1024 * 1024 });
+  console.log(`STEP ${step} ${name}`);
+  const png = execFileSync("adb", ["exec-out", "screencap", "-p"], { maxBuffer: 64 * 1024 * 1024, timeout: ADB_TIMEOUT_MS });
   writeFileSync(join(out, `${String(step).padStart(2, "0")}-${name}.png`), png);
 }
 
@@ -86,6 +90,7 @@ async function main() {
   // again. A crash cannot hide behind this, as any FATAL EXCEPTION in ABOT fails the run below.
   const attach = async () => {
     for (let tries = 1; ; tries++) {
+      console.log(`ATTACH WebView, try ${tries} (after step ${step})`);
       try {
         return (await device.webView({ pkg: PKG }, { timeout: 60000 })).page();
       } catch (e) {
@@ -223,6 +228,19 @@ async function main() {
   await device.close();
 }
 
+// A run that has not finished in 20 minutes is stuck: say where, show ABOT's log, and stop.
+const watchdog = setTimeout(() => {
+  console.log(`FAIL  smoke run stuck after step ${step}; stopping`);
+  try {
+    const log = execFileSync("adb", ["logcat", "-d", "-v", "brief"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, timeout: 30_000 });
+    console.log(log.split("\n").filter((l) => /AndroidRuntime|FATAL|ANR|abot/i.test(l)).slice(-80).join("\n"));
+  } catch (e) {
+    console.log(`logcat unavailable: ${e}`);
+  }
+  process.exit(1);
+}, 20 * 60_000);
+watchdog.unref();
+
 main()
   .catch((err) => {
     console.log(`FAIL  smoke script crashed: ${err?.stack ?? err}`);
@@ -230,7 +248,7 @@ main()
   })
   .finally(() => {
     try {
-      const log = execFileSync("adb", ["logcat", "-d", "-v", "brief"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+      const log = execFileSync("adb", ["logcat", "-d", "-v", "brief"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, timeout: ADB_TIMEOUT_MS });
       writeFileSync(join(out, "logcat.txt"), log);
       // An ABOT crash anywhere in the run fails it, with its stack, even if every check passed.
       const all = log.split("\n");

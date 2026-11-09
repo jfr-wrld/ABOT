@@ -53,10 +53,10 @@ export const PHASE_BLURB: Record<BodyPhaseType, string> = {
 };
 /** What each phase changes in the rest of ABOT, shown before saving. */
 export const PHASE_CALIBRATION: Record<BodyPhaseType, string[]> = {
-  CUTTING: ["Coach: hold the weight when sets get hard; drop a set instead of weight when tired", "Recovery map: 15% slower recovery in a deficit"],
-  BULKING: ["Coach: add weight after every clean compound session, and a set when the muscle is fresh", "Recovery map: 10% faster recovery in a surplus"],
-  RECOMP: ["Calories: a little more on training days, a little less on rest days", "Coach and recovery work as usual"],
-  STRENGTH_PEAK: ["Coach: compounds in sets of 3 to 5", "Rest after compound sets: at least 3 minutes"],
+  CUTTING: ["Coach holds the weight when sets get hard", "Recovery map: 15% slower"],
+  BULKING: ["Coach adds weight after clean sessions", "Recovery map: 10% faster"],
+  RECOMP: ["More food on training days, less on rest days", "Coach and recovery as usual"],
+  STRENGTH_PEAK: ["Compounds in sets of 3 to 5", "3 min rest after compound sets"],
 };
 
 export const RISK_LABEL = { low: "Muscle loss risk: low", moderate: "Muscle loss risk: moderate", high: "Muscle loss risk: high" } as const;

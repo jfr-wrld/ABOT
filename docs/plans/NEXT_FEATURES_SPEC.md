@@ -266,14 +266,27 @@ timer to suit it. PRO feature `body_phase_protocols` (open to everyone during th
 - Recovery map (`lib/muscle-recovery`): recovery time × 1.15 cutting, × 0.9 bulking.
 - Rest timer: at least 180 s after a compound set while peaking.
 
-### 13.4 UI (`src/components/phase/*`)
-- `PhaseCommandCard` on Home and Profile > Progress (with scale against trend chart): protocol
-  and week, block bar with deload, trend weight + Log weight, daily fuel target, relative
-  strength and retention risk, protein and water tally, food guide. Without a phase, a card to
-  choose one.
-- `PhaseSetupModal`: four phases, length, weights, height, age, sex, activity, and a preview of
-  the target and what changes. `WeightLogModal`: weight with optional body fat and waist.
+### 13.4 UI (pages, not sheets: `src/app/phase/*`, `src/components/phase/*`)
+Owner brief 2026-11-09: less text, tidier layout, full pages with illustration and motion.
+- Identity motif: the block drawn as a weight plate (`BlockPlate`), one segment per week, lit in
+  order as weeks pass. The plate is ABOT's mark, so the phase belongs to the app.
+- Home and Profile: `PhaseCommandCard`, a glance card linking to `/phase`: phase and week, block
+  bar, trend weight with a sparkline, today's calories with a macro bar, and protein and water
+  rings that fill with a tap. Without a phase, one row with the four phase icons opens setup.
+- `/phase`: plate hero with the week, trend weight and start-to-target bar; today's calories as
+  a counting figure inside a macro donut; protein and water rings; weigh-in stepper (body fat
+  and waist on request) with the scale against trend chart; relative strength with a change
+  meter and muscle-loss risk on a cut.
+- `/phase/setup`: four steps, one decision each (phase, about you, goal, plan), sliding in the
+  direction of travel. Phase cards draw their own weight curve (falling, rising, cycling,
+  stepped). Steppers instead of text fields; the plan step counts the calories up and lists what
+  changes in the coach and recovery map with icons.
+- `/phase/fuel`: meals before and after training as a timeline around a dumbbell, foods as chips
+  with grams; the food grid shows an icon, kcal per 100 g, a macro bar, and opens to the portion
+  and note on tap.
 - Routines > Templates: `Fits your <phase>` on the templates that suit it (`templateFitsPhase`).
+- Motion purpose: plate segments light in order (how far through the block), calories count up,
+  donut and bars draw in, wizard steps slide with the direction; reduced motion shows end states.
 
 ### 13.5 Food guide and pacer (`src/lib/nutrition-guide.ts`, `NutritionGuideModal`)
 - 24 foods and drinks, many easy to find in Indonesia (chicken, eggs, tempeh, tofu, tuna,

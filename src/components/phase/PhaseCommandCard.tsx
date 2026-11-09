@@ -1,289 +1,175 @@
 "use client";
 
-import { useState } from "react";
-import { Droplets, Flame, Hammer, Plus, Scale, Settings2, Shield, Soup, Zap } from "lucide-react";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { useSettingsStore } from "@/store/useSettingsStore";
+import Link from "next/link";
+import { Beef, ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "lucide-react";
 import { useFuelPacer, useTodayFuel } from "@/store/useFuelPacer";
-import { useEntitlements } from "@/store/useEntitlements";
-import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme";
-import { ProBadge } from "@/components/paywall/ProBadge";
-import { PHASE_LABEL, RISK_LABEL, type BodyPhaseType } from "@/lib/phase-engine";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { PHASE_LABEL, type BodyPhaseType } from "@/lib/phase-engine";
 import { toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
-import { usePhaseTelemetry, type PhaseTelemetry } from "./usePhaseTelemetry";
-import { PhaseSetupModal } from "./PhaseSetupModal";
-import { WeightLogModal } from "./WeightLogModal";
-import { NutritionGuideModal } from "./NutritionGuideModal";
+import { usePhaseTelemetry } from "./usePhaseTelemetry";
+import { MacroBar, Ring, Sparkline } from "./visuals";
 
 export const PHASE_ICON: Record<BodyPhaseType, typeof Flame> = { CUTTING: Flame, BULKING: Hammer, RECOMP: Scale, STRENGTH_PEAK: Zap };
 
 /**
- * The active body phase at a glance: week of the block, trend weight, today's fuel target,
- * relative strength, and a one-tap protein and water tally. `full` (Profile) adds the raw
- * against trend weight chart. Without a phase it invites the lifter to pick one.
+ * The body phase on Home and Profile, read in a glance: phase and week, block bar, trend weight
+ * with its last weeks as a line, today's calories split by macro, and protein and water rings
+ * that fill with a tap. Everything else is one tap away on /phase.
  */
-export function PhaseCommandCard({ now, full = false }: { now: number; full?: boolean }) {
+export function PhaseCommandCard({ now }: { now: number }) {
   const t = useT();
-  const telemetry = usePhaseTelemetry(now);
-  const [setup, setSetup] = useState(false);
-  const [log, setLog] = useState(false);
-  const [guide, setGuide] = useState(false);
-  const { canAccessPro, openPaywall } = useEntitlements();
-
-  const openSetup = () => (canAccessPro("body_phase_protocols") ? setSetup(true) : openPaywall("body_phase_protocols"));
-
-  return (
-    <>
-      {telemetry ? (
-        <ActiveCard telemetry={telemetry} full={full} now={now} onSetup={openSetup} onLog={() => setLog(true)} onGuide={() => setGuide(true)} />
-      ) : (
-        <section aria-labelledby="phase-cta" className="panel flex flex-col gap-3 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 id="phase-cta" className="label-caps">
-                {t("Body phase")} <ProBadge className="ml-1 align-middle" />
-              </h2>
-              <p className="mt-1 text-sm text-text-muted">
-                {t("Pick a cut, lean bulk, recomp or strength peak. ABOT sets your daily calories and macros and tunes the coach and recovery to it.")}
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 gap-1.5" aria-hidden="true">
-            {(Object.keys(PHASE_ICON) as BodyPhaseType[]).map((p) => {
-              const Icon = PHASE_ICON[p];
-              return (
-                <span key={p} className="flex flex-col items-center gap-1 rounded-ctl bg-surface-2 py-2 text-[11px] font-semibold text-text-muted">
-                  <Icon size={16} />
-                  {t(PHASE_LABEL[p])}
-                </span>
-              );
-            })}
-          </div>
-          <button
-            type="button"
-            onClick={openSetup}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-on-accent hover:brightness-110"
-          >
-            {t("Choose a body phase")}
-          </button>
-        </section>
-      )}
-      {/* Mounted only while open, so each opening starts from the saved values. */}
-      {setup && <PhaseSetupModal open onClose={() => setSetup(false)} now={now} />}
-      {log && <WeightLogModal open onClose={() => setLog(false)} now={now} />}
-      {guide && telemetry && <NutritionGuideModal open onClose={() => setGuide(false)} telemetry={telemetry} />}
-    </>
-  );
-}
-
-function ActiveCard({
-  telemetry: m,
-  full,
-  now,
-  onSetup,
-  onLog,
-  onGuide,
-}: {
-  telemetry: PhaseTelemetry;
-  now: number;
-  full: boolean;
-  onSetup: () => void;
-  onLog: () => void;
-  onGuide: () => void;
-}) {
-  const t = useT();
+  const m = usePhaseTelemetry(now);
   const unit = useSettingsStore((s) => s.weightUnit);
+
+  if (!m) {
+    return (
+      <Link href="/phase/setup" aria-label={t("Choose a body phase")} className="panel group flex items-center gap-3 p-4 hover:border-ink/[0.15]">
+        <span aria-hidden="true" className="flex -space-x-2">
+          {(Object.keys(PHASE_ICON) as BodyPhaseType[]).map((p) => {
+            const Icon = PHASE_ICON[p];
+            return (
+              <span key={p} className="flex size-9 items-center justify-center rounded-full border-2 border-surface bg-surface-2 text-text-muted transition-colors group-hover:text-accent">
+                <Icon size={16} />
+              </span>
+            );
+          })}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="label-caps block">{t("Body phase")}</span>
+          <span className="block text-sm font-semibold">{t("Cut, bulk, recomp or peak")}</span>
+        </span>
+        <ChevronRight aria-hidden="true" size={18} className="text-text-muted" />
+      </Link>
+    );
+  }
+
   const Icon = PHASE_ICON[m.phase.phaseType];
-  const { meso, fuel, shield } = m;
+  const { meso, fuel } = m;
+  const weight = (Math.round(toDisplay(m.trendKg, unit) * 10) / 10).toFixed(1);
   const rate = m.ratePerWeek;
-  const shown = (kg: number) => (Math.round(toDisplay(kg, unit) * 10) / 10).toFixed(1);
 
   return (
-    <section aria-labelledby="phase-heading" className="panel flex flex-col gap-3 p-4">
-      <header className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 id="phase-heading" className="label-caps flex flex-wrap items-center gap-x-1.5">
-            <Icon aria-hidden="true" size={13} className="text-accent" />
-            <span>
-              {t("Active protocol")} {"//"} {t(PHASE_LABEL[m.phase.phaseType])}
-            </span>
+    <section aria-labelledby="phase-heading" className="panel overflow-hidden">
+      <Link href="/phase" className="flex flex-col gap-3 p-4 pb-3 hover:bg-ink/[0.02]">
+        <div className="flex items-center gap-2">
+          <span aria-hidden="true" className="flex size-8 items-center justify-center rounded-full bg-accent-tint text-accent">
+            <Icon size={16} />
+          </span>
+          <h2 id="phase-heading" className="min-w-0 flex-1 truncate text-sm font-bold">
+            {t(PHASE_LABEL[m.phase.phaseType])}
           </h2>
-          <p className="num mt-1 text-sm font-semibold">
-            {meso.finished
-              ? t("Block finished")
-              : t("Week {week} of {of}", { week: meso.week, of: meso.of })}
-            {meso.deload && !meso.finished && <span className="ml-2 rounded-full bg-warmup/15 px-2 py-0.5 text-[11px] font-bold uppercase text-warmup">{t("Deload week")}</span>}
-          </p>
+          <span className="num rounded-full bg-surface-2 px-2 py-0.5 text-xs font-bold">
+            {meso.finished ? t("Done") : t("W{week}/{of}", { week: meso.week, of: meso.of })}
+          </span>
+          {meso.deload && !meso.finished && <span className="rounded-full bg-warmup/15 px-2 py-0.5 text-[10px] font-bold uppercase text-warmup">{t("Deload")}</span>}
+          <ChevronRight aria-hidden="true" size={16} className="text-text-muted" />
         </div>
-        <button type="button" onClick={onSetup} aria-label={t("Edit body phase")} className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.05] hover:text-text">
-          <Settings2 aria-hidden="true" size={18} />
-        </button>
-      </header>
 
-      <div
-        role="progressbar"
-        aria-label={t("Block progress")}
-        aria-valuemin={0}
-        aria-valuemax={meso.of}
-        aria-valuenow={meso.week}
-        className="flex h-2 gap-0.5 overflow-hidden rounded-full"
-      >
-        {Array.from({ length: meso.of }, (_, i) => {
-          const done = (i + 1) / meso.of <= meso.progress + 1e-9;
-          const current = i + 1 === meso.week && !meso.finished;
-          return <span key={i} className={`h-full flex-1 ${done ? "bg-accent" : current ? "bg-accent/45" : "bg-surface-2"}`} />;
-        })}
-      </div>
+        <BlockBar of={meso.of} progress={meso.progress} week={meso.week} finished={meso.finished} label={t("Block progress")} />
 
-      <dl className="grid gap-2">
-        <div className="flex items-center justify-between gap-3 rounded-ctl bg-surface-2 px-3 py-2">
+        <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0">
-            <dt className="label-caps">{t("Trend weight")}</dt>
-            <dd className="num text-lg font-bold">
-              {shown(m.trendKg)} <span className="text-sm font-semibold text-text-muted">{unit}</span>
+            <p className="label-caps">{t("Trend")}</p>
+            <p className="num text-2xl font-bold leading-tight">
+              {weight}
+              <span className="ml-0.5 text-xs font-semibold text-text-muted">{unit}</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <Sparkline values={m.points.slice(-21).map((p) => p.emaKg)} width={64} height={22} />
               {rate !== null && (
-                <span className="ml-2 text-xs font-semibold text-text-muted">
+                <span className="num text-[11px] font-semibold text-text-muted">
                   {rate > 0 ? "+" : rate < 0 ? "−" : "±"}
-                  {t("{weight} {unit}/wk", { weight: shown(Math.abs(rate)), unit })}
+                  {Math.abs(Math.round(toDisplay(rate, unit) * 10) / 10)}/{t("wk")}
                 </span>
               )}
-            </dd>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={onLog}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-ctl border border-ink/[0.12] px-3 text-xs font-bold hover:border-ink/25"
-          >
-            <Plus aria-hidden="true" size={14} />
-            {t("Log weight")}
-          </button>
+          <div className="min-w-0">
+            <p className="label-caps">{t("Today")}</p>
+            <p className="num text-2xl font-bold leading-tight text-accent">
+              {fuel.kcal.toLocaleString(t.locale)}
+              <span className="ml-0.5 text-xs font-semibold text-text-muted">kcal</span>
+            </p>
+            <MacroBar protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} className="mt-1.5 h-1.5" />
+            <p className="num mt-1 text-[11px] font-semibold text-text-muted">
+              P {fuel.proteinG} · C {fuel.carbsG} · F {fuel.fatG}
+            </p>
+          </div>
         </div>
-
-        <div className="rounded-ctl bg-surface-2 px-3 py-2">
-          <dt className="label-caps">{m.phase.phaseType === "RECOMP" ? (m.trainingDay ? t("Fuel target, training day") : t("Fuel target, rest day")) : t("Daily fuel target")}</dt>
-          <dd className="num">
-            <span className="text-lg font-bold text-accent">{fuel.kcal.toLocaleString(t.locale)}</span> <span className="text-sm font-semibold text-text-muted">kcal</span>
-            <span className="mt-0.5 block text-xs font-semibold text-text-muted">
-              {t("{p} g protein · {c} g carbs · {f} g fat", { p: fuel.proteinG, c: fuel.carbsG, f: fuel.fatG })}
-            </span>
-          </dd>
-        </div>
-
-        <div className="rounded-ctl bg-surface-2 px-3 py-2">
-          <dt className="label-caps">{t("Relative strength")}</dt>
-          <dd className="num">
-            {shield ? (
-              <>
-                <span className="text-lg font-bold">{t("{x}× body weight", { x: shield.ratio.toFixed(2) })}</span>
-                {shield.changePct !== null && (
-                  <span className={`ml-2 text-xs font-semibold ${shield.changePct >= 0 ? "text-accent" : "text-failure"}`}>
-                    {shield.changePct >= 0 ? "▲ +" : "▼ "}
-                    {shield.changePct.toFixed(1)}%
-                  </span>
-                )}
-                {shield.risk && (
-                  <span className={`mt-0.5 flex items-center gap-1 text-xs font-semibold ${shield.risk === "low" ? "text-accent" : shield.risk === "high" ? "text-failure" : "text-text-muted"}`}>
-                    <Shield aria-hidden="true" size={12} />
-                    {t(RISK_LABEL[shield.risk])}
-                  </span>
-                )}
-              </>
-            ) : (
-              <span className="font-sans text-xs text-text-muted">{t("Log a barbell squat, bench, deadlift or press and a weigh-in to see this.")}</span>
-            )}
-          </dd>
-        </div>
-      </dl>
-
+      </Link>
       <Pacer proteinTarget={fuel.proteinG} waterTarget={m.waterMl} now={now} />
-
-      <button
-        type="button"
-        onClick={onGuide}
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-ink/[0.12] bg-surface-2 px-4 text-sm font-semibold hover:border-ink/25"
-      >
-        <Soup aria-hidden="true" size={16} />
-        {t("Food guide")}
-      </button>
-
-      {full && <TrendChart telemetry={m} />}
-      <p className="text-[11px] text-text-muted">{t("Targets are estimates from Mifflin-St Jeor and your logged training, not medical advice.")}</p>
     </section>
   );
 }
 
-/** One-tap protein and water tally for today. */
-function Pacer({ proteinTarget, waterTarget, now }: { proteinTarget: number; waterTarget: number; now: number }) {
-  const t = useT();
-  const { proteinG, waterMl } = useTodayFuel(now);
-  const add = useFuelPacer((s) => s.add);
-  const row = (label: string, value: number, target: number, unitLabel: string, button: string, aria: string, onAdd: () => void, Icon: typeof Droplets) => {
-    const pct = Math.min(100, Math.round((value / Math.max(1, target)) * 100));
-    return (
-      <div className="flex items-center gap-3">
-        <Icon aria-hidden="true" size={16} className="shrink-0 text-text-muted" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2 text-xs">
-            <span className="font-semibold">{label}</span>
-            <span className="num text-text-muted">
-              {value.toLocaleString(t.locale)} / {target.toLocaleString(t.locale)} {unitLabel}
-            </span>
-          </div>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={target} aria-valuenow={value}>
-            <div className={`h-full ${pct >= 100 ? "bg-accent" : "bg-accent/60"}`} style={{ width: `${pct}%` }} />
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            feedback.tick();
-            onAdd();
-          }}
-          aria-label={aria}
-          className="num inline-flex min-h-11 min-w-[76px] shrink-0 items-center justify-center rounded-ctl border border-ink/[0.12] px-2 text-xs font-bold hover:border-ink/25"
-        >
-          {button}
-        </button>
-      </div>
-    );
-  };
+/** One segment per week: done in Volt, this week half-lit. */
+export function BlockBar({ of, progress, week, finished, label }: { of: number; progress: number; week: number; finished: boolean; label: string }) {
   return (
-    <div className="flex flex-col gap-2" aria-label={t("Today's protein and water")} role="group">
-      {row(t("Protein today"), proteinG, proteinTarget, "g", "+25 g", t("Add 25 g protein"), () => add({ proteinG: 25 }), Soup)}
-      {row(t("Water today"), waterMl, waterTarget, "ml", "+500 ml", t("Add 500 ml water"), () => add({ waterMl: 500 }), Droplets)}
+    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={of} aria-valuenow={week} className="flex h-1.5 gap-0.5">
+      {Array.from({ length: of }, (_, i) => {
+        const done = (i + 1) / of <= progress + 1e-9;
+        const current = i + 1 === week && !finished;
+        return <span key={i} className={`h-full flex-1 rounded-full ${done ? "bg-accent" : current ? "bg-accent/45" : "bg-track"}`} />;
+      })}
     </div>
   );
 }
 
-/** Raw weigh-ins against the trend line, last 60 entries. */
-function TrendChart({ telemetry: m }: { telemetry: PhaseTelemetry }) {
+/**
+ * Protein and water for today: a ring each that fills toward the target. Tapping the tile adds
+ * 25 g or 500 ml; the step is printed under the figure so the tap's effect is known in advance.
+ */
+export function Pacer({
+  proteinTarget,
+  waterTarget,
+  now,
+  size = 44,
+  bordered = true,
+}: {
+  proteinTarget: number;
+  waterTarget: number;
+  now: number;
+  size?: number;
+  bordered?: boolean;
+}) {
   const t = useT();
-  const unit = useSettingsStore((s) => s.weightUnit);
-  const data = m.points.slice(-60).map((p) => ({
-    date: new Date(p.date).toLocaleDateString(t.locale, { day: "numeric", month: "short" }),
-    raw: Math.round(toDisplay(p.weightKg, unit) * 10) / 10,
-    trend: Math.round(toDisplay(p.emaKg, unit) * 10) / 10,
-  }));
-  if (data.length < 2) return <p className="text-xs text-text-muted">{t("Log your weight on a few days to see the trend line.")}</p>;
+  const { proteinG, waterMl } = useTodayFuel(now);
+  const add = useFuelPacer((s) => s.add);
+  const item = (key: string, label: string, value: number, target: number, unitLabel: string, step: string, aria: string, onAdd: () => void, Icon: typeof Droplets) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => {
+        feedback.tick();
+        onAdd();
+      }}
+      aria-label={aria}
+      className="flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-ctl px-2 py-1.5 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
+    >
+      <Ring value={value} max={target} size={size} stroke={4} label={`${label}: ${value} / ${target}`}>
+        <Icon aria-hidden="true" size={Math.round(size * 0.36)} className={value >= target ? "text-accent" : "text-text-muted"} />
+      </Ring>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[11px] font-semibold text-text-muted">{label}</span>
+        <span className="num block whitespace-nowrap text-sm font-bold">
+          {value.toLocaleString(t.locale)}
+          <span className="text-[11px] font-semibold text-text-muted">
+            /{target.toLocaleString(t.locale)} {unitLabel}
+          </span>
+        </span>
+        <span aria-hidden="true" className="num mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-bold text-accent">
+          <Plus size={11} />
+          {step}
+        </span>
+      </span>
+    </button>
+  );
   return (
-    <figure aria-label={t("Scale weight against trend weight, {unit}", { unit })} className="h-44">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 6, right: 6, bottom: 0, left: -18 }}>
-          <CartesianGrid stroke={CHART.grid} vertical={false} />
-          <XAxis dataKey="date" tick={numTick} tickLine={false} axisLine={false} minTickGap={24} />
-          <YAxis tick={numTick} tickLine={false} axisLine={false} domain={["dataMin - 1", "dataMax + 1"]} />
-          <Tooltip {...tooltipStyle} cursor={{ stroke: CHART.axis }} formatter={(v, name) => [`${v} ${unit}`, name === "raw" ? t("Scale") : t("Trend")]} />
-          <Line type="monotone" dataKey="raw" stroke={CHART.axis} strokeWidth={1} dot={{ r: 2 }} isAnimationActive={false} />
-          <Line type="monotone" dataKey="trend" stroke={CHART.series} strokeWidth={2.5} dot={false} isAnimationActive={false} />
-        </LineChart>
-      </ResponsiveContainer>
-      <figcaption className="mt-1 flex gap-3 text-[11px] text-text-muted">
-        <span>— {t("Scale")}</span>
-        <span className="text-accent">— {t("Trend")}</span>
-      </figcaption>
-    </figure>
+    <div role="group" aria-label={t("Today's protein and water")} className={`flex gap-1 px-2 py-1.5 ${bordered ? "border-t border-line" : ""}`}>
+      {item("p", t("Protein"), proteinG, proteinTarget, "g", "25 g", t("Add 25 g protein"), () => add({ proteinG: 25 }), Beef)}
+      {item("w", t("Water"), waterMl, waterTarget, "ml", "500 ml", t("Add 500 ml water"), () => add({ waterMl: 500 }), Droplets)}
+    </div>
   );
 }
-
