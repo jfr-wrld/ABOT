@@ -11,6 +11,8 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
 
@@ -55,6 +57,26 @@ jobs:
           name: abot-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # versionCode is the run number (android/app/build.gradle), and every build is signed with the
+      # repository's abot-debug.keystore, so a newer release installs over the one on the phone.
+      # The app's Settings > About > Check for updates reads these releases.
+      - name: Publish the APK as a release (main only)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          N="$GITHUB_RUN_NUMBER"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "abot-1.0.$N.apk"
+          gh release create "apk-$N" "abot-1.0.$N.apk" \
+            --title "ABOT 1.0.$N" \
+            --notes "$(git log -1 --pretty=%s)" \
+            --target "$GITHUB_SHA" \
+            --latest
+          # Keep the ten newest APK releases.
+          gh release list --limit 100 --json tagName --jq '.[].tagName' \
+            | grep '^apk-' | sort -t- -k2 -n -r | tail -n +11 \
+            | xargs -r -I{} gh release delete {} --yes --cleanup-tag
 
   # The APK on a real Android 14 emulator: intro and permissions screens, Android's permission
   # dialogs, the Settings hand-off and the workout notification (scripts/android-smoke.mjs).
