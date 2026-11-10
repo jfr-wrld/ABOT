@@ -255,15 +255,19 @@ function Hero({
       <motion.div
         aria-hidden="true"
         className="absolute inset-0 grid grid-cols-2"
-        animate={reduce ? undefined : { scale: [1.15, 1.05, 1.15] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        // Blurred once as a still layer: a backdrop blur over a slowly zooming photo was
+        // recomputed on every frame while the page was open.
+        style={{ filter: "blur(24px)", scale: 1.15 }}
+        initial={reduce ? undefined : { scale: 1.22 }}
+        animate={{ scale: 1.15 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
       >
         {photos.map((src, i) => (
           <div key={i} className={`bg-cover bg-center ${photos.length === 1 ? "col-span-2" : ""}`} style={{ backgroundImage: `url(${src})` }} />
         ))}
       </motion.div>
-      {/* Blur and a dark wash so white text holds 4.5:1 over any photo. */}
-      <div aria-hidden="true" className="absolute inset-0 bg-bg/70 backdrop-blur-xl" />
+      {/* A dark wash over the blurred photos so white text holds 4.5:1 over any photo. */}
+      <div aria-hidden="true" className="absolute inset-0 bg-bg/70" />
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-bg to-transparent" />
 
       <div className="relative flex flex-col gap-3 px-4 pb-3 pt-3">

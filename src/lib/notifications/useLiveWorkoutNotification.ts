@@ -62,22 +62,31 @@ export function useLiveWorkoutNotification(): void {
     latest.current = { active, timer, byId };
   });
 
-  // Android app: mirror the workout into the notification, a moment after it settles (typing a
-  // weight changes the session on every key).
+  // Android app: mirror the workout into the notification, a second after it settles (typing a
+  // weight changes the session on every key). An update that would show the same thing is not
+  // sent: each one rewrites the stored state, reschedules the alarm and redraws the notification.
+  const lastSent = useRef<string | null>(null);
   useEffect(() => {
     if (!isNativeApp()) return;
     if (!active || !liveStatusEnabled() || permission !== "granted") {
+      lastSent.current = null;
       void clearNativeLive().catch(() => {});
       return;
     }
     let live = true;
     const t = setTimeout(() => {
       const content = capsuleContent({ session: active, sessions, byId, rest: timer, now: Date.now(), unit, mode, detail, ring, handoff });
+      const key = JSON.stringify(content);
+      if (key === lastSent.current) return;
       const ex = content.photoKey ? byId[content.photoKey] : undefined;
       void capsulePhoto(content.photoKey ?? "", ex && exercisePhoto(ex))
-        .then((photo) => (live ? showNativeLive({ ...content, photo }) : undefined))
+        .then((photo) => {
+          if (!live) return;
+          lastSent.current = key;
+          return showNativeLive({ ...content, photo });
+        })
         .catch(() => {});
-    }, 300);
+    }, 1000);
     return () => {
       live = false;
       clearTimeout(t);

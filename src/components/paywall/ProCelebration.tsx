@@ -99,7 +99,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
               aria-hidden="true"
               className="text-[#ccff00]/80"
               animate={reduce ? undefined : { scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 1.6, repeat: 4, ease: "easeInOut" }}
             >
               <AbotMark size={112} />
             </motion.span>
@@ -122,8 +122,9 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
             ? t("Active until {date}", { date: longDate(unlocked.until) })
             : t("Active on your account");
   const after = (s: number) => (reduce ? 0 : s);
-  // Loops only run with motion allowed; with reduced motion the screen is still.
-  const loop = (t: object) => (reduce ? { duration: 0 } : { repeat: Infinity, ...t });
+  // Loops only run with motion allowed, and only for the first seconds: an endless loop kept the
+  // screen redrawing for as long as it stayed open.
+  const loop = (t: object) => (reduce ? { duration: 0 } : { repeat: 4, ...t });
 
   return (
     <div
@@ -167,7 +168,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
             className="pointer-events-none absolute left-1/2 top-[34%] size-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full"
             style={{ background: "radial-gradient(circle, rgb(204 255 0 / 0.12), transparent 55%)" }}
             animate={{ scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] }}
-            transition={{ delay: 1.6, duration: 3.4, ease: "easeInOut", repeat: Infinity }}
+            transition={{ delay: 1.6, duration: 3.4, ease: "easeInOut", repeat: 4 }}
           />
         )}
 
@@ -268,7 +269,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
             >
               <motion.div
                 animate={reduce ? undefined : { y: [0, -9, 0], rotate: [0, 3, 0, -3, 0] }}
-                transition={{ delay: 1.4, duration: 4, ease: "easeInOut", repeat: Infinity }}
+                transition={{ delay: 1.4, duration: 4, ease: "easeInOut", repeat: 4 }}
               >
                 <AbotMark size={132} />
               </motion.div>
@@ -323,7 +324,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
                   aria-hidden="true"
                   className="shrink-0 text-[#ccff00]"
                   animate={reduce ? undefined : { scale: [1, 1.25, 1] }}
-                  transition={{ delay: 2.4 + i * 0.6, duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
+                  transition={{ delay: 2.4 + i * 0.6, duration: 0.5, repeat: 4, repeatDelay: 4 }}
                 >
                   <Icon size={16} />
                 </motion.span>
@@ -377,7 +378,7 @@ function Embers() {
             style={{ left: `${left}%`, width: size, height: size, boxShadow: "0 0 8px rgb(204 255 0 / 0.8)" }}
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: [40, -520 - (i % 4) * 90], x: [0, (i % 2 ? 1 : -1) * (12 + (i % 3) * 8), 0], opacity: [0, 0.9, 0] }}
-            transition={{ delay: 0.9 + ((i * 0.53) % 3.2), duration: dur, ease: "easeOut", repeat: Infinity, repeatDelay: (i % 4) * 0.4 }}
+            transition={{ delay: 0.9 + ((i * 0.53) % 3.2), duration: dur, ease: "easeOut", repeat: 4, repeatDelay: (i % 4) * 0.4 }}
           />
         );
       })}

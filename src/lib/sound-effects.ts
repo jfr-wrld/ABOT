@@ -19,6 +19,31 @@
 type Wave = OscillatorType;
 
 let ctx: AudioContext | null = null;
+/** Context time the last scheduled tone ends. */
+let busyUntil = 0;
+let idleTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Suspends the context once the last tone has rung out. A running AudioContext keeps an audio
+ * thread pulling silence for as long as the app lives, which stops the phone from sleeping.
+ * The next sound resumes it (audio()).
+ */
+function suspendWhenIdle(): void {
+  if (!ctx) return;
+  if (idleTimer) clearTimeout(idleTimer);
+  const waitMs = Math.max(0, (busyUntil - ctx.currentTime) * 1000) + 300;
+  idleTimer = setTimeout(() => {
+    idleTimer = null;
+    if (ctx && ctx.state === "running" && ctx.currentTime >= busyUntil) void ctx.suspend().catch(() => {});
+  }, waitMs);
+}
+
+/** Going to the background: nothing should keep the audio thread awake. */
+export function suspendAudio(): void {
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = null;
+  if (ctx && ctx.state === "running") void ctx.suspend().catch(() => {});
+}
 
 function audio(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -36,6 +61,7 @@ function audio(): AudioContext | null {
 /** Call from a tap so the context is allowed to run before the first timed sound. */
 export function unlockAudio(): void {
   audio();
+  suspendWhenIdle();
 }
 
 interface Tone {
@@ -66,6 +92,7 @@ function tone(ac: AudioContext, { wave, from, to, at, dur, peak }: Tone): void {
   osc.connect(gain).connect(ac.destination);
   osc.start(t0);
   osc.stop(t0 + dur + 0.01);
+  busyUntil = Math.max(busyUntil, t0 + dur + 0.01);
 }
 
 function play(tones: Tone[]): boolean {
@@ -73,6 +100,7 @@ function play(tones: Tone[]): boolean {
   if (!ac) return false;
   try {
     for (const t of tones) tone(ac, t);
+    suspendWhenIdle();
     return true;
   } catch {
     // Sound is a convenience; a blocked context is not an error worth surfacing.

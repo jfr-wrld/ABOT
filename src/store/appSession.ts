@@ -1,4 +1,5 @@
 import { getRepository, type OpenedRepository } from "@/data/repo";
+import { onAppPause, subscribeAppActive, isAppActive } from "@/lib/native/app-active";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { createTabLock, type TabLock } from "@/lib/tabLock";
 import { bootstrapStores } from "./persistence";
@@ -53,10 +54,15 @@ async function attach(): Promise<void> {
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("online", retry);
   window.addEventListener("pagehide", onVisibility);
+  // The Android app never fires visibilitychange: its pause and resume do the same jobs.
+  const offPause = onAppPause(() => void persistence.flush());
+  const offActive = subscribeAppActive(() => isAppActive() && retry());
   detach = () => {
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("online", retry);
     window.removeEventListener("pagehide", onVisibility);
+    offPause();
+    offActive();
     persistence.detach();
   };
 

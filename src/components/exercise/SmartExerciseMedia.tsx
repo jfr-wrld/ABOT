@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { embedUrl, parseVideoUrl, searchLinks, type ParsedVideo } from "@/lib/videoUrl";
 import { useExerciseStore } from "@/store/useExerciseStore";
 import { useT } from "@/i18n";
+import { useAppActive } from "@/lib/native/app-active";
 
 const TABS = ["Motion", "Video", "Anatomy"] as const;
 type Tab = (typeof TABS)[number];
@@ -171,11 +172,13 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
   const isFramePair = urls.length >= 2 && !first;
   const t = useT();
 
+  // Frames only swap while ABOT is in the foreground.
+  const appActive = useAppActive();
   useEffect(() => {
-    if (!isFramePair || !playing || failed) return;
+    if (!isFramePair || !playing || failed || !appActive) return;
     const timer = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), 900);
     return () => clearInterval(timer);
-  }, [isFramePair, playing, failed]);
+  }, [isFramePair, playing, failed, appActive]);
 
   if (urls.length === 0) {
     return <p className="px-2 py-8 text-center text-sm text-text-muted">{t("No motion images for this exercise.")}</p>;

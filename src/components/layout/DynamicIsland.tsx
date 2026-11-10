@@ -16,6 +16,7 @@ import type { WeightUnit, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { usePagePath } from "@/components/layout/usePagePath";
 import { feedback } from "@/lib/feedback";
 import { isNativeApp } from "@/lib/native/files";
+import { isAppActive, useAppActive } from "@/lib/native/app-active";
 import { pageRingsRestOver } from "@/lib/rest-alert";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { supersetLabels, type SupersetHandoff } from "@/lib/superset";
@@ -187,7 +188,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
       transition={ISLAND_SPRING}
       className={`${capsule} w-full flex-col items-stretch ${open ? "!rounded-[28px]" : "h-14 rounded-[28px]"}`}
     >
-      <LiveWave paused={paused} />
+      <LiveWave paused={paused} beat={`${done}:${paused}`} />
       <button
         type="button"
         onClick={() => {
@@ -291,13 +292,36 @@ const WAVES = [
   { d: wavePath(400 / 6, 4), color: "#ffffff", opacity: 0.07, run: "2.8s", breathe: "3.2s", reverse: false },
 ];
 
+/** How long the wave moves after something happens, before it holds still. */
+const WAVE_MOVES_MS = 4000;
+
 /**
- * The running bar's wave: solid swells along its bottom edge that rise and fall while the
- * workout runs, like a level breathing, and sink to a thin floor when it is paused.
+ * The running bar's wave: solid swells along its bottom edge that rise and fall for a few
+ * seconds whenever the workout moves on (a set ticked, a start, a resume), then hold still, and
+ * sink to a thin floor when it is paused. A wave that never stopped kept the screen redrawing
+ * for the whole workout, which cost real battery.
  */
-function LiveWave({ paused }: { paused: boolean }) {
+function LiveWave({ paused, beat }: { paused: boolean; beat: string }) {
+  const active = useAppActive();
+  const [movingFor, setMovingFor] = useState<string | null>(null);
+  useEffect(() => {
+    if (!active) return;
+    // A new beat (or coming back to the app) starts a few seconds of movement.
+    const start = setTimeout(() => setMovingFor(beat), 0);
+    const stop = setTimeout(() => setMovingFor(null), WAVE_MOVES_MS);
+    return () => {
+      clearTimeout(start);
+      clearTimeout(stop);
+    };
+  }, [beat, active]);
+  const still = movingFor !== beat;
   return (
-    <span aria-hidden="true" data-paused={paused || undefined} className="live-wave pointer-events-none absolute inset-x-0 top-5 h-9 overflow-hidden">
+    <span
+      aria-hidden="true"
+      data-paused={paused || undefined}
+      data-still={still || undefined}
+      className="live-wave pointer-events-none absolute inset-x-0 top-5 h-9 overflow-hidden"
+    >
       {WAVES.map((w, i) => (
         <span
           key={i}
@@ -394,21 +418,30 @@ function RestCapsule() {
   const adjust = useWorkoutStore((s) => s.adjustRest);
   const skip = useWorkoutStore((s) => s.skipRest);
   const alert = useSettingsStore((s) => s.restTimerAlert);
-  const now = useNow(250, timer !== null);
+  // Whole seconds are all the label shows, so one render a second. The zero is caught by its own
+  // timeout below, not by polling.
+  const now = useNow(1000, timer !== null);
+  const [, setZeroTick] = useState(0);
   const firedFor = useRef<number | null>(null);
 
   const remainingMs = timer ? Math.max(0, timer.endsAt - now) : 0;
   const remainingSec = Math.ceil(remainingMs / 1000);
-  const fraction = timer ? remainingMs / (timer.totalSec * 1000) : 0;
+  const endsAt = timer?.endsAt;
+  const totalSec = timer?.totalSec ?? 0;
 
-  // 3, 2, 1: one pip per second, so the lifter can get under the bar before zero.
-  const pipped = useRef<number | null>(null);
+  // 3, 2, 1: one pip per second, so the lifter can get under the bar before zero. Scheduled once
+  // per rest, at those instants, and a render exactly at zero.
   useEffect(() => {
-    if (!timer || !alert || remainingSec < 1 || remainingSec > 3 || timer.totalSec < 10) return;
-    if (pipped.current === remainingSec || document.visibilityState !== "visible") return;
-    pipped.current = remainingSec;
-    feedback.restCountdown();
-  }, [timer, alert, remainingSec]);
+    if (endsAt === undefined) return;
+    const ids: ReturnType<typeof setTimeout>[] = [];
+    const at = (ms: number, fn: () => void) => {
+      const wait = endsAt - ms - Date.now();
+      if (wait >= 0) ids.push(setTimeout(fn, wait));
+    };
+    if (alert && totalSec >= 10) for (const ms of [3000, 2000, 1000]) at(ms, () => isAppActive() && feedback.restCountdown());
+    at(0, () => setZeroTick((n) => n + 1));
+    return () => ids.forEach(clearTimeout);
+  }, [endsAt, totalSec, alert]);
 
   useEffect(() => {
     if (!timer) {
@@ -417,7 +450,7 @@ function RestCapsule() {
     }
     if (remainingMs > 0 || firedFor.current === timer.endsAt) return;
     firedFor.current = timer.endsAt;
-    if (pageRingsRestOver({ alert, native: isNativeApp(), visible: document.visibilityState === "visible", overdueMs: Date.now() - timer.endsAt })) feedback.restZero();
+    if (pageRingsRestOver({ alert, native: isNativeApp(), visible: isAppActive() && document.visibilityState === "visible", overdueMs: Date.now() - timer.endsAt })) feedback.restZero();
     // Hold "Go" for a moment so the lifter sees rest is over, then fold back to compact.
     const id = setTimeout(skip, 2500);
     return () => clearTimeout(id);
@@ -463,12 +496,30 @@ function RestCapsule() {
       </motion.div>
       {/* Time left as a hairline along the bottom edge: the one moving part while you rest. */}
       <div className="absolute inset-x-6 bottom-0 h-px bg-ink/10" aria-hidden="true">
-        <div
-          className="h-full bg-accent transition-[width] duration-250 ease-linear motion-reduce:transition-none"
-          style={{ width: `${fraction * 100}%` }}
-        />
+        {/* One compositor animation per rest (and per +/-15 s): no renders while it runs. */}
+        <RestBar key={timer.endsAt} endsAt={timer.endsAt} totalSec={timer.totalSec} />
       </div>
     </motion.div>
+  );
+}
+
+function RestBar({ endsAt, totalSec }: { endsAt: number; totalSec: number }) {
+  // The start point is read once, when this rest (or this adjustment) begins.
+  const [start] = useState(() => {
+    const left = Math.max(0, endsAt - Date.now());
+    return { left, from: totalSec > 0 ? Math.min(1, left / (totalSec * 1000)) : 0 };
+  });
+  return (
+    <div
+      className="h-full origin-left bg-accent motion-reduce:!animate-none"
+      style={
+        {
+          "--from": start.from,
+          transform: `scaleX(${start.from})`,
+          animation: start.left > 0 ? `rest-bar ${start.left}ms linear forwards` : "none",
+        } as React.CSSProperties
+      }
+    />
   );
 }
 

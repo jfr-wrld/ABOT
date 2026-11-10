@@ -62,7 +62,8 @@ export function HomeDashboard() {
   const schedule = useReminderStore((s) => s.schedule);
   const { weightUnit, firstDayOfWeek } = useSettingsStore();
   const { byId } = useAllExercises();
-  const now = useNow(active ? 1000 : 60_000);
+  // The running clock ticks inside ActiveCard; the rest of Home only needs the date.
+  const now = useNow(60_000);
 
   const next = useMemo(() => nextProtocol(routines, sessions, schedule, now), [routines, sessions, schedule, now]);
 
@@ -85,7 +86,7 @@ export function HomeDashboard() {
         <WeekStrip days={weekStrip(sessions, now, firstDayOfWeek)} sessions={sessions} byId={byId} streak={weekStreak(sessions, now, firstDayOfWeek)} />
       </header>
 
-      <Rise step={0.07} order={1}>{active ? <ActiveCard now={now} /> : <ProtocolHero next={next} byId={byId} />}</Rise>
+      <Rise step={0.07} order={1}>{active ? <ActiveCard /> : <ProtocolHero next={next} byId={byId} />}</Rise>
 
       <Rise step={0.07} order={2}>
         <PhaseCommandCard now={now} />
@@ -171,7 +172,7 @@ function WeekStrip({
                   <motion.span
                     className="absolute inset-0 rounded-lg border border-ink/70"
                     animate={reduce ? undefined : { opacity: [1, 0.45, 1] }}
-                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                    transition={{ duration: 2.4, repeat: 2, ease: "easeInOut" }}
                   />
                 )}
                 {d.trained ? (
@@ -305,7 +306,10 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
   );
 }
 
-/** A large plate outline turning slowly behind the hero: the brand mark as hardware, at rest. */
+/**
+ * A large plate outline behind the hero: the brand mark as hardware. It settles in with a short
+ * turn, then rests; a plate turning for good kept Home redrawing and cost battery.
+ */
 function HeroPlate() {
   const reduce = useReducedMotionConfig();
   return (
@@ -313,8 +317,9 @@ function HeroPlate() {
       aria-hidden="true"
       viewBox="0 0 100 100"
       className="pointer-events-none absolute -right-12 -top-12 size-48 text-accent/[0.16]"
-      animate={reduce ? undefined : { rotate: 360 }}
-      transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+      initial={reduce ? undefined : { rotate: -30 }}
+      animate={{ rotate: 0 }}
+      transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
       fill="none"
       stroke="currentColor"
       strokeWidth={0.8}
@@ -326,8 +331,9 @@ function HeroPlate() {
   );
 }
 
-function ActiveCard({ now }: { now: number }) {
+function ActiveCard() {
   const t = useT();
+  const now = useNow(1000);
   const active = useWorkoutStore((s) => s.active)!;
   const { byId } = useAllExercises();
   const done = countSets(active).completed;
@@ -341,7 +347,7 @@ function ActiveCard({ now }: { now: number }) {
           aria-hidden="true"
           className="size-1.5 rounded-full bg-accent"
           animate={{ opacity: [1, 0.3, 1] }}
-          transition={{ duration: 1.2, repeat: Infinity }}
+          transition={{ duration: 1.2, repeat: 3 }}
         />
         {t("Workout in progress")}
       </span>

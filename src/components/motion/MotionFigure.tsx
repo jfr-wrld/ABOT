@@ -6,6 +6,7 @@ import { CYCLE_SECONDS, GROUND, phaseAt, poseAt, rig, type Joints, type MotionPa
 import { FrontScene } from "./FrontFigure";
 import type { Vec } from "./ik";
 import { useT } from "@/i18n";
+import { useAppActive } from "@/lib/native/app-active";
 
 type Segment = "torso" | "upperArm" | "foreArm" | "thigh" | "shin";
 
@@ -170,8 +171,10 @@ export function MotionFigure({
   const offset = useRef(0);
   const lastLabel = useRef<PhaseLabel | null>(null);
 
+  // The loop stops while ABOT is in the background and picks up where it was.
+  const appActive = useAppActive();
   useEffect(() => {
-    if (!playing) {
+    if (!playing || !appActive) {
       start.current = null;
       return;
     }
@@ -185,7 +188,7 @@ export function MotionFigure({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [playing]);
+  }, [playing, appActive]);
 
   const phase = phaseAt(pattern, u);
   useEffect(() => {

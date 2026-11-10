@@ -212,8 +212,26 @@ export function applyCapsuleAction(id: string, w: WorkoutActions, byId: Record<s
 const photoCache = new Map<string, Promise<string | undefined>>();
 
 /**
+ * A notification's large icon shows at about 64 dp, so 128 px is plenty. Smaller base64 means
+ * less to store and decode on every notification update. Falls back to the original image.
+ */
+async function iconSized(blob: Blob): Promise<Blob> {
+  try {
+    if (typeof createImageBitmap !== "function" || typeof OffscreenCanvas === "undefined") return blob;
+    const bmp = await createImageBitmap(blob, { resizeWidth: 128, resizeQuality: "medium" });
+    const canvas = new OffscreenCanvas(bmp.width, bmp.height);
+    canvas.getContext("2d")?.drawImage(bmp, 0, 0);
+    bmp.close();
+    return await canvas.convertToBlob({ type: "image/jpeg", quality: 0.8 });
+  } catch {
+    return blob;
+  }
+}
+
+/**
  * An exercise's photo as base64 for the notification's large icon: the bundled thumbnail
- * (offline), else the free-exercise-db frame while online. Read once per exercise.
+ * (offline), else the free-exercise-db frame while online, scaled to icon size. Read once per
+ * exercise.
  */
 export function capsulePhoto(id: string, url: string | undefined): Promise<string | undefined> {
   if (!url) return Promise.resolve(undefined);
@@ -221,6 +239,7 @@ export function capsulePhoto(id: string, url: string | undefined): Promise<strin
   if (!p) {
     p = fetch(url)
       .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+      .then(iconSized)
       .then(
         (blob) =>
           new Promise<string | undefined>((resolve) => {

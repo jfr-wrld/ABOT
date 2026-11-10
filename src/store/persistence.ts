@@ -153,6 +153,11 @@ async function writeKey(repo: Repository, key: WriteKey): Promise<void> {
   return row ? t.put(row) : t.remove(id);
 }
 
+/** What a keystroke cannot change: the exercises, their sets, and which sets are done. */
+function shape(session: { exercises: { id: string; sets: { id: string; completed: boolean }[] }[]; pausedAt?: number }): string {
+  return `${session.pausedAt ?? ""}|${session.exercises.map((e) => `${e.id}:${e.sets.map((x) => `${x.id}${x.completed ? "+" : ""}`).join(",")}`).join(";")}`;
+}
+
 function changedIds<T extends { id: string }>(prev: T[], next: T[]): string[] {
   if (prev === next) return [];
   const before = new Map(prev.map((x) => [x.id, x]));
@@ -203,7 +208,26 @@ export function attachPersistence(repo: Repository): PersistenceHandle {
     });
   };
 
+  // The active workout is rewritten whole on every change, and typing a weight changes it on
+  // every key. Those writes are coalesced into one, 750 ms after the last change; flush() and a
+  // finished workout write it at once.
+  let activeTimer: ReturnType<typeof setTimeout> | null = null;
+  const writeActiveSoon = () => {
+    if (activeTimer) clearTimeout(activeTimer);
+    activeTimer = setTimeout(() => {
+      activeTimer = null;
+      enqueue("kv:activeWorkout");
+    }, 750);
+  };
+  const writeActiveNow = () => {
+    if (!activeTimer) return;
+    clearTimeout(activeTimer);
+    activeTimer = null;
+    enqueue("kv:activeWorkout");
+  };
+
   const flush = async () => {
+    writeActiveNow();
     let current: Promise<void>;
     do {
       current = chain;
@@ -220,10 +244,20 @@ export function attachPersistence(repo: Repository): PersistenceHandle {
         if (id !== finishedId) enqueue(`sessions:${id}`);
       }
       if (finishedId) {
+        if (activeTimer) clearTimeout(activeTimer);
+        activeTimer = null;
         enqueue(`finish:${finishedId}`);
         return; // the commit writes activeWorkout and restTimer
       }
-      if (next.active !== prev.active) enqueue("kv:activeWorkout");
+      if (next.active !== prev.active) {
+        // Starting or discarding a workout, ticking a set, adding an exercise or a set: saved at
+        // once, so nothing that matters waits. Typing in a field is coalesced.
+        if (!prev.active || !next.active || shape(prev.active) !== shape(next.active)) {
+          if (activeTimer) clearTimeout(activeTimer);
+          activeTimer = null;
+          enqueue("kv:activeWorkout");
+        } else writeActiveSoon();
+      }
       if (next.restTimer !== prev.restTimer) enqueue("kv:restTimer");
     }),
     useRoutineStore.subscribe((next, prev) => {
@@ -263,7 +297,10 @@ export function attachPersistence(repo: Repository): PersistenceHandle {
       );
       return run;
     },
-    detach: () => unsubs.forEach((u) => u()),
+    detach: () => {
+      writeActiveNow();
+      unsubs.forEach((u) => u());
+    },
   };
 }
 

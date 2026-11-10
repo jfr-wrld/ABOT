@@ -8,6 +8,7 @@ import { BUNDLED_THUMBS } from "@/data/exercise-thumbs.generated";
 import { MotionFigure } from "@/components/motion/MotionFigure";
 import { patternFor } from "@/components/motion/patterns";
 import { useT } from "@/i18n";
+import { useAppActive } from "@/lib/native/app-active";
 
 const FRAME_MS = 900;
 const isImage = (u: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
@@ -39,11 +40,13 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
     };
   }, []);
 
+  // Frames only swap while ABOT is in the foreground.
+  const appActive = useAppActive();
   useEffect(() => {
-    if (!moving) return;
+    if (!moving || !appActive) return;
     const timer = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), FRAME_MS);
     return () => clearInterval(timer);
-  }, [moving]);
+  }, [moving, appActive]);
 
   const bundled = BUNDLED_THUMBS.has(exercise.id) ? `/thumbs/${exercise.id}.webp` : null;
   const pattern = patternFor(exercise);

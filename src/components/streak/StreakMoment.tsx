@@ -11,6 +11,14 @@ import { markStreakShown, type StreakMoment as Moment } from "@/lib/streak-momen
 import { useT } from "@/i18n";
 import { FLAME_CORE, FLAME_MIDDLE, FLAME_OUTER } from "./flame-path";
 
+/**
+ * How many times a loop of `duration` seconds repeats to fill about 8 s. The flame, embers and
+ * glow used to loop for as long as the screen stayed open, redrawing a filtered SVG every frame;
+ * after the moment has landed they come to rest.
+ */
+const LOOP_SECONDS = 8;
+const loopsFor = (duration: number) => Math.max(1, Math.ceil(LOOP_SECONDS / duration));
+
 /** Everything dramatic is timed from the moment the flame catches. */
 const IGNITE = 0.35;
 /** When the count rolls over to the new number. */
@@ -100,13 +108,13 @@ export function StreakMoment({
           transition={{ delay: IGNITE, duration: 0.7, times: [0, 0.15, 1] }}
         />
       )}
-      {/* A slow glow that breathes under the flame for as long as the screen is open. */}
+      {/* A slow glow that breathes under the flame for the first seconds. */}
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-[12%] mx-auto size-80 rounded-full"
         style={{ opacity: reduce ? 0.3 : 0, background: "radial-gradient(circle, rgb(204 255 0 / 0.35), transparent 65%)" }}
         animate={reduce ? undefined : { opacity: [0, 0.4, 0.25, 0.4], scale: [0.8, 1.05, 0.98, 1.05] }}
-        transition={{ delay: IGNITE, duration: 3, times: [0, 0.2, 0.6, 1], repeat: loops ? Infinity : 0, repeatType: "mirror" }}
+        transition={{ delay: IGNITE, duration: 3, times: [0, 0.2, 0.6, 1], repeat: loops ? loopsFor(3) : 0, repeatType: "mirror" }}
       />
 
       <div className="relative flex flex-1 flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] text-center">
@@ -238,7 +246,7 @@ function Flame({ reduce, loops }: { reduce: boolean; loops: boolean }) {
               className="absolute bottom-10 rounded-full"
               style={{ width: e.size, height: e.size, left: `calc(50% + ${e.x}px)`, opacity: 0, background: i % 3 ? "#ccff00" : "#facc15" }}
               animate={{ opacity: [0, 1, 0], y: [0, -150 - (i % 5) * 18], x: [0, e.drift] }}
-              transition={{ delay: e.delay, duration: e.duration, repeat: Infinity, ease: "easeOut" }}
+              transition={{ delay: e.delay, duration: e.duration, repeat: loopsFor(e.duration), ease: "easeOut" }}
             />
           ))}
         </>
@@ -261,7 +269,7 @@ function Flame({ reduce, loops }: { reduce: boolean; loops: boolean }) {
             fill={l.fill}
             style={{ originX: 0.5, originY: 1 }}
             animate={loops ? { scaleY: [...l.scaleY], skewX: [...l.skewX] } : undefined}
-            transition={{ delay: IGNITE + 0.5, duration: l.duration, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ delay: IGNITE + 0.5, duration: l.duration, repeat: loopsFor(l.duration), ease: "easeInOut" }}
           />
         ))}
       </motion.svg>
