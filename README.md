@@ -1,29 +1,31 @@
+<img src="docs/brand/abot-logo-512.png" width="72" alt="ABOT logo: a heavy A with a loaded barbell">
+
 # ABOT: Gym Progress Tracker
 
 [![Android APK](https://github.com/jfr-wrld/ABOT/actions/workflows/android.yml/badge.svg)](https://github.com/jfr-wrld/ABOT/actions/workflows/android.yml)
 
 ABOT (Javanese for "heavy") is a strength-training log for your phone. Log sets in the gym, keep
-your routines, watch your records and progress, and share a finished workout to your Instagram
-Story. It works offline, needs no account, and keeps your training on your phone. Google sign-in
-is optional, for a cloud backup and the same data on two phones.
+your routines, watch your records, progress and week streak, and share a finished workout or
+your streak to your Instagram Story. It works offline, needs no account, and keeps your training
+on your phone. Google sign-in is optional, for a cloud backup and the same data on two phones.
 
 ABOT runs as an **Android app** (built with Capacitor) and in the **browser**, in **English and
 Bahasa Indonesia**, with a dark and a light theme.
 
 <p>
-  <img src="docs/images/home-dark.webp" width="200" alt="Home, dark theme: week strip, next routine, body phase card with trend weight, today's calories and protein and water rings">
-  <img src="docs/images/logger-dark.webp" width="200" alt="Workout logger: Coach Pill suggesting the next weight, sets with weight, reps and RPE, rest countdown above the tab bar">
-  <img src="docs/images/phase-dark.webp" width="200" alt="Body phase page: the block drawn as a weight plate at week 3 of 8, trend weight, today's calories in a macro donut">
-  <img src="docs/images/phase-setup-dark.webp" width="200" alt="Body phase setup: cut, lean bulk, recomp and strength peak, each card drawing its weight curve">
+  <img src="docs/images/home-dark.webp" width="200" alt="Home, dark theme: week strip with a 16-week streak, next routine, lean bulk card with trend weight and calories">
+  <img src="docs/images/logger-dark.webp" width="200" alt="Workout logger: sets with weight, reps and RPE; the workout bar at the bottom names the next set and is open on its shortcuts">
+  <img src="docs/images/streak-dark.webp" width="200" alt="Streak screen: a Volt flame over the count, 16 weeks in a row, with Share and Continue">
+  <img src="docs/images/streak-share.webp" width="200" alt="Share your streak: the streak as a story card, with twelve themes to pick">
 </p>
 <p>
-  <img src="docs/images/fuel-dark.webp" width="200" alt="Meals and foods: a meal before and after training sized from today's target, and the food list">
+  <img src="docs/images/progress-dark.webp" width="200" alt="Profile, Progress: volume for the last 8 weeks against the 8 before, with a share button">
+  <img src="docs/images/phase-dark.webp" width="200" alt="Body phase page: a lean bulk at week 6 of 12, trend weight, today's calories in a macro donut">
   <img src="docs/images/story-studio.webp" width="200" alt="Story Studio: a finished workout as an Instagram Story card, with layouts to pick">
   <img src="docs/images/home-light.webp" width="200" alt="Home, light theme">
-  <img src="docs/images/exercise-light.webp" width="200" alt="Exercise detail, light theme: start and end photos, best e1RM, heaviest set">
 </p>
 
-Screenshots show sample data loaded from a generated backup file.
+Screenshots show sample data from a generated backup file (`scripts/readme-screenshots.mjs` makes them).
 
 ## Contents
 
@@ -39,25 +41,27 @@ Screenshots show sample data loaded from a generated backup file.
 
 ## Download and install (Android)
 
-ABOT is not on Google Play yet. Every push builds a ready-to-install APK in GitHub Actions.
+ABOT is not on Google Play yet. Every push to `main` publishes a ready-to-install APK as a
+GitHub release.
 
-1. Open the [Android APK workflow](https://github.com/jfr-wrld/ABOT/actions/workflows/android.yml)
-   (you need to be signed in to GitHub) and pick the latest run with a green check.
-2. Scroll to **Artifacts** and download **abot-debug-apk**. It is a `.zip`.
-3. Unzip it on the phone (Files app, tap the zip, **Extract**) or on a computer, then copy
-   `app-debug.apk` to the phone (USB, Google Drive or Telegram; WhatsApp can mangle APKs).
-4. Tap `app-debug.apk`. Android asks to allow **Install unknown apps** for the app you opened it
-   with: allow it once, then tap **Install**.
-5. If **Play Protect** warns about an unknown app, tap **More details**, then **Install anyway**.
+1. Open the [latest release](https://github.com/jfr-wrld/ABOT/releases/latest) on the phone and
+   download `abot-1.0.N.apk` under **Assets**.
+2. Open the file. Android asks to allow **Install unknown apps** for the browser or Files app you
+   opened it with: allow it once, then tap **Install**.
+3. If **Play Protect** warns about an unknown app, tap **More details**, then **Install anyway**.
    If the install hangs on "Installing", choose **Install without scanning** or pause Play
    Protect's scan for a moment.
-6. Open ABOT. After the intro, **Allow access** explains each permission (notifications, camera,
+4. Open ABOT. After the intro, **Allow access** explains each permission (notifications, camera,
    location). Allow the ones you want; Settings can change them later.
 
-**Updating:** install a newer APK over the old one; your data stays. Every build since 1.0.5 is
-signed with the same key and numbered (Settings shows the version at the bottom). An APK from
-before 1.0.5 must be uninstalled once: export a backup first (Settings, Data & backup) or sign
-in with Google, then import or sign in again after installing.
+**Updating:** from 1.0.133 on, ABOT checks GitHub when it starts. A newer build shows a **New
+version** sheet with what changed; **Update now** downloads it in the background (Android's
+download notification shows the progress), and a banner offers **Install** when it is in. The
+first time, Android asks you to allow installs from ABOT. Settings, About also has **Check for
+updates**. An older build updates by hand once: install the latest APK over it; your data stays.
+Every build since 1.0.5 is signed with the same key. An APK from before 1.0.5 must be uninstalled
+once: export a backup first (Settings, Data & backup) or sign in with Google, then import or sign
+in again after installing.
 
 **Requirements:** Android 7.0 or newer. The live workout chip in the status bar needs Android 16.
 
@@ -68,6 +72,10 @@ in with Google, then import or sign in again after installing.
   optional RPE per set. Warm-up, drop and failure sets are marked by letter.
 - Previous numbers for each set, plates and bar per gym, supersets, reorder and replace.
 - A rest timer starts when you tick a set; it sits above the tab bar within thumb reach.
+- Between sets the same bar names where you are: the set you are on with its weight and reps
+  (or the set before it while this one is empty), the exercise, the clock and sets done, with a
+  solid wave along its edge while the workout runs. Tap it for shortcuts: Pause or Resume,
+  Done set, Add set, and Go to it.
 - Pause and resume the workout clock.
 - Add up to six photos to a workout from the camera or the gallery. They show on the summary and
   in history, can be saved to the phone's gallery, and go into backup files.
@@ -94,6 +102,14 @@ in with Google, then import or sign in again after installing.
   which apps get their own pill by the camera: on ColorOS (OPPO) turn on Settings >
   Notifications > ABOT > Live updates; HyperOS and One UI choose for themselves.
 
+### Week streak
+- Count the weeks in a row with at least one workout. A workout that starts or grows the streak
+  opens on a flame screen before the summary, with its own sound; tap the streak on Home to play
+  it again.
+- Share the streak as a 1080 x 1920 story card in twelve themes, all free: Volt Flame, Inferno,
+  Paper, Poster, Neon Grid, Blue Flame, Steel, Gold, Heatmap, Badge, Sunset and Terminal. Each
+  shows the count, the last twelve weeks, the workouts since the streak began and your @username.
+
 ### Routines and templates
 - Your own routines, plus a Template Vault of ready programs (PPL, Upper/Lower, Full Body,
   Calisthenics) to start or copy.
@@ -105,7 +121,11 @@ in with Google, then import or sign in again after installing.
 - Records count once per lift per workout: heaviest weight, best estimated 1RM (Epley) and most
   volume in a set. The first time you log a lift is your baseline, not a record.
 - Workout summary with a comparison to last time; workout detail with a body map of the
-  muscles worked; lift trends, weekly volume and a training calendar on Profile.
+  muscles worked.
+- Profile, Progress: a summary (volume against the weeks before, workouts, time and sets) with a
+  page each for the weekly trend, muscles, the training calendar and the body phase. Lifts ranks
+  your lifts by estimated 1RM. Edit profile holds your name, username, height, photo, bodyweight
+  and account.
 - Bodyweight log with a trend line that smooths out day-to-day water swings.
 
 ### Body phases: cut, lean bulk, recomp, strength peak
@@ -127,6 +147,7 @@ in with Google, then import or sign in again after installing.
 ### Exercises
 - 88 built-in exercises with start and end photos that play like a short loop, steps and form
   cues, and a muscle map. About 800 more from the full catalog, downloaded once on request.
+- The catalog opens from a button on Exercises, and each muscle section has its own figure.
 - Your own exercises, with a video link if you like.
 
 ### Share to Instagram Stories
@@ -147,13 +168,22 @@ in with Google, then import or sign in again after installing.
   theme (System, Dark, Light), kg or lbs, first day of the week.
 - The whole interface is translated. Exercise names, instructions and the story card layouts
   stay in English.
+- Visual effects: Auto, Full or Lite. Lite drops the glass blur and the movement for slower
+  phones; Auto picks it for phones that report under 4 GB of memory or 4 cores or fewer, and
+  with Data Saver or reduced motion on.
 - Workout, Notifications (with a test alert), Data & backup, app permissions.
-- FAQ, About, Contact us, social links (coming soon), Sign out.
+- FAQ, About (with Check for updates on Android, the Privacy Policy and the Terms of Use),
+  Contact us, social links (coming soon), Sign out.
+- Back, from Android's button or a "‹ Parent" link, returns to where the page was scrolled.
 
 ### ABOT // BLACK PRO
 - Some features are marked PRO: the Coach Pill, body phases, the full recovery and symmetry
   readouts and most story layouts. During the founders beta every PRO feature is open to
-  everyone; a code can be redeemed in Settings.
+  everyone.
+- PRO can be bought with QRIS, e-wallets, virtual accounts or cards through Midtrans, signed in:
+  a year (added onto any time left), lifetime, or the founder price for founder accounts. Prices
+  are in rupiah and shown before you pay. The purchase follows your account to any phone, and a
+  short celebration plays when it lands. A code can also be redeemed in Settings.
 
 ### Health apps (Android)
 - Settings, Health apps connects ABOT to Android Health Connect. Finished workouts go there as
@@ -178,8 +208,8 @@ in with Google, then import or sign in again after installing.
 
 - Your training is stored on your phone (IndexedDB) and works with no connection.
 - ABOT has no ads, no analytics and no paid API. The network is used only for exercise photos,
-  the optional full catalog download, backup if you sign in, and, in builds with Supabase set
-  up, one small read of the public app settings row (`app_remote_config`: plan prices, the
+  the optional full catalog download, backup if you sign in, buying PRO, the Android update
+  check, and, in builds with Supabase set up, one small read of the public app settings row (`app_remote_config`: plan prices, the
   announcement, algorithm calibration) at most every 6 hours. That read sends nothing about you.
   Redeeming a code sends the code. "Find gyms near me" sends your position, once per tap, to
   OpenStreetMap to list the gyms around you: its Overpass service, or its Nominatim search when
@@ -190,6 +220,12 @@ in with Google, then import or sign in again after installing.
   goes into backup files). Food values are built into the app; nothing about your diet is sent.
 - Story photos are drawn into the PNG on the phone and are never uploaded. Workout photos stay on
   the phone and go into backup files only if you include them; they are never synced.
+- Buying PRO sends Midtrans the order, its amount and your account email; you enter payment
+  details on Midtrans' page, never in ABOT.
+- The Android app asks GitHub for a newer release when it starts (and at most every 30 minutes
+  when it comes back), and downloads an update only when you tap Update now.
+- The full texts: [Privacy Policy](https://abot-app.vercel.app/privacy) and
+  [Terms of Use](https://abot-app.vercel.app/terms).
 
 ## Build from source
 
@@ -233,7 +269,13 @@ Recharts, Framer Motion, Lucide icons, Capacitor 8.
   rule shown on screens.
 - `src/data/repo/` and `src/store/persistence.ts`: storage behind a repository interface.
 - `src/data/sync/`: merge engine and Supabase adapter; schema in `supabase/migrations/`.
+- `supabase/functions/`: the Midtrans checkout and payment notification (Edge Functions);
+  setup and test checklist in [`docs/payments-setup.md`](docs/payments-setup.md).
 - `src/lib/story-exporter.ts`: the Story Studio layouts, drawn on a canvas.
+  `src/lib/streak-card.ts`: the twelve streak themes.
+- `src/lib/app-update.ts` and `src/store/useAppUpdate.ts`: the Android update check and download.
+- `src/components/brand/mark-path.ts`: the logo as one path; `scripts/make-app-icons.mjs` draws
+  the favicon and the Android icons from it. Brand PNGs in `docs/brand/`.
 - `src/lib/phase-engine.ts`: body phases, trend weight, calorie and macro targets, and how they
   tune the coach and recovery. `src/lib/nutrition-guide.ts`: the food list and meal sizes.
 - `src/lib/native/` and `android/app/src/main/java/app/abot/gym/`: Android-only pieces (files,
@@ -292,12 +334,20 @@ Tampilan ABOT tersedia dalam **Bahasa Indonesia** dan English: Pengaturan, Umum,
 "Phone" (Ikuti HP) otomatis memakai Bahasa Indonesia kalau bahasa HP-mu Indonesia. Nama gerakan,
 instruksi gerakan, dan desain kartu story tetap dalam bahasa Inggris.
 
+**Streak mingguan:** latihan yang memulai atau menambah streak membuka layar api sebelum
+ringkasan; tap streak di Home untuk memutarnya lagi. Streak bisa dibagikan ke Instagram Story
+dalam 12 tema, semuanya gratis.
+
+**ABOT // BLACK PRO:** bisa dibeli lewat Midtrans (QRIS, e-wallet, virtual account, kartu) saat
+login: tahunan, lifetime, atau harga founder. Selama beta founders, semua fitur PRO terbuka.
+
 **Cara install di Android:**
-1. Buka [workflow Android APK](https://github.com/jfr-wrld/ABOT/actions/workflows/android.yml)
-   (login GitHub), pilih run terbaru yang centang hijau.
-2. Di bagian **Artifacts**, download **abot-debug-apk** (file `.zip`), lalu ekstrak.
-3. Tap `app-debug.apk`, izinkan **Install unknown apps**, lalu **Install**. Kalau Play Protect
+1. Buka [rilis terbaru](https://github.com/jfr-wrld/ABOT/releases/latest) di HP, lalu unduh
+   `abot-1.0.N.apk` di bagian **Assets**.
+2. Buka file-nya, izinkan **Install unknown apps**, lalu **Install**. Kalau Play Protect
    memperingatkan, pilih **Install anyway**.
-4. Update berikutnya cukup install APK baru di atas yang lama; data tetap aman.
+3. Mulai versi 1.0.133, ABOT mengecek versi baru saat dibuka: pop-up **Versi baru** menampilkan
+   perubahannya, **Perbarui sekarang** mengunduh di latar belakang, lalu tekan **Pasang**. Data
+   tetap aman.
 
 Pertanyaan atau laporan bug: [aljasidik@gmail.com](mailto:aljasidik@gmail.com).
