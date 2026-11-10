@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { setGridColumns } from "./setGrid";
 import { Trash2, Trophy } from "lucide-react";
-import { animate, motion, useMotionValue, useReducedMotionConfig } from "framer-motion";
+import { animate, motion, useMotionValue, useReducedMotionConfig, useTransform } from "framer-motion";
 import type { PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
 import { NumberField } from "@/components/ui/NumberField";
 import { press } from "@/components/ui/Button";
@@ -18,6 +18,9 @@ const PR_LABEL: Record<PRKind, string> = {
   best_1rm: "best estimated 1RM",
   best_set_volume: "best set volume",
 };
+
+/** Share of the row's width a pull must pass to remove the set on release. */
+const REMOVE_AT = 0.4;
 
 export function SetRow({
   set,
@@ -55,6 +58,8 @@ export function SetRow({
   const repsRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotionConfig();
   const x = useMotionValue(0);
+  const removeOpacity = useTransform(x, [-48, 0], [1, 0]);
+  const armed = useRef(false);
   const rowWidth = useRef<HTMLDivElement>(null);
 
   // Bodyweight: "BW × 10", "BW+10 × 8", "BW−20 × 10" (assisted).
@@ -105,33 +110,54 @@ export function SetRow({
   const a11yName = setTypeA11yName(set.type, number, t);
 
   return (
-    // Swipe the row left to remove the set: past a third of the way, or with a quick flick, it
-    // slides off; less springs back. The set-type menu still offers Remove for anyone not swiping.
+    // One pull removes the set: the row follows the finger left; once it is past 40% of the
+    // way the phone ticks, and letting go removes it (a quick flick does too). Less springs
+    // back. The set-type menu still offers Remove for anyone not swiping.
     <li className="relative overflow-hidden rounded-xl">
-      <span
+      {/* Shown only as the row moves left; at rest it is fully transparent. Inset a pixel so the
+          rounded corners never show a red edge. */}
+      <motion.span
         aria-hidden="true"
-        className="absolute inset-0 flex items-center justify-end gap-1.5 rounded-xl bg-failure pr-4 text-sm font-semibold text-white"
+        style={{ opacity: removeOpacity }}
+        className="absolute inset-px flex items-center justify-end rounded-xl bg-failure pr-5 text-white"
       >
-        <Trash2 size={16} />
-        {t("Remove")}
-      </span>
+        {/* The bin alone: a word would be cut while the strip is still narrow. */}
+        <Trash2 size={20} />
+      </motion.span>
       <motion.div
         drag="x"
         dragDirectionLock
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={{ left: 0.9, right: 0 }}
-        dragSnapToOrigin
-        style={{ x, gridTemplateColumns: setGridColumns(showRpe), touchAction: "pan-y" }}
+        dragConstraints={{ left: -2000, right: 0 }}
+        dragElastic={0}
+        dragMomentum={false}
+        style={{
+          x,
+          gridTemplateColumns: setGridColumns(showRpe),
+          touchAction: "pan-y",
+          // The row's tint is see-through, so it is laid over the card's own colour: the red
+          // behind it never shows through.
+          backgroundColor: "var(--color-surface)",
+          backgroundImage: `linear-gradient(${set.completed ? "var(--color-accent-tint)" : "var(--color-row)"}, ${set.completed ? "var(--color-accent-tint)" : "var(--color-row)"})`,
+        }}
+        onDrag={() => {
+          const past = x.get() < -(rowWidth.current?.offsetWidth ?? 320) * REMOVE_AT;
+          if (past !== armed.current) {
+            armed.current = past;
+            if (past) feedback.tick();
+          }
+        }}
         onDragEnd={(_, info) => {
           const width = rowWidth.current?.offsetWidth ?? 320;
-          if (info.offset.x < -width / 3 || info.velocity.x < -700) {
-            feedback.tick();
-            void animate(x, -width, { duration: 0.18, ease: "easeIn" }).then(onRemove);
+          armed.current = false;
+          if (x.get() < -width * REMOVE_AT || info.velocity.x < -700) {
+            void animate(x, -width, { duration: 0.16, ease: "easeIn" }).then(onRemove);
+          } else {
+            void animate(x, 0, { type: "spring", stiffness: 500, damping: 38 });
           }
         }}
         ref={rowWidth}
         className={`relative grid items-center gap-1 overflow-hidden rounded-xl border px-1 py-1 transition-colors duration-200 ${
-          set.completed ? "border-accent/20 bg-accent-tint" : "border-ink/[0.04] bg-row"
+          set.completed ? "border-accent/20" : "border-ink/[0.04]"
         }`}
       >
       {sweep > 0 && (
