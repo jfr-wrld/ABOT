@@ -113,7 +113,7 @@ test("exercise detail: no dock, quick stats, and a workout started from it", asy
 test("the workout capsule sits above a detail page's action bar, not over it", async ({ page }) => {
   await startEmptyWorkout(page);
   await page.goto("/exercises/detail?id=bench-press-barbell");
-  const capsule = page.getByRole("link", { name: "Open the workout in progress" }).first();
+  const capsule = page.getByRole("button", { name: /^Workout running/ });
   const bar = page.getByRole("button", { name: "Add to workout" });
   const c = (await capsule.boundingBox())!;
   const b = (await bar.boundingBox())!;

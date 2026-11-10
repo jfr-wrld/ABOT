@@ -419,4 +419,7 @@ export const workout: Record<string, string> = {
   "{done}/{total} sets": "{done}/{total} set",
   "{n} rep": "{n} rep",
   "last {set}": "terakhir {set}",
+  "Done set": "Set selesai",
+  "Go to it": "Ke latihan",
+  "Workout shortcuts": "Pintasan latihan",
 };

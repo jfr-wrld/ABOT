@@ -195,8 +195,12 @@ Owner brief 2026-11-08:
   of 4 · 60 kg × 8", the first set not ticked off) over the exercise name. While that set is still
   empty it shows the set before it as the number to beat ("last 60 kg × 8"). Right: the clock
   with the live dot, and sets done ("7/16 sets"). The share of sets done runs as a Volt hairline
-  along the bottom edge, the same mark the rest countdown uses. On the workout page a tap brings
-  that exercise into view; elsewhere it opens the workout.
+  along the bottom edge, the same mark the rest countdown uses.
+- **Shortcuts in the bar** (owner brief 2026-11-10). A tap opens the bar upward, the same shape
+  growing (Dynamic Island), into four 56 px targets: Pause or Resume, Done set (Volt, the one
+  primary; it ticks the set with the numbers the bar shows, so what you read is what is saved),
+  Add set, and Go to it on the workout page or Open elsewhere. Tap again, tap outside, Escape
+  or another page folds it. Ticking hands over to the rest countdown as usual.
 - **Info tips in Settings.** Each setting is a short title with an (i) beside it; the sentence
   that explains it opens under the title on tap, instead of every explanation always showing.
 - **Status outside the app.** The owner asked for a Dynamic Island while ABOT is in the
