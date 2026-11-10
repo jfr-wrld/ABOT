@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotionConfig } from "framer-motion";
-import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Sparkles, Timer, Trophy } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Pencil, Sparkles, Timer, Trophy } from "lucide-react";
+import { RenameWorkoutSheet, SaveAsRoutineButton } from "@/components/workout/SessionActions";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -73,6 +74,7 @@ function Summary() {
     streakAlreadyShown(id) ? null : streakMoment(sessions, id, Date.now(), firstDayOfWeek),
   );
   const closeStreak = useCallback(() => setStreak(null), []);
+  const [renameOpen, setRenameOpen] = useState(false);
 
   // The finish chord and a buzz, behind Sounds & vibration, once the summary itself is in view.
   // Finish was just tapped, so audio is unlocked.
@@ -107,9 +109,19 @@ function Summary() {
         <Celebration record={recordLifts > 0} />
         <Rise order={6}>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">{t("Workout saved")}</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {session.name} ·{" "}
-            {new Date(session.startedAt).toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })}
+          <p className="mt-1 flex items-center justify-center gap-1 text-sm text-text-muted">
+            <span>
+              {session.name} ·{" "}
+              {new Date(session.startedAt).toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })}
+            </span>
+            <button
+              type="button"
+              onClick={() => setRenameOpen(true)}
+              aria-label={t("Rename workout")}
+              className="-my-2 flex size-11 items-center justify-center rounded-ctl hover:bg-surface-2 hover:text-text"
+            >
+              <Pencil aria-hidden="true" size={15} />
+            </button>
           </p>
         </Rise>
       </header>
@@ -205,10 +217,12 @@ function Summary() {
       </div>
 
       {/* Room for the action bar, so the last block scrolls clear of it. */}
-      <div className="h-40" aria-hidden="true" />
+      <div className="h-56" aria-hidden="true" />
+      <RenameWorkoutSheet session={session} open={renameOpen} onClose={() => setRenameOpen(false)} />
 
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-[640px] flex-col gap-2 border-t border-line bg-bg/85 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
         <ShareStoryButton session={session} photos={photos.photos} variant="primary" className="min-h-12 w-full text-base" />
+        <SaveAsRoutineButton session={session} className="w-full" />
         <div className="grid grid-cols-2 gap-2">
           <Link
             href={historyPath(session.id)}

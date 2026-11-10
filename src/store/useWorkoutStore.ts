@@ -97,6 +97,8 @@ interface WorkoutState {
   finishActive: () => WorkoutSession | null;
   discardActive: () => void;
   deleteSession: (id: string) => void;
+  /** Renames a finished workout; a blank name is ignored. */
+  renameSession: (id: string, name: string) => void;
   /** Changes the gym of a finished workout; undefined clears it. */
   setSessionLocation: (id: string, locationId: string | undefined) => void;
 }
@@ -417,6 +419,12 @@ export const useWorkoutStore = create<WorkoutState>()(
       discardActive: () => set({ active: null, restTimer: null, handoff: null }),
 
       deleteSession: (id) => set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) })),
+
+      renameSession: (id, name) => {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        set((s) => ({ sessions: s.sessions.map((x) => (x.id === id && x.name !== trimmed ? { ...x, name: trimmed } : x)) }));
+      },
 
       setSessionLocation: (id, locationId) =>
         set((s) => ({

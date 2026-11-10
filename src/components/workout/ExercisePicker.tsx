@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import type { Exercise, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
@@ -20,8 +20,16 @@ export function ExercisePicker({
   onPick,
   inWorkout = new Set<string>(),
   title,
+  suggestions = [],
+  suggestionsTitle,
 }: {
   title?: string;
+  /**
+   * Shown above the library while nothing is searched or filtered: similar exercises when
+   * replacing one, the muscles still to train today when adding one. `note` says why.
+   */
+  suggestions?: { exercise: Exercise; note: string }[];
+  suggestionsTitle?: string;
   open: boolean;
   onClose: () => void;
   onPick: (exercise: Exercise) => void;
@@ -33,6 +41,15 @@ export function ExercisePicker({
   const searchId = `exercise-search-${useId()}`;
   const [query, setQuery] = useState("");
   const [muscle, setMuscle] = useState<MuscleGroup | null>(null);
+  // Each opening starts clean, so the suggestions show and an old search does not hide the list.
+  useEffect(() => {
+    if (!open) return;
+    const id = setTimeout(() => {
+      setQuery("");
+      setMuscle(null);
+    }, 0);
+    return () => clearTimeout(id);
+  }, [open]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -73,6 +90,33 @@ export function ExercisePicker({
           ))}
         </div>
       </div>
+
+      {suggestions.length > 0 && !query.trim() && !muscle && (
+        <section aria-label={suggestionsTitle} className="mt-3">
+          <h3 className="label-caps px-2">{suggestionsTitle}</h3>
+          <ul className="mt-1 flex flex-col">
+            {suggestions.map(({ exercise: e, note }) => (
+              <li key={e.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    useExerciseStore.getState().adopt(e);
+                    onPick(e);
+                  }}
+                  className="flex min-h-14 w-full items-center gap-3 rounded-xl px-2 py-1 text-left hover:bg-surface-2 active:bg-ink/[0.08]"
+                >
+                  <ExerciseThumb exercise={e} size={44} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{e.name}</span>
+                    <span className="block truncate text-xs text-accent">{note}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <h3 className="label-caps mt-3 px-2">{t("All exercises")}</h3>
+        </section>
+      )}
 
       {filtered.length === 0 ? (
         <p className="py-10 text-center text-sm text-text-muted">

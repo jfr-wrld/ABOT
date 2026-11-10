@@ -20,6 +20,8 @@ import { SetRow } from "./SetRow";
 import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseHowToSheet } from "./ExerciseHowToSheet";
 import { ExercisePicker } from "./ExercisePicker";
+import { swapCandidates } from "@/lib/exercise-swapper";
+import { useAllExercises } from "@/store/useExerciseStore";
 import { ReorderSheet } from "./ReorderSheet";
 import { SupersetSheet } from "./SupersetSheet";
 import { SUPERSET_COLORS, type SupersetLabel } from "@/lib/superset";
@@ -67,6 +69,7 @@ export function ExerciseCard({
 }) {
   const t = useT();
   const store = useWorkoutStore();
+  const { list: library } = useAllExercises();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [howToOpen, setHowToOpen] = useState(false);
@@ -268,6 +271,20 @@ export function ExerciseCard({
         <ExercisePicker
           open
           title={t("Replace {name}", { name })}
+          suggestionsTitle={t("Similar to {name}", { name })}
+          suggestions={
+            exercise
+              ? swapCandidates(exercise, library, "all", 5).map((c) => ({
+                  exercise: c.exercise,
+                  note:
+                    c.reason.kind === "pattern"
+                      ? t("Same movement · {n}% match", { n: c.match })
+                      : c.reason.kind === "muscle" && c.reason.muscle
+                        ? t("Same muscle: {muscle} · {n}% match", { muscle: muscleText(MUSCLE_GROUP_LABELS[c.reason.muscle], t), n: c.match })
+                        : t("Related · {n}% match", { n: c.match }),
+                }))
+              : []
+          }
           onClose={() => setReplaceOpen(false)}
           onPick={(ex) => {
             store.replaceExercise(item.id, ex.id);

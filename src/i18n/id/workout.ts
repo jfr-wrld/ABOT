@@ -484,4 +484,16 @@ export const workout: Record<string, string> = {
   "Ankle strap": "Tali pergelangan kaki",
   "Hook grip": "Hook grip",
   "Thumbless grip": "Grip tanpa jempol",
+  // Save as routine, rename, suggestions.
+  "Saved to My Routines · Open": "Tersimpan di My Routines · Buka",
+  "Save as routine": "Simpan sebagai routine",
+  "Rename workout": "Ganti nama workout",
+  "Save name": "Simpan nama",
+  "Similar to {name}": "Mirip dengan {name}",
+  "Same movement · {n}% match": "Gerakan sama · cocok {n}%",
+  "Same muscle: {muscle} · {n}% match": "Otot sama: {muscle} · cocok {n}%",
+  "Related · {n}% match": "Terkait · cocok {n}%",
+  "Still to train today · {routine}": "Belum dilatih hari ini · {routine}",
+  "For {muscle}, not trained yet today": "Untuk {muscle}, belum dilatih hari ini",
+  "All exercises": "Semua exercise",
 };

@@ -24,6 +24,10 @@ import type { PRKind } from "@/types/workout";
 import { summaryPath } from "@/lib/routes";
 import { autoSyncFinished } from "@/store/useHealthSyncStore";
 import { useT } from "@/i18n";
+import { useReminderStore } from "@/store/useReminderStore";
+import { suggestNext, todaysTargets } from "@/lib/exercise-suggest";
+import { muscleText } from "@/lib/home";
+import { MUSCLE_GROUP_LABELS } from "@/types/workout";
 
 export default function WorkoutPage() {
   return (
@@ -60,9 +64,22 @@ function WorkoutScreen() {
   const sessions = useWorkoutStore((s) => s.sessions);
   const { addExercise, finishActive, discardActive, completeAllRemaining } = useWorkoutStore();
   const { weightUnit, showRpe, defaultRestSeconds } = useSettingsStore();
-  const { byId } = useAllExercises();
-
+  const { byId, list: library } = useAllExercises();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const routines = useRoutineStore((st) => st.routines);
+  const schedule = useReminderStore((st) => st.schedule);
+  // Exercises for today's target muscles not in the workout yet, worked out when the picker opens.
+  const nextUp = useMemo(() => {
+    if (!pickerOpen || !active) return null;
+    const targets = todaysTargets(active, routines, sessions, schedule, byId);
+    if (!targets) return null;
+    const list = suggestNext(active, targets, library, sessions, byId).map((x) => ({
+      exercise: x.exercise,
+      note: t("For {muscle}, not trained yet today", { muscle: muscleText(MUSCLE_GROUP_LABELS[x.muscle], t) }),
+    }));
+    return { routine: targets.routine, list };
+  }, [pickerOpen, active, routines, sessions, schedule, byId, library, t]);
+
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
 
@@ -150,6 +167,8 @@ function WorkoutScreen() {
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         inWorkout={inWorkout}
+        suggestionsTitle={nextUp ? t("Still to train today · {routine}", { routine: nextUp.routine.name }) : undefined}
+        suggestions={nextUp?.list ?? []}
         onPick={(ex) => {
           addExercise(ex.id, defaultRestSeconds);
           setPickerOpen(false);
