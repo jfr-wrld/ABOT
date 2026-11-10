@@ -66,7 +66,7 @@ function Trend() {
           />
           <WeeklyBars key={`${metric}-${d.weeks}`} title={chart.title} unitLabel={chart.unit} points={chart.points} />
         </section>
-        <StreakPlates buckets={d.buckets} streak={d.streak} />
+        <StreakPlates buckets={d.buckets} streak={d.streak} restWeeks={d.restWeeks} restReady={d.restReady} />
       </div>
     </main>
   );

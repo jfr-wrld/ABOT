@@ -30,6 +30,8 @@ export const phase: Record<string, string> = {
   // Coach Pill
   "Muscle retention target": "Target pertahankan otot",
   "Fatigue: drop one set": "Lelah: kurangi satu set",
+  "Welcome back": "Selamat datang kembali",
+  "First time back after a break: start about 10% lighter and build up again": "Pertama kali lagi setelah jeda: mulai sekitar 10% lebih ringan, lalu naikkan lagi",
   "Surplus overload": "Overload surplus",
   "Cutting: holding this weight is the win while body weight comes down": "Cutting: bertahan di beban ini sudah menang selama berat badan turun",
   "Cutting: keep the weight on the bar and do one working set less": "Cutting: pertahankan beban di barbel dan kurangi satu working set",

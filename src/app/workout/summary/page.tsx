@@ -31,6 +31,7 @@ import type { WorkoutSession } from "@/types/workout";
 import { muscleText } from "@/lib/home";
 import { StreakMoment } from "@/components/streak/StreakMoment";
 import { streakAlreadyShown, streakMoment } from "@/lib/streak-moment";
+import { returnAfter } from "@/lib/comeback";
 
 export default function WorkoutSummaryPage() {
   return (
@@ -102,6 +103,7 @@ function Summary() {
   const sets = countSets(session).completed;
   const prev = insights.previous;
   const prevVolume = prev ? sessionVolume(prev, byId) : 0;
+  const backAfter = returnAfter(sessions, session);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -123,6 +125,12 @@ function Summary() {
               <Pencil aria-hidden="true" size={15} />
             </button>
           </p>
+          {backAfter !== null && (
+            // The first workout after a break is the one that counts most: said once, plainly.
+            <p className="mt-2 text-sm font-semibold text-accent">
+              {t("First workout in {n} days. The hardest one is done.", { n: backAfter })}
+            </p>
+          )}
         </Rise>
       </header>
 

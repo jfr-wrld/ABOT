@@ -1,6 +1,7 @@
 "use client";
 
 import { setText } from "@/lib/set-metrics";
+import { asRoutine } from "@/lib/comeback";
 import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -32,7 +33,6 @@ import {
   EQUIPMENT_LABELS,
   MUSCLE_GROUP_LABELS,
   type Exercise,
-  type Routine,
   type SessionExercise,
   type WeightUnit,
   type WorkoutSession,
@@ -50,25 +50,6 @@ export default function SessionPage() {
       <SessionDetail />
     </HydrationGate>
   );
-}
-
-/** A finished workout as a routine, so "Repeat" starts the same lifts with the same numbers. */
-function asRoutine(s: WorkoutSession): Routine {
-  return {
-    id: s.routineId ?? "",
-    name: s.name,
-    createdAt: s.startedAt,
-    updatedAt: s.startedAt,
-    exercises: s.exercises.map((ex) => ({
-      id: ex.id,
-      exerciseId: ex.exerciseId,
-      restSeconds: ex.restSeconds,
-      notes: ex.notes,
-      ...(ex.supersetId ? { supersetId: ex.supersetId } : {}),
-      ...(ex.variation ? { variation: ex.variation } : {}),
-      sets: ex.sets.map((set) => ({ id: set.id, type: set.type, targetWeightKg: set.weightKg, targetReps: set.reps })),
-    })),
-  };
 }
 
 function SessionDetail() {

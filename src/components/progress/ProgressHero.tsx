@@ -105,8 +105,21 @@ function Tile({ label, value, format, change }: { label: string; value: number; 
   );
 }
 
-/** One hexagon plate per week in the range: filled when you trained that week. */
-export function StreakPlates({ buckets, streak }: { buckets: WeekBucket[]; streak: number }) {
+/**
+ * One hexagon plate per week in the range: filled when you trained that week, dashed for a rest
+ * week the streak used (lib/analytics streakWeeks).
+ */
+export function StreakPlates({
+  buckets,
+  streak,
+  restWeeks = new Set<number>(),
+  restReady = false,
+}: {
+  buckets: WeekBucket[];
+  streak: number;
+  restWeeks?: Set<number>;
+  restReady?: boolean;
+}) {
   const trained = buckets.filter((b) => b.workouts > 0).length;
   const t = useT();
   return (
@@ -118,6 +131,13 @@ export function StreakPlates({ buckets, streak }: { buckets: WeekBucket[]; strea
         <p className="text-xs text-text-muted">
           {t("Trained in {n} of {total} weeks", { n: trained, total: buckets.length })}
         </p>
+        {streak > 0 && (
+          <p className="text-xs text-text-muted">
+            {restReady
+              ? t("Rest week ready: one week off keeps the streak.")
+              : t("Every 4 weeks trained earns a rest week.")}
+          </p>
+        )}
       </div>
       {/* Up to 8 plates sit on one row; 12 weeks split into two even rows of 6. */}
       <ol
@@ -136,8 +156,9 @@ export function StreakPlates({ buckets, streak }: { buckets: WeekBucket[]; strea
               <path
                 d={PLATE}
                 fill={b.workouts > 0 ? "var(--color-accent)" : "none"}
-                stroke={b.workouts > 0 ? "var(--color-accent)" : "var(--color-line-strong)"}
+                stroke={b.workouts > 0 || restWeeks.has(b.weekStart) ? "var(--color-accent)" : "var(--color-line-strong)"}
                 strokeWidth={8}
+                strokeDasharray={b.workouts === 0 && restWeeks.has(b.weekStart) ? "14 10" : undefined}
               />
             </svg>
           </motion.li>

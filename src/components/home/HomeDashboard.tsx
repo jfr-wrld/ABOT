@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotionConfig } from "framer-motion";
-import { Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, RotateCcw, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -41,6 +41,7 @@ import { useT } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { trainingFocus } from "@/lib/training-focus";
 import { weekStreak } from "@/lib/analytics";
+import { asRoutine, comeback, dismissWelcomeBack, welcomeBackDismissed } from "@/lib/comeback";
 import { currentStreak, type StreakMoment as StreakMomentData } from "@/lib/streak-moment";
 import { StreakMoment } from "@/components/streak/StreakMoment";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
@@ -86,6 +87,8 @@ export function HomeDashboard() {
         <WeekStrip days={weekStrip(sessions, now, firstDayOfWeek)} sessions={sessions} byId={byId} streak={weekStreak(sessions, now, firstDayOfWeek)} />
       </header>
 
+      {!active && <WelcomeBack now={now} />}
+
       <Rise step={0.07} order={1}>{active ? <ActiveCard /> : <ProtocolHero next={next} byId={byId} />}</Rise>
 
       <Rise step={0.07} order={2}>
@@ -100,6 +103,58 @@ export function HomeDashboard() {
         <RecentWorkouts unit={weightUnit} byId={byId} now={now} />
       </Rise>
     </main>
+  );
+}
+
+/* ---------------------------------------------------------------- welcome back */
+
+/**
+ * After ten days or more without a workout: no count of missed days, no broken streak, just
+ * the last workout ready to repeat. The Coach Pill starts that session lighter (comeback).
+ */
+function WelcomeBack({ now }: { now: number }) {
+  const t = useT();
+  const router = useRouter();
+  const sessions = useWorkoutStore((s) => s.sessions);
+  const back = useMemo(() => comeback(sessions, now), [sessions, now]);
+  const [hidden, setHidden] = useState(false);
+  if (!back || hidden || welcomeBackDismissed(back.last.id)) return null;
+  const { last } = back;
+
+  return (
+    <section aria-labelledby="welcome-back" className={`${TILE} flex flex-col gap-3 p-4`}>
+      <div>
+        <p className="label-caps text-accent">{t("Welcome back")}</p>
+        <h2 id="welcome-back" className="mt-1 text-lg font-bold tracking-tight">
+          {t("Pick up where you left off")}
+        </h2>
+        <p className="mt-1 text-sm text-text-muted">
+          {t("Last time: {name}, {n} days ago. Today's Coach targets start about 10% lighter.", { name: last.name, n: back.days })}
+        </p>
+      </div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+        <Button
+          variant="primary"
+          onClick={() => {
+            useWorkoutStore.getState().startFromRoutine(asRoutine(last));
+            router.push("/workout");
+          }}
+          className="min-h-12 text-base"
+        >
+          <RotateCcw aria-hidden="true" size={18} />
+          <span className="truncate">{t("Repeat {name}", { name: last.name })}</span>
+        </Button>
+        <Button
+          onClick={() => {
+            dismissWelcomeBack(last.id);
+            setHidden(true);
+          }}
+          className="min-h-12 !bg-transparent"
+        >
+          {t("Not now")}
+        </Button>
+      </div>
+    </section>
   );
 }
 

@@ -2,6 +2,7 @@ import type { Exercise, MuscleGroup, WeightUnit, WorkoutSession, WorkoutSet } fr
 import { estimate1RM, isWorkingSet, kgToLbs, lbsToKg, matchesVariant, setVolume, type VariantOptions } from "./calc";
 import { tunables } from "./tunables";
 import { activePhase } from "./phase-engine";
+import { WELCOME_BACK_DAYS } from "./comeback";
 
 /**
  * The Coach Pill: next session's target for one exercise, from its last three sessions.
@@ -14,6 +15,8 @@ import { activePhase } from "./phase-engine";
  * - Deload: volume fell in each of the last three sessions, or the last two averaged RPE 9.5
  *   or more with missed reps, or three sessions at the same weight never came out clean.
  *   Take 10% off, rounded down to a loadable step.
+ * - Comeback: the lift was last done COMEBACK_DAYS or more ago. Start 10% lighter and build up
+ *   again, instead of asking for a weight the lifter has not touched in weeks.
  * - Nothing: no history, a timed or distance exercise, or a session that was neither.
  * Pounds users get 5 lb and 10 lb jumps instead of 2.5 kg and 5 kg.
  *
@@ -26,7 +29,10 @@ import { activePhase } from "./phase-engine";
  *   the last top set says is a 5-rep load.
  */
 
-export type OverloadKind = "load" | "reps" | "deload" | "hold" | "trim";
+export type OverloadKind = "load" | "reps" | "deload" | "hold" | "trim" | "comeback";
+
+/** Days since the lift was last done that count as a break: the same gap as Home's welcome back. */
+export const COMEBACK_DAYS = WELCOME_BACK_DAYS;
 
 /** Pill titles and the reasons behind a call (English; the UI translates them). */
 export const KIND_LABEL: Record<OverloadKind, string> = {
@@ -35,6 +41,7 @@ export const KIND_LABEL: Record<OverloadKind, string> = {
   deload: "CNS fatigue: deload",
   hold: "Muscle retention target",
   trim: "Fatigue: drop one set",
+  comeback: "Welcome back",
 };
 /** Pill titles while a body phase is active, in place of KIND_LABEL for load and reps. */
 export const PHASE_PILL_LABEL = { surplus: "Surplus overload", peak: "Strength peak" } as const;
@@ -48,6 +55,7 @@ export const WHY = {
   trim: "Cutting: keep the weight on the bar and do one working set less",
   surplus: "Lean bulk: clean session, add weight",
   peak: "Strength peak: compounds in sets of 3 to 5",
+  comeback: "First time back after a break: start about 10% lighter and build up again",
 } as const;
 
 export interface OverloadSuggestion {
@@ -126,7 +134,7 @@ function roundLoad(kg: number, ex: Exercise, unit: WeightUnit, dir: "near" | "do
 export function suggestOverload(
   ex: Exercise | undefined,
   sessions: WorkoutSession[],
-  opts: { unit: WeightUnit; excludeSessionId?: string; variant?: VariantOptions; fresh?: boolean },
+  opts: { unit: WeightUnit; excludeSessionId?: string; variant?: VariantOptions; fresh?: boolean; now?: number },
 ): OverloadSuggestion | null {
   const s = baseSuggestion(ex, sessions, opts);
   const phase = activePhase()?.phaseType;
@@ -137,7 +145,7 @@ export function suggestOverload(
 function baseSuggestion(
   ex: Exercise | undefined,
   sessions: WorkoutSession[],
-  opts: { unit: WeightUnit; excludeSessionId?: string; variant?: VariantOptions },
+  opts: { unit: WeightUnit; excludeSessionId?: string; variant?: VariantOptions; now?: number },
 ): OverloadSuggestion | null {
   if (!ex || ex.logType === "duration" || ex.logType === "distance_duration") return null;
   const history = sessions
@@ -154,6 +162,13 @@ function baseSuggestion(
   const basedOn = history.length;
   const phase = activePhase()?.phaseType ?? null;
   const compound = ex.category === "compound";
+
+  // Back after a break: the last numbers are out of date, so the first session comes in lighter.
+  // `now` is the workout's start; callers without one (previews) skip this.
+  if (loaded && opts.now !== undefined && opts.now - last.startedAt >= COMEBACK_DAYS * 86_400_000) {
+    const weightKg = roundLoad(last.topKg * (1 - coach.deloadPct / 100), ex, opts.unit, "down");
+    return { kind: "comeback", weightKg, reps, deltaKg: weightKg - last.topKg, deltaReps: 0, basedOn, why: WHY.comeback };
+  }
 
   // Fatigue first: a lifter grinding down should not be told to add weight.
   const falling = history.length >= 3 && history[0]!.volume < history[1]!.volume && history[1]!.volume < history[2]!.volume;

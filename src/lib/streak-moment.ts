@@ -1,5 +1,5 @@
 import type { WorkoutSession } from "@/types/workout";
-import { startOfWeek, weekStreak } from "./analytics";
+import { startOfWeek, streakWeeks, weekStreak } from "./analytics";
 
 /** How many weeks the streak screen draws as plates, the current week last. */
 export const STREAK_WEEKS = 5;
@@ -107,10 +107,17 @@ export function streakCardData(
     row.unshift(trained.has(cursor.getTime()));
     cursor.setDate(cursor.getDate() - 7);
   }
-  // The streak's first week: walk back over trained weeks from the newest one in the streak.
+  // The streak's first week: walk back over trained weeks (and rest weeks it kept) from the
+  // newest one in the streak.
+  const { restWeeks } = streakWeeks(sessions, now, firstDay);
   const start = new Date(startOfWeek(now, firstDay));
   if (!trained.has(start.getTime())) start.setDate(start.getDate() - 7);
-  for (let i = 1; i < weeks; i++) start.setDate(start.getDate() - 7);
+  for (;;) {
+    const before = new Date(start);
+    before.setDate(before.getDate() - 7);
+    if (!trained.has(before.getTime()) && !restWeeks.has(before.getTime())) break;
+    start.setTime(before.getTime());
+  }
   const since = start.getTime();
   return { weeks, row, workouts: done.filter((s) => s.startedAt >= since).length, since, handle };
 }

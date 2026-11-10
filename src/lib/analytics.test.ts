@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { monthGrid, startOfWeek, weekStreak, weeklyBuckets } from "./analytics";
+import { monthGrid, startOfWeek, streakWeeks, weekStreak, weeklyBuckets } from "./analytics";
 import type { WorkoutSession } from "@/types/workout";
 
 const session = (startedAt: number, volumeSet = true): WorkoutSession => ({
@@ -51,6 +51,19 @@ describe("weekStreak", () => {
     expect(weekStreak([session(now), session(now - WEEK), session(now - 3 * WEEK)], now)).toBe(2);
     expect(weekStreak([session(now - 2 * WEEK)], now)).toBe(0);
     expect(weekStreak([], now)).toBe(0);
+  });
+
+  it("four trained weeks earn one rest week that keeps the streak", () => {
+    const weeks = (...ago: number[]) => ago.map((n) => session(now - n * WEEK));
+    // Trained 6..3 weeks ago, off 2 weeks ago, trained last week: the rest week bridges it.
+    expect(weekStreak(weeks(6, 5, 4, 3, 1), now)).toBe(5);
+    expect(streakWeeks(weeks(6, 5, 4, 3, 1), now).restWeeks.size).toBe(1);
+    // Only three trained weeks before the gap: no rest week yet.
+    expect(weekStreak(weeks(5, 4, 3, 1), now)).toBe(1);
+    // Two weeks off in a row are one too many.
+    expect(weekStreak(weeks(7, 6, 5, 4, 1), now)).toBe(1);
+    // The rest week is spent; the next gap needs four more trained weeks.
+    expect(weekStreak(weeks(8, 7, 6, 5, 3, 1), now)).toBe(1);
   });
 });
 

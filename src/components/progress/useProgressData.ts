@@ -5,7 +5,7 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { useProgressRange } from "@/store/useProgressRange";
-import { weekStreak, weeklyBuckets } from "@/lib/analytics";
+import { streakWeeks, weeklyBuckets } from "@/lib/analytics";
 import { percentChange, periodTotals, rangeStart } from "@/lib/progress";
 import { useNow } from "@/lib/useNow";
 
@@ -34,7 +34,7 @@ export function useProgressData() {
     time: percentChange(totals.durationSec, previous.durationSec),
     sets: percentChange(totals.sets, previous.sets),
   };
-  const streak = weekStreak(sessions, now, firstDayOfWeek);
+  const { streak, restWeeks, restReady } = streakWeeks(sessions, now, firstDayOfWeek);
 
-  return { sessions, completed, byId, unit: weightUnit, firstDay: firstDayOfWeek, now, weeks, from, to, buckets, totals, change, streak };
+  return { sessions, completed, byId, unit: weightUnit, firstDay: firstDayOfWeek, now, weeks, from, to, buckets, totals, change, streak, restWeeks, restReady };
 }

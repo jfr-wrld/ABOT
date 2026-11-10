@@ -54,30 +54,57 @@ export function weeklyBuckets(
   return buckets;
 }
 
+/** Trained weeks that earn one rest week, and the most rest weeks held at once. */
+export const REST_WEEK_EVERY = 4;
+
 /**
- * Consecutive weeks (ending this week or last week) with at least one workout.
- * A streak is kept alive through the current week even if it has no workout yet.
+ * Weeks in a row with at least one workout. The current week keeps the streak alive before
+ * its workout. Every REST_WEEK_EVERY trained weeks earn one rest week (one held at a time): a
+ * week off after that does not break the streak, it just does not add to it. Lifters take
+ * planned weeks off, and a streak shown broken makes people quit (Silverman and Barasch 2023;
+ * one missed week does not undo a habit, Lally et al. 2010).
  */
 export function weekStreak(sessions: WorkoutSession[], now = Date.now(), firstDay: 0 | 1 = 1): number {
-  const weeks = new Set(
-    sessions.filter((s) => s.status === "completed").map((s) => startOfWeek(s.startedAt, firstDay)),
-  );
-  if (weeks.size === 0) return 0;
-  let cursor = startOfWeek(now, firstDay);
-  if (!weeks.has(cursor)) {
-    const prev = new Date(cursor);
-    prev.setDate(prev.getDate() - 7);
-    cursor = prev.getTime();
-    if (!weeks.has(cursor)) return 0;
-  }
+  return streakWeeks(sessions, now, firstDay).streak;
+}
+
+export function streakWeeks(
+  sessions: WorkoutSession[],
+  now = Date.now(),
+  firstDay: 0 | 1 = 1,
+): { streak: number; restWeeks: Set<number>; restReady: boolean } {
+  const trained = new Set(sessions.filter((s) => s.status === "completed").map((s) => startOfWeek(s.startedAt, firstDay)));
+  const restWeeks = new Set<number>();
+  if (trained.size === 0) return { streak: 0, restWeeks, restReady: false };
+  const current = startOfWeek(now, firstDay);
+  const cursor = new Date(Math.min(...trained));
   let streak = 0;
-  while (weeks.has(cursor)) {
-    streak++;
-    const prev = new Date(cursor);
-    prev.setDate(prev.getDate() - 7);
-    cursor = prev.getTime();
+  let sinceCredit = 0;
+  let credit = 0;
+  let used: number[] = [];
+  while (cursor.getTime() <= current) {
+    const week = cursor.getTime();
+    if (trained.has(week)) {
+      streak++;
+      if (++sinceCredit === REST_WEEK_EVERY) {
+        credit = 1;
+        sinceCredit = 0;
+      }
+    } else if (week !== current) {
+      if (credit > 0 && streak > 0) {
+        credit--;
+        used.push(week);
+      } else {
+        streak = 0;
+        sinceCredit = 0;
+        credit = 0;
+        used = [];
+      }
+    }
+    cursor.setDate(cursor.getDate() + 7);
   }
-  return streak;
+  for (const w of used) restWeeks.add(w);
+  return { streak, restWeeks, restReady: credit > 0 };
 }
 
 /** Sessions grouped by local calendar day. */

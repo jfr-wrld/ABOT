@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertTriangle, Scissors, Shield, TrendingUp, Zap } from "lucide-react";
+import { AlertTriangle, RotateCcw, Scissors, Shield, TrendingUp, Zap } from "lucide-react";
 import type { Exercise, SessionExercise, WeightUnit } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -20,6 +20,8 @@ const LOOK: Record<OverloadKind, { color: string; Icon: typeof Zap; label: strin
   deload: { color: "#f59e0b", Icon: AlertTriangle, label: KIND_LABEL.deload },
   hold: { color: "#00f0ff", Icon: Shield, label: KIND_LABEL.hold },
   trim: { color: "#f59e0b", Icon: Scissors, label: KIND_LABEL.trim },
+  // A return is good news, not a warning: cyan like the other "keep going" calls.
+  comeback: { color: "#00f0ff", Icon: RotateCcw, label: KIND_LABEL.comeback },
 };
 
 /** Exercises in this workout that already got the lean-bulk extra set (one per exercise). */
@@ -46,7 +48,7 @@ export function OverloadBanner({ item, exercise, unit }: { item: SessionExercise
     // Lean bulk adds a set only when every muscle the lift trains is fully recovered.
     const fatigue = exercise ? muscleFatigue(sessions, byId, startedAt ?? 0) : {};
     const fresh = !!exercise && exercise.primaryMuscles.every((m) => (fatigue[m] ?? 0) < 1);
-    return suggestOverload(exercise, sessions, { unit, excludeSessionId: active?.id, variant: { byId, locationId: active?.locationId }, fresh });
+    return suggestOverload(exercise, sessions, { unit, excludeSessionId: active?.id, variant: { byId, locationId: active?.locationId }, fresh, now: startedAt });
   }, [exercise, sessions, unit, active?.id, active?.locationId, byId, startedAt]);
   const todo = item.sets.filter((x) => !x.completed && x.type !== "warmup");
   if (!s || todo.length === 0) return null;
@@ -59,7 +61,7 @@ export function OverloadBanner({ item, exercise, unit }: { item: SessionExercise
   const w = s.weightKg === null ? t("Bodyweight") : formatWeight(s.weightKg, unit);
   const target = `${w} × ${s.reps}`;
   const change =
-    s.kind === "deload"
+    s.kind === "deload" || s.kind === "comeback"
       ? "-10%"
       : s.kind === "trim"
         ? t("−1 set")
