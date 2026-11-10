@@ -63,6 +63,17 @@ export default function LoginPage() {
         <motion.div variants={rise} className="mt-8 flex flex-col gap-3">
           <GoogleSignIn from={from} />
         </motion.div>
+        <motion.p variants={rise} className="mt-4 text-xs text-text-muted">
+          {t("By signing in you agree to the")}{" "}
+          <Link href="/terms" className="font-semibold text-text underline underline-offset-2">
+            {t("Terms of Use")}
+          </Link>{" "}
+          {t("and the")}{" "}
+          <Link href="/privacy" className="font-semibold text-text underline underline-offset-2">
+            {t("Privacy Policy")}
+          </Link>
+          .
+        </motion.p>
       </motion.div>
     </main>
   );

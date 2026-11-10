@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useState } from "react";
 import { ChevronDown, Mail } from "lucide-react";
 import { AbotMark } from "@/components/brand/AbotMark";
@@ -67,6 +68,14 @@ export function AboutSection() {
           {t(
             "Your training stays on this phone. Signing in copies it to your own backup space so you can restore it. Nothing is sold, and no one else sees it.",
           )}
+        </p>
+        <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <Link href="/privacy" className="font-semibold text-accent underline-offset-4 hover:underline">
+            {t("Privacy Policy")}
+          </Link>
+          <Link href="/terms" className="font-semibold text-accent underline-offset-4 hover:underline">
+            {t("Terms of Use")}
+          </Link>
         </p>
       </section>
 

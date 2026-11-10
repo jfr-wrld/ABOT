@@ -567,4 +567,8 @@ export const settings: Record<string, string> = {
   "Allow installs from ABOT in the screen that opened, then tap Install.": "Izinkan pemasangan dari ABOT di layar yang terbuka, lalu ketuk Pasang.",
   "{n} update since yours": "{n} pembaruan sejak versimu",
   "{n} updates since yours": "{n} pembaruan sejak versimu",
+  "Privacy Policy": "Kebijakan Privasi",
+  "Terms of Use": "Ketentuan Penggunaan",
+  "By signing in you agree to the": "Dengan masuk, kamu menyetujui",
+  "and the": "dan",
 };
