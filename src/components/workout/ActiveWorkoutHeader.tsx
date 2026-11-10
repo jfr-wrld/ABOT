@@ -15,6 +15,7 @@ import { MapPin, Pause, Play } from "lucide-react";
 import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { useT } from "@/i18n";
+import { WorkoutMuscles } from "./WorkoutMuscles";
 
 export function ActiveWorkoutHeader({
   session,
@@ -86,8 +87,9 @@ export function ActiveWorkoutHeader({
         </Link>
       )}
 
-      <dl className="mt-3 grid grid-cols-3 gap-2">
-        <div className="rounded-xl border border-ink/10 bg-surface px-3 py-2.5">
+      {/* Three figures and, right of Sets, the muscles worked so far as a small map. */}
+      <dl className="mt-3 grid grid-cols-[1.15fr_1fr_0.75fr_auto] gap-2">
+        <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
           <dt className="label-caps flex items-center gap-1.5">
             {t("Duration")}
             {paused && <span className="rounded bg-accent px-1 text-[9px] font-bold text-on-accent">{t("Paused")}</span>}
@@ -102,32 +104,34 @@ export function ActiveWorkoutHeader({
                   ? t("Duration {time}, paused. Pause or adjust the timer", { time: formatDuration(duration) })
                   : t("Duration {time}. Pause or adjust the timer", { time: formatDuration(duration) })
               }
-              className="num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-xl font-bold tracking-tight text-text underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
+              className="num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-lg font-bold tracking-tight text-text underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
             >
               {formatDuration(duration)}
             </button>
           </dd>
         </div>
         <Stat label={t("Volume")} value={formatVolume(volume, unit)} />
-        <Stat label={t("Sets")} value={`${completed} / ${total}`} />
+        <Stat label={t("Sets")} value={String(completed)} small={`/${total}`} />
+        <WorkoutMuscles session={session} byId={byId} />
       </dl>
       {startOpen && <StartTimeSheet startedAt={session.startedAt} paused={paused} onClose={() => setStartOpen(false)} />}
     </header>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  // The unit is set small, so "1,360 kg" fits a third of a 360 px screen with the figure whole.
-  const m = /^(.*) (kg|lbs)$/.exec(value);
+function Stat({ label, value, small }: { label: string; value: string; small?: string }) {
+  // The unit (or a set total) is set small, so "1,360 kg" and "12/16" keep the figure whole in a
+  // quarter of a 360 px screen.
+  const m = small !== undefined ? [value, value, small] : /^(.*) (kg|lbs)$/.exec(value);
   return (
-    <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-3 py-2.5">
-      <dt className="label-caps">{label}</dt>
-      <dd className="num flex min-h-11 items-baseline truncate pt-2 text-xl font-bold tracking-tight text-text">
+    <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
+      <dt className="label-caps truncate">{label}</dt>
+      <dd className="num flex min-h-11 items-baseline truncate pt-2 text-lg font-bold tracking-tight text-text">
         {m ? (
           <>
             {m[1]}
             {/* The space sits inside the small unit, so it reads "480 kg" and stays narrow. */}
-            <span className="text-xs font-semibold text-text-muted">{` ${m[2]}`}</span>
+            <span className={`text-[11px] font-semibold text-text-muted ${small !== undefined ? "" : "pl-1"}`}>{small !== undefined ? m[2] : ` ${m[2]}`}</span>
           </>
         ) : (
           value

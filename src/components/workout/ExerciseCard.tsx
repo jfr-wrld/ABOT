@@ -31,7 +31,6 @@ import { PlateCalculatorModal } from "./PlateCalculatorModal";
 import { OverloadBanner } from "./OverloadBanner";
 import { BodyweightLoad } from "./BodyweightLoad";
 import { ExerciseExtras } from "./ExerciseExtras";
-import { FinishedMuscles } from "./FinishedMuscles";
 import { ExerciseSwapModal } from "./ExerciseSwapModal";
 import { fromDisplay, toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
@@ -251,7 +250,6 @@ export function ExerciseCard({
           />
         ))}
       </ol>
-      <FinishedMuscles item={item} exercise={exercise} />
 
       <button
         type="button"

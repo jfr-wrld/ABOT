@@ -33,7 +33,7 @@ test("completing a set starts the rest timer and updates the header", async ({ p
   const timer = page.getByRole("timer");
   await expect(timer).toHaveAttribute("aria-label", /Rest, 1:(29|30) left/);
   await expect(page.locator("dd").nth(1)).toHaveText("480 kg");
-  await expect(page.locator("dd").nth(2)).toHaveText("1 / 3");
+  await expect(page.locator("dd").nth(2)).toHaveText("1/3");
   await expect(page.getByText(/New record/)).toHaveCount(1);
   await page.getByRole("button", { name: "Extend rest by 15 seconds" }).click();
   await expect(timer).toHaveAttribute("aria-label", /Rest, 1:4\d left/);

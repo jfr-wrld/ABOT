@@ -29,14 +29,13 @@ test("a note shows on the card", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Note for Pull Up: Band 2 for the last set. Edit" })).toBeVisible();
 });
 
-test("a finished exercise shows the muscles it worked", async ({ page }) => {
-  const muscles = page.getByRole("region", { name: "Muscles worked by Pull Up" });
-  for (const n of [1, 2]) await logSet(page, n, null, "8");
-  await expect(muscles).toBeHidden();
-  await logSet(page, 3, null, "8");
-  await expect(muscles).toBeVisible();
-  await expect(muscles.locator('[data-region="upper-back"][data-level="primary"]').first()).toBeVisible();
-  // Unticking a set hides it again.
-  await page.getByRole("button", { name: /Set 3 done\. Mark as not done/ }).click();
-  await expect(muscles).toBeHidden();
+test("the header's muscle map fills in as sets are ticked", async ({ page }) => {
+  const map = page.getByRole("button", { name: /^Muscles worked: / });
+  await expect(map).toHaveAccessibleName("Muscles worked: none yet. Show map");
+  await logSet(page, 1, null, "8");
+  await expect(map).toHaveAccessibleName("Muscles worked: Lats. Show map");
+  await map.click();
+  const sheet = page.getByRole("dialog", { name: "Muscles worked" });
+  await expect(sheet.locator('[data-region="upper-back"][data-level="primary"]').first()).toBeVisible();
+  await expect(sheet.getByRole("listitem").filter({ hasText: "Biceps" })).toBeVisible();
 });
