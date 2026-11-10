@@ -9,7 +9,7 @@ import { toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 import { usePhaseTelemetry } from "./usePhaseTelemetry";
-import { MacroBar, Ring, Sparkline } from "./visuals";
+import { MacroBar, Ring } from "./visuals";
 
 export const PHASE_ICON: Record<BodyPhaseType, typeof Flame> = { CUTTING: Flame, BULKING: Hammer, RECOMP: Scale, STRENGTH_PEAK: Zap };
 
@@ -52,62 +52,98 @@ export function PhaseCommandCard({ now }: { now: number }) {
 
   return (
     <section aria-labelledby="phase-heading" className="panel overflow-hidden">
-      <Link href="/phase" className="flex flex-col gap-3 p-4 pb-3 hover:bg-ink/[0.02]">
+      {/* Compact on purpose: phase and week, then two figures. Detail lives one tap away on /phase. */}
+      <Link href="/phase" className="flex flex-col gap-2.5 px-3 pb-2.5 pt-3 hover:bg-ink/[0.02]">
         <div className="flex items-center gap-2">
-          <span aria-hidden="true" className="flex size-8 items-center justify-center rounded-full bg-accent-tint text-accent">
-            <Icon size={16} />
+          <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent">
+            <Icon size={14} />
           </span>
-          <h2 id="phase-heading" className="min-w-0 flex-1 truncate text-sm font-bold">
+          <h2 id="phase-heading" className="min-w-0 truncate text-sm font-bold">
             {t(PHASE_LABEL[m.phase.phaseType])}
           </h2>
-          <span className="num rounded-full bg-surface-2 px-2 py-0.5 text-xs font-bold">
+          <span className="num shrink-0 text-xs font-bold text-text-muted">
             {meso.finished ? t("Done") : t("W{week}/{of}", { week: meso.week, of: meso.of })}
           </span>
-          {meso.deload && !meso.finished && <span className="rounded-full bg-warmup/15 px-2 py-0.5 text-[10px] font-bold uppercase text-warmup">{t("Deload")}</span>}
-          <ChevronRight aria-hidden="true" size={16} className="text-text-muted" />
+          {meso.deload && !meso.finished && <span className="shrink-0 rounded-full bg-warmup/15 px-1.5 py-px text-[10px] font-bold uppercase text-warmup">{t("Deload")}</span>}
+          <span className="flex-1" />
+          <ChevronRight aria-hidden="true" size={16} className="shrink-0 text-text-muted" />
         </div>
 
-        <BlockBar of={meso.of} progress={meso.progress} week={meso.week} finished={meso.finished} label={t("Block progress")} />
+        <BlockBar of={meso.of} progress={meso.progress} week={meso.week} finished={meso.finished} label={t("Block progress")} thin />
 
         <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0">
             <p className="label-caps">{t("Trend")}</p>
-            <p className="num text-2xl font-bold leading-tight">
-              {weight}
-              <span className="ml-0.5 text-xs font-semibold text-text-muted">{unit}</span>
-            </p>
-            <div className="flex items-center gap-2">
-              <Sparkline values={m.points.slice(-21).map((p) => p.emaKg)} width={64} height={22} />
+            <p className="num flex items-baseline gap-1.5 whitespace-nowrap">
+              <span className="text-lg font-bold leading-tight">
+                {weight}
+                <span className="ml-0.5 text-[11px] font-semibold text-text-muted">{unit}</span>
+              </span>
               {rate !== null && (
-                <span className="num text-[11px] font-semibold text-text-muted">
+                <span className="text-[11px] font-semibold text-text-muted">
                   {rate > 0 ? "+" : rate < 0 ? "−" : "±"}
                   {Math.abs(Math.round(toDisplay(rate, unit) * 10) / 10)}/{t("wk")}
                 </span>
               )}
-            </div>
+            </p>
           </div>
           <div className="min-w-0">
             <p className="label-caps">{t("Today")}</p>
-            <p className="num text-2xl font-bold leading-tight text-accent">
+            <p className="num text-lg font-bold leading-tight text-accent">
               {fuel.kcal.toLocaleString(t.locale)}
-              <span className="ml-0.5 text-xs font-semibold text-text-muted">kcal</span>
+              <span className="ml-0.5 text-[11px] font-semibold text-text-muted">kcal</span>
             </p>
-            <MacroBar protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} className="mt-1.5 h-1.5" />
-            <p className="num mt-1 text-[11px] font-semibold text-text-muted">
-              P {fuel.proteinG} · C {fuel.carbsG} · F {fuel.fatG}
-            </p>
+            <MacroBar protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} className="mt-1 h-1" />
           </div>
         </div>
       </Link>
-      <Pacer proteinTarget={fuel.proteinG} waterTarget={m.waterMl} now={now} />
+      <PacerChips proteinTarget={fuel.proteinG} waterTarget={m.waterMl} now={now} />
     </section>
   );
 }
 
-/** One segment per week: done in Volt, this week half-lit. */
-export function BlockBar({ of, progress, week, finished, label }: { of: number; progress: number; week: number; finished: boolean; label: string }) {
+/**
+ * Protein and water as two small tap targets on one row: a mini ring, today against the target,
+ * and the step a tap adds. The full-size Pacer stays on /phase.
+ */
+function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number; waterTarget: number; now: number }) {
+  const t = useT();
+  const { proteinG, waterMl } = useTodayFuel(now);
+  const add = useFuelPacer((s) => s.add);
+  const litres = (n: number) => (n / 1000).toLocaleString(t.locale, { maximumFractionDigits: 1 });
+  const chip = (key: string, label: string, value: number, target: number, figure: string, step: string, aria: string, onAdd: () => void, Icon: typeof Droplets) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => {
+        feedback.tick();
+        onAdd();
+      }}
+      aria-label={aria}
+      className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ctl px-2 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
+    >
+      <Ring value={value} max={target} size={28} stroke={3} label={`${label}: ${value} / ${target}`}>
+        <Icon aria-hidden="true" size={11} className={value >= target ? "text-accent" : "text-text-muted"} />
+      </Ring>
+      <span className="num min-w-0 flex-1 truncate text-xs font-bold">{figure}</span>
+      <span aria-hidden="true" className="num inline-flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-accent">
+        <Plus size={10} />
+        {step}
+      </span>
+    </button>
+  );
   return (
-    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={of} aria-valuenow={week} className="flex h-1.5 gap-0.5">
+    <div role="group" aria-label={t("Today's protein and water")} className="flex gap-1 border-t border-line px-1 py-0.5">
+      {chip("p", t("Protein"), proteinG, proteinTarget, `${proteinG}/${proteinTarget} g`, "25 g", t("Add 25 g protein"), () => add({ proteinG: 25 }), Beef)}
+      {chip("w", t("Water"), waterMl, waterTarget, `${litres(waterMl)}/${litres(waterTarget)} L`, "0.5 L", t("Add 500 ml water"), () => add({ waterMl: 500 }), Droplets)}
+    </div>
+  );
+}
+
+/** One segment per week: done in Volt, this week half-lit. */
+export function BlockBar({ of, progress, week, finished, label, thin = false }: { of: number; progress: number; week: number; finished: boolean; label: string; thin?: boolean }) {
+  return (
+    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={of} aria-valuenow={week} className={`flex gap-0.5 ${thin ? "h-1" : "h-1.5"}`}>
       {Array.from({ length: of }, (_, i) => {
         const done = (i + 1) / of <= progress + 1e-9;
         const current = i + 1 === week && !finished;
