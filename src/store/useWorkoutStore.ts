@@ -12,6 +12,17 @@ import { useLocationStore } from "./useLocationStore";
 import { currentT } from "@/i18n";
 import { activePhase, peakRestSec } from "@/lib/phase-engine";
 import { exerciseById } from "./useExerciseStore";
+import { useSettingsStore } from "./useSettingsStore";
+import { bodyLoadFor } from "@/data/bodyweight-load";
+
+/** A ticked set records the body weight it lifted (bodyweight exercises); unticking clears it. */
+function ticked(st: WorkoutSet, exerciseId: string, completed: boolean, at: number): WorkoutSet {
+  const { bodyLoadKg: _drop, ...rest } = st;
+  void _drop;
+  if (!completed) return { ...rest, completed, completedAt: undefined };
+  const body = bodyLoadFor(exerciseById(exerciseId), useSettingsStore.getState().bodyweightKg);
+  return { ...rest, completed, completedAt: at, ...(body !== undefined ? { bodyLoadKg: body } : {}) };
+}
 
 /** Rest after a set: the exercise's own, or at least the strength-peak rest after a compound. */
 function restFor(ex: SessionExercise): number {
@@ -64,6 +75,10 @@ interface WorkoutState {
   unlinkSuperset: (sessionExerciseId: string) => void;
   setExerciseRest: (sessionExerciseId: string, restSeconds: number) => void;
   setExerciseNotes: (sessionExerciseId: string, notes: string) => void;
+  /** Grip, stance or angle for this exercise in this workout; undefined clears it. */
+  setExerciseVariation: (sessionExerciseId: string, variation: string | undefined) => void;
+  /** Bodyweight exercises: the weight column means assistance; existing weights change sign. */
+  setAssisted: (sessionExerciseId: string, assisted: boolean) => void;
   addSet: (sessionExerciseId: string) => void;
   removeSet: (sessionExerciseId: string, setId: string) => void;
   updateSet: (sessionExerciseId: string, setId: string, patch: Partial<WorkoutSet>) => void;
@@ -146,6 +161,7 @@ export const useWorkoutStore = create<WorkoutState>()(
               restSeconds: re.restSeconds,
               notes: re.notes,
               ...(re.supersetId ? { supersetId: re.supersetId } : {}),
+              ...(re.variation ? { variation: re.variation } : {}),
               sets: re.sets.map((rs) =>
                 newSet({ type: rs.type, weightKg: rs.targetWeightKg, reps: rs.targetReps }),
               ),
@@ -251,6 +267,30 @@ export const useWorkoutStore = create<WorkoutState>()(
       setExerciseNotes: (id, notes) =>
         set((s) => patchActive(s, (a) => patchExercise(a, id, (ex) => ({ ...ex, notes })))),
 
+      setExerciseVariation: (id, variation) =>
+        set((s) =>
+          patchActive(s, (a) =>
+            patchExercise(a, id, (ex) => {
+              const { variation: _old, ...rest } = ex;
+              void _old;
+              return variation ? { ...rest, variation } : rest;
+            }),
+          ),
+        ),
+
+      setAssisted: (id, assisted) =>
+        set((s) =>
+          patchActive(s, (a) =>
+            patchExercise(a, id, (ex) => ({
+              ...ex,
+              assisted: assisted || undefined,
+              sets: ex.sets.map((st) =>
+                st.weightKg === null || st.weightKg === 0 ? st : { ...st, weightKg: (assisted ? -1 : 1) * Math.abs(st.weightKg) },
+              ),
+            })),
+          ),
+        ),
+
       addSet: (id) =>
         set((s) =>
           patchActive(s, (a) =>
@@ -299,11 +339,7 @@ export const useWorkoutStore = create<WorkoutState>()(
           // Ticking a set means training again: a paused workout resumes.
           const active = patchExercise(completed ? resumed(s.active, Date.now()) : s.active, id, (e) => ({
             ...e,
-            sets: e.sets.map((st) =>
-              st.id === setId
-                ? { ...st, completed, completedAt: completed ? Date.now() : undefined }
-                : st,
-            ),
+            sets: e.sets.map((st) => (st.id === setId ? ticked(st, e.exerciseId, completed, Date.now()) : st)),
           }));
           // In a superset the lifter moves straight to the next exercise with a set left; rest comes
           // after the last one.
@@ -330,7 +366,7 @@ export const useWorkoutStore = create<WorkoutState>()(
           sets: ex.sets.map((st) => {
             if (st.completed || st.reps === null || st.reps <= 0) return st;
             n++;
-            return { ...st, completed: true, completedAt: now };
+            return ticked(st, ex.exerciseId, true, now);
           }),
         }));
         if (n > 0) set({ active: { ...a, exercises } });

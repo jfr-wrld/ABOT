@@ -36,9 +36,20 @@ export function isWorkingSet(set: WorkoutSet): boolean {
   return set.completed && set.type !== "warmup" && set.reps !== null && set.reps > 0;
 }
 
+/**
+ * The load a set moved, in kg. A bodyweight set adds the body weight it lifted (taken when it was
+ * ticked) to the added load, or takes off the assistance (negative weight), never below 0.
+ * Older bodyweight sets have no body weight on record and count their added load only.
+ */
+export function setLoadKg(set: WorkoutSet): number | null {
+  if (set.bodyLoadKg !== undefined) return Math.max(0, set.bodyLoadKg + (set.weightKg ?? 0));
+  return set.weightKg;
+}
+
 /** A working set that also carries load, the only kind that can set a weight-based record. */
 function isLoadedSet(set: WorkoutSet): boolean {
-  return isWorkingSet(set) && set.weightKg !== null && set.weightKg > 0;
+  const load = setLoadKg(set);
+  return isWorkingSet(set) && load !== null && load > 0;
 }
 
 /**
@@ -51,7 +62,7 @@ export function volumeFactor(mode: LoadMode): 1 | 2 {
 
 export function setVolume(set: WorkoutSet, mode: LoadMode = "total"): number {
   if (!isLoadedSet(set)) return 0;
-  return (set.weightKg as number) * (set.reps as number) * volumeFactor(mode);
+  return (setLoadKg(set) as number) * (set.reps as number) * volumeFactor(mode);
 }
 
 /** With `byId`, each exercise's load mode applies; without it every load counts once. */
@@ -149,7 +160,7 @@ export function buildPRTable(
     for (const ex of session.exercises) {
       for (const set of ex.sets) {
         if (!isLoadedSet(set)) continue;
-        const w = set.weightKg as number;
+        const w = setLoadKg(set) as number;
         const r = set.reps as number;
         const bucket = (table[keyFor(ex.exerciseId, session, byId, opts?.allGyms)] ??= {});
         for (const kind of PR_KINDS) {
@@ -196,7 +207,7 @@ export function detectSessionPRs(
     const key = keyFor(ex.exerciseId, session, byId);
     for (const set of ex.sets) {
       if (!isLoadedSet(set)) continue;
-      const w = set.weightKg as number;
+      const w = setLoadKg(set) as number;
       const r = set.reps as number;
       for (const kind of PR_KINDS) {
         const value = prValue(kind, w, r, volumeFactor(byId?.[ex.exerciseId]?.loadMode ?? "total"));
@@ -282,7 +293,7 @@ export function exerciseHistory(
       for (const set of ex.sets) {
         if (!isLoadedSet(set)) continue;
         seen = true;
-        const w = set.weightKg as number;
+        const w = setLoadKg(set) as number;
         const r = set.reps as number;
         vol += w * r * volumeFactor(opts?.byId?.[exerciseId]?.loadMode ?? "total");
         const e = estimate1RM(w, r);

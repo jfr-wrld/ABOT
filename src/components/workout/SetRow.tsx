@@ -26,6 +26,7 @@ export function SetRow({
   unit,
   showRpe,
   isBodyweight,
+  assisted = false,
   prKinds,
   onUpdate,
   onSetType,
@@ -38,6 +39,8 @@ export function SetRow({
   unit: WeightUnit;
   showRpe: boolean;
   isBodyweight: boolean;
+  /** Bodyweight exercises: the weight column is assistance, stored as a negative load. */
+  assisted?: boolean;
   prKinds: PRKind[];
   onUpdate: (patch: Partial<WorkoutSet>) => void;
   onSetType: (t: SetType) => void;
@@ -52,14 +55,18 @@ export function SetRow({
   const repsRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotionConfig();
 
+  // Bodyweight: "BW × 10", "BW+10 × 8", "BW−20 × 10" (assisted).
   const prevLabel =
     previous && previous.reps !== null
-      ? previous.weightKg === null || previous.weightKg <= 0
-        ? t("{n} reps", { n: previous.reps })
-        : isBodyweight
-          ? `+${formatWeight(previous.weightKg, unit, false)} × ${previous.reps}`
-        : `${formatWeight(previous.weightKg, unit, false)} × ${previous.reps}`
+      ? isBodyweight
+        ? `BW${!previous.weightKg ? "" : previous.weightKg > 0 ? `+${formatWeight(previous.weightKg, unit, false)}` : `−${formatWeight(-previous.weightKg, unit, false)}`} × ${previous.reps}`
+        : previous.weightKg === null || previous.weightKg <= 0
+          ? t("{n} reps", { n: previous.reps })
+          : `${formatWeight(previous.weightKg, unit, false)} × ${previous.reps}`
       : null;
+  // The field shows the amount; the sign comes from the exercise's Added / Assisted choice.
+  const sign = isBodyweight && assisted ? -1 : 1;
+  const shown = (kg: number) => toDisplay(Math.abs(kg), unit);
 
   function fillFromPrevious() {
     if (!previous) return;
@@ -145,10 +152,16 @@ export function SetRow({
       </div>
 
       <NumberField
-          aria-label={isBodyweight ? t("{set} added weight in {unit}", { set: a11yName, unit }) : t("{set} weight in {unit}", { set: a11yName, unit })}
-          placeholder={previous?.weightKg != null ? formatWeight(previous.weightKg, unit, false) : "0"}
-          value={set.weightKg === null ? null : toDisplay(set.weightKg, unit)}
-          onCommit={(n) => onUpdate({ weightKg: n === null ? null : fromDisplay(n, unit) })}
+          aria-label={
+            isBodyweight
+              ? assisted
+                ? t("{set} assistance in {unit}", { set: a11yName, unit })
+                : t("{set} added weight in {unit}", { set: a11yName, unit })
+              : t("{set} weight in {unit}", { set: a11yName, unit })
+          }
+          placeholder={previous?.weightKg != null ? String(shown(previous.weightKg)) : "0"}
+          value={set.weightKg === null ? null : shown(set.weightKg)}
+          onCommit={(n) => onUpdate({ weightKg: n === null ? null : sign * fromDisplay(Math.abs(n), unit) })}
           disabled={set.completed}
           className={set.completed ? "border-transparent bg-transparent" : ""}
           step={0.5}

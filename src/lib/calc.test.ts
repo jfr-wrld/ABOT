@@ -6,6 +6,7 @@ import {
   muscleSplit,
   previousSets,
   sessionVolume,
+  setLoadKg,
 } from "./calc";
 import type { WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES_BY_ID } from "@/data/exercises";
@@ -203,6 +204,28 @@ describe("bodyweight sets", () => {
   it("sets without reps are not working sets", () => {
     const s = session("bw", 1, [set({ id: "p1", weightKg: null, reps: null })], "pull-up");
     expect(muscleSplit([s], SEED_EXERCISES_BY_ID).lats).toBeUndefined();
+  });
+  it("with body weight on record, the body counts toward volume, plus added load or minus assistance", () => {
+    const s = session(
+      "bw",
+      1,
+      [
+        set({ id: "p1", weightKg: null, reps: 10, bodyLoadKg: 70 }),
+        set({ id: "p2", weightKg: 10, reps: 8, bodyLoadKg: 70 }),
+        set({ id: "p3", weightKg: -20, reps: 10, bodyLoadKg: 70 }),
+      ],
+      "pull-up",
+    );
+    expect(sessionVolume(s)).toBe(700 + 640 + 500);
+    expect(setLoadKg(s.exercises[0].sets[2])).toBe(50);
+  });
+  it("assistance never takes the load below zero", () => {
+    expect(setLoadKg(set({ id: "p", weightKg: -90, reps: 5, bodyLoadKg: 70 }))).toBe(0);
+  });
+  it("records use the full load", () => {
+    const s = session("bw", 1, [set({ id: "p1", weightKg: 10, reps: 5, bodyLoadKg: 70 })], "pull-up");
+    const table = buildPRTable([s]);
+    expect(table["pull-up"]?.heaviest_weight?.value).toBe(80);
   });
 });
 

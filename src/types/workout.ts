@@ -117,6 +117,12 @@ export interface WorkoutSet {
   completedAt?: number;
   durationSec?: number | null;
   distanceM?: number | null;
+  /**
+   * Bodyweight exercises: the share of body weight moved, in kg, taken when the set was ticked
+   * (body weight then × the exercise's factor), so a later weigh-in never rewrites history.
+   * The set's load is this plus `weightKg`, which is added load, or assistance when negative.
+   */
+  bodyLoadKg?: number;
 }
 
 export interface SessionExercise {
@@ -127,6 +133,10 @@ export interface SessionExercise {
   restSeconds: number;
   notes?: string;
   supersetId?: string;
+  /** Grip, stance or angle chosen for this workout (a key from data/variations.ts). */
+  variation?: string;
+  /** Bodyweight exercises: the weight column is assistance (a band or machine), stored negative. */
+  assisted?: boolean;
 }
 
 export type SessionStatus = "active" | "completed" | "discarded";
@@ -164,6 +174,7 @@ export interface RoutineExercise {
   restSeconds: number;
   notes?: string;
   supersetId?: string;
+  variation?: string;
 }
 
 export interface Routine {

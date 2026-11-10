@@ -95,6 +95,7 @@ function normalizeSet(raw: unknown): WorkoutSet | null {
     completedAt: num(raw.completedAt),
     durationSec: numOrNull(raw.durationSec) ?? undefined,
     distanceM: numOrNull(raw.distanceM) ?? undefined,
+    bodyLoadKg: num(raw.bodyLoadKg),
   };
 }
 
@@ -111,6 +112,8 @@ function normalizeSessionExercise(raw: unknown): SessionExercise | null {
     restSeconds: num(raw.restSeconds) ?? 90,
     notes: str(raw.notes),
     supersetId: str(raw.supersetId),
+    variation: str(raw.variation),
+    assisted: raw.assisted === true ? true : undefined,
   };
 }
 
@@ -162,6 +165,7 @@ export function normalizeRoutine(raw: unknown): Routine | null {
             restSeconds: num(e.restSeconds) ?? 90,
             notes: str(e.notes),
             supersetId: str(e.supersetId),
+            variation: str(e.variation),
             sets: Array.isArray(e.sets) ? e.sets.map(normalizeRoutineSet).filter((x): x is RoutineSet => x !== null) : [],
           },
         ];

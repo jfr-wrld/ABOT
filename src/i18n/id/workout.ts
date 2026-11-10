@@ -430,4 +430,12 @@ export const workout: Record<string, string> = {
   "The PNG could not be saved.": "PNG tidak bisa disimpan.",
   "{theme} streak card: {n}-week streak": "Kartu streak {theme}: streak {n} minggu",
   "Themes": "Tema",
+  // Bodyweight load.
+  "Body weight": "Berat badan",
+  "{n}% counted": "{n}% dihitung",
+  "Add your body weight to count it in volume": "Isi berat badanmu agar ikut dihitung di volume",
+  "Weight column": "Kolom beban",
+  "Assisted": "Dibantu",
+  "Added": "Tambahan",
+  "{set} assistance in {unit}": "{set} bantuan dalam {unit}",
 };

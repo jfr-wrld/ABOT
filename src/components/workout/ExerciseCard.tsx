@@ -29,6 +29,7 @@ import { useT, type T } from "@/i18n";
 import { muscleText } from "@/lib/home";
 import { PlateCalculatorModal } from "./PlateCalculatorModal";
 import { OverloadBanner } from "./OverloadBanner";
+import { BodyweightLoad } from "./BodyweightLoad";
 import { ExerciseSwapModal } from "./ExerciseSwapModal";
 import { fromDisplay, toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
@@ -170,6 +171,7 @@ export function ExerciseCard({
       </header>
 
       <OverloadBanner item={item} exercise={exercise} unit={unit} />
+      <BodyweightLoad item={item} exercise={exercise} unit={unit} />
 
       <div className="mt-2 flex items-center gap-1 px-1 text-xs text-text-muted">
         <Timer aria-hidden="true" size={14} />
@@ -221,7 +223,7 @@ export function ExerciseCard({
       >
         <span className="text-center">{t("Set")}</span>
         <span className="truncate">{t("Prev")}</span>
-        <span className="text-center normal-case">{weightColumnLabel(exercise, unit, t)}</span>
+        <span className="text-center normal-case">{weightColumnLabel(exercise, unit, t, item.assisted === true)}</span>
         <span className="text-center">{t("Reps")}</span>
         {showRpe && <span className="text-center">RPE</span>}
         <span className="text-center">{t("Done")}</span>
@@ -237,6 +239,7 @@ export function ExerciseCard({
             unit={unit}
             showRpe={showRpe}
             isBodyweight={exercise?.isBodyweight ?? false}
+            assisted={item.assisted === true}
             prKinds={prBySet[set.id] ?? []}
             onUpdate={(patch) => store.updateSet(item.id, set.id, patch)}
             onSetType={(type) => store.setSetType(item.id, set.id, type)}
@@ -389,9 +392,9 @@ export function ExerciseCard({
   );
 }
 
-/** Says what the number means: per dumbbell, per side, or load added to bodyweight. */
-function weightColumnLabel(exercise: Exercise | undefined, unit: WeightUnit, t: T): string {
-  if (exercise?.isBodyweight) return `+${unit}`;
+/** Says what the number means: per dumbbell, per side, or load added to (or taken off) bodyweight. */
+function weightColumnLabel(exercise: Exercise | undefined, unit: WeightUnit, t: T, assisted: boolean): string {
+  if (exercise?.isBodyweight) return `${assisted ? "−" : "+"}${unit}`;
   if (exercise?.loadMode === "per_hand") return t("{unit}/hand", { unit });
   if (exercise?.loadMode === "unilateral") return t("{unit}/side", { unit });
   return unit;
