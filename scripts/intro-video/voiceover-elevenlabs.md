@@ -13,7 +13,17 @@ The same 22 lines as `voiceover.md`, written for ElevenLabs. Times are seconds f
   the Voice Library works; avoid "announcer" voices, which flatten the deadpan opening.
 - **Pauses:** v3 takes no `<break>` tags. Use "..." for a beat, a full stop for a short stop, and an
   em dash for a cut-off.
-- **ABOT** is said as one word, "AY-bot". If the voice spells it out, write `Aybot`.
+- **ABOT:** see "Saying ABOT" below.
+
+**Saying ABOT.** ABOT is the Javanese word *abot*, "heavy", which is also the point of the app:
+lift heavy. Say it the Javanese way, two light syllables, **AH-bot**:
+
+- *a* as in "father", short;
+- *bot* as in "bottle", with an open o and a crisp t;
+- no stress on either syllable, or a touch on *bot*; never "AY-bot", and never spelled A-B-O-T.
+
+In the text, write `Abot` (not all capitals, which some voices spell out). If an English voice still
+says "AY-bot", write `Ah-bot`.
 
 ## Clips, one per generation
 
@@ -37,7 +47,7 @@ line under each label; the `#` lines are only labels.
 [whispers] There's a better way.
 
 # 06 · 11.9 s · hook
-[confident] ABOT. Lift heavy. Log everything.
+[confident] Abot. Lift heavy. Log everything.
 
 # 07 · 15.0 s · log
 [warmly] One tap per set. Last week's numbers are already filled in.
@@ -85,7 +95,7 @@ line under each label; the `#` lines are only labels.
 [reassuring] Works offline. No ads, no tracking. Your data stays on your phone.
 
 # 22 · 96.2 s · outro
-[confident] ABOT. The gym progress tracker. Free on Android and the web.
+[confident] Abot. The gym progress tracker. Free on Android and the web.
 ```
 
 Line 18 must land one word per beat (78.5, 79.0, 79.5, 80.0). If the clip runs long, generate the
@@ -100,7 +110,7 @@ the timing will still need placing by hand.
 [deadpan] Me, every leg day. ...... [confused] How much did I squat... last week? ......
 [sighs] [sarcastic] My notes? ...Useless. ...... [flatly] No progress. No idea. ......
 [whispers] There's a better way. ......
-[confident] ABOT. Lift heavy. Log everything. ......
+[confident] Abot. Lift heavy. Log everything. ......
 [warmly] One tap per set. Last week's numbers are already filled in. ......
 [calm] Rest timer running. ...... [upbeat] Pause, finish a set or add one, right from the bar. ......
 [warmly] Build your own routines, or start from seventeen ready programs. ......
@@ -113,7 +123,7 @@ the timing will still need placing by hand.
 [punchy] Cut. Bulk. Recomp. Peak. ...... [calm] Calories and macros follow your training. ......
 [playfully] English or Bahasa Indonesia. Dark or light. Kilos or pounds. ......
 [reassuring] Works offline. No ads, no tracking. Your data stays on your phone. ......
-[confident] ABOT. The gym progress tracker. Free on Android and the web.
+[confident] Abot. The gym progress tracker. Free on Android and the web.
 ```
 
 ## Mixing it in

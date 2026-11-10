@@ -12,9 +12,19 @@ tone is casual, "kamu", the way the app talks in Indonesian.
   them as directions in any language and does not say them.
 - **Stability: Natural.**
 - **Pauses:** "..." for a beat, a full stop for a short stop. v3 takes no `<break>` tags.
-- **ABOT:** an Indonesian voice says "A-bot". For the English "AY-bot", write `Ei-bot`.
+- **ABOT:** lihat "Cara menyebut ABOT" di bawah.
 - Gym words stay English as people say them in the gym: leg day, squat, set, streak, story, layout,
   cut, bulk, recomp, peak.
+
+**Cara menyebut ABOT.** ABOT adalah kata Jawa *abot*, artinya "berat", pas dengan isi aplikasinya:
+angkat berat. Ucapkan seperti orang Jawa menyebutnya, dua suku kata ringan, **a-bot**:
+
+- *a* seperti pada "apa", pendek;
+- *bot* seperti pada "botol", o terbuka, t-nya tegas;
+- tekanan rata, atau sedikit di *bot*. Bukan "Ei-bot", dan tidak dieja A-B-O-T.
+
+Di teks, tulis `Abot` (bukan huruf kapital semua, karena sebagian suara akan mengejanya). Suara
+Indonesia biasanya langsung benar; kalau suara Inggris membacanya "Ei-bot", tulis `Ah-bot`.
 
 ## Clips, one per generation
 
@@ -37,7 +47,7 @@ Copy the line under each label; the `#` lines are only labels.
 [whispers] Ada cara yang lebih baik.
 
 # 06 · 11.9 s · hook
-[confident] ABOT. Angkat berat. Catat semuanya.
+[confident] Abot. Angkat berat. Catat semuanya.
 
 # 07 · 15.0 s · log
 [warmly] Satu tap per set. Angka minggu lalu udah langsung keisi.
@@ -85,7 +95,7 @@ Copy the line under each label; the `#` lines are only labels.
 [reassuring] Bisa offline. Tanpa iklan, tanpa pelacakan. Datamu tetap di HP-mu.
 
 # 22 · 96.2 s · outro
-[confident] ABOT. Pencatat progres gym. Gratis di Android dan web.
+[confident] Abot. Pencatat progres gym. Gratis di Android dan web.
 ```
 
 Line 18 must land one word per beat (78.5, 79.0, 79.5, 80.0). If the clip runs long, generate the
@@ -100,7 +110,7 @@ over, regenerate it a little faster or drop "lengkap dengan".
 [deadpan] Aku, tiap leg day. ...... [confused] Minggu lalu squat berapa, ya...? ......
 [sighs] [sarcastic] Catatanku? ...Nggak kebaca. ...... [flatly] Nggak ada progres. Bingung. ......
 [whispers] Ada cara yang lebih baik. ......
-[confident] ABOT. Angkat berat. Catat semuanya. ......
+[confident] Abot. Angkat berat. Catat semuanya. ......
 [warmly] Satu tap per set. Angka minggu lalu udah langsung keisi. ......
 [calm] Timer istirahat jalan. ...... [upbeat] Pause, selesai set, atau tambah set, langsung dari bar. ......
 [warmly] Bikin rutinitas sendiri, atau mulai dari tujuh belas program siap pakai. ......
@@ -113,7 +123,7 @@ over, regenerate it a little faster or drop "lengkap dengan".
 [punchy] Cut. Bulk. Recomp. Peak. ...... [calm] Kalori dan makro ngikutin latihanmu. ......
 [playfully] Bahasa Indonesia atau Inggris. Gelap atau terang. Kilo atau pound. ......
 [reassuring] Bisa offline. Tanpa iklan, tanpa pelacakan. Datamu tetap di HP-mu. ......
-[confident] ABOT. Pencatat progres gym. Gratis di Android dan web.
+[confident] Abot. Pencatat progres gym. Gratis di Android dan web.
 ```
 
 ## Mixing it in

@@ -47,7 +47,7 @@ Say slowly, flat and defeated: No progress. No idea.
 Whisper, like sharing a secret: There's a better way.
 
 # 06 · 11.9 s · hook
-Say with confident, punchy energy: ABOT. Lift heavy. Log everything.
+Say with confident, punchy energy: Abot. Lift heavy. Log everything.
 
 # 07 · 15.0 s · log
 Say warmly and confidently: One tap per set. Last week's numbers are already filled in.
@@ -107,7 +107,7 @@ Say confident and proud, like the end of an ad: ABOT. The gym progress tracker. 
 | 3 | 5.7 | problem | My notes? ...Useless. |
 | 4 | 6.9 | problem | No progress. No idea. |
 | 5 | 8.7 | problem | There's a better way. |
-| 6 | 11.9 | hook | ABOT. Lift heavy. Log everything. |
+| 6 | 11.9 | hook | Abot. Lift heavy. Log everything. |
 | 7 | 15.0 | log | One tap per set. Last week's numbers are already filled in. |
 | 8 | 21.8 | bar | Rest timer running. |
 | 9 | 25.0 | bar | Pause, finish a set or add one, right from the bar. |
@@ -130,7 +130,15 @@ Line 18 lands one word per beat (78.5, 79.0, 79.5, 80.0), with the words on scre
 If a clip still reads part of the instruction, put the instruction in the style box of AI Studio
 and paste only the words.
 
-"ABOT" is said as one word, "AY-bot". If the voice spells it out, write it as "Aybot" for the TTS.
+**Saying ABOT.** ABOT is the Javanese word *abot*, "heavy", which is also the point of the app:
+lift heavy. Say it the Javanese way, two light syllables, **AH-bot**:
+
+- *a* as in "father", short;
+- *bot* as in "bottle", with an open o and a crisp t;
+- no stress on either syllable, or a touch on *bot*; never "AY-bot", and never spelled A-B-O-T.
+
+In the text, write `Abot` (not all capitals, which some voices spell out). If an English voice still
+says "AY-bot", write `Ah-bot`.
 
 ## Mixing it in
 
