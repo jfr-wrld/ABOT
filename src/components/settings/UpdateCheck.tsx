@@ -71,9 +71,10 @@ export function UpdateCheck() {
         <>
           <p className="text-sm">{t("ABOT {version} is ready", { version: r.release.version })}</p>
           {s.phase === "failed" && (
-            <p role="alert" className="text-sm text-failure">
-              {t("The download did not finish. Try again, or download it in the browser.")}
-            </p>
+            <div role="alert" className="flex flex-col gap-0.5">
+              <p className="text-sm text-failure">{t("The download did not finish. Try again, or download it in the browser.")}</p>
+              {s.detail && <p className="num break-words text-[11px] text-text-muted">{s.detail}</p>}
+            </div>
           )}
           <div className="grid grid-cols-2 gap-2">
             <Button onClick={s.openModal}>

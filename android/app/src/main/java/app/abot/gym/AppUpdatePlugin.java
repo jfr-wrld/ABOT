@@ -68,12 +68,15 @@ public class AppUpdatePlugin extends Plugin {
 
     @PluginMethod
     public void progress(PluginCall call) {
-        Long id = call.getLong("id");
+        // The id comes back from JavaScript as a plain number, which the bridge parses as an Integer
+        // for small values; PluginCall.getLong only accepts a Long, so read any Number.
+        Object raw = call.getData().opt("id");
         JSObject ret = new JSObject();
-        if (id == null) {
+        if (!(raw instanceof Number)) {
             call.reject("No download id.", "BAD_ID");
             return;
         }
+        long id = ((Number) raw).longValue();
         try (Cursor c = manager().query(new DownloadManager.Query().setFilterById(id))) {
             if (c == null || !c.moveToFirst()) {
                 ret.put("status", "missing");

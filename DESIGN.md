@@ -223,8 +223,8 @@ plain links. A new page always opens at the top.
 ## App updates (Android)
 
 Owner brief 2026-11-10: update inside the app, download in the background, a pop-up with the
-changelog. On launch or return (at most every 12 hours) the app asks GitHub Releases for a newer
-build. If there is one, a sheet titled New version shows the version, how many builds the phone
+changelog. Every start, and on return from the background at most every 30 minutes, the app asks
+GitHub Releases for a newer build. If there is one, a sheet titled New version shows the version, how many builds the phone
 is behind, and every skipped build's notes as a changelog (newest first, up to five), with Later
 (that version waits a day) and Update now (Volt). The sheet waits while a workout runs and on the
 workout, sign-in and intro pages. Android's DownloadManager fetches the APK, so it carries on with

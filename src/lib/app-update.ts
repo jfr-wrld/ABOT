@@ -1,9 +1,9 @@
 /**
  * Android app updates from GitHub Releases. Builds of main are published as release
  * "apk-<run number>" with the APK attached (.github/workflows/android.yml); the installed app's
- * build number is the same run number (versionCode), so newer means a bigger number. Checked when
- * the app opens (at most every 12 hours) and when the lifter taps "Check for updates" (CLAUDE.md
- * network exceptions).
+ * build number is the same run number (versionCode), so newer means a bigger number. Checked every
+ * time the app starts, on return from the background at most every 30 minutes, and when the
+ * lifter taps "Check for updates" (CLAUDE.md network exceptions).
  */
 
 export const UPDATE_REPO = process.env.NEXT_PUBLIC_ABOT_UPDATE_REPO || "jfr-wrld/ABOT";
@@ -74,8 +74,12 @@ export function changelogLines(notes: string, max = 8): string[] {
     .slice(0, max);
 }
 
-/** How often the app asks GitHub on its own. */
-export const AUTO_CHECK_MS = 12 * 3_600_000;
+/**
+ * How often a return from the background asks GitHub again. A cold start always asks: builds land
+ * several times a day, and a long wait meant a phone opened right after one build never heard of
+ * the next.
+ */
+export const AUTO_CHECK_MS = 30 * 60_000;
 /** "Later" keeps a version's pop-up away this long. */
 export const LATER_MS = 24 * 3_600_000;
 

@@ -50,7 +50,7 @@ describe("app updates", () => {
     ]);
   });
 
-  it("asks GitHub at most every 12 hours, and Later waits a day for that build", () => {
+  it("asks GitHub again on return at most every 30 minutes, and Later waits a day for that build", () => {
     expect(checkDue(null, 0)).toBe(true);
     expect(checkDue(0, AUTO_CHECK_MS - 1)).toBe(false);
     expect(checkDue(0, AUTO_CHECK_MS)).toBe(true);

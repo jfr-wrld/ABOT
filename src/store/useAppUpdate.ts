@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { checkDue, checkForUpdate, LATER_MS, putOff, type UpdateCheck } from "@/lib/app-update";
-import { AppUpdate, followDownload } from "@/lib/native/app-updater";
+import { AppUpdate, errorText, followDownload } from "@/lib/native/app-updater";
 
 /**
  * The Android app's update, shared by the pop-up, the ready banner and Settings > About: what
@@ -38,6 +38,8 @@ interface State {
   checking: boolean;
   phase: UpdatePhase;
   fraction: number | null;
+  /** Why the last download or install failed, shown small under the error. */
+  detail: string | null;
   /** The build being downloaded or ready to install. */
   build: number | null;
   /** The "new version" pop-up. */
@@ -46,8 +48,11 @@ interface State {
   bannerClosed: boolean;
   /** Learns the installed build and picks up a download from before a restart. */
   init: (installed: number) => void;
-  /** `auto`: on launch or resume, only when due, and it may open the pop-up. */
-  check: (auto?: boolean) => Promise<void>;
+  /**
+   * "launch": the app just started, always asks. "resume": back from the background, asks only
+   * when due. Both may open the pop-up. "manual": the button in Settings.
+   */
+  check: (from?: "launch" | "resume" | "manual") => Promise<void>;
   openModal: () => void;
   later: () => void;
   start: () => Promise<void>;
@@ -57,9 +62,9 @@ interface State {
 
 export const useAppUpdate = create<State>()((set, get) => {
   async function follow(id: number, build: number) {
-    set({ phase: "downloading", fraction: null, bannerClosed: false, build });
-    const end = await followDownload(id, (fraction) => set({ fraction }));
-    set({ phase: end === "done" ? "ready" : "failed" });
+    set({ phase: "downloading", fraction: null, bannerClosed: false, build, detail: null });
+    const { end, detail } = await followDownload(id, (fraction) => set({ fraction }));
+    set({ phase: end === "done" ? "ready" : "failed", detail: detail ?? null });
   }
 
   return {
@@ -69,6 +74,7 @@ export const useAppUpdate = create<State>()((set, get) => {
     phase: "idle",
     fraction: null,
     build: null,
+    detail: null,
     modal: false,
     bannerClosed: false,
 
@@ -82,11 +88,12 @@ export const useAppUpdate = create<State>()((set, get) => {
       else void follow(saved.id, saved.build);
     },
 
-    check: async (auto = false) => {
+    check: async (from = "manual") => {
       const { installed, checking } = get();
       if (installed === null || checking) return;
       const now = Date.now();
-      if (auto && !checkDue(read<number>(CHECKED_KEY), now)) return;
+      if (from === "resume" && !checkDue(read<number>(CHECKED_KEY), now)) return;
+      const auto = from !== "manual";
       set({ checking: true });
       const result = await checkForUpdate(installed);
       if (result.kind !== "error") write(CHECKED_KEY, now);
@@ -117,8 +124,8 @@ export const useAppUpdate = create<State>()((set, get) => {
         const { id } = await AppUpdate.download({ url: r.release.apkUrl, title: `ABOT ${r.release.version}` });
         write(DOWNLOAD_KEY, { id, build: r.release.build });
         await follow(id, r.release.build);
-      } catch {
-        set({ phase: "failed" });
+      } catch (e) {
+        set({ phase: "failed", detail: errorText(e) });
       }
     },
 
@@ -127,9 +134,9 @@ export const useAppUpdate = create<State>()((set, get) => {
         const { needsPermission } = await AppUpdate.install();
         // Without the permission the banner stays, so Install is one tap away on the way back.
         set({ phase: needsPermission ? "permission" : "opened", bannerClosed: !needsPermission });
-      } catch {
+      } catch (e) {
         write(DOWNLOAD_KEY, null);
-        set({ phase: "failed" });
+        set({ phase: "failed", detail: errorText(e) });
       }
     },
 

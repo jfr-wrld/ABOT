@@ -21,8 +21,8 @@ const QUIET = ["/onboarding", "/login", "/permissions", "/workout"];
 const MAX_VERSIONS = 5;
 
 /**
- * Android only. Asks GitHub for a newer build when the app opens or comes back (at most every
- * 12 hours), then shows what is new in a sheet: Update now starts the download in the background
+ * Android only. Asks GitHub for a newer build every time the app starts, and when it comes back
+ * from the background (at most every 30 minutes), then shows what is new in a sheet: Update now starts the download in the background
  * (Android's download notification shows its progress), Later puts that version off for a day.
  * Once the APK is in, a banner offers Install. The pop-up waits while a workout runs.
  */
@@ -39,14 +39,14 @@ export function UpdateCenter() {
       .then((info) => {
         if (!live) return;
         init(Number(info.build) || 0);
-        void check(true);
+        void check("launch");
       })
       .catch(() => {});
     return () => {
       live = false;
     };
   }, [init, check]);
-  useAppResumed(() => void check(true));
+  useAppResumed(() => void check("resume"));
 
   if (!hydrated || !isNativeApp()) return null;
   return (
