@@ -209,6 +209,17 @@ Owner brief 2026-11-08:
   workout: "<workout> · rest until 14:32" with the next set below, cleared on return. Times are
   absolute because background pages cannot tick. Opt-in under Settings, Status outside the app.
 
+## Back keeps your place
+
+Owner brief 2026-11-10: open a page, come back, and the list is where you left it. ABOT keeps
+each page's scroll offset itself (`ScrollMemory`): the browser's own restoration loses it,
+because the outgoing page fades out first and the incoming one starts short while it loads.
+On Back (the browser's, Android's, or a "‹ Parent" link) the offset is put back once the page
+is tall enough, and held a moment while photos settle; a touch or scroll stops it at once. The
+"‹ Parent" links (`BackLink`) go back in history when the parent is the page the lifter came
+from, so the parent returns with its scroll, tab and filters; opened any other way they are
+plain links. A new page always opens at the top.
+
 ## App updates (Android)
 
 Owner brief 2026-11-10: update inside the app, download in the background, a pop-up with the

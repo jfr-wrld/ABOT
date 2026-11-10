@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackLink } from "@/components/navigation/BackLink";
 import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -17,13 +17,13 @@ export function PageHeader({
   return (
     <header className="px-4 pt-4">
       {back && (
-        <Link
+        <BackLink
           href={back.href}
           className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-ctl pr-3 pl-1 text-sm text-text-muted hover:bg-surface hover:text-text"
         >
           <ChevronLeft aria-hidden="true" size={18} />
           {back.label}
-        </Link>
+        </BackLink>
       )}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

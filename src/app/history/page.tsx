@@ -3,6 +3,7 @@
 import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { BackLink } from "@/components/navigation/BackLink";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
 import { ChevronDown, ChevronLeft, Dumbbell, Layers, MoreHorizontal, Play, Timer, Trash2, Trophy } from "lucide-react";
@@ -267,13 +268,13 @@ function Hero({
 
       <div className="relative flex flex-col gap-3 px-4 pb-3 pt-3">
         <div className="flex items-center justify-between">
-          <Link
+          <BackLink
             href="/"
             className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-surface/60 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-surface/70"
           >
             <ChevronLeft aria-hidden="true" size={18} />
             {t("Home")}
-          </Link>
+          </BackLink>
           <button
             type="button"
             onClick={onMenu}

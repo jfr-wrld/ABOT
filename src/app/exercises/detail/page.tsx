@@ -3,6 +3,7 @@
 import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { BackLink } from "@/components/navigation/BackLink";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CalendarClock, ChevronLeft, Dumbbell, Play, Plus, Repeat, Trophy, TrendingDown, TrendingUp, Pencil, Trash2 } from "lucide-react";
 import { motion, useReducedMotionConfig } from "framer-motion";
@@ -295,13 +296,13 @@ function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.React
       <div className="force-dark relative">
         <PhotoLoop exercise={exercise} className="aspect-[4/3] max-h-[52vh] w-full" />
       <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-6 pt-3">
-        <Link
+        <BackLink
           href="/exercises"
           className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-black/50 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-black/70"
         >
           <ChevronLeft aria-hidden="true" size={18} />
           {t("Exercises")}
-        </Link>
+        </BackLink>
         {actions}
         </div>
       </div>
