@@ -109,8 +109,11 @@ async function main() {
   screenshot("intro");
   check("intro fits the screen without scrolling", await fits());
 
-  // 2. Permissions step: reached from the intro, fits the screen.
+  // 2. Permissions step: the intro no longer leads to it (features ask when first used, and the
+  // full list follows the first workout), so it is opened directly. It must fit the screen.
   await page.getByRole("button", { name: "Skip intro" }).click();
+  await page.getByRole("button", { name: "Start an empty workout" }).waitFor({ timeout: 15000 });
+  await page.evaluate(() => window.location.assign("/permissions/?next=%2F"));
   await page.getByRole("heading", { name: "Allow access" }).waitFor({ timeout: 15000 });
   screenshot("permissions");
   check("permissions step fits the screen without scrolling", await fits());

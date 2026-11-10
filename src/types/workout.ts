@@ -137,6 +137,8 @@ export interface SessionExercise {
   variation?: string;
   /** Bodyweight exercises: the weight column is assistance (a band or machine), stored negative. */
   assisted?: boolean;
+  /** The routine's rep range for this exercise ([8, 12]), shown under its name while logging. */
+  repRange?: [number, number];
 }
 
 export type SessionStatus = "active" | "completed" | "discarded";
@@ -165,6 +167,8 @@ export interface RoutineSet {
   type: SetType;
   targetWeightKg: number | null;
   targetReps: number | null;
+  /** Top of a rep range ("8-12"): targetReps is the bottom. Absent for a single number. */
+  targetRepsMax?: number | null;
 }
 
 export interface RoutineExercise {

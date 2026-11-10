@@ -17,6 +17,7 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { NumberField } from "@/components/ui/NumberField";
+import { RepRangeField } from "@/components/ui/RepRangeField";
 import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { SetTypeChip, setTypeA11yName } from "@/components/workout/SetTypeChip";
 import { SetTypeMenu } from "@/components/workout/SetTypeMenu";
@@ -279,12 +280,12 @@ function Editor() {
                           max={2000}
                         />
                       )}
-                      <NumberField
-                        aria-label={t("{name} target reps", { name })}
-                        placeholder="0"
-                        value={s.targetReps}
-                        onCommit={(v) => patchSet(ex.id, s.id, { targetReps: v === null ? null : Math.round(v) })}
-                        max={999}
+                      <RepRangeField
+                        aria-label={t("{name} target reps, a number or a range like 8-12", { name })}
+                        placeholder="8-12"
+                        min={s.targetReps}
+                        max={s.targetRepsMax}
+                        onCommit={(v) => patchSet(ex.id, s.id, { targetReps: v.min, targetRepsMax: v.max })}
                       />
                     </li>
                   );
@@ -299,7 +300,11 @@ function Editor() {
                       ...x,
                       sets: [
                         ...x.sets,
-                        newRoutineSet({ targetWeightKg: last?.targetWeightKg ?? null, targetReps: last?.targetReps ?? null }),
+                        newRoutineSet({
+                          targetWeightKg: last?.targetWeightKg ?? null,
+                          targetReps: last?.targetReps ?? null,
+                          ...(last?.targetRepsMax ? { targetRepsMax: last.targetRepsMax } : {}),
+                        }),
                       ],
                     };
                   })

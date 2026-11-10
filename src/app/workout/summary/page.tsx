@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotionConfig } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Pencil, Sparkles, Timer, Trophy } from "lucide-react";
-import { RenameWorkoutSheet, SaveAsRoutineButton } from "@/components/workout/SessionActions";
+import { RenameWorkoutSheet, SaveAsRoutineButton, UpdateRoutineCard } from "@/components/workout/SessionActions";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -222,6 +222,10 @@ function Summary() {
         <Rise order={12}>
           <WorkoutPhotos state={photos} sessionName={session.name} />
         </Rise>
+      </div>
+
+      <div className="px-4 pt-3">
+        <UpdateRoutineCard session={session} />
       </div>
 
       {/* Room for the action bar, so the last block scrolls clear of it. */}

@@ -38,8 +38,9 @@ export function routineSummary(r: Routine, byId: Record<string, Exercise>): Rout
     sec += e.sets.length * (45 + e.restSeconds) + 60;
     for (const m of byId[e.exerciseId]?.primaryMuscles ?? []) perMuscle.set(m, (perMuscle.get(m) ?? 0) + n);
     const reps = working.map((s) => s.targetReps).filter((x): x is number => x !== null && x > 0);
+    const tops = working.map((s) => s.targetRepsMax).filter((x): x is number => x != null && x > 0);
     const lo = Math.min(...reps);
-    const hi = Math.max(...reps);
+    const hi = Math.max(...reps, ...tops);
     return { exerciseId: e.exerciseId, sets: n, reps: reps.length === 0 ? null : lo === hi ? String(lo) : `${lo}-${hi}`, superset: Boolean(e.supersetId) };
   });
   return {

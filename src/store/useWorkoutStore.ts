@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type {
+  RoutineExercise,
   Routine,
   SessionExercise,
   SetType,
@@ -82,6 +83,8 @@ interface WorkoutState {
   addSet: (sessionExerciseId: string) => void;
   removeSet: (sessionExerciseId: string, setId: string) => void;
   updateSet: (sessionExerciseId: string, setId: string, patch: Partial<WorkoutSet>) => void;
+  /** Puts warm-up sets (lightest first) ahead of the exercise's sets. */
+  addWarmups: (sessionExerciseId: string, sets: { weightKg: number; reps: number }[]) => void;
   setSetType: (sessionExerciseId: string, setId: string, type: SetType) => void;
   /** Marks complete and starts the rest timer; or un-completes and clears the timer for that set. */
   completeSet: (sessionExerciseId: string, setId: string, completed: boolean) => void;
@@ -101,6 +104,12 @@ interface WorkoutState {
   renameSession: (id: string, name: string) => void;
   /** Changes the gym of a finished workout; undefined clears it. */
   setSessionLocation: (id: string, locationId: string | undefined) => void;
+}
+
+/** The first rep range planned for a routine exercise, to show while logging it. */
+function repRangeOf(re: RoutineExercise): { repRange?: [number, number] } {
+  const s = re.sets.find((x) => x.targetReps != null && x.targetRepsMax != null && x.targetRepsMax > x.targetReps);
+  return s ? { repRange: [s.targetReps!, s.targetRepsMax!] } : {};
 }
 
 export function newSet(partial: Partial<WorkoutSet> = {}): WorkoutSet {
@@ -164,6 +173,7 @@ export const useWorkoutStore = create<WorkoutState>()(
               notes: re.notes,
               ...(re.supersetId ? { supersetId: re.supersetId } : {}),
               ...(re.variation ? { variation: re.variation } : {}),
+              ...repRangeOf(re),
               sets: re.sets.map((rs) =>
                 newSet({ type: rs.type, weightKg: rs.targetWeightKg, reps: rs.targetReps }),
               ),
@@ -318,6 +328,16 @@ export const useWorkoutStore = create<WorkoutState>()(
         set((s) =>
           patchActive(s, (a) =>
             patchExercise(a, id, (ex) => ({ ...ex, sets: ex.sets.filter((st) => st.id !== setId) })),
+          ),
+        ),
+
+      addWarmups: (id, warmups) =>
+        set((s) =>
+          patchActive(s, (a) =>
+            patchExercise(a, id, (ex) => ({
+              ...ex,
+              sets: [...warmups.map((w) => newSet({ type: "warmup", weightKg: w.weightKg, reps: w.reps })), ...ex.sets],
+            })),
           ),
         ),
 

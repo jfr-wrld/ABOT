@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { isNativeApp } from "@/lib/native/files";
 import { onLiveAction, setupNativeNotifications } from "@/lib/native/notify";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
@@ -32,6 +32,16 @@ const exerciseIndex = () => {
 
 export function NativeShell() {
   const router = useRouter();
+  const trained = useWorkoutStore((s) => s.sessions.some((x) => x.status === "completed"));
+  const pathname = usePathname();
+
+  // The full permissions list waits until the first workout is done, and shows once, on Home:
+  // before that, each feature asks for what it needs when it is first used.
+  useEffect(() => {
+    if (!isNativeApp() || !trained || !hasSeenOnboarding() || pathname !== "/") return;
+    const to = withPermissionsStep("/");
+    if (to.startsWith("/permissions")) router.push(to);
+  }, [trained, pathname, router]);
 
   useEffect(() => {
     if (!isNativeApp()) return;
@@ -77,12 +87,7 @@ export function NativeShell() {
     void onLiveAction((id) => (id === "open" ? router.push("/workout") : applyCapsuleAction(id, useWorkoutStore.getState(), exerciseIndex().byId)))
       .then(keep)
       .catch(() => {});
-    // Installs from before the permissions step see it once, on top of where they are.
-    const here = window.location.pathname;
-    if (hasSeenOnboarding() && !/^\/(onboarding|permissions|login)/.test(here)) {
-      const to = withPermissionsStep(here + window.location.search);
-      if (to.startsWith("/permissions")) router.push(to);
-    }
+
     // Back in the app: notification access may have changed in Android settings.
     void import("@capacitor/app").then(async ({ App }) => {
       const h = await App.addListener("resume", () => void syncPermission());

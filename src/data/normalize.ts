@@ -116,7 +116,14 @@ function normalizeSessionExercise(raw: unknown): SessionExercise | null {
     supersetId: str(raw.supersetId),
     variation: str(raw.variation),
     assisted: raw.assisted === true ? true : undefined,
+    repRange: repRange(raw.repRange),
   };
+}
+
+function repRange(raw: unknown): [number, number] | undefined {
+  if (!Array.isArray(raw) || raw.length !== 2) return undefined;
+  const [lo, hi] = raw.map(Number);
+  return Number.isInteger(lo) && Number.isInteger(hi) && lo! > 0 && hi! > lo! && hi! <= 999 ? [lo!, hi!] : undefined;
 }
 
 export function normalizeSession(raw: unknown): WorkoutSession | null {
@@ -149,6 +156,7 @@ function normalizeRoutineSet(raw: unknown): RoutineSet | null {
     type: SET_TYPES.includes(raw.type as SetType) ? (raw.type as SetType) : "normal",
     targetWeightKg: numOrNull(raw.targetWeightKg) ?? null,
     targetReps: numOrNull(raw.targetReps) ?? null,
+    ...(numOrNull(raw.targetRepsMax) != null ? { targetRepsMax: numOrNull(raw.targetRepsMax) } : {}),
   };
 }
 

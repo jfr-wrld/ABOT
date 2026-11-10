@@ -6,14 +6,15 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { LIVE_TAG, liveContent } from "./live-workout";
 import { capsuleContent, capsulePhoto, useCapsulePrefs } from "@/lib/live-capsule";
 import { exercisePhoto } from "@/components/exercise/ExerciseThumb";
-import { notificationPermission, registerReminderWorker } from "./reminder-service";
-import { useReminderStore } from "@/store/useReminderStore";
+import { askPermission, notificationPermission, registerReminderWorker } from "./reminder-service";
+import { syncPermission, useReminderStore } from "@/store/useReminderStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { isNativeApp } from "@/lib/native/files";
 import { clearNativeLive, showNativeLive } from "@/lib/native/notify";
 
 /** Per-device choice, like the intro flag: a convenience, not training data. */
 const PREF = "abot.liveStatus";
+const ASKED = "abot.liveStatusAsked";
 
 export function liveStatusEnabled(): boolean {
   try {
@@ -58,6 +59,20 @@ export function useLiveWorkoutNotification(): void {
   const { mode, detail } = useCapsulePrefs();
   const handoff = useWorkoutStore((s) => s.handoff);
   const latest = useRef({ active, timer, byId });
+
+  // Android: the first workout is when the status notification first has a use, so that is when
+  // ABOT asks for notifications (once; the answer is Android's to keep).
+  const activeId = active?.id;
+  useEffect(() => {
+    if (!isNativeApp() || !activeId || permission !== "default" || !liveStatusEnabled()) return;
+    try {
+      if (localStorage.getItem(ASKED) === "1") return;
+      localStorage.setItem(ASKED, "1");
+    } catch {
+      return;
+    }
+    void askPermission().then(() => syncPermission());
+  }, [activeId, permission]);
   useEffect(() => {
     latest.current = { active, timer, byId };
   });

@@ -5,7 +5,10 @@ import { Select } from "@/components/ui/Select";
 import { memo, useEffect, useRef, useState, type ComponentProps } from "react";
 import { setGridColumns } from "./setGrid";
 import { distanceUnit } from "@/lib/set-metrics";
-import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Flame, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
+import { useLocationStore } from "@/store/useLocationStore";
+import { warmupSets } from "@/lib/warmup";
+import { formatWeight } from "@/lib/units";
 import type {
   Exercise,
   PRKind,
@@ -99,6 +102,16 @@ function ExerciseCardView({
   const locationId = useWorkoutStore((s) => s.active?.locationId);
 
   const numbers = setNumbers(item.sets);
+  // Warm-up sets toward the first working weight (or last time's), once per exercise.
+  const gym = useLocationStore((s) => s.locations.find((l) => l.id === locationId));
+  const workKg =
+    item.sets.find((x) => x.type !== "warmup" && (x.weightKg ?? 0) > 0)?.weightKg ??
+    previous?.find((x) => x.type !== "warmup" && (x.weightKg ?? 0) > 0)?.weightKg ??
+    0;
+  const warmups =
+    exercise && !item.sets.some((x) => x.type === "warmup")
+      ? warmupSets(workKg, exercise, { unit, barKg: gym?.barWeightKg, platesKg: gym?.plateInventoryKg })
+      : [];
   const logType = exercise?.logType ?? "weight_reps";
   // Plate calculator: barbells only, starting from the next set waiting to be done.
   const loadsPlates = exercise?.equipment === "barbell" || exercise?.equipment === "smith_machine";
@@ -114,6 +127,8 @@ function ExerciseCardView({
   const subtitle = exercise
     ? `${exercise.primaryMuscles.map((m) => muscleText(MUSCLE_GROUP_LABELS[m], t)).join(" / ")} · ${t(EQUIPMENT_LABELS[exercise.equipment])}`
     : t("This exercise was removed from the library");
+  // The routine's range: reach its top on every set and the Coach adds weight next time.
+  const range = item.repRange ? t("{lo}-{hi} reps", { lo: item.repRange[0], hi: item.repRange[1] }) : null;
 
   return (
     <section
@@ -154,6 +169,7 @@ function ExerciseCardView({
             {exercise && <EquipmentIcon equipment={exercise.equipment} size={14} />}
             <span className="truncate">{subtitle}</span>
           </p>
+          {range && <p className="num text-xs font-semibold text-accent">{range}</p>}
         </div>
         {exercise && (
           <button
@@ -269,14 +285,30 @@ function ExerciseCardView({
         ))}
       </ol>
 
-      <button
-        type="button"
-        onClick={() => store.addSet(item.id)}
-        className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-ink/[0.14] text-sm font-semibold text-text-muted transition-colors duration-200 hover:border-ink/30 hover:bg-ink/[0.03] hover:text-text active:bg-ink/[0.06]"
-      >
-        <Plus aria-hidden="true" size={16} />
-        {t("Add set")}
-      </button>
+      <div className={`mt-2 grid gap-2 ${warmups.length ? "grid-cols-[minmax(0,1fr)_auto]" : ""}`}>
+        <button
+          type="button"
+          onClick={() => store.addSet(item.id)}
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-ink/[0.14] text-sm font-semibold text-text-muted transition-colors duration-200 hover:border-ink/30 hover:bg-ink/[0.03] hover:text-text active:bg-ink/[0.06]"
+        >
+          <Plus aria-hidden="true" size={16} />
+          {t("Add set")}
+        </button>
+        {warmups.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              feedback.tick();
+              store.addWarmups(item.id, warmups);
+            }}
+            aria-label={t("Add {n} warm-up sets up to {weight}", { n: warmups.length, weight: formatWeight(warmups.at(-1)?.weightKg ?? 0, unit) })}
+            className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-dashed border-ink/[0.14] px-3 text-sm font-semibold text-text-muted transition-colors duration-200 hover:border-ink/30 hover:bg-ink/[0.03] hover:text-text active:bg-ink/[0.06]"
+          >
+            <Flame aria-hidden="true" size={16} />
+            {t("Warm-up")}
+          </button>
+        )}
+      </div>
 
       {exercise && (
         <ExerciseHowToSheet exercise={exercise} locationId={locationId} open={howToOpen} onClose={() => setHowToOpen(false)} />

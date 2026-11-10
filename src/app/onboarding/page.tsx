@@ -8,7 +8,9 @@ import { AbotMark } from "@/components/brand/AbotMark";
 import { Button } from "@/components/ui/Button";
 import { markOnboardingSeen } from "@/lib/onboarding";
 import { DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
-import { withPermissionsStep } from "@/lib/native/permissions-step";
+import { FirstPlan } from "@/components/onboarding/FirstPlan";
+import { templateToRoutine, type RoutineTemplate } from "@/lib/seed-routines";
+import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useT, type T } from "@/i18n";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
@@ -58,6 +60,8 @@ export default function OnboardingPage() {
   const t = useT();
   const slides = SLIDES(t);
   const [[index, dir], setPage] = useState<[number, number]>([0, 1]);
+  // After the slides: pick and start a first workout.
+  const [planning, setPlanning] = useState(false);
   const last = index === slides.length - 1;
   const slide = slides[index]!;
 
@@ -65,9 +69,17 @@ export default function OnboardingPage() {
     if (next < 0 || next >= slides.length) return;
     setPage([next, next > index ? 1 : -1]);
   }
+  // Android's permissions are asked when a feature first needs them (notifications when a
+  // workout starts, location when a gym is pinned), and the full list after the first workout:
+  // nothing stands between a new lifter and their first set.
   function finish(to: string) {
     markOnboardingSeen();
-    router.replace(withPermissionsStep(to));
+    router.replace(to);
+  }
+  function startFirst(tpl: RoutineTemplate) {
+    markOnboardingSeen();
+    useWorkoutStore.getState().startFromRoutine(templateToRoutine(tpl));
+    router.replace("/workout");
   }
   function onDragEnd(_: unknown, info: PanInfo) {
     if (info.offset.x < -SWIPE_PX || info.velocity.x < -SWIPE_VELOCITY) go(index + 1);
@@ -80,7 +92,7 @@ export default function OnboardingPage() {
         <span className="text-accent">
           <AbotMark size={28} title="ABOT" />
         </span>
-        {!last && (
+        {!last && !planning && (
           <button
             type="button"
             onClick={() => finish("/")}
@@ -104,6 +116,10 @@ export default function OnboardingPage() {
         <circle cx="50" cy="50" r="22" fill="none" stroke="currentColor" strokeWidth={0.6} />
       </motion.svg>
 
+      {planning ? (
+        <FirstPlan onStart={startFirst} onSkip={() => finish("/")} />
+      ) : (
+        <>
       <section
         aria-roledescription="carousel"
         aria-label={t("Introduction")}
@@ -157,7 +173,7 @@ export default function OnboardingPage() {
       <div className="flex flex-col gap-2 pb-[calc(16px+env(safe-area-inset-bottom))]">
         {last ? (
           <>
-            <Button variant="primary" onClick={() => finish("/")} className="min-h-12 w-full text-base">
+            <Button variant="primary" onClick={() => setPlanning(true)} className="min-h-12 w-full text-base">
               {t("Start training")}
             </Button>
             <Link
@@ -174,6 +190,8 @@ export default function OnboardingPage() {
           </Button>
         )}
       </div>
+        </>
+      )}
     </main>
   );
 }

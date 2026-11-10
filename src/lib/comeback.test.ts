@@ -18,6 +18,8 @@ describe("coming back after a break", () => {
     expect(comeback([s("a", 3)], now)).toBeNull();
     expect(comeback([s("a", 30), s("b", 12)], now)).toMatchObject({ last: { id: "b" }, days: 11 });
     expect(comeback([], now)).toBeNull();
+    // Old history (often imported) is not a break to come back from.
+    expect(comeback([s("a", 400)], now)).toBeNull();
   });
 
   it("names the first workout after a gap", () => {

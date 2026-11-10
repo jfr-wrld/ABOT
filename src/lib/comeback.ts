@@ -2,6 +2,11 @@ import type { Routine, WorkoutSession } from "@/types/workout";
 
 /** Days without a workout after which Home welcomes the lifter back. */
 export const WELCOME_BACK_DAYS = 10;
+/**
+ * Past this, "repeat your last workout" no longer fits: the history is old (often imported from
+ * another app), and Home's usual start is the better offer.
+ */
+export const WELCOME_BACK_MAX_DAYS = 90;
 const DAY = 86_400_000;
 
 /** A finished workout as a routine, so "Repeat" starts the same lifts with the same numbers. */
@@ -33,12 +38,12 @@ export function comeback(sessions: WorkoutSession[], now = Date.now()): { last: 
   for (const s of sessions) if (s.status === "completed" && (!last || s.startedAt > last.startedAt)) last = s;
   if (!last) return null;
   const days = Math.floor((now - (last.finishedAt ?? last.startedAt)) / DAY);
-  return days >= WELCOME_BACK_DAYS ? { last, days } : null;
+  return days >= WELCOME_BACK_DAYS && days <= WELCOME_BACK_MAX_DAYS ? { last, days } : null;
 }
 
 /**
- * The first workout after a gap of WELCOME_BACK_DAYS or more, for the summary: how many days the
- * break lasted, or null.
+ * The first workout after a gap of WELCOME_BACK_DAYS to WELCOME_BACK_MAX_DAYS, for the summary:
+ * how many days the break lasted, or null.
  */
 export function returnAfter(sessions: WorkoutSession[], session: WorkoutSession): number | null {
   let before: WorkoutSession | null = null;
@@ -48,7 +53,7 @@ export function returnAfter(sessions: WorkoutSession[], session: WorkoutSession)
   }
   if (!before) return null;
   const days = Math.floor((session.startedAt - (before.finishedAt ?? before.startedAt)) / DAY);
-  return days >= WELCOME_BACK_DAYS ? days : null;
+  return days >= WELCOME_BACK_DAYS && days <= WELCOME_BACK_MAX_DAYS ? days : null;
 }
 
 const DISMISSED = "abot.welcome-back-dismissed";
