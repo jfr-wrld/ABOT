@@ -11,7 +11,7 @@ export const BEAT = 60 / BPM;
 
 /** Scene lengths in order; starts follow from them. */
 const LENGTHS = [
-  ["problem", 10],
+  ["problem", 13],
   ["hook", 4.5],
   ["log", 7],
   ["bar", 6.5],
@@ -43,21 +43,23 @@ const every = (scene, from, step, n) => Array.from({ length: n }, (_, i) => at(s
 
 /** The moments the picture is built around. */
 export const T = {
-  // The problem, meme style: a lifter who cannot remember last week.
+  // The problem, meme style: a lifter who cannot remember last week. Paced to the voice-over:
+  // the guesses answer the spoken question, the BOOM gets a beat of silence.
   scratch: at("problem", 0),
   caption: at("problem", 0.25),
-  guesses: every("problem", 2.0, 0.5, 3),
-  boom: at("problem", 4.0),
-  notes: at("problem", 5.5),
-  trombone: at("problem", 6.5),
-  better: at("problem", 8.5),
+  bubble: at("problem", 2.0),
+  guesses: every("problem", 4.6, 0.4, 3),
+  boom: at("problem", 6.0),
+  notes: at("problem", 7.2),
+  trombone: at("problem", 9.3),
+  better: at("problem", 11.4),
   spark: at("hook", 0),
   ignite: at("hook", 0.6),
   lock: at("hook", 1.3),
   sweep: at("hook", 1.5),
   letters: at("hook", 1.8),
-  tag1: at("hook", 2.5),
-  tag2: at("hook", 3.0),
+  tag1: at("hook", 2.3),
+  tag2: at("hook", 3.06),
   logIn: at("log", 0.1),
   ticks: every("log", 2.5, 0.5, 3),
   rest: every("bar", 1.5, 0.5, 3),
@@ -80,15 +82,48 @@ export const T = {
   layouts: every("story", 1.0, 0.5, 11),
   cards: every("share", 0.5, 0.25, 12),
   gather: at("share", 4.0),
-  phaseWords: every("phase", 0.5, 0.5, 4),
-  phaseIn: at("phase", 2.5),
+  // On the spoken words: Cut, Bulk, Recomp, Peak.
+  phaseWords: [0.5, 0.93, 1.63, 2.28].map((x) => at("phase", x)),
+  phaseIn: at("phase", 2.6),
   settingsIn: at("settings", 0.3),
-  settingsLines: every("settings", 1.5, 0.5, 3),
-  trustLines: every("trust", 0.5, 1, 4),
+  // On "English", "Dark", "Kilos".
+  settingsLines: [0.3, 2.3, 3.29].map((x) => at("settings", x)),
+  // On "Works", "No ads", "Your data"; the last line has no voice.
+  trustLines: [0.4, 1.58, 3.25, 4.4].map((x) => at("trust", x)),
   outroHit: at("outro", 0.5),
-  outroUrl: at("outro", 2),
+  outroUrl: at("outro", 3.6),
   end: DURATION,
 };
+
+/**
+ * The voice-over: one take (video-out/vo.mp3, from ElevenLabs), cut into lines. `src` is where the
+ * line sits in the take, found by aligning it to the script; `at` is where its first word lands.
+ * render.mjs places each line and ducks the soundtrack under it.
+ */
+export const VO = [
+  { src: [0.09, 1.75], at: at("problem", 0.3) },
+  { src: [2.71, 5.15], at: at("problem", 2.1) },
+  { src: [6.46, 8.37], at: at("problem", 7.3) },
+  { src: [8.87, 10.69], at: at("problem", 9.4) },
+  { src: [11.29, 12.16], at: at("problem", 11.6) },
+  { src: [13.02, 15.71], at: at("hook", 1.75) },
+  { src: [16.04, 19.13], at: at("log", 0.5) },
+  { src: [19.47, 20.54], at: at("bar", 0.3) },
+  { src: [20.87, 23.92], at: at("bar", 3.4) },
+  { src: [24.17, 27.85], at: at("routines", 0.4) },
+  { src: [28.07, 32.3], at: at("exercises", 0.3) },
+  { src: [32.57, 35.47], at: at("progress", 0.4) },
+  { src: [35.7, 38.85], at: at("history", 0.3) },
+  { src: [39.08, 41.95], at: at("streak", 2.0) },
+  { src: [42.15, 43.51], at: at("streak", 6.5) },
+  { src: [43.72, 46.81], at: at("story", 0.4) },
+  { src: [47.0, 50.8], at: at("share", 0.3) },
+  { src: [51.0, 53.4], at: at("phase", 0.5) },
+  { src: [53.56, 55.7], at: at("phase", 3.0) },
+  { src: [55.93, 60.4], at: at("settings", 0.3) },
+  { src: [60.54, 65.15], at: at("trust", 0.4) },
+  { src: [65.39, 69.4], at: at("outro", 0.75) },
+];
 
 /** Sound cues: { t, kind, ...params }. audio.mjs knows each kind. */
 export function cues() {

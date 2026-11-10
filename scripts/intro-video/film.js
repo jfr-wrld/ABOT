@@ -117,29 +117,16 @@ function rrect(x, y, w, h, r) {
 }
 
 /** Obsidian with a slow Volt glow and a faint grid that drifts, behind every scene. */
-function background(t, glowY = 760, glow = 0.18) {
+function background(t, glowY = 760, glow = 0) {
   ctx.fillStyle = OBS;
   ctx.fillRect(0, 0, W, H);
+  // A Volt glow only where light is the point: the logo igniting, the streak flame, the outro.
+  if (glow <= 0) return;
   const g = ctx.createRadialGradient(W / 2, glowY, 0, W / 2, glowY, 900);
   g.addColorStop(0, `rgba(204,255,0,${glow})`);
   g.addColorStop(1, "rgba(204,255,0,0)");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = "rgba(255,255,255,0.035)";
-  ctx.lineWidth = 2;
-  const off = (t * 24) % 120;
-  for (let y = -120 + off; y < H; y += 120) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(W, y);
-    ctx.stroke();
-  }
-  for (let x = 0; x <= W; x += 120) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, H);
-    ctx.stroke();
-  }
 }
 
 /**
@@ -214,8 +201,8 @@ function liftCard(screen, box, geo, k, to, o = {}) {
   ctx.clip();
   ctx.drawImage(im, bx, by, bw, bh, x - w / 2, y - h / 2, w, h);
   ctx.restore();
-  ctx.strokeStyle = `rgba(204,255,0,${0.9 * k})`;
-  ctx.lineWidth = 5;
+  ctx.strokeStyle = `rgba(255,255,255,${0.16 * k})`;
+  ctx.lineWidth = 3;
   rrect(x - w / 2, y - h / 2, w, h, r);
   ctx.stroke();
   ctx.restore();
@@ -348,7 +335,7 @@ function flash(t, at, alpha = 0.6, len = 0.35) {
 }
 
 function label(s, y, alpha = 1, color = VOLT) {
-  text(s, W / 2, y, { size: 30, weight: 700, family: MONO, tracking: 8, color, alpha });
+  text(s, W / 2, y, { size: 30, weight: 700, family: MONO, tracking: 3, color, alpha });
 }
 
 /* ------------------------------------------------------------------ */
@@ -628,7 +615,7 @@ function glitch(t, at0, len = 0.3) {
 function problem(t) {
   const [a] = SCENES.problem;
   const boomOn = t >= T.boom && t < T.notes;
-  const mood = t >= T.trombone ? "sad" : boomOn ? "shock" : t >= at("problem", 1.0) ? "think" : "calm";
+  const mood = t >= T.trombone ? "sad" : boomOn ? "shock" : t >= T.bubble ? "think" : "calm";
   const tilts = [-0.14, 0.14, -0.1];
   const g = T.guesses.filter((x) => t >= x).length;
   const tilt = g && t < T.boom ? tilts[g - 1] * outBack(prog(t, T.guesses[g - 1], T.guesses[g - 1] + 0.25), 3) : 0;
@@ -668,7 +655,7 @@ function problem(t) {
     }
     // The thought bubble and the guesses.
     if (t < T.boom) {
-      const kb = outBack(prog(t, at("problem", 1.0), at("problem", 1.3)), 1.8);
+      const kb = outBack(prog(t, T.bubble, T.bubble + 0.3), 1.8);
       if (kb > 0) {
         ctx.save();
         ctx.translate(W / 2, 540);
@@ -779,7 +766,7 @@ function hook(t) {
 
 function logging(t) {
   const [a] = SCENES.log;
-  background(t, 1100, 0.12);
+  background(t, 1100);
   const p = presence(t, "log");
   const m = A.meta.boxes;
   const n = T.ticks.filter((x) => t >= x).length;
@@ -834,7 +821,7 @@ function barWave(t, x, y, w, h) {
 
 function workoutBar(t) {
   const [a] = SCENES.bar;
-  background(t, 1500, 0.14);
+  background(t, 1500);
   const p = presence(t, "bar");
   ctx.globalAlpha = p;
   riseLine(t, a + 0.2, "Your workout, live.", W / 2, 230, { size: 84 });
@@ -881,11 +868,10 @@ function workoutBar(t) {
     ctx.restore();
   });
   ctx.globalAlpha = 1;
-  flash(t, T.go, 0.25, 0.3);
 }
 function progress(t) {
   const [a] = SCENES.progress;
-  background(t, 900, 0.12);
+  background(t, 900);
   const p = presence(t, "progress");
   ctx.globalAlpha = p;
   riseLine(t, a + 0.2, "Every kilo adds up.", W / 2, 230, { size: 84 });
@@ -979,11 +965,11 @@ function streak(t) {
 
 function share(t) {
   const [a] = SCENES.share;
-  background(t, 960, 0.1);
+  background(t, 960);
   const p = presence(t, "share");
   ctx.globalAlpha = p;
   riseLine(t, a + 0.2, "Share it.", W / 2, 210, { size: 96 });
-  riseLine(t, a + 0.55, "12 themes, all free.", W / 2, 300, { size: 56, weight: 700, color: VOLT });
+  riseLine(t, a + 2.3, "12 themes, all free.", W / 2, 300, { size: 56, weight: 700, color: VOLT });
   const cw = 230;
   const ch = (cw * 1920) / 1080;
   const g = inOutCubic(prog(t, T.gather, T.gather + 0.8));
@@ -1028,11 +1014,10 @@ function share(t) {
   });
   text("Instagram Stories in one tap", W / 2, 1870, { size: 38, weight: 600, color: MUTED, alpha: clamp(prog(t, T.gather + 0.5, T.gather + 0.9)) });
   ctx.globalAlpha = 1;
-  flash(t, T.gather, 0.18, 0.3);
 }
 
 function bodyPhase(t) {
-  background(t, 1200, 0.12);
+  background(t, 1200);
   const p = presence(t, "phase");
   ctx.globalAlpha = p;
   ["Cut.", "Bulk.", "Recomp.", "Peak."].forEach((w, i) => {
@@ -1053,7 +1038,7 @@ function bodyPhase(t) {
   ctx.globalAlpha = 1;
 }
 function trust(t) {
-  background(t, 1000, 0.08);
+  background(t, 1000);
   const p = presence(t, "trust");
   ctx.globalAlpha = p;
   // Dark and light Home, split by a wipe that slides across.
@@ -1089,8 +1074,8 @@ function outro(t) {
   mark(t, W / 2, 740, 360, T.outroHit - 0.35, T.outroHit, { glow: true, sweepAt: T.outroHit + 0.4 });
   const kw = outExpo(prog(t, T.outroHit + 0.2, T.outroHit + 0.8));
   text("ABOT", W / 2, 1100 + (1 - kw) * 60, { size: 170, weight: 800, tracking: -4, alpha: kw * p });
-  riseLine(t, T.outroHit + 0.6, "Gym Progress Tracker", W / 2, 1200, { size: 56, weight: 700, color: MUTED });
-  riseLine(t, T.outroHit + 1.0, "Free on Android and the web", W / 2, 1290, { size: 48, weight: 600, color: INK });
+  riseLine(t, T.outroHit + 0.7, "Gym Progress Tracker", W / 2, 1200, { size: 56, weight: 700, color: MUTED });
+  riseLine(t, T.outroHit + 2.6, "Free on Android and the web", W / 2, 1290, { size: 48, weight: 600, color: INK });
   // The Download pill, pulsing on the beat.
   const kb = outBack(prog(t, T.outroUrl - 0.3, T.outroUrl + 0.2), 2);
   if (kb > 0) {
@@ -1117,7 +1102,7 @@ const slideUp = (t, from, len = 0.7) => outCubic(prog(t, from, from + len));
 
 function routines(t) {
   const [a] = SCENES.routines;
-  background(t, 1100, 0.12);
+  background(t, 1100);
   const p = presence(t, "routines");
   ctx.globalAlpha = p;
   riseLine(t, a + 0.2, "Routines, ready to go.", W / 2, 230, { size: 80 });
@@ -1150,7 +1135,7 @@ function routines(t) {
 }
 function exercises(t) {
   const [a] = SCENES.exercises;
-  background(t, 1100, 0.12);
+  background(t, 1100);
   const p = presence(t, "exercises");
   ctx.globalAlpha = p;
   riseLine(t, a + 0.2, "88 exercises, shown.", W / 2, 230, { size: 84 });
@@ -1167,11 +1152,10 @@ function exercises(t) {
     alpha: detail ? clamp(prog(t, T.exerciseDetail + 0.4, T.exerciseDetail + 0.8)) : clamp(prog(t, a + 1.2, a + 1.6)) * (1 - prog(t, T.exerciseDetail - 0.3, T.exerciseDetail)),
   });
   ctx.globalAlpha = 1;
-  flash(t, T.exerciseDetail, 0.15, 0.3);
 }
 function history(t) {
   const [a] = SCENES.history;
-  background(t, 900, 0.12);
+  background(t, 900);
   const p = presence(t, "history");
   ctx.globalAlpha = p;
   riseLine(t, a + 0.2, "Every record, counted.", W / 2, 230, { size: 80 });
@@ -1197,7 +1181,7 @@ function history(t) {
 }
 function storyLayouts(t) {
   const [a] = SCENES.story;
-  background(t, 1000, 0.1);
+  background(t, 1000);
   const p = presence(t, "story");
   ctx.globalAlpha = p;
   riseLine(t, a + 0.2, "Your workout as a story.", W / 2, 210, { size: 78 });
@@ -1249,7 +1233,7 @@ function storyLayouts(t) {
 
 function settings(t) {
   const [a] = SCENES.settings;
-  background(t, 1100, 0.1);
+  background(t, 1100);
   const p = presence(t, "settings");
   ctx.globalAlpha = p;
   riseLine(t, a + 0.2, "Make it yours.", W / 2, 230, { size: 88 });

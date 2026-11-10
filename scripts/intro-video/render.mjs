@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Renders the ABOT intro video: 1080 x 1920, 30 fps, about 100 s, with its synthesised soundtrack.
+ * Renders the ABOT intro video: 1080 x 1920, 30 fps, about 104 s, with its synthesised soundtrack.
  *
  *   npm run dev                                   (in another terminal)
  *   node scripts/intro-video/render.mjs [http://localhost:3000] [--skip-capture] [--preview]
@@ -9,6 +9,8 @@
  * 2. audio.mjs: the soundtrack from timeline.mjs's cues.
  * 3. film.js: every frame drawn by renderAt(t) in Playwright, piped to ffmpeg with the audio.
  * --preview renders only a contact sheet of key moments (video-out/abot-intro-preview.png).
+ * Voice-over: put the take at video-out/vo.mp3; timeline.mjs's VO table places its lines and the
+ * soundtrack ducks under them. Without the file the video renders with music and effects only.
  * Output: video-out/abot-intro.mp4 (git-ignored). Needs ffmpeg (libx264, aac) and curl.
  */
 import { execFileSync, spawn } from "node:child_process";
@@ -18,7 +20,7 @@ import { createRequire } from "node:module";
 import { extname, join, normalize } from "node:path";
 import { capture } from "./capture.mjs";
 import { renderAudio } from "./audio.mjs";
-import { DURATION, FPS, SCENES } from "./timeline.mjs";
+import { DURATION, FPS, SCENES, VO } from "./timeline.mjs";
 
 const args = process.argv.slice(2);
 const BASE = args.find((a) => a.startsWith("http")) || process.env.ABOT_URL || "http://localhost:3000";
@@ -135,6 +137,39 @@ console.log("soundtrack…");
 const wav = join(OUT, "abot-intro.wav");
 renderAudio(wav);
 
+/**
+ * The audio filter. Each voice line is cut from the take with a little air either side, faded at
+ * the cuts so they do not click, and delayed to its place. The soundtrack ducks about 6 dB while
+ * the voice speaks (sidechain), then the whole mix is mastered.
+ */
+const VO_FILE = join(OUT, "vo.mp3");
+const hasVo = existsSync(VO_FILE);
+// Social apps play at about -14 LUFS. The 15 kHz low-pass comes first: AAC cuts there anyway, and
+// cutting the synth's bright clicks inside the encoder made them ring about 3 dB over the limiter.
+const master = "lowpass=f=15000,loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.8:level=false";
+let audioArgs;
+if (hasVo) {
+  const pre = 0.08;
+  const post = 0.15;
+  const lines = VO.map(({ src: [a, b], at }, i) => {
+    const len = b - a + pre + post;
+    const delay = Math.round(Math.max(0, at - pre) * 1000);
+    return `[v${i}]atrim=start=${Math.max(0, a - pre)}:end=${b + post},asetpts=PTS-STARTPTS,afade=t=in:d=0.02,afade=t=out:st=${(len - 0.06).toFixed(3)}:d=0.06,adelay=${delay}|${delay}[l${i}]`;
+  });
+  const filter = [
+    `[2:a]aformat=sample_rates=48000:channel_layouts=stereo,asplit=${VO.length}${VO.map((_, i) => `[v${i}]`).join("")}`,
+    ...lines,
+    `${VO.map((_, i) => `[l${i}]`).join("")}amix=inputs=${VO.length}:normalize=0,volume=1.6[vo]`,
+    "[vo]asplit[vomix][vokey]",
+    "[1:a][vokey]sidechaincompress=threshold=0.02:ratio=4:attack=15:release=350:makeup=1[bed]",
+    `[bed][vomix]amix=inputs=2:normalize=0,${master}[mix]`,
+  ].join(";");
+  audioArgs = ["-i", VO_FILE, "-filter_complex", filter, "-map", "0:v", "-map", "[mix]"];
+} else {
+  audioArgs = ["-af", master];
+}
+console.log(hasVo ? "voice-over: video-out/vo.mp3" : "no voice-over (video-out/vo.mp3 missing)");
+
 console.log("frames…");
 const mp4 = join(OUT, "abot-intro.mp4");
 const ff = spawn(
@@ -143,11 +178,8 @@ const ff = spawn(
     "-loglevel", "error", "-y",
     "-f", "image2pipe", "-framerate", String(FPS), "-c:v", "mjpeg", "-i", "-",
     "-i", wav,
+    ...audioArgs,
     "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
-    // Social apps play at about -14 LUFS. The 15 kHz low-pass comes first: AAC cuts there anyway,
-    // and cutting the synth's bright clicks inside the encoder made them ring about 3 dB over
-    // the limiter. Then loudness, then a limiter at about -2 dB.
-    "-af", "lowpass=f=15000,loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.8:level=false",
     "-c:a", "aac", "-b:a", "192k",
     "-shortest", "-movflags", "+faststart",
     mp4,
