@@ -47,3 +47,20 @@ describe("plans", () => {
     expect(planPrice(life, false).was).toBeNull();
   });
 });
+
+describe("release builds trust only the account's licence", () => {
+  const base = { ...DEFAULT_ENTITLEMENT };
+  it("ignores the simulator", () => {
+    expect(resolveEntitlement({ ...base, devOverrideMode: "FORCE_PRO" }, "COMMERCIAL_LIVE", Date.now(), false).proActive).toBe(false);
+    expect(resolveEntitlement({ ...base, devOverrideMode: "FORCE_BETA" }, "COMMERCIAL_LIVE", Date.now(), false).proActive).toBe(false);
+  });
+  it("ignores a tier held on the device alone, from a code, a simulator or a backup", () => {
+    for (const licenseSource of ["device", null] as const) {
+      expect(resolveEntitlement({ ...base, tier: "lifetime", licenseSource }, "COMMERCIAL_LIVE", Date.now(), false).proActive).toBe(false);
+    }
+  });
+  it("counts the account's licence, and still opens everything during the beta", () => {
+    expect(resolveEntitlement({ ...base, tier: "lifetime", licenseSource: "account" }, "COMMERCIAL_LIVE", Date.now(), false).proActive).toBe(true);
+    expect(resolveEntitlement(base, "FOUNDERS_BETA", Date.now(), false).proActive).toBe(true);
+  });
+});

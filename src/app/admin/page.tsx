@@ -10,6 +10,7 @@ import { LicensesModule, MonetizationModule } from "@/components/admin/BusinessM
 import { AlgorithmsModule } from "@/components/admin/AlgorithmsModule";
 import { ExercisesModule, RoutinesModule } from "@/components/admin/ContentModules";
 import { cls, errText } from "@/components/admin/ui";
+import { DEV_TOOLS } from "@/lib/dev-tools";
 
 /**
  * ABOT // MISSION CONTROL (docs/plans/ADMIN_ARCHITECTURE_SPEC.md). Global modules write to
@@ -17,11 +18,16 @@ import { cls, errText } from "@/components/admin/ui";
  * stores and IndexedDB. The PIN only hides the page: it ships inside the app like every page.
  */
 
-const PIN = process.env.NEXT_PUBLIC_ABOT_ADMIN_PIN || "2026";
+/**
+ * An optional extra lock, set with NEXT_PUBLIC_ABOT_ADMIN_PIN. It ships inside the app, so it is
+ * never the protection: release builds open the console only for an account the server confirms
+ * as an admin (is_abot_admin). The old public default PIN is gone (security audit 2026-11-11).
+ */
+const PIN = process.env.NEXT_PUBLIC_ABOT_ADMIN_PIN || (DEV_TOOLS ? "2026" : "");
 const UNLOCK_KEY = "abot.admin-unlocked";
 
 type ModuleId = "overview" | "money" | "licenses" | "algorithms" | "exercises" | "routines" | "database" | "device";
-const MODULES: { id: ModuleId; label: string; icon: LucideIcon }[] = [
+const ALL_MODULES: { id: ModuleId; label: string; icon: LucideIcon }[] = [
   { id: "overview", label: "Overview", icon: Gauge },
   { id: "money", label: "Monetization", icon: SlidersHorizontal },
   { id: "licenses", label: "Licenses", icon: KeyRound },
@@ -31,6 +37,8 @@ const MODULES: { id: ModuleId; label: string; icon: LucideIcon }[] = [
   { id: "database", label: "Database", icon: Database },
   { id: "device", label: "Device", icon: Smartphone },
 ];
+// Device edits this phone's licence and stores directly: development builds only.
+const MODULES = DEV_TOOLS ? ALL_MODULES : ALL_MODULES.filter((m) => m.id !== "device");
 
 const noop = () => () => {};
 function readUnlocked(): boolean {
@@ -45,7 +53,7 @@ export default function AdminPage() {
   // Unlocked earlier in this tab, or just now (the prerendered page is always locked).
   const stored = useSyncExternalStore(noop, readUnlocked, () => false);
   const [justUnlocked, setUnlocked] = useState(false);
-  const unlocked = stored || justUnlocked;
+  const unlocked = !PIN || stored || justUnlocked;
   return (
     // Its own full-screen layer: the app shell is a 640 px phone column with a dock, and the
     // console needs the whole window on a laptop.
@@ -149,9 +157,10 @@ function Console() {
     window.history.replaceState(null, "", `#${id}`);
   };
 
-  // A signed-in non-admin can still use the Device modules; Global ones say why they are closed.
-  const globalOpen = mode !== null && (mode.kind === "local" || mode.admin);
-  const isGlobal = current === "money" || current === "licenses" || current === "algorithms";
+  // Development: a signed-in non-admin can still use the Device modules; Global ones say why they
+  // are closed. Release builds: nothing opens without a server-confirmed admin account.
+  const globalOpen = mode !== null && ((DEV_TOOLS && mode.kind === "local") || (mode.kind === "server" && mode.admin));
+  const isGlobal = !DEV_TOOLS || current === "money" || current === "licenses" || current === "algorithms";
 
   return (
     <div className="mx-auto grid min-h-dvh max-w-[1440px] grid-cols-[minmax(0,1fr)] lg:grid-cols-[232px_minmax(0,1fr)]">

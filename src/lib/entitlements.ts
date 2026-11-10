@@ -1,5 +1,6 @@
 /**
- * ABOT // BLACK PRO entitlements. Everything is decided on the device: no server, no network.
+ * ABOT // BLACK PRO entitlements, resolved on the device. In release builds a paid tier counts
+ * only when it came from the account (the server); see resolveEntitlement.
  *
  * - The app runs in one monetization mode, set at build time (NEXT_PUBLIC_ABOT_MONETIZATION):
  *   FOUNDERS_BETA (now): every PRO feature is open to everyone, marked "PRO // BETA", and every
@@ -9,6 +10,7 @@
  * - The simulator (devOverrideMode) lets anyone switch between Beta, Free (locked) and Pro to
  *   try both sides without a rebuild. AUTO follows the build.
  */
+import { DEV_TOOLS } from "./dev-tools";
 
 export type MonetizationMode = "FOUNDERS_BETA" | "COMMERCIAL_LIVE";
 export type Tier = "free" | "pro" | "lifetime";
@@ -77,8 +79,18 @@ export interface Resolved {
   proActive: boolean;
 }
 
-/** What the rules say for this state at `now`, after the simulator override. */
-export function resolveEntitlement(e: EntitlementState, appMode: MonetizationMode = APP_MONETIZATION_MODE, now = Date.now()): Resolved {
+/**
+ * What the rules say for this state at `now`, after the simulator override.
+ * Release builds (`devTools` false) ignore the simulator, and count a paid tier only when it came
+ * from the account (the server's user_entitlements, written by a payment or a server-checked
+ * code). A tier held on the device alone, from a simulator, an offline code or an edited backup,
+ * opens nothing there.
+ */
+export function resolveEntitlement(e: EntitlementState, appMode: MonetizationMode = APP_MONETIZATION_MODE, now = Date.now(), devTools = DEV_TOOLS): Resolved {
+  if (!devTools) {
+    const tier: Tier = e.licenseSource === "account" ? e.tier : "free";
+    e = { ...e, devOverrideMode: "AUTO", tier, proExpiresAt: tier === "free" ? null : e.proExpiresAt };
+  }
   const mode: MonetizationMode =
     e.devOverrideMode === "FORCE_BETA" ? "FOUNDERS_BETA" : e.devOverrideMode === "FORCE_FREE" || e.devOverrideMode === "FORCE_PRO" ? "COMMERCIAL_LIVE" : appMode;
   const tier: Tier = e.devOverrideMode === "FORCE_FREE" ? "free" : e.devOverrideMode === "FORCE_PRO" ? (e.tier === "lifetime" ? "lifetime" : "pro") : e.tier;

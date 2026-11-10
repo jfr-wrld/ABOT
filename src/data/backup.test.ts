@@ -54,6 +54,18 @@ describe("export and parse", () => {
     expect(settings("fr", 3)).toMatchObject({ language: "auto", theme: "system" });
   });
 
+  it("never restores a paid tier from a file, only the founder pass", async () => {
+    const repo = await seeded();
+    const raw = JSON.parse(JSON.stringify(await exportBackup(repo)));
+    raw.data.settings = {
+      ...(raw.data.settings ?? {}),
+      entitlement: { tier: "lifetime", licenseSource: "account", devOverrideMode: "FORCE_PRO", proExpiresAt: null, isFounder: true, founderUnitCode: "FOUNDER // #0042", founderJoinedAt: "2026-11-01T00:00:00Z" },
+    };
+    const parsed = parseBackup(JSON.stringify(raw));
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.data.settings?.entitlement).toMatchObject({ tier: "free", licenseSource: null, devOverrideMode: "AUTO", isFounder: true, founderUnitCode: "FOUNDER // #0042" });
+  });
+
   it("rejects text that is not JSON", () => {
     expect(parseBackup("not json")).toEqual({ ok: false, error: "This file is not valid JSON" });
   });

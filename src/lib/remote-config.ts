@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { SUPABASE_ENV, isCloudSyncConfigured } from "@/data/sync/supabase";
 import type { MonetizationMode } from "./entitlements";
 import { DEFAULT_TUNABLES, normalizeTunables, setTunablesSource, type Tunables } from "./tunables";
+import { DEV_TOOLS } from "./dev-tools";
 
 /**
  * Settings the founder changes from Mission Control (/admin) without a new APK: monetization
@@ -107,7 +108,10 @@ export const useRemoteConfig = create<RemoteConfigState>()((set, get) => ({
   config: DEFAULT_REMOTE_CONFIG,
   source: "default",
   load: () => {
-    const local = read(LOCAL_KEY);
+    // A device-only override is for development and for builds without Supabase. With Supabase,
+    // a release build follows the server's config only: an override in local storage would
+    // otherwise reopen every PRO feature as "beta" (security audit 2026-11-11).
+    const local = DEV_TOOLS || !isCloudSyncConfigured() ? read(LOCAL_KEY) : null;
     if (local) return set({ config: normalizeRemoteConfig(local), source: "local" });
     const cached = read(CACHE_KEY);
     if (cached) set({ config: normalizeRemoteConfig(cached), source: "cache" });

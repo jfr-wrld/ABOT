@@ -14,6 +14,7 @@ import { useRemoteConfig } from "@/lib/remote-config";
 import { useRedeemStore } from "./RedeemCodeModal";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { DEV_TOOLS } from "@/lib/dev-tools";
 
 /**
  * ABOT // BLACK PRO: the upgrade screen, full height, always dark. During the founders beta it
@@ -268,16 +269,20 @@ export function AbotProModal() {
                 {isFounder ? t("Verify Founder Pass") : t("Claim Founder Pass")}
               </button>
               {checkoutOn && plan !== "monthly" && <BuyButton busy={busy} onClick={() => void checkout()} label={t("Buy {plan}", { plan: t(PLANS.find((p) => p.id === plan)?.name ?? "") })} />}
-              <button type="button" onClick={simulate} className="min-h-11 rounded-ctl text-sm font-semibold text-zinc-400 underline-offset-4 hover:text-white hover:underline">
-                {t("Simulate activating this plan")}
-              </button>
+              {DEV_TOOLS && (
+                <button type="button" onClick={simulate} className="min-h-11 rounded-ctl text-sm font-semibold text-zinc-400 underline-offset-4 hover:text-white hover:underline">
+                  {t("Simulate activating this plan")}
+                </button>
+              )}
             </>
           ) : (
             <>
               <BuyButton busy={busy} onClick={() => void checkout()} label={t("Activate {plan}", { plan: t(PLANS.find((p) => p.id === plan)?.name ?? "") })} />
-              <button type="button" onClick={simulate} className="min-h-11 rounded-ctl text-sm font-semibold text-zinc-400 underline-offset-4 hover:text-white hover:underline">
-                {t("Simulate activating this plan")}
-              </button>
+              {DEV_TOOLS && (
+                <button type="button" onClick={simulate} className="min-h-11 rounded-ctl text-sm font-semibold text-zinc-400 underline-offset-4 hover:text-white hover:underline">
+                  {t("Simulate activating this plan")}
+                </button>
+              )}
             </>
           )}
           {note && (

@@ -2,20 +2,19 @@ import { SUPABASE_ENV, isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
 import { currentMonetizationMode, useRemoteConfig } from "./remote-config";
 import type { Tier } from "./entitlements";
+import { DEV_TOOLS } from "./dev-tools";
 
 /**
  * VIP, influencer and promo codes.
  *
- * 1. With Supabase set up and online, the code goes to the `redeem_code` function, which checks
- *    and counts uses atomically and, when signed in, records the grant on the account.
- * 2. Built-in codes (ABOT-FOUNDER-2026, ABOT-PRO-30D, ...) also work offline, during the Founders
- *    beta only. They are in every copy of the app and this repository is public, so they are
- *    public promo codes: none grants lifetime, and once the app sells PRO (COMMERCIAL_LIVE) they
- *    stop working so they cannot stand in for a purchase. Mission Control can also turn them off
- *    during the beta (remote config). Grants already redeemed are kept.
- * 3. Codes made in Mission Control on a build without Supabase are kept on that device only.
- * Codes made in Mission Control with Supabase are checked online only: a code that can be
- * verified with no server would have to ship its secret inside the app.
+ * Release builds: a signed-in account sends the code to the `redeem_code` function, which checks
+ * and counts uses atomically and records the grant on the account. That is the only way a code
+ * grants anything, so a code cannot be stacked on a device or carried by a backup.
+ *
+ * Development builds also accept the built-in test codes (during the Founders beta, while
+ * Mission Control allows them) and codes made in Mission Control on a build without Supabase,
+ * kept on that device. Both lived in the app itself, so release builds leave them out (security
+ * audit 2026-11-11).
  */
 
 export interface Grant {
@@ -44,13 +43,10 @@ export function normalizeCode(input: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** SHA-256 of the normalized code -> what it grants. */
+/** Development only (see redeemLicenseCode): SHA-256 of a normalized test code -> its grant. */
 const BUILT_IN: Record<string, Grant> = {
-  // ABOT-FOUNDER-2026
   "7ede389f83e8adffa9ea1bea43d2f01630ab1015d4bb9aad1bb008d68af8ddf8": { tier: "pro", days: 365, founder: true },
-  // ABOT-PRO-30D
   ab5cb157fdd264617bdf265edbddb640ab63af7c54ff448458627c150c33d69e: { tier: "pro", days: 30, founder: false },
-  // ABOT-VIP-30D
   df92b5adc8fc29568ead60b5b732fe4995b8a488ce6c1db4bd0bd42585848c61: { tier: "pro", days: 30, founder: false },
 };
 
@@ -145,6 +141,7 @@ export function builtInCodesAccepted(): boolean {
 
 export const REDEEM_REASONS = {
   empty: "Enter a code.",
+  signIn: "Sign in to redeem a code: it is checked on ABOT's server and kept on your account.",
   unknown: "This code is not valid, or it has been used up.",
 } as const;
 
@@ -156,8 +153,13 @@ export async function redeemLicenseCode(input: string): Promise<RedeemResult> {
   const code = normalizeCode(input);
   if (code.length < 6) return { ok: false, reason: REDEEM_REASONS.empty };
 
+  // Release builds: a code is checked on the server, for a signed-in account, and the grant lands
+  // on that account. Built-in and this-device codes are for development only: they lived in the
+  // app (and its comments), could be stacked, and could not be revoked (security audit 2026-11-11).
+  if (!DEV_TOOLS && !maySignedIn()) return { ok: false, reason: REDEEM_REASONS.signIn };
   const server = await redeemOnServer(code);
   if ("grant" in server) return { ok: true, code, grant: server.grant, source: "server", onAccount: server.onAccount };
+  if (!DEV_TOOLS) return { ok: false, reason: REDEEM_REASONS.unknown };
 
   if (builtInCodesAccepted()) {
     const builtIn = BUILT_IN[await sha256Hex(code)];

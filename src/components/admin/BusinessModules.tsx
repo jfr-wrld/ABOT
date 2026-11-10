@@ -69,7 +69,7 @@ export function MonetizationModule({ mode }: { mode: AdminMode }) {
           ))}
         </div>
         <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300">
-          Built-in offline codes work (ABOT-FOUNDER-2026, ...)
+          Built-in test codes work (development builds only)
           <input type="checkbox" checked={draft.offlineCodesEnabled} onChange={(e) => setDraft((d) => ({ ...d, offlineCodesEnabled: e.target.checked }))} className="size-6 accent-[#ccff00]" />
         </label>
         <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300">

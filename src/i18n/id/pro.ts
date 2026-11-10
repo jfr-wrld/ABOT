@@ -127,4 +127,5 @@ export const pro: Record<string, string> = {
   "+{n} days added": "+{n} hari ditambahkan",
   "Was until": "Sebelumnya sampai",
   "Now until": "Sekarang sampai",
+  "Sign in to redeem a code: it is checked on ABOT's server and kept on your account.": "Login untuk menukar kode: kode dicek di server ABOT dan disimpan di akunmu.",
 };

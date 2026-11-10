@@ -4,6 +4,7 @@ import { useEntitlements } from "@/store/useEntitlements";
 import { SIMULATOR } from "@/lib/entitlements";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { DEV_TOOLS } from "@/lib/dev-tools";
 
 /**
  * ABOT // FOUNDER TELEMETRY PASS: a steel plate with the unit number and the join date, at the top
@@ -33,7 +34,8 @@ export function FounderPassCard() {
         {isFounder && founderUnitCode ? founderUnitCode.replace("FOUNDER //", "FOUNDER UNIT //") : t("No founder unit")}
       </h2>
 
-      <div className="mt-2">
+      {/* Development builds only: release builds leave the simulator out (see lib/dev-tools). */}
+      {DEV_TOOLS && <div className="mt-2">
         <p id="sim-label" className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">
           {t("Monetization simulator")}
         </p>
@@ -59,7 +61,7 @@ export function FounderPassCard() {
             );
           })}
         </div>
-      </div>
+      </div>}
     </section>
   );
 }

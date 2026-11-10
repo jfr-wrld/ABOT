@@ -125,23 +125,22 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
   };
 }
 
-const TIERS = ["free", "pro", "lifetime"] as const;
-const OVERRIDES = ["AUTO", "FORCE_FREE", "FORCE_PRO", "FORCE_BETA"] as const;
 const FOUNDER_CODE = /^FOUNDER \/\/ #\d{4}$/;
 const isoOrNull = (v: unknown) => (typeof v === "string" && Number.isFinite(Date.parse(v)) ? v : null);
 
-/** A file can carry the founder pass across devices; anything malformed falls back to free. */
+/**
+ * A file carries only the founder pass across devices. A paid tier never comes from a file: it
+ * was editable, so a hand-made backup could grant PRO (security audit 2026-11-11). Signing in
+ * brings the account's licence back.
+ */
 function normalizeEntitlement(raw: unknown): EntitlementState {
   if (!isObj(raw)) return DEFAULT_ENTITLEMENT;
   const code = typeof raw.founderUnitCode === "string" && FOUNDER_CODE.test(raw.founderUnitCode) ? raw.founderUnitCode : null;
   return {
-    tier: TIERS.includes(raw.tier as never) ? (raw.tier as EntitlementState["tier"]) : "free",
+    ...DEFAULT_ENTITLEMENT,
     isFounder: raw.isFounder === true && code !== null,
     founderUnitCode: code,
     founderJoinedAt: isoOrNull(raw.founderJoinedAt),
-    proExpiresAt: isoOrNull(raw.proExpiresAt),
-    licenseSource: raw.licenseSource === "account" || raw.licenseSource === "device" ? raw.licenseSource : null,
-    devOverrideMode: OVERRIDES.includes(raw.devOverrideMode as never) ? (raw.devOverrideMode as EntitlementState["devOverrideMode"]) : "AUTO",
   };
 }
 
