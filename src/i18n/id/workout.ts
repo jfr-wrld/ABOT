@@ -398,7 +398,6 @@ export const workout: Record<string, string> = {
   "Searching the map…": "Mencari di peta…",
   "Find gyms near me": "Cari gym di dekatku",
   "Sends your position once to OpenStreetMap to list the gyms around you.": "Mengirim posisimu sekali ke OpenStreetMap untuk menampilkan gym di sekitarmu.",
-  "No gyms on the map within 5 km. Add yours by name below.": "Tidak ada gym di peta dalam radius 5 km. Tambahkan gymmu dengan nama di bawah.",
   "Gyms near you": "Gym di dekatmu",
   "{name}, added": "{name}, sudah ditambahkan",
   "Add {name}": "Tambah {name}",
@@ -496,4 +495,11 @@ export const workout: Record<string, string> = {
   "Still to train today · {routine}": "Belum dilatih hari ini · {routine}",
   "For {muscle}, not trained yet today": "Untuk {muscle}, belum dilatih hari ini",
   "All exercises": "Semua exercise",
+  // Mark a gym where you stand.
+  "No gyms on the map within 5 km. Many local gyms are not mapped yet: mark yours where you stand, below.": "Tidak ada gym di peta dalam 5 km. Banyak gym lokal belum ada di peta: tandai gym-mu di tempat kamu berdiri, di bawah.",
+  "{name} marked here, within {m} m. Workouts started here are tagged with it.": "{name} ditandai di sini, akurasi {m} m. Workout yang dimulai di sini otomatis memakai gym ini.",
+  "At the gym? Mark it here": "Sedang di gym? Tandai di sini",
+  "Mark your gym here": "Tandai gym-mu di sini",
+  "Your phone's position is saved with the name, on this device only. No map service is asked.": "Posisi HP disimpan bersama namanya, hanya di perangkat ini. Tidak ada layanan peta yang dihubungi.",
+  "Save gym at my position": "Simpan gym di posisiku",
 };

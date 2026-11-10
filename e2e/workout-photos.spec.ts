@@ -231,3 +231,42 @@ test.describe("gyms from the map", () => {
     await expect(page.getByRole("status").filter({ hasText: "Could not reach the map service." })).toBeVisible();
   });
 });
+
+test.describe("a gym that is not on the map", () => {
+  // A street in Yogyakarta where the map has no gym: the test answers the map with nothing.
+  test.use({ geolocation: { latitude: -7.7956, longitude: 110.3695 }, permissions: ["geolocation"] });
+
+  async function emptyMap(page: Page) {
+    await page.route("https://overpass-api.de/api/interpreter?**", (route) => route.fulfill({ contentType: "application/json", body: '{"elements":[]}' }));
+    await page.route("https://nominatim.openstreetmap.org/**", (route) => route.fulfill({ contentType: "application/json", body: "[]" }));
+  }
+
+  test("is marked where you stand from Settings, and becomes the default", async ({ page }) => {
+    await emptyMap(page);
+    await page.goto("/settings?section=workout");
+    await page.getByRole("button", { name: "Find gyms near me" }).click();
+    await expect(page.getByText(/Many local gyms are not mapped yet/)).toBeVisible();
+    await page.getByRole("button", { name: "At the gym? Mark it here" }).click();
+    const sheet = page.getByRole("dialog", { name: "Mark your gym here" });
+    await sheet.getByRole("button", { name: "Save gym at my position" }).click();
+    await expect(sheet.getByRole("alert")).toHaveText("Enter a gym name");
+    await sheet.getByLabel("Gym name").fill("Garasi Iron Jogja");
+    await sheet.getByRole("button", { name: "Save gym at my position" }).click();
+    await expect(page.getByText(/Garasi Iron Jogja marked here/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Garasi Iron Jogja", exact: true })).toBeVisible();
+    await expect(page.getByText("Picked by itself when a workout starts here.")).toBeVisible();
+  });
+
+  test("is marked from a finished workout and tags it", async ({ page }) => {
+    await emptyMap(page);
+    await finishToSummary(page);
+    await page.goto(page.url().replace(/\/workout\/summary\?/, "/history?"));
+    await page.getByRole("button", { name: "Tag a gym" }).click();
+    const tag = page.getByRole("dialog", { name: "Where did you train?" });
+    await tag.getByRole("button", { name: "At the gym? Mark it here" }).click();
+    const sheet = page.getByRole("dialog", { name: "Mark your gym here" });
+    await sheet.getByLabel("Gym name").fill("Garasi Iron Jogja");
+    await sheet.getByRole("button", { name: "Save gym at my position" }).click();
+    await expect(page.getByRole("button", { name: "Gym: Garasi Iron Jogja. Change" })).toBeVisible();
+  });
+});

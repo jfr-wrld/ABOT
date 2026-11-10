@@ -61,6 +61,8 @@ export function LocationsSection() {
         }}
       />
 
+      <MarkGymHere />
+
       <p className="text-xs text-text-muted">{t("Not on the map? Add it by name:")}</p>
       <form
         onSubmit={(e) => {
@@ -221,7 +223,7 @@ export function NearbyGymFinder({ taken, onPick }: { taken: GymLocation[]; onPic
       setPhase("searching");
       const found = await findNearbyGyms(fix);
       setResults(found);
-      if (found.length === 0) setMessage({ text: t("No gyms on the map within 5 km. Add yours by name below.") });
+      if (found.length === 0) setMessage({ text: t("No gyms on the map within 5 km. Many local gyms are not mapped yet: mark yours where you stand, below.") });
       setPhase("done");
     } catch (e) {
       setMessage({ text: e instanceof Error ? t(e.message) : t("Could not reach the map service. Check your connection and try again.") });
@@ -279,6 +281,104 @@ export function NearbyGymFinder({ taken, onPick }: { taken: GymLocation[]; onPic
           <p className="text-[11px] text-text-muted">{t("Map data © OpenStreetMap contributors")}</p>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * For a gym the map does not have (many local gyms are not on OpenStreetMap): at the gym, name it
+ * and its position is taken from the phone, once, on this tap. Workouts started there pick it by
+ * themselves (AutoGym). No map service is asked.
+ */
+export function MarkGymHere({ onMarked }: { onMarked?: (gymId: string) => void }) {
+  const t = useT();
+  const { locations, add, update, setDefault } = useLocationStore();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [phase, setPhase] = useState<"idle" | "locating">("idle");
+  const [message, setMessage] = useState<{ text: string; denied?: boolean } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function mark() {
+    const n = name.trim();
+    if (!n) return setError(t("Enter a gym name"));
+    setMessage(null);
+    setPhase("locating");
+    try {
+      const access = await requestAccess("location");
+      if (access === "denied") {
+        setMessage({ text: t("Location is off for ABOT, so the gym cannot be pinned."), denied: true });
+        return;
+      }
+      const fix = await currentPosition();
+      const first = locations.length === 0;
+      const gym = add(n);
+      update(gym.id, { lat: fix.lat, lng: fix.lng });
+      if (first) setDefault(gym.id);
+      onMarked?.(gym.id);
+      setOpen(false);
+      setName("");
+      setMessage({ text: t("{name} marked here, within {m} m. Workouts started here are tagged with it.", { name: n, m: Math.round(fix.accuracy) }) });
+    } catch {
+      setMessage({ text: t("Could not find where you are. Try again near a window or outdoors.") });
+    } finally {
+      setPhase("idle");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Button onClick={() => setOpen(true)}>
+        <MapPin aria-hidden="true" size={18} />
+        {t("At the gym? Mark it here")}
+      </Button>
+      {message && (
+        <div className="flex items-center justify-between gap-3">
+          <p role="status" className="text-sm text-text-muted">
+            {message.text}
+          </p>
+          {message.denied && isNativeApp() && (
+            <Button variant="ghost" onClick={() => void openAppSettings()} className="shrink-0">
+              {t("Open settings")}
+            </Button>
+          )}
+        </div>
+      )}
+      <Sheet open={open} onClose={() => setOpen(false)} title={t("Mark your gym here")}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void mark();
+          }}
+        >
+          <p className="mb-3 text-sm text-text-muted">{t("Your phone's position is saved with the name, on this device only. No map service is asked.")}</p>
+          <label htmlFor="mark-gym-name" className="mb-1 block text-sm font-semibold">
+            {t("Gym name")}
+          </label>
+          <input
+            id="mark-gym-name"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setError(null);
+            }}
+            maxLength={80}
+            autoComplete="off"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "mark-gym-error" : undefined}
+            className="h-12 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
+          />
+          {error && (
+            <p id="mark-gym-error" role="alert" className="mt-1 text-xs text-failure">
+              {error}
+            </p>
+          )}
+          <Button type="submit" variant="primary" disabled={phase === "locating"} aria-busy={phase === "locating"} className="mt-3 w-full">
+            <MapPin aria-hidden="true" size={18} />
+            {phase === "locating" ? t("Finding you…") : t("Save gym at my position")}
+          </Button>
+        </form>
+      </Sheet>
     </div>
   );
 }

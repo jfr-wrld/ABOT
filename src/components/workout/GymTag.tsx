@@ -7,7 +7,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { useLocationStore } from "@/store/useLocationStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import type { WorkoutSession } from "@/types/workout";
-import { NearbyGymFinder } from "@/components/settings/LocationsSection";
+import { MarkGymHere, NearbyGymFinder } from "@/components/settings/LocationsSection";
 import { useT } from "@/i18n";
 
 /**
@@ -93,6 +93,7 @@ export function GymTag({ session }: { session: WorkoutSession }) {
               pick(gym.id);
             }}
           />
+          <MarkGymHere onMarked={pick} />
           <Link href="/settings?section=workout" className="flex min-h-11 items-center justify-center text-sm font-semibold text-text-muted hover:text-text">
             {t("Manage gyms in Settings")}
           </Link>
