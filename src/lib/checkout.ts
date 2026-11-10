@@ -74,6 +74,16 @@ export function pendingOrder(): string | null {
 /** Fired when a payment page opened in another tab, so the app can wait for the order. */
 export const CHECKOUT_OPENED = "abot:checkout-opened";
 
+/** Only Midtrans' own payment pages are opened, whatever the checkout function answers. */
+export function isMidtransPage(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    return u.protocol === "https:" && (u.hostname === "app.midtrans.com" || u.hostname === "app.sandbox.midtrans.com");
+  } catch {
+    return false;
+  }
+}
+
 /**
  * On the web, open the tab for the payment page straight from the tap (browsers block pop-ups
  * opened later, after the network round trip). Null in the Android app, or when blocked.
@@ -82,7 +92,11 @@ export function openPaymentTab(): Window | null {
   if (isNativeApp() || typeof window === "undefined") return null;
   try {
     const w = window.open("", "_blank");
-    if (w) w.document.title = "ABOT · Payment";
+    if (w) {
+      // The payment and bank pages that load in this tab cannot reach back and redirect ABOT's tab.
+      w.opener = null;
+      w.document.title = "ABOT · Payment";
+    }
     return w;
   } catch {
     return null;
@@ -124,7 +138,7 @@ async function createCheckout(
     }
     const url = (data as { redirect_url?: string; order_id?: string } | null)?.redirect_url;
     const orderId = (data as { order_id?: string } | null)?.order_id;
-    if (!url || !orderId) return { ok: false, reason: "gateway" };
+    if (!url || !orderId || !isMidtransPage(url)) return { ok: false, reason: "gateway" };
     rememberPendingOrder(orderId);
     if (isNativeApp()) {
       const { Browser } = await import("@capacitor/browser");

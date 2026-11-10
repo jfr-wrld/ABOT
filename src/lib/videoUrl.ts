@@ -46,6 +46,8 @@ export function parseVideoUrl(input: string): ParsedVideo | null {
     const m = /\/video\/(\d{8,})/.exec(url.pathname);
     return m ? { kind: "tiktok", id: m[1]!, vertical: true } : null;
   }
+  // Files play straight from their host, so plain http (readable and changeable in transit) is out.
+  if (url.protocol !== "https:") return null;
   const ext = /\.([a-z0-9]+)$/i.exec(url.pathname)?.[1]?.toLowerCase();
   if (ext === "mp4" || ext === "webm" || ext === "mov") return { kind: "file", url: url.toString(), media: "video" };
   if (ext === "gif") return { kind: "file", url: url.toString(), media: "image" };

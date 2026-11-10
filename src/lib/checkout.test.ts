@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { startMidtransCheckout, waitForOrder, checkoutAvailable, whenForeground, type OrderStatus } from "./checkout";
+import { isMidtransPage, startMidtransCheckout, waitForOrder, checkoutAvailable, whenForeground, type OrderStatus } from "./checkout";
 import { DEFAULT_REMOTE_CONFIG, useRemoteConfig } from "./remote-config";
 
 afterEach(() => useRemoteConfig.setState({ config: DEFAULT_REMOTE_CONFIG, source: "default" }));
@@ -42,5 +42,15 @@ describe("checkout", () => {
     await p;
     expect(done).toBe(true);
     await expect(whenForeground(false, { ...doc, visibilityState: "visible" } as never)).resolves.toBeUndefined();
+  });
+});
+
+describe("isMidtransPage", () => {
+  it("opens Midtrans' payment pages only", () => {
+    expect(isMidtransPage("https://app.sandbox.midtrans.com/snap/v4/redirection/abc")).toBe(true);
+    expect(isMidtransPage("https://app.midtrans.com/snap/v4/redirection/abc")).toBe(true);
+    expect(isMidtransPage("http://app.midtrans.com/snap")).toBe(false);
+    expect(isMidtransPage("https://app.midtrans.com.evil.com/snap")).toBe(false);
+    expect(isMidtransPage("javascript:alert(1)")).toBe(false);
   });
 });

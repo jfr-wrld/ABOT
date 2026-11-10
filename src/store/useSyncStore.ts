@@ -1,3 +1,4 @@
+import { safeReturnPath } from "@/lib/safe-path";
 import { create } from "zustand";
 import type { User } from "@supabase/supabase-js";
 import { syncOnce, SIGNED_OUT } from "@/data/sync/engine";
@@ -28,7 +29,7 @@ export function takeSignInReturn(): string | null {
   try {
     const to = sessionStorage.getItem(RETURN_KEY);
     sessionStorage.removeItem(RETURN_KEY);
-    return to && to.startsWith("/") && !to.startsWith("//") ? to : null;
+    return safeReturnPath(to);
   } catch {
     return null;
   }

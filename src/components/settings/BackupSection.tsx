@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
-import { backupFileName, backupFromSnapshot, importBackup, parseBackup, photosForBackup, type AbotBackup, type BackupCounts } from "@/data/backup";
+import { IMPORT_MAX_BYTES, backupFileName, backupFromSnapshot, importBackup, parseBackup, photosForBackup, type AbotBackup, type BackupCounts } from "@/data/backup";
 import { getActivePersistence, getActiveRepository, hydrateStores, snapshotFromStores } from "@/store/persistence";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { saveFile } from "@/lib/native/files";
@@ -60,6 +60,8 @@ export function BackupSection() {
     setStatus(null);
     setPending(null);
     if (!file) return;
+    // A real ABOT file is a few MB; reading a huge one would freeze the phone.
+    if (file.size > IMPORT_MAX_BYTES) return setError(t("This file is too large to be an ABOT export."));
     let text: string;
     try {
       text = await file.text();

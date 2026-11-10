@@ -182,6 +182,7 @@ function normalizeExerciseMedia(raw: unknown): RepoSnapshot["exerciseMedia"] {
   if (!isObj(raw)) return {};
   const out: RepoSnapshot["exerciseMedia"] = {};
   for (const [id, v] of Object.entries(raw)) {
+    if (id === "__proto__" || id === "constructor" || id === "prototype") continue;
     if (isObj(v) && typeof v.customVideoUrl === "string" && parseVideoUrl(v.customVideoUrl)) {
       out[id] = { customVideoUrl: v.customVideoUrl.trim() };
     }
@@ -312,3 +313,6 @@ async function mergeData(repo: Repository, backup: AbotBackup): Promise<void> {
   ];
   await repo.mergeAll({ sessions, routines, exercises, locations: merged, exerciseMedia, bodyweightLog });
 }
+
+/** Largest file the import screens read: a real export with photos is a few MB. */
+export const IMPORT_MAX_BYTES = 50 * 1024 * 1024;

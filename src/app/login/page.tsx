@@ -1,5 +1,6 @@
 "use client";
 
+import { safeReturnPath } from "@/lib/safe-path";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
@@ -25,8 +26,7 @@ const QUIET_LINK =
 
 /** Only in-app paths, so ?from= cannot send anyone off the site. */
 function useFrom(): string | null {
-  const from = useSearchParams().get("from");
-  return from && from.startsWith("/") && !from.startsWith("//") ? from : null;
+  return safeReturnPath(useSearchParams().get("from"));
 }
 
 const LABELS: Record<string, string> = { "/profile": "Profile", "/profile/edit": "Edit profile", "/profile?tab=about": "Profile", "/settings": "Settings" };

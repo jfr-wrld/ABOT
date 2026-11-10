@@ -258,6 +258,8 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
             src={embedUrl(video)}
             title={t("Video tutorial: {name}", { name: exercise.name })}
             allow="autoplay; encrypted-media; picture-in-picture"
+            // The player may run its own scripts, but cannot open pop-ups or move ABOT's page.
+            sandbox="allow-scripts allow-same-origin allow-presentation"
             allowFullScreen
             loading="lazy"
             referrerPolicy="strict-origin-when-cross-origin"

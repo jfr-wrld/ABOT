@@ -5,7 +5,11 @@ import type { Repository } from "./repo";
 import { SEED_EXERCISES } from "./exercises";
 
 /** free-exercise-db (public domain, Unlicense): about 870 exercises, roughly 1 MB of JSON. */
-export const CATALOG_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
+// Pinned to a commit: a later change to that repository reaches the app only when ABOT moves the pin.
+const CATALOG_COMMIT = "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5";
+export const CATALOG_URL = `https://raw.githubusercontent.com/yuhonas/free-exercise-db/${CATALOG_COMMIT}/dist/exercises.json`;
+/** The catalog is about 1 MB; anything far larger is not it. */
+const CATALOG_MAX_BYTES = 10 * 1024 * 1024;
 const IMAGE_BASE = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
 
 const EQUIPMENT: Record<string, Equipment> = {
@@ -99,9 +103,12 @@ export async function loadCatalog(
     throw new Error("Could not download the catalog. Check your connection and try again.");
   }
   if (!res.ok) throw new Error(`Could not download the catalog (HTTP ${res.status}). Check your connection and try again.`);
+  if (Number(res.headers?.get("content-length") ?? 0) > CATALOG_MAX_BYTES) throw new Error("The catalog file was not in the expected format.");
   let data: unknown;
   try {
-    data = await res.json();
+    const text = await res.text();
+    if (text.length > CATALOG_MAX_BYTES) throw new Error("too large");
+    data = JSON.parse(text);
   } catch {
     throw new Error("The catalog file was not in the expected format.");
   }

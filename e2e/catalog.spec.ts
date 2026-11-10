@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
 
-const CATALOG_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json";
+const CATALOG_URL = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/*/dist/exercises.json";
 
 async function serveCatalog(page: Page) {
   const body = await readFile(path.join(__dirname, "fixtures/catalog-sample.json"), "utf8");

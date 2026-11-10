@@ -28,6 +28,7 @@ describe("parseVideoUrl", () => {
     "https://www.youtube.com/channel/UC123",
     "https://vm.tiktok.com/ZMabc123/",
     "https://example.com/page.html",
+    "http://example.com/clips/squat.mp4",
     "ftp://example.com/a.mp4",
   ])("rejects %s", (url) => {
     expect(parseVideoUrl(url)).toBeNull();

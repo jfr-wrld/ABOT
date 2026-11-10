@@ -103,7 +103,15 @@ jobs:
           fi
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           KS="$RUNNER_TEMP/release.jks"
-          printf '%s' "$KEYSTORE_B64" | base64 -d > "$KS"
+          # A pasted secret often carries line breaks or spaces; base64 has none of its own.
+          if ! printf '%s' "$KEYSTORE_B64" | tr -d ' \r\n\t' | base64 -d > "$KS" 2>/dev/null || [ ! -s "$KS" ]; then
+            echo "::error::ABOT_KEYSTORE_B64 is not valid base64. Copy the whole file again (pbcopy < ~/abot-release/abot-release.jks.b64) and paste it as the secret's value."
+            exit 1
+          fi
+          if ! keytool -list -keystore "$KS" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null 2>&1; then
+            echo "::error::The keystore opened, but ABOT_KEYSTORE_PASSWORD or ABOT_KEY_ALIAS does not match it (the alias is abot)."
+            exit 1
+          fi
           "$BT/zipalign" -p -f 4 unsigned/app-release-unsigned.apk aligned.apk
           "$BT/apksigner" sign --ks "$KS" --ks-key-alias "$KEY_ALIAS" \
             --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD \

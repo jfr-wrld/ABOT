@@ -1,5 +1,6 @@
 "use client";
 
+import { safeReturnPath } from "@/lib/safe-path";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
@@ -18,8 +19,7 @@ export default function PermissionsPage() {
 
 function PermissionsStep() {
   const router = useRouter();
-  const raw = useSearchParams().get("next");
-  const next = raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+  const next = safeReturnPath(useSearchParams().get("next")) ?? "/";
   const perms = useAppPermissions();
   const t = useT();
 

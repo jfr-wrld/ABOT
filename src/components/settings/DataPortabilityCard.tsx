@@ -1,5 +1,6 @@
 "use client";
 
+import { IMPORT_MAX_BYTES } from "@/data/backup";
 import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { InfoTip } from "@/components/ui/InfoTip";
@@ -52,6 +53,8 @@ export function DataPortabilityCard() {
     setStatus(null);
     setPicked(null);
     if (!file) return;
+    // A real ABOT file is a few MB; reading a huge one would freeze the phone.
+    if (file.size > IMPORT_MAX_BYTES) return setError(t("This file is too large to be an ABOT export."));
     let text: string;
     try {
       text = await file.text();
