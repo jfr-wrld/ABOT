@@ -63,8 +63,23 @@ interface State {
 export const useAppUpdate = create<State>()((set, get) => {
   async function follow(id: number, build: number) {
     set({ phase: "downloading", fraction: null, bannerClosed: false, build, detail: null });
-    const { end, detail } = await followDownload(id, (fraction) => set({ fraction }));
+    const { end, detail } = await followDownload(id, (fraction) => {
+      if (get().build === build) set({ fraction });
+    });
+    // A newer build may have replaced this download meanwhile: then its end is not news.
+    if (get().build !== build) return;
     set({ phase: end === "done" ? "ready" : "failed", detail: detail ?? null });
+  }
+
+  /**
+   * GitHub has a newer build than the one downloaded (or downloading): that file is dropped, so
+   * the pop-up and Install offer the newest build, not a step in between.
+   */
+  function dropStale(latest: number) {
+    const { build, phase } = get();
+    if (build === null || build >= latest || phase === "idle") return;
+    write(DOWNLOAD_KEY, null);
+    set({ phase: "idle", build: null, fraction: null, detail: null, bannerClosed: false });
   }
 
   return {
@@ -97,6 +112,7 @@ export const useAppUpdate = create<State>()((set, get) => {
       set({ checking: true });
       const result = await checkForUpdate(installed);
       if (result.kind !== "error") write(CHECKED_KEY, now);
+      if (result.kind === "available") dropStale(result.release.build);
       set({ result, checking: false });
       if (
         auto &&
@@ -119,7 +135,9 @@ export const useAppUpdate = create<State>()((set, get) => {
       const r = get().result;
       if (r?.kind !== "available") return;
       set({ modal: false });
-      if (get().phase === "ready") return get().install();
+      dropStale(r.release.build);
+      // The file on the phone is this very build: install it instead of downloading it again.
+      if (get().phase === "ready" && get().build === r.release.build) return get().install();
       try {
         const { id } = await AppUpdate.download({ url: r.release.apkUrl, title: `ABOT ${r.release.version}` });
         write(DOWNLOAD_KEY, { id, build: r.release.build });
