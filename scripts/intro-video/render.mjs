@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Renders the ABOT intro video: 1080 x 1920, 30 fps, about 90 s, with its synthesised soundtrack.
+ * Renders the ABOT intro video: 1080 x 1920, 30 fps, about 100 s, with its synthesised soundtrack.
  *
  *   npm run dev                                   (in another terminal)
  *   node scripts/intro-video/render.mjs [http://localhost:3000] [--skip-capture] [--preview]
@@ -54,13 +54,13 @@ function readPaths() {
   return { mark, flame };
 }
 
-/** Plus Jakarta Sans and JetBrains Mono, downloaded once into video-out/fonts with a local CSS. */
+/** Plus Jakarta Sans, JetBrains Mono and Anton (meme captions), downloaded once into video-out/fonts. */
 function ensureFonts() {
   const css = join(FONTS, "fonts.css");
-  if (existsSync(css)) return;
+  if (existsSync(css) && readFileSync(css, "utf8").includes("Anton")) return;
   mkdirSync(FONTS, { recursive: true });
   const ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36";
-  const url = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=block";
+  const url = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700;800&family=Anton&display=block";
   let text = execFileSync("curl", ["-sfL", "-A", ua, url], { encoding: "utf8" });
   let n = 0;
   text = text.replace(/url\((https:[^)]+\.woff2)\)/g, (_, u) => {

@@ -154,6 +154,80 @@ const SFX = {
   plate: (c) => put(c.t, mix([tone({ type: "tri", from: c.f, dur: 0.05, curve: 7 }), 0.7], [tone({ from: c.f * 2.71, dur: 0.12, curve: 8 }), 0.25]), 0.3),
   chord: (c) => [392, 493.88, 587.33, 783.99, 196].forEach((f, i) => put(c.t, tone({ type: i === 4 ? "tri" : "sine", from: f, dur: 1.8, attack: 0.01, curve: 2.5 }), i === 4 ? 0.14 : 0.1)),
   shimmer: (c) => [1567.98, 1975.53, 2349.32, 3135.96].forEach((f, i) => put(c.t + i * 0.06, tone({ from: f, dur: 2.6, attack: 0.05, curve: 2.2 }), 0.05, (i - 1.5) * 0.3)),
+  // Meme-style cues for the problem scene, all synthesised here (no recorded memes).
+  // A record scratch: band-passed noise whose pitch rocks back and forth, then a stop.
+  scratch: (c) => {
+    const dur = 0.42;
+    const n = Math.round(dur * SR);
+    const out = new Float32Array(n);
+    let lp = 0;
+    let bp = 0;
+    for (let i = 0; i < n; i++) {
+      const k = i / n;
+      const f = 700 + 1800 * Math.abs(Math.sin(k * Math.PI * 3.2)) * (1 - k * 0.6);
+      const fc = 2 * Math.sin((Math.PI * f) / SR);
+      const x = rand() * 2 - 1;
+      lp += fc * bp;
+      bp += fc * (x - lp - bp / 0.8);
+      out[i] = bp * Math.min(1, k * 40) * (k < 0.85 ? 1 : (1 - k) / 0.15);
+    }
+    put(c.t, mix([out, 1], [tone({ type: "saw", from: 220, to: 70, dur: 0.4, curve: 2 }), 0.12]), 0.5);
+  },
+  // A cartoon spring: a pitch that wobbles up and settles.
+  boing: (c) => {
+    const dur = 0.45;
+    const n = Math.round(dur * SR);
+    const out = new Float32Array(n);
+    let ph = 0;
+    for (let i = 0; i < n; i++) {
+      const k = i / n;
+      const f = c.f * (1 + 0.9 * Math.exp(-5 * k) * Math.sin(k * Math.PI * 14)) * (1 + k * 0.6);
+      ph += f / SR;
+      out[i] = wave.sine(ph) * Math.exp(-4 * k) * Math.min(1, i / 60);
+    }
+    put(c.t, out, 0.4);
+  },
+  // A deep cinematic boom with a long tail, for the dramatic zoom.
+  boom: (c) =>
+    put(
+      c.t,
+      mix(
+        [tone({ from: 90, to: 38, dur: 1.6, curve: 2.5 }).map((x) => Math.tanh(x * 2.4)), 1],
+        [tone({ type: "tri", from: 60, to: 45, dur: 1.2, curve: 3 }), 0.4],
+        [burst({ dur: 0.08, lp: 0.3, curve: 12 }), 0.5],
+      ),
+      0.85,
+    ),
+  // Paper flicking past.
+  paper: (c) => put(c.t, noiseSweep({ dur: 0.16, f0: 2500, f1: 6000, q: 0.7, shape: (k) => Math.sin(Math.PI * k) * (1 - k * 0.5) }), 0.16, c.pan ?? 0),
+  // The sad trombone: four falling notes, the last one long and wobbling.
+  trombone: (c) => {
+    const notes = [
+      [196, 0.32],
+      [185, 0.32],
+      [174.6, 0.32],
+      [164.8, 1.2],
+    ];
+    let t = c.t;
+    notes.forEach(([f, d], i) => {
+      const n = Math.round(d * SR);
+      const out = new Float32Array(n);
+      let ph = 0;
+      let lp = 0;
+      for (let j = 0; j < n; j++) {
+        const k = j / n;
+        const vib = i === 3 ? 1 + 0.035 * Math.sin(2 * Math.PI * 5.5 * (j / SR)) * Math.min(1, k * 3) : 1;
+        ph += (f * vib) / SR;
+        lp += 0.08 * (wave.saw(ph) - lp);
+        const env = Math.min(1, j / (0.03 * SR)) * (i === 3 ? Math.exp(-1.6 * k) : 1 - k * 0.3);
+        out[j] = lp * env;
+      }
+      put(t, out, 0.5);
+      t += d * 0.95;
+    });
+  },
+  // A digital glitch into the turn: crushed bursts.
+  glitch: (c) => [0, 0.05, 0.09, 0.16].forEach((d, i) => put(c.t + d, burst({ dur: 0.04, hp: 0.5, curve: 4 }).map((x) => Math.round(x * 4) / 4), 0.25, i % 2 ? 0.5 : -0.5)),
 };
 
 /* ------------------------------------------------------------------ */
@@ -195,7 +269,9 @@ function musicBed() {
     const inS = (name) => t0 >= SCENES[name][0] - 0.01 && t0 < SCENES[name][1];
     const quiet = inS("trust");
     const drop = t0 >= T.flame - 0.01 && t0 < SCENES.streak[1];
-    const intro = t0 < SCENES.log[0];
+    const intro = t0 >= SCENES.hook[0] - 0.01 && t0 < SCENES.log[0];
+    // The problem plays over silence, so the meme cues land on their own.
+    if (t0 < SCENES.hook[0] - 0.01) continue;
     const outro = inS("outro");
     pad(t0, CHORDS[idx], BEAT * 4 + 0.3, outro ? 0.07 : quiet ? 0.04 : drop ? 0.07 : 0.05);
     if (intro || outro) continue;

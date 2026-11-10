@@ -11,6 +11,7 @@ export const BEAT = 60 / BPM;
 
 /** Scene lengths in order; starts follow from them. */
 const LENGTHS = [
+  ["problem", 10],
   ["hook", 4.5],
   ["log", 7],
   ["bar", 6.5],
@@ -42,13 +43,21 @@ const every = (scene, from, step, n) => Array.from({ length: n }, (_, i) => at(s
 
 /** The moments the picture is built around. */
 export const T = {
-  spark: 0,
-  ignite: 0.6,
-  lock: 1.3,
-  sweep: 1.5,
-  letters: 1.8,
-  tag1: 2.5,
-  tag2: 3.0,
+  // The problem, meme style: a lifter who cannot remember last week.
+  scratch: at("problem", 0),
+  caption: at("problem", 0.25),
+  guesses: every("problem", 2.0, 0.5, 3),
+  boom: at("problem", 4.0),
+  notes: at("problem", 5.5),
+  trombone: at("problem", 6.5),
+  better: at("problem", 8.5),
+  spark: at("hook", 0),
+  ignite: at("hook", 0.6),
+  lock: at("hook", 1.3),
+  sweep: at("hook", 1.5),
+  letters: at("hook", 1.8),
+  tag1: at("hook", 2.5),
+  tag2: at("hook", 3.0),
   logIn: at("log", 0.1),
   ticks: every("log", 2.5, 0.5, 3),
   rest: every("bar", 1.5, 0.5, 3),
@@ -86,8 +95,17 @@ export function cues() {
   const c = [];
   const add = (t, kind, p = {}) => c.push({ t, kind, ...p });
   const out = (scene) => add(before(scene, 0.35), "whoosh", { dur: 0.45 });
+  // The problem.
+  add(T.scratch, "scratch");
+  add(T.caption + 0.15, "pop", { f: 420 });
+  T.guesses.forEach((t, i) => add(t, "boing", { f: 300 + i * 90 }));
+  add(T.boom, "boom");
+  [0, 0.18, 0.36, 0.54, 0.72].forEach((d, i) => add(T.notes + d, "paper", { pan: i % 2 ? 0.4 : -0.4 }));
+  add(T.trombone, "trombone");
+  add(T.better - 0.15, "glitch");
+  add(T.better + 0.2, "hit", { high: true });
+  add(before("problem", 0.6), "riser", { dur: 0.6 });
   // Hook.
-  add(0, "riser", { dur: 0.6 });
   add(T.ignite, "impact", { big: false });
   add(T.lock - 0.12, "whoosh", { dur: 0.25, up: true });
   add(T.lock, "clank");
