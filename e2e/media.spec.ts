@@ -98,3 +98,14 @@ test("anatomy tab highlights primary and secondary muscles; tabs work with arrow
   await expect(media.locator('[data-region="triceps"]').first()).toHaveAttribute("data-level", "secondary");
   await expect(media.locator('[data-region="quadriceps"]').first()).toHaveAttribute("data-level", "none");
 });
+
+test("the exercise demo keeps looping with Lite effects, as it teaches the movement", async ({ page }) => {
+  await serveFrames(page);
+  await page.goto("/settings?section=general");
+  await page.getByRole("radiogroup", { name: "Visual effects" }).getByText("Lite", { exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-effects", "lite");
+  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
+  const phase = page.getByRole("region", { name: "Exercise media" }).getByTestId("motion-phase");
+  await expect(phase).toHaveText("Start position");
+  await expect(phase).toHaveText("End position", { timeout: 3000 });
+});

@@ -102,6 +102,8 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
   const urls = exercise.media.motionUrls ?? [];
   const first = urls[0] ? parseVideoUrl(urls[0]) : null;
   const [frame, setFrame] = useState(0);
+  // The loop teaches the movement, so it plays with Lite effects too; only the phone's own
+  // reduce-motion setting starts it paused.
   const [playing, setPlaying] = useState(() => !prefersReducedMotion());
   const [failed, setFailed] = useState(false);
   const isFramePair = urls.length >= 2 && !first;

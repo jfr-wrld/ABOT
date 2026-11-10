@@ -297,16 +297,16 @@ export const useWorkoutStore = create<WorkoutState>()(
         set((s) =>
           patchActive(s, (a) =>
             patchExercise(a, id, (ex) => {
-              const last = ex.sets[ex.sets.length - 1];
-              // Carry weight/reps forward: the next set is usually the same load.
+              const from = carryFrom(ex, s.sessions);
               return {
                 ...ex,
                 sets: [
                   ...ex.sets,
                   newSet({
-                    weightKg: last?.weightKg ?? null,
-                    reps: last?.reps ?? null,
-                    type: last?.type === "warmup" ? "normal" : "normal",
+                    weightKg: from?.weightKg ?? null,
+                    reps: from?.reps ?? null,
+                    ...(from?.durationSec != null ? { durationSec: from.durationSec } : {}),
+                    ...(from?.distanceM != null ? { distanceM: from.distanceM } : {}),
                   }),
                 ],
               };
@@ -437,6 +437,24 @@ export const useWorkoutStore = create<WorkoutState>()(
         })),
     }),
 );
+
+const filled = (st: WorkoutSet) => st.weightKg !== null || st.reps !== null || st.durationSec != null || st.distanceM != null;
+
+/**
+ * What a new set starts with: the next set is usually the same load. The last set in this
+ * exercise that has numbers, a working set before a warm-up; with none yet, the last working set
+ * of this exercise in the latest finished workout.
+ */
+export function carryFrom(ex: SessionExercise, sessions: WorkoutSession[]): WorkoutSet | undefined {
+  const sets = [...ex.sets].reverse();
+  const here = sets.find((st) => filled(st) && st.type !== "warmup") ?? sets.find(filled);
+  if (here) return here;
+  const before = [...sessions]
+    .filter((x) => x.status === "completed")
+    .sort((x, y) => y.startedAt - x.startedAt)
+    .flatMap((x) => x.exercises.filter((e) => e.exerciseId === ex.exerciseId))[0];
+  return before ? [...before.sets].reverse().find((st) => st.completed && st.type !== "warmup" && filled(st)) : undefined;
+}
 
 /** Closes a running pause, adding its length to pausedMs. */
 function resumed(a: WorkoutSession, now: number): WorkoutSession {

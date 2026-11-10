@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Pause, Play } from "lucide-react";
-import { useReducedMotionConfig } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import type { Exercise } from "@/types/workout";
 import { BUNDLED_THUMBS } from "@/data/exercise-thumbs.generated";
 import { useT } from "@/i18n";
@@ -15,10 +15,12 @@ const isImage = (u: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
 /**
  * The exercise's two real photos, start and end position, crossfading like a GIF so the movement
  * reads at a glance. Tap the pause button to hold a frame. Falls back to the photo bundled with
- * the app (offline, one frame), then to ABOT's own animated figure, so the box is never empty.
+ * the app (offline, one frame), then to the equipment icon, so the box is never empty.
+ * The loop teaches the movement, so it plays with Lite effects too; only the phone's own
+ * reduce-motion setting starts it paused.
  */
 export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; className?: string }) {
-  const reduce = useReducedMotionConfig();
+  const reduce = useReducedMotion() === true;
   const t = useT();
   const frames = (exercise.media.motionUrls ?? []).filter(isImage).slice(0, 2);
   const [online, setOnline] = useState(true);

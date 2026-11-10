@@ -39,3 +39,12 @@ test("the header's muscle map fills in as sets are ticked", async ({ page }) => 
   await expect(sheet.locator('[data-region="upper-back"][data-level="primary"]').first()).toBeVisible();
   await expect(sheet.getByRole("listitem").filter({ hasText: "Biceps" })).toBeVisible();
 });
+
+test("an added set starts with the last set's numbers", async ({ page }) => {
+  await page.getByRole("button", { name: "Options for Pull Up" }).press("Escape").catch(() => {});
+  await logSet(page, 1, null, "8");
+  await page.getByRole("button", { name: "Skip rest" }).click();
+  // Sets 2 and 3 are still empty: the new set copies set 1, not the empty row above it.
+  await page.getByRole("button", { name: "Add set" }).click();
+  await expect(page.getByLabel("Set 4 reps")).toHaveValue("8");
+});

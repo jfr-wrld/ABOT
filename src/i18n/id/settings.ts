@@ -539,7 +539,6 @@ export const settings: Record<string, string> = {
   "Choose a program": "Pilih program",
   "Trend {weight}": "Tren {weight}",
   "Visual effects": "Efek visual",
-  "Full: the glass dock and every animation. Lite: solid surfaces and no movement, for a smoother phone and a longer battery. Auto picks Lite on phones with 4 cores or less, 4 GB of memory or less, Data Saver, or reduced motion or transparency.": "Penuh: dock kaca dan semua animasi. Ringan: permukaan padat tanpa gerakan, supaya HP lebih lancar dan baterai lebih awet. Otomatis memilih Ringan di HP dengan 4 inti atau kurang, memori 4 GB atau kurang, Penghemat Data, atau pengaturan kurangi gerakan/transparansi.",
   "Auto ({mode})": "Otomatis ({mode})",
   "Full": "Penuh",
   Lite: "Ringan",

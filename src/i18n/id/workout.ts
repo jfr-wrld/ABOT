@@ -502,4 +502,5 @@ export const workout: Record<string, string> = {
   "Mark your gym here": "Tandai gym-mu di sini",
   "Your phone's position is saved with the name, on this device only. No map service is asked.": "Posisi HP disimpan bersama namanya, hanya di perangkat ini. Tidak ada layanan peta yang dihubungi.",
   "Save gym at my position": "Simpan gym di posisiku",
+  "Full: the glass dock and every animation. Lite saves battery: solid surfaces and no decorative movement (the workout bar's wave, celebrations), only short fades. Exercise demos keep moving in both, as they show how to do the lift. Auto picks Lite on phones with 4 cores or less, under 4 GB of memory, Data Saver, or reduced motion or transparency.": "Penuh: dock kaca dan semua animasi. Lite hemat baterai: permukaan solid dan tanpa gerakan hiasan (gelombang di bar workout, perayaan), hanya transisi singkat. Demo gerakan exercise tetap bergerak di kedua mode karena menunjukkan cara melakukannya. Auto memilih Lite di HP dengan 4 core atau kurang, memori di bawah 4 GB, Data Saver, atau pengurangan gerak/transparansi.",
 };
