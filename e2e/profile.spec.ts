@@ -12,7 +12,6 @@ test("profile opens from Home and starts honestly empty", async ({ page }) => {
   await page.getByRole("link", { name: "Profile" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Profile" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Progress", selected: true })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Lifetime" }).locator("dd").first()).toHaveText("0");
   await expect(page.getByRole("region", { name: "Identity" }).getByText("0 workouts", { exact: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
@@ -136,9 +135,8 @@ test("lifetime stats and top lifts come from finished workouts", async ({ page }
   await finishWorkout(page);
 
   await page.goto("/profile");
-  const stats = page.getByRole("region", { name: "Lifetime" });
-  await expect(stats.getByText("Workouts")).toBeVisible();
-  await expect(stats.locator("dd").first()).toHaveText("1");
+  // Lifetime figures sit in the line under the name.
+  await expect(page.getByRole("region", { name: "Identity" }).getByText(/^1 workout · 400 kg lifted/)).toBeVisible();
   await page.getByRole("tab", { name: "Lifts" }).click();
   const lifts = page.getByRole("region", { name: "Top lifts" });
   await expect(lifts.getByRole("link", { name: /Bench Press \(Barbell\)/ })).toBeVisible();

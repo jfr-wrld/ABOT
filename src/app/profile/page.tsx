@@ -25,7 +25,7 @@ import { PROFILE_LIMITS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
 import { isNativeApp } from "@/lib/native/files";
 import { openPhotoInput } from "@/lib/native/photo-input";
-import { useT, type T } from "@/i18n";
+import { useT } from "@/i18n";
 
 export default function ProfilePage() {
   return (
@@ -79,6 +79,7 @@ function ProfileScreen() {
 
   const record = [
     t.n(stats.workouts, "{n} workout", "{n} workouts"),
+    stats.volumeKg > 0 ? t("{volume} lifted", { volume: formatVolume(stats.volumeKg, unit) }) : null,
     stats.weekStreak > 0 ? t("{n}-wk streak", { n: stats.weekStreak }) : null,
   ].filter(Boolean);
 
@@ -179,21 +180,6 @@ function ProfileScreen() {
       <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-4 px-4 pb-8 pt-4">
         {tab === "progress" && (
           <>
-            <section aria-labelledby="lifetime-heading" className="panel p-3">
-              <h2 id="lifetime-heading" className="label-caps">
-                {t("Lifetime")}
-              </h2>
-              <dl className="mt-2 grid grid-cols-2 gap-2">
-                <Stat label={t("Workouts")} value={String(stats.workouts)} />
-                <Stat label={t("Volume")} value={formatVolume(stats.volumeKg, unit)} />
-                <Stat label={t("Time trained")} value={formatHours(stats.trainingSec, t)} />
-                <Stat
-                  label={t("Week streak")}
-                  value={t.n(stats.weekStreak, "{n} week", "{n} weeks")}
-                  accent={stats.weekStreak > 0}
-                />
-              </dl>
-            </section>
             <ProgressPanel />
           </>
         )}
@@ -264,12 +250,6 @@ function ProfileScreen() {
   );
 }
 
-function formatHours(sec: number, t: T): string {
-  if (sec < 3600) return t("{n} min", { n: Math.round(sec / 60) });
-  const h = (sec / 3600).toFixed(1);
-  return t("{n} h", { n: t.lang === "id" ? h.replace(".", ",") : h });
-}
-
 /**
  * The cover is the lifter's last twelve weeks of volume as a skyline: real data in place of a
  * stock banner. With nothing logged it is a plain Carbon plate.
@@ -299,15 +279,6 @@ function Cover({ weeks }: { weeks: number[] }) {
         </svg>
       )}
       <span className="label-caps absolute top-3 right-3">{t("12 wk volume")}</span>
-    </div>
-  );
-}
-
-function Stat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="min-w-0 rounded-xl bg-bg px-3 py-2.5">
-      <dt className="label-caps">{label}</dt>
-      <dd className={`num truncate text-xl font-bold tracking-tight ${accent ? "text-accent" : ""}`}>{value}</dd>
     </div>
   );
 }
