@@ -117,10 +117,22 @@ export function ActiveWorkoutHeader({
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
+  // The unit is set small, so "1,360 kg" fits a third of a 360 px screen with the figure whole.
+  const m = /^(.*) (kg|lbs)$/.exec(value);
   return (
     <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-3 py-2.5">
       <dt className="label-caps">{label}</dt>
-      <dd className="num flex min-h-11 items-center truncate text-xl font-bold tracking-tight text-text">{value}</dd>
+      <dd className="num flex min-h-11 items-baseline truncate pt-2 text-xl font-bold tracking-tight text-text">
+        {m ? (
+          <>
+            {m[1]}
+            {/* The space sits inside the small unit, so it reads "480 kg" and stays narrow. */}
+            <span className="text-xs font-semibold text-text-muted">{` ${m[2]}`}</span>
+          </>
+        ) : (
+          value
+        )}
+      </dd>
     </div>
   );
 }
