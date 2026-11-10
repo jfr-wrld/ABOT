@@ -140,7 +140,8 @@ renderAudio(wav);
 /**
  * The audio filter. Each voice line is cut from the take with a little air either side, faded at
  * the cuts so they do not click, and delayed to its place. The soundtrack ducks about 6 dB while
- * the voice speaks (sidechain), then the whole mix is mastered.
+ * the voice speaks (sidechain), then the whole mix is mastered. The voice is padded with silence to
+ * the full length: the sidechain stops when its key input ends, which cut the outro short.
  */
 const VO_FILE = join(OUT, "vo.mp3");
 const hasVo = existsSync(VO_FILE);
@@ -159,7 +160,7 @@ if (hasVo) {
   const filter = [
     `[2:a]aformat=sample_rates=48000:channel_layouts=stereo,asplit=${VO.length}${VO.map((_, i) => `[v${i}]`).join("")}`,
     ...lines,
-    `${VO.map((_, i) => `[l${i}]`).join("")}amix=inputs=${VO.length}:normalize=0,volume=1.6[vo]`,
+    `${VO.map((_, i) => `[l${i}]`).join("")}amix=inputs=${VO.length}:normalize=0,volume=1.6,apad=whole_dur=${DURATION + 0.5}[vo]`,
     "[vo]asplit[vomix][vokey]",
     "[1:a][vokey]sidechaincompress=threshold=0.02:ratio=4:attack=15:release=350:makeup=1[bed]",
     `[bed][vomix]amix=inputs=2:normalize=0,${master}[mix]`,
