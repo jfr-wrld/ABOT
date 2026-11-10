@@ -1,0 +1,760 @@
+/**
+ * The ABOT intro, drawn on one 1080 x 1920 canvas by renderAt(t): a pure function of time, so
+ * render.mjs can step it frame by frame and every frame is the same on every run. Scenes and hit
+ * times come from timeline.mjs; real app screens, the logo and flame paths come in through
+ * window.ASSETS (set by render.mjs).
+ */
+import { SCENES, T } from "./timeline.mjs";
+
+const W = 1080;
+const H = 1920;
+const VOLT = "#ccff00";
+const OBS = "#09090b";
+const INK = "#f4f4f5";
+const MUTED = "#a1a1aa";
+const SANS = '"Plus Jakarta Sans", system-ui, sans-serif';
+const MONO = '"JetBrains Mono", ui-monospace, monospace';
+
+const A = window.ASSETS;
+const cv = document.getElementById("film");
+const ctx = cv.getContext("2d");
+
+/* ------------------------------------------------------------------ */
+/* Easing and time                                                     */
+/* ------------------------------------------------------------------ */
+
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const outCubic = (k) => 1 - Math.pow(1 - k, 3);
+const inCubic = (k) => k * k * k;
+const inOutCubic = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+const outExpo = (k) => (k >= 1 ? 1 : 1 - Math.pow(2, -10 * k));
+const outBack = (k, s = 1.70158) => 1 + (s + 1) * Math.pow(k - 1, 3) + s * Math.pow(k - 1, 2);
+/** A pulse that peaks at `at` and fades over `len`. */
+const pulse = (t, at, len = 0.35) => (t < at ? 0 : Math.max(0, 1 - (t - at) / len));
+const inScene = (t, name) => t >= SCENES[name][0] && t < SCENES[name][1];
+/** 0 to 1 entering a scene over `len`, and 1 to 0 leaving over `len`. */
+function presence(t, name, len = 0.45) {
+  const [a, b] = SCENES[name];
+  return Math.min(outCubic(prog(t, a, a + len)), 1 - inCubic(prog(t, b - len, b)));
+}
+
+/* ------------------------------------------------------------------ */
+/* Assets                                                              */
+/* ------------------------------------------------------------------ */
+
+const img = {};
+function load(name, src) {
+  return new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => {
+      img[name] = i;
+      res();
+    };
+    i.onerror = rej;
+    i.src = src;
+  });
+}
+
+const P = {
+  A: new Path2D(A.mark.A),
+  BAR: new Path2D(A.mark.BAR),
+  L: new Path2D(A.mark.L),
+  R: new Path2D(A.mark.R),
+  fo: new Path2D(A.flame.outer),
+  fm: new Path2D(A.flame.middle),
+  fc: new Path2D(A.flame.core),
+  plate: new Path2D("M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z"),
+};
+
+/* ------------------------------------------------------------------ */
+/* Drawing helpers                                                     */
+/* ------------------------------------------------------------------ */
+
+function font(size, weight = 800, family = SANS, tracking = 0) {
+  ctx.font = `${weight} ${size}px ${family}`;
+  ctx.letterSpacing = `${tracking}px`;
+}
+
+function text(s, x, y, o = {}) {
+  font(o.size ?? 64, o.weight ?? 800, o.family ?? SANS, o.tracking ?? 0);
+  ctx.fillStyle = o.color ?? INK;
+  ctx.textAlign = o.align ?? "center";
+  ctx.textBaseline = o.baseline ?? "alphabetic";
+  ctx.globalAlpha = o.alpha ?? 1;
+  ctx.fillText(s, x, y);
+  ctx.globalAlpha = 1;
+  ctx.letterSpacing = "0px";
+}
+
+/** Words that rise out of a slot one after another from `at`, centred on x. */
+function riseLine(t, at, s, x, y, o = {}) {
+  const words = s.split(" ");
+  font(o.size ?? 88, o.weight ?? 800, o.family ?? SANS, o.tracking ?? -2);
+  const gap = (o.size ?? 88) * 0.28;
+  const widths = words.map((w) => ctx.measureText(w).width);
+  const total = widths.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
+  let cx = x - total / 2;
+  const size = o.size ?? 88;
+  words.forEach((w, i) => {
+    const k = outExpo(prog(t, at + i * (o.stagger ?? 0.08), at + i * (o.stagger ?? 0.08) + 0.5));
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cx - 10, y - size * 1.05, widths[i] + 20, size * 1.35);
+    ctx.clip();
+    text(w, cx, y + (1 - k) * size * 1.2, { ...o, align: "left", alpha: (o.alpha ?? 1) * clamp(k * 1.5) });
+    ctx.restore();
+    cx += widths[i] + gap;
+  });
+}
+
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+}
+
+/** Obsidian with a slow Volt glow and a faint grid that drifts, behind every scene. */
+function background(t, glowY = 760, glow = 0.18) {
+  ctx.fillStyle = OBS;
+  ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W / 2, glowY, 0, W / 2, glowY, 900);
+  g.addColorStop(0, `rgba(204,255,0,${glow})`);
+  g.addColorStop(1, "rgba(204,255,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = "rgba(255,255,255,0.035)";
+  ctx.lineWidth = 2;
+  const off = (t * 24) % 120;
+  for (let y = -120 + off; y < H; y += 120) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+  for (let x = 0; x <= W; x += 120) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+  }
+}
+
+/**
+ * A phone showing `screen` (a 1080 x 2280 capture). `focus` zooms into the screen around a
+ * point (screen pixels) by `zoom`, keeping the phone's size; the frame is drawn around it.
+ */
+function phone(screen, cx, cy, w, o = {}) {
+  const im = img[screen];
+  if (!im) return;
+  const h = w * (2280 / 1080);
+  const pad = w * 0.035;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(o.rot ?? 0);
+  ctx.globalAlpha = o.alpha ?? 1;
+  // Shadow and bezel.
+  ctx.shadowColor = "rgba(0,0,0,0.6)";
+  ctx.shadowBlur = 80;
+  ctx.shadowOffsetY = 30;
+  rrect(-w / 2 - pad, -h / 2 - pad, w + pad * 2, h + pad * 2, w * 0.14);
+  ctx.fillStyle = "#18181b";
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.strokeStyle = o.ring ?? "rgba(255,255,255,0.14)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  // Screen.
+  rrect(-w / 2, -h / 2, w, h, w * 0.11);
+  ctx.save();
+  ctx.clip();
+  const zoom = o.zoom ?? 1;
+  const fx = o.focus?.[0] ?? 540;
+  const fy = o.focus?.[1] ?? 1140;
+  const sw = 1080 / zoom;
+  const sh = 2280 / zoom;
+  const sx = clamp(fx - sw / 2, 0, 1080 - sw);
+  const sy = clamp(fy - sh / 2, 0, 2280 - sh);
+  ctx.drawImage(im, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
+  o.over?.({ sx, sy, sw, sh, w, h, k: w / sw });
+  ctx.restore();
+  ctx.restore();
+}
+
+/** The ABOT mark assembling: the A punches up at `a`, the plates slide on and lock at `lock`. */
+function mark(t, cx, cy, size, a, lock, o = {}) {
+  const k = size / 100;
+  const ka = outBack(prog(t, a, a + 0.4), 2.2);
+  const kp = outBack(prog(t, lock - 0.3, lock), 1.4);
+  const shake = pulse(t, lock, 0.25) * 8 * Math.sin(t * 90);
+  ctx.save();
+  ctx.translate(cx - 50 * k + shake, cy - 50 * k);
+  ctx.scale(k, k);
+  ctx.fillStyle = o.color ?? VOLT;
+  if (o.glow) {
+    ctx.shadowColor = "rgba(204,255,0,0.55)";
+    ctx.shadowBlur = 40;
+  }
+  // The A, from the base.
+  if (ka > 0) {
+    ctx.save();
+    ctx.translate(50, 88);
+    ctx.scale(lerp(0.4, 1, ka), lerp(0.2, 1, ka));
+    ctx.translate(-50, -88);
+    ctx.globalAlpha = clamp(ka * 2);
+    ctx.fill(P.A);
+    ctx.fill(P.BAR);
+    ctx.restore();
+  }
+  // The plates, from the sides.
+  if (kp > 0) {
+    ctx.globalAlpha = clamp(kp * 2);
+    ctx.save();
+    ctx.translate(-(1 - kp) * 60, 0);
+    ctx.fill(P.L);
+    ctx.restore();
+    ctx.save();
+    ctx.translate((1 - kp) * 60, 0);
+    ctx.fill(P.R);
+    ctx.restore();
+  }
+  ctx.restore();
+  // One band of light across it.
+  if (o.sweepAt !== undefined) {
+    const ks = prog(t, o.sweepAt, o.sweepAt + 0.5);
+    if (ks > 0 && ks < 1) {
+      ctx.save();
+      ctx.translate(cx - 50 * k, cy - 50 * k);
+      ctx.scale(k, k);
+      ctx.clip(new Path2D(A.mark.all));
+      const x = lerp(-40, 140, inOutCubic(ks));
+      const g = ctx.createLinearGradient(x - 25, 0, x + 25, 0);
+      g.addColorStop(0, "rgba(255,255,255,0)");
+      g.addColorStop(0.5, "rgba(255,255,255,0.75)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(-20, 0, 160, 100);
+      ctx.restore();
+    }
+  }
+}
+
+/** The streak flame, flickering by time. */
+function flame(t, cx, bottom, height, grow = 1) {
+  const k = (height / 160) * grow;
+  const layers = [
+    [P.fo, VOLT, 1.5, 0.05, 0.025],
+    [P.fm, "#facc15", 1.1, 0.06, 0.02],
+    [P.fc, "#fffbe6", 0.8, 0.07, 0.015],
+  ];
+  ctx.save();
+  ctx.translate(cx, bottom);
+  ctx.shadowColor = "rgba(204,255,0,0.7)";
+  ctx.shadowBlur = 70;
+  layers.forEach(([p, color, period, amp, skew], i) => {
+    const ph = (t / period) * Math.PI * 2 + i;
+    ctx.save();
+    ctx.scale(k, k * (1 + amp * Math.sin(ph) + amp * 0.5 * Math.sin(ph * 2.3)));
+    ctx.transform(1, 0, skew * Math.sin(ph * 0.9), 1, 0, 0);
+    ctx.translate(-60, -160);
+    ctx.fillStyle = color;
+    ctx.fill(p);
+    ctx.restore();
+    ctx.shadowBlur = 0;
+  });
+  ctx.restore();
+}
+
+/** Embers drifting up from a point, deterministic in t. */
+function embers(t, cx, cy, from, n = 26, spread = 260) {
+  for (let i = 0; i < n; i++) {
+    const life = 1.4 + (i % 5) * 0.25;
+    const start = from + ((i * 0.37) % 1.6);
+    if (t < start) continue;
+    const age = ((t - start) % life) / life;
+    const x = cx + (((i * 73) % spread) - spread / 2) + Math.sin(age * 6 + i) * 18;
+    const y = cy - age * (420 + (i % 4) * 80);
+    ctx.globalAlpha = Math.sin(age * Math.PI) * 0.9;
+    ctx.fillStyle = i % 3 ? VOLT : "#facc15";
+    ctx.beginPath();
+    ctx.arc(x, y, 3 + (i % 3) * 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/** A Volt ring that spreads from a point. */
+function ripple(t, at, x, y, r0, r1, len = 0.45) {
+  const k = prog(t, at, at + len);
+  if (k <= 0 || k >= 1) return;
+  ctx.strokeStyle = `rgba(204,255,0,${(1 - k) * 0.9})`;
+  ctx.lineWidth = 6 * (1 - k) + 1;
+  ctx.beginPath();
+  ctx.arc(x, y, lerp(r0, r1, outCubic(k)), 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function flash(t, at, alpha = 0.6, len = 0.35) {
+  const k = pulse(t, at, len);
+  if (k <= 0) return;
+  ctx.fillStyle = `rgba(204,255,0,${k * alpha})`;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function label(s, y, alpha = 1, color = VOLT) {
+  text(s, W / 2, y, { size: 30, weight: 700, family: MONO, tracking: 8, color, alpha });
+}
+
+/* ------------------------------------------------------------------ */
+/* Scenes                                                              */
+/* ------------------------------------------------------------------ */
+
+function hook(t) {
+  background(t, 820, 0.08 + pulse(t, T.ignite, 1.2) * 0.25);
+  const out = 1 - inCubic(prog(t, 4.0, 4.5));
+  ctx.save();
+  ctx.translate(W / 2, 820);
+  ctx.scale(lerp(1, 0.8, 1 - out), lerp(1, 0.8, 1 - out));
+  ctx.translate(-W / 2, -820);
+  ctx.globalAlpha = out;
+  // The spark rising before the mark.
+  if (t < T.ignite + 0.05) {
+    const k = outCubic(prog(t, T.spark, T.ignite));
+    const y = lerp(1500, 820, k);
+    ctx.fillStyle = VOLT;
+    ctx.shadowColor = VOLT;
+    ctx.shadowBlur = 40;
+    ctx.beginPath();
+    ctx.arc(W / 2, y, 10 + k * 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "rgba(204,255,0,0.4)";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(W / 2, y);
+    ctx.lineTo(W / 2, Math.min(1500, y + 260));
+    ctx.stroke();
+  }
+  ripple(t, T.ignite, W / 2, 820, 60, 520, 0.8);
+  ripple(t, T.lock, W / 2, 820, 120, 640, 0.7);
+  mark(t, W / 2, 800, 380, T.ignite, T.lock, { glow: true, sweepAt: T.sweep });
+  // ABOT, letter by letter.
+  "ABOT".split("").forEach((ch, i) => {
+    const k = outBack(prog(t, T.letters + i * 0.07, T.letters + i * 0.07 + 0.45), 2);
+    if (k <= 0) return;
+    const x = W / 2 + (i - 1.5) * 118;
+    ctx.save();
+    ctx.translate(x, 1150);
+    ctx.scale(1, clamp(k, 0, 1.3));
+    text(ch, 0, 0, { size: 150, weight: 800, tracking: -4, alpha: clamp(k * 2) });
+    ctx.restore();
+  });
+  riseLine(t, T.tag1, "Lift heavy.", W / 2, 1330, { size: 70, weight: 700, color: MUTED });
+  riseLine(t, T.tag2, "Log everything.", W / 2, 1420, { size: 70, weight: 800, color: VOLT });
+  ctx.restore();
+  flash(t, T.ignite, 0.35, 0.5);
+}
+
+function logging(t) {
+  const [a] = SCENES.log;
+  background(t, 1100, 0.12);
+  const p = presence(t, "log");
+  const m = A.meta.boxes;
+  // Which capture: the sets tick on the beat.
+  const n = T.ticks.filter((x) => t >= x).length;
+  const screen = `logger-${n}`;
+  const enter = outCubic(prog(t, T.logIn, T.logIn + 0.7));
+  const zoomIn = inOutCubic(prog(t, 5.6, 6.6)) * (1 - inOutCubic(prog(t, 9.2, 10.2)));
+  const zoom = lerp(1, 1.75, zoomIn);
+  const focus = [lerp(540, 720, zoomIn), lerp(1140, 1250, zoomIn)];
+  const pw = 600;
+  const cy = lerp(1920 + 800, 1210, enter);
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.3, "One tap per set.", W / 2, 230, { size: 84 });
+  phone(screen, W / 2, cy, pw, {
+    zoom,
+    focus,
+    rot: (1 - enter) * 0.12,
+    over: ({ sx, sy, k }) => {
+      // A ring and a lift on each tick, at the real button.
+      T.ticks.forEach((at, i) => {
+        const b = m[`tick${i + 1}`];
+        if (!b) return;
+        const x = (b.x + b.w / 2 - sx) * k - pw / 2;
+        const y = (b.y + b.h / 2 - sy) * k - (pw * 2280) / 1080 / 2;
+        ripple(t, at, x, y, b.w * 0.35 * k, b.w * 1.4 * k, 0.5);
+        const kk = pulse(t, at, 0.3);
+        if (kk > 0) {
+          ctx.fillStyle = `rgba(204,255,0,${kk * 0.35})`;
+          ctx.beginPath();
+          ctx.roundRect(x - (b.w / 2) * k * (1 + kk * 0.2), y - (b.h / 2) * k * (1 + kk * 0.2), b.w * k * (1 + kk * 0.2), b.h * k * (1 + kk * 0.2), 24 * k);
+          ctx.fill();
+        }
+        // The set's volume (85 kg x 8 on the sample data) rising off the tick.
+        const kf = prog(t, at, at + 1.0);
+        if (kf > 0 && kf < 1) {
+          text("+680 kg", x - 150, y - 40 - outCubic(kf) * 110, { size: 44, weight: 800, family: MONO, color: VOLT, alpha: 1 - inCubic(kf) });
+        }
+      });
+    },
+  });
+  const vol = Math.round(lerp(0, 2040, clamp(n / 3)));
+  text(`${vol.toLocaleString("en-US")} kg`, W / 2, 400, { size: 64, weight: 800, family: MONO, color: VOLT, alpha: clamp(prog(t, 6.6, 7.0)) * (1 - prog(t, 9.4, 9.8)) });
+  label("VOLUME THIS WORKOUT", 460, clamp(prog(t, 6.6, 7.0)) * (1 - prog(t, 9.4, 9.8)), MUTED);
+  text("Previous numbers, plates, supersets, RPE", W / 2, 1830, { size: 40, weight: 600, color: MUTED, alpha: clamp(prog(t, 9.6, 10.1)) });
+  ctx.globalAlpha = 1;
+}
+
+/** A filled wave along a bar's bottom edge (screen coordinates in px of the phone). */
+function barWave(t, x, y, w, h) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, h / 2);
+  ctx.clip();
+  [
+    [200, 0.16, 0.9, -1],
+    [100, 0.26, 1.4, 1],
+  ].forEach(([period, alpha, speed, dir], i) => {
+    const amp = h * 0.12 * (0.6 + 0.4 * Math.sin(t * (1.6 + i)));
+    ctx.fillStyle = `rgba(204,255,0,${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    for (let px = 0; px <= w; px += 6) {
+      const yy = y + h * 0.55 + amp * Math.sin(((px / w) * 400) / period * Math.PI * 2 + dir * t * speed * 3);
+      ctx.lineTo(x + px, yy);
+    }
+    ctx.lineTo(x + w, y + h);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function workoutBar(t) {
+  const [a] = SCENES.bar;
+  background(t, 1500, 0.14);
+  const p = presence(t, "bar");
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.2, "Your workout, live.", W / 2, 230, { size: 84 });
+  const open = t >= T.barOpen;
+  const screen = open ? "logger-bar" : "logger-rest";
+  const zoomK = inOutCubic(prog(t, a + 0.3, a + 1.3));
+  const pw = 640;
+  phone(screen, W / 2, lerp(1330, 1260, zoomK), pw, {
+    zoom: lerp(1, 1.5, zoomK),
+    focus: [540, open ? 1820 : 1900],
+    over: ({ sx, sy, k, w, h }) => {
+      const b = open ? A.meta.boxes.barOpen : A.meta.boxes.bar;
+      if (!b) return;
+      const x = (b.x - sx) * k - w / 2;
+      const y = (b.y - sy) * k - h / 2;
+      // The live wave and a Volt outline that pops when the bar opens.
+      if (open) barWave(t, x, y, b.w * k, Math.min(b.h * k, 56 * 3 * k));
+      const kk = pulse(t, T.barOpen, 0.5);
+      if (kk > 0) {
+        ctx.strokeStyle = `rgba(204,255,0,${kk})`;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.roundRect(x - 10 * kk, y - 10 * kk, b.w * k + 20 * kk, b.h * k + 20 * kk, 80 * k);
+        ctx.stroke();
+      }
+    },
+  });
+  // 3, 2, 1, GO above the phone.
+  const marks = [...T.rest.map((x, i) => [x, String(3 - i)]), [T.go, "GO"]];
+  marks.forEach(([at, s], i) => {
+    const k = prog(t, at, at + 0.5);
+    if (k <= 0 || (k >= 1 && i < marks.length - 1)) return;
+    const end = i === marks.length - 1 ? 1 - prog(t, T.barOpen - 0.1, T.barOpen + 0.2) : 1 - k;
+    const s0 = outBack(clamp(k * 2), 2.5);
+    ctx.save();
+    ctx.translate(W / 2, 470);
+    ctx.scale(s0, s0);
+    text(s, 0, 60, { size: 200, weight: 800, family: MONO, color: s === "GO" ? VOLT : INK, alpha: end });
+    ctx.restore();
+  });
+  const tags = ["Pause", "Done set", "Add set", "Go to it"];
+  tags.forEach((s, i) => {
+    const k = outBack(prog(t, T.barOpen + 0.3 + i * 0.12, T.barOpen + 0.7 + i * 0.12), 2);
+    if (k <= 0) return;
+    const x = 160 + i * 253;
+    ctx.save();
+    ctx.translate(x, 470);
+    ctx.scale(k, k);
+    rrect(-115, -44, 230, 88, 44);
+    ctx.fillStyle = i === 1 ? VOLT : "rgba(255,255,255,0.08)";
+    ctx.fill();
+    text(s, 0, 12, { size: 34, weight: 700, color: i === 1 ? OBS : INK });
+    ctx.restore();
+  });
+  ctx.globalAlpha = 1;
+  flash(t, T.go, 0.25, 0.3);
+}
+
+function progress(t) {
+  const [a] = SCENES.progress;
+  background(t, 900, 0.12);
+  const p = presence(t, "progress");
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.2, "Every kilo adds up.", W / 2, 230, { size: 84 });
+  // Eight bars rising behind the phone, one per beat.
+  const heights = [0.46, 0.52, 0.5, 0.61, 0.66, 0.7, 0.78, 0.92];
+  T.bars.forEach((at, i) => {
+    const k = outBack(prog(t, at, at + 0.4), 1.8);
+    const bw = 50;
+    const x = 50 + i * 64;
+    const h = heights[i] * 1000 * k;
+    ctx.fillStyle = i === 7 ? VOLT : `rgba(204,255,0,${0.22 + i * 0.05})`;
+    rrect(x, 1760 - h, bw, Math.max(0, h), 14);
+    ctx.fill();
+    if (k > 0) text(`W${i + 1}`, x + bw / 2, 1810, { size: 24, weight: 700, family: MONO, color: MUTED, alpha: clamp(k) });
+  });
+  const enter = outCubic(prog(t, a + 0.3, a + 1.1));
+  phone("progress", lerp(W + 500, 800, enter), 1080, 470, { rot: lerp(0.2, 0.04, enter) });
+  text("Volume · records · muscles · calendar", W / 2, 1890, { size: 34, weight: 600, color: MUTED, alpha: clamp(prog(t, 23.2, 23.6)) });
+  ctx.globalAlpha = 1;
+}
+
+function streak(t) {
+  ctx.fillStyle = "#050505";
+  ctx.fillRect(0, 0, W, H);
+  const lit = prog(t, T.flame, T.flame + 0.4);
+  const g = ctx.createRadialGradient(W / 2, 760, 0, W / 2, 760, 820);
+  g.addColorStop(0, `rgba(204,255,0,${0.28 * lit * (0.85 + 0.15 * Math.sin(t * 3))})`);
+  g.addColorStop(1, "rgba(204,255,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  const p = presence(t, "streak", 0.3);
+  ctx.globalAlpha = p;
+  // The ember, then the flame catching.
+  if (t < T.flame + 0.05) {
+    const k = outCubic(prog(t, T.ember, T.flame));
+    ctx.fillStyle = VOLT;
+    ctx.shadowColor = VOLT;
+    ctx.shadowBlur = 30;
+    ctx.beginPath();
+    ctx.arc(W / 2, lerp(1300, 900, k), 9 + k * 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  if (t >= T.flame) {
+    const grow = outBack(prog(t, T.flame, T.flame + 0.6), 2);
+    flame(t, W / 2, 980, 560, grow);
+    embers(t, W / 2, 900, T.flame + 0.2);
+  }
+  ripple(t, T.flame, W / 2, 800, 80, 700, 0.9);
+  // The count rolling 15 to 16.
+  const kr = outBack(prog(t, T.roll, T.roll + 0.5), 1.6);
+  if (t > T.flame + 0.3) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 1040, W, 290);
+    ctx.clip();
+    text("15", W / 2, 1290 - kr * 290, { size: 280, weight: 800, family: SANS, tracking: -10, color: MUTED, alpha: 1 - kr });
+    text("16", W / 2, 1290 + (1 - kr) * 290, { size: 280, weight: 800, family: SANS, tracking: -10, color: VOLT });
+    ctx.restore();
+    label("WEEK STREAK", 1010, clamp(prog(t, T.flame + 0.3, T.flame + 0.7)));
+    text("weeks in a row", W / 2, 1400, { size: 60, weight: 700, alpha: clamp(prog(t, T.roll + 0.3, T.roll + 0.7)) });
+  }
+  // Twelve week plates lighting in turn.
+  T.plates.forEach((at, i) => {
+    const size = 64;
+    const x = W / 2 + (i - 5.5) * 80 - size / 2;
+    const y = 1500;
+    const k = outBack(prog(t, at, at + 0.3), 2.5);
+    ctx.save();
+    ctx.translate(x + size / 2, y + size / 2);
+    const s = t >= at ? lerp(0.7, 1, clamp(k)) * (1 + pulse(t, at, 0.25) * 0.25) : 0.85;
+    ctx.scale((s * size) / 100, (s * size) / 100);
+    ctx.translate(-50, -50);
+    if (t >= at) {
+      ctx.fillStyle = VOLT;
+      ctx.shadowColor = "rgba(204,255,0,0.7)";
+      ctx.shadowBlur = 20;
+      ctx.fill(P.plate);
+    } else {
+      ctx.strokeStyle = `rgba(255,255,255,${0.2 * clamp(prog(t, T.flame + 0.5, T.flame + 1))})`;
+      ctx.lineWidth = 7;
+      ctx.stroke(P.plate);
+    }
+    ctx.restore();
+  });
+  riseLine(t, T.keepFire, "Keep the fire going.", W / 2, 1760, { size: 72, weight: 800 });
+  ctx.globalAlpha = 1;
+  flash(t, T.flame, 0.5, 0.5);
+}
+
+function share(t) {
+  const [a] = SCENES.share;
+  background(t, 960, 0.1);
+  const p = presence(t, "share");
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.2, "Share it.", W / 2, 210, { size: 96 });
+  riseLine(t, a + 0.55, "12 themes, all free.", W / 2, 300, { size: 56, weight: 700, color: VOLT });
+  const cw = 230;
+  const ch = (cw * 1920) / 1080;
+  const g = inOutCubic(prog(t, T.gather, T.gather + 0.8));
+  T.cards.forEach((at, i) => {
+    const im = img[`theme${i}`];
+    if (!im || t < at - 0.05) return;
+    const k = outBack(prog(t, at, at + 0.45), 1.4);
+    // A fan that swings in from alternate sides...
+    const fanAngle = (i - 5.5) * 0.06;
+    const fx = W / 2 + (i - 5.5) * 64;
+    const fy = 1050 + Math.abs(i - 5.5) * 14;
+    const from = i % 2 ? W + 400 : -400;
+    let x = lerp(from, fx, k);
+    let y = lerp(1300, fy, k);
+    let rot = lerp(i % 2 ? 0.6 : -0.6, fanAngle, k);
+    let s = 1.15;
+    // ...then gathers into a 4 x 3 grid.
+    if (g > 0) {
+      const gx = 150 + (i % 4) * 260;
+      const gy = 660 + Math.floor(i / 4) * 450;
+      x = lerp(x, gx, g);
+      y = lerp(y, gy, g);
+      rot = lerp(rot, 0, g);
+      s = lerp(s, 1, g);
+    }
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.scale(s, s);
+    ctx.shadowColor = "rgba(0,0,0,0.6)";
+    ctx.shadowBlur = 40;
+    rrect(-cw / 2, -ch / 2, cw, ch, 18);
+    ctx.fillStyle = "#000";
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.save();
+    rrect(-cw / 2, -ch / 2, cw, ch, 18);
+    ctx.clip();
+    ctx.drawImage(im, -cw / 2, -ch / 2, cw, ch);
+    ctx.restore();
+    ctx.restore();
+  });
+  text("Instagram Stories in one tap", W / 2, 1870, { size: 38, weight: 600, color: MUTED, alpha: clamp(prog(t, T.gather + 0.5, T.gather + 0.9)) });
+  ctx.globalAlpha = 1;
+  flash(t, T.gather, 0.18, 0.3);
+}
+
+function bodyPhase(t) {
+  background(t, 1200, 0.12);
+  const p = presence(t, "phase");
+  ctx.globalAlpha = p;
+  const words = ["Cut.", "Bulk.", "Recomp.", "Peak."];
+  words.forEach((w, i) => {
+    const at = T.phaseWords[i];
+    const k = outBack(prog(t, at, at + 0.4), 2);
+    if (k <= 0) return;
+    const x = i < 2 ? 300 + i * 480 : 300 + (i - 2) * 480;
+    const y = i < 2 ? 260 : 380;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(k, k);
+    text(w, 0, 0, { size: 96, weight: 800, color: i === 1 ? VOLT : INK });
+    ctx.restore();
+  });
+  const enter = outCubic(prog(t, T.phaseIn, T.phaseIn + 0.7));
+  phone("phase", W / 2, lerp(2600, 1220, enter), 640, { zoom: lerp(1, 1.25, prog(t, T.phaseIn + 0.6, 48)), focus: [540, 760] });
+  text("Calories and macros from your training", W / 2, 1880, { size: 38, weight: 600, color: MUTED, alpha: clamp(prog(t, 46, 46.4)) });
+  ctx.globalAlpha = 1;
+}
+
+function trust(t) {
+  background(t, 1000, 0.08);
+  const p = presence(t, "trust");
+  ctx.globalAlpha = p;
+  // Dark and light Home, split by a wipe that slides across.
+  const wipe = lerp(1080, 0, inOutCubic(prog(t, 50.5, 51.5)));
+  const pw = 560;
+  const y = 1240;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, wipe, H);
+  ctx.clip();
+  phone("home", W / 2, y, pw);
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(wipe, 0, W - wipe, H);
+  ctx.clip();
+  phone("home-light", W / 2, y, pw);
+  ctx.restore();
+  if (wipe > 0 && wipe < W) {
+    ctx.fillStyle = VOLT;
+    ctx.fillRect(wipe - 3, 560, 6, 1200);
+  }
+  const lines = ["Works offline.", "No ads. No tracking.", "Your data stays on your phone.", "English · Bahasa Indonesia"];
+  lines.forEach((s, i) => riseLine(t, T.trustLines[i], s, W / 2, 200 + i * 88, { size: i === 2 ? 60 : 56, weight: i === 2 ? 800 : 700, color: i === 2 ? VOLT : INK }));
+  ctx.globalAlpha = 1;
+}
+
+function outro(t) {
+  background(t, 820, 0.12 + pulse(t, T.outroHit, 1.5) * 0.25);
+  const p = clamp(prog(t, SCENES.outro[0], SCENES.outro[0] + 0.3)) * (1 - prog(t, 59.4, 60));
+  ctx.globalAlpha = p;
+  ripple(t, T.outroHit, W / 2, 760, 100, 760, 1);
+  mark(t, W / 2, 740, 360, T.outroHit - 0.35, T.outroHit, { glow: true, sweepAt: T.outroHit + 0.4 });
+  const kw = outExpo(prog(t, T.outroHit + 0.2, T.outroHit + 0.8));
+  text("ABOT", W / 2, 1100 + (1 - kw) * 60, { size: 170, weight: 800, tracking: -4, alpha: kw * p });
+  riseLine(t, T.outroHit + 0.6, "Gym Progress Tracker", W / 2, 1200, { size: 56, weight: 700, color: MUTED });
+  riseLine(t, T.outroHit + 1.0, "Free on Android and the web", W / 2, 1290, { size: 48, weight: 600, color: INK });
+  // The Download pill, pulsing on the beat.
+  const kb = outBack(prog(t, T.outroUrl - 0.3, T.outroUrl + 0.2), 2);
+  if (kb > 0) {
+    const beat = 1 + 0.04 * Math.max(0, Math.sin(((t - T.outroUrl) / 0.5) * Math.PI * 2));
+    ctx.save();
+    ctx.translate(W / 2, 1480);
+    ctx.scale(kb * beat, kb * beat);
+    ctx.shadowColor = "rgba(204,255,0,0.6)";
+    ctx.shadowBlur = 40;
+    rrect(-260, -70, 520, 140, 70);
+    ctx.fillStyle = VOLT;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    text("Download", 0, 22, { size: 60, weight: 800, color: OBS, alpha: p });
+    ctx.restore();
+    text("abot-app.vercel.app", W / 2, 1640, { size: 40, weight: 700, family: MONO, color: VOLT, alpha: clamp(kb) * p });
+  }
+  ctx.globalAlpha = 1;
+  flash(t, T.outroHit, 0.4, 0.5);
+}
+
+/* ------------------------------------------------------------------ */
+/* Entry points                                                        */
+/* ------------------------------------------------------------------ */
+
+const ORDER = [
+  ["hook", hook],
+  ["log", logging],
+  ["bar", workoutBar],
+  ["progress", progress],
+  ["streak", streak],
+  ["share", share],
+  ["phase", bodyPhase],
+  ["trust", trust],
+  ["outro", outro],
+];
+
+window.renderAt = (t) => {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+  const scene = ORDER.find(([name]) => inScene(t, name)) ?? ORDER.at(-1);
+  scene[1](t);
+};
+
+window.ready = (async () => {
+  const src = A.src;
+  const screens = ["home", "home-light", "progress", "phase", "story", "logger-0", "logger-1", "logger-2", "logger-3", "logger-rest", "logger-bar"];
+  await Promise.all([
+    ...screens.map((s) => load(s, `${src}/${s}.png`)),
+    ...Array.from({ length: 12 }, (_, i) => load(`theme${i}`, `${src}/themes/${String(i).padStart(2, "0")}.png`)),
+    document.fonts.load(`800 80px ${SANS}`),
+    document.fonts.load(`700 80px ${SANS}`),
+    document.fonts.load(`600 80px ${SANS}`),
+    document.fonts.load(`700 40px ${MONO}`),
+    document.fonts.load(`800 40px ${MONO}`),
+  ]);
+  return true;
+})();

@@ -20,6 +20,9 @@
 # production
 /build
 
+# rendered intro video and its working files (scripts/intro-video)
+/video-out/
+
 # misc
 .DS_Store
 *.pem
