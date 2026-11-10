@@ -187,6 +187,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
       transition={ISLAND_SPRING}
       className={`${capsule} w-full flex-col items-stretch ${open ? "!rounded-[28px]" : "h-14 rounded-[28px]"}`}
     >
+      <LiveWave paused={paused} />
       <button
         type="button"
         onClick={() => {
@@ -196,7 +197,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
         aria-expanded={open}
         aria-controls="island-shortcuts"
         aria-label={`${status}. ${headline}, ${detail}`}
-        className="flex h-14 w-full shrink-0 items-center text-left hover:bg-ink/[0.06]"
+        className="relative flex h-14 w-full shrink-0 items-center text-left hover:bg-ink/[0.06]"
       >
         <motion.span {...fade} className="flex min-w-0 flex-1 items-center gap-3 pl-5 pr-5">
           <span className="flex min-w-0 flex-1 flex-col items-start" aria-hidden="true">
@@ -222,7 +223,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.16, delay: 0.08 }}
-          className="grid grid-cols-4 gap-1.5 px-3 pb-3"
+          className="relative grid grid-cols-4 gap-1.5 px-3 pb-3"
         >
           <Shortcut
             label={paused ? t("Resume") : t("Pause")}
@@ -270,6 +271,44 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
         <div className="h-full bg-accent transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${fraction * 100}%` }} />
       </div>
     </motion.div>
+  );
+}
+
+/** A sine line across 0..400 (two bar widths) with whole periods, so sliding by half loops cleanly. */
+function sinePath(period: number, amp: number): string {
+  let d = "";
+  for (let x = 0; x <= 400; x += 4) d += `${x === 0 ? "M" : "L"}${x} ${(20 + amp * Math.sin((2 * Math.PI * x) / period)).toFixed(2)}`;
+  return d;
+}
+
+/** Three lines: a bright Volt lead, a softer Volt echo the other way, and a faint white thread. */
+const WAVES = [
+  { d: sinePath(100, 13), color: "var(--color-accent)", opacity: 0.42, width: 1.6, run: "3.4s", breathe: "1.9s", reverse: false },
+  { d: sinePath(200 / 3, 9), color: "var(--color-accent)", opacity: 0.28, width: 1.3, run: "5.2s", breathe: "2.7s", reverse: true },
+  { d: sinePath(50, 6), color: "#ffffff", opacity: 0.16, width: 1, run: "2.6s", breathe: "3.3s", reverse: false },
+];
+
+/** The wave behind the running bar's text: it moves while the workout runs and lies flat when paused. */
+function LiveWave({ paused }: { paused: boolean }) {
+  return (
+    <span aria-hidden="true" data-paused={paused || undefined} className="live-wave pointer-events-none absolute inset-x-0 top-0 h-14 overflow-hidden">
+      {WAVES.map((w, i) => (
+        <span
+          key={i}
+          className="live-wave-amp absolute inset-0"
+          style={{ "--breathe": w.breathe, animationDelay: `${-i * 0.7}s` } as React.CSSProperties}
+        >
+          <svg
+            viewBox="0 0 400 40"
+            preserveAspectRatio="none"
+            className="live-wave-line absolute top-0 left-0 h-full w-[200%]"
+            style={{ "--run": w.run, animationDirection: w.reverse ? "reverse" : "normal" } as React.CSSProperties}
+          >
+            <path d={w.d} fill="none" stroke={w.color} strokeOpacity={w.opacity} strokeWidth={w.width} vectorEffect="non-scaling-stroke" />
+          </svg>
+        </span>
+      ))}
+    </span>
   );
 }
 
