@@ -3,7 +3,8 @@
 import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { PRESS_SPRING } from "@/components/ui/Button";
+/** Softer than the press spring, so the lens overshoots a touch, like liquid settling. */
+const LENS_SPRING = { type: "spring", stiffness: 380, damping: 24, mass: 0.8 } as const;
 import { Dumbbell, House, Search } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useHydration } from "@/store/hydration";
@@ -54,8 +55,9 @@ function CurrentNav() {
 }
 
 /**
- * A floating dock, inset from the screen edges. The blur is the app's only glass surface:
- * it lets the set list read through as it scrolls under, so the dock never feels like a lid.
+ * A floating dock, inset from the screen edges, in liquid glass: the app's only glass surface.
+ * It lets the set list read through as it scrolls under, so the dock never feels like a lid; the
+ * current tab is a brighter lens that slides between tabs.
  */
 function NavBar({ pathname }: { pathname: string | null }) {
   const hydrated = useHydration((s) => s.hydrated);
@@ -69,7 +71,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
       aria-label={t("Primary")}
       className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(10px+env(safe-area-inset-bottom))]"
     >
-      <ul className="mx-auto flex max-w-[616px] rounded-2xl border border-ink/[0.08] bg-bg/80 p-1 shadow-[0_8px_32px_rgb(0_0_0/0.5)] backdrop-blur-xl">
+      <ul className="liquid-glass mx-auto flex max-w-[616px] rounded-2xl p-1">
         {TABS.map(({ href, label, Icon, also }) => {
           const current =
             pathname !== null &&
@@ -85,7 +87,17 @@ function NavBar({ pathname }: { pathname: string | null }) {
                 }`}
               >
                 {/* One pill that slides to the current tab instead of jumping. */}
-                {current && <motion.span layoutId="nav-pill" transition={PRESS_SPRING} aria-hidden="true" className="absolute inset-0 rounded-xl bg-ink/[0.06]" />}
+                {current && (
+                  // A drop of glass: it slides on a soft spring and stretches a little as it lands.
+                  <motion.span
+                    layoutId="nav-pill"
+                    transition={LENS_SPRING}
+                    initial={{ scaleX: 1.14, scaleY: 0.9 }}
+                    animate={{ scaleX: 1, scaleY: 1 }}
+                    aria-hidden="true"
+                    className="glass-lens absolute inset-0 rounded-xl"
+                  />
+                )}
                 <span className="relative">
                   {Icon ? (
                     <Icon aria-hidden="true" size={21} strokeWidth={current ? 2.25 : 1.75} className={current ? "text-accent" : ""} />
