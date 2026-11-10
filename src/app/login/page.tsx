@@ -29,7 +29,7 @@ function useFrom(): string | null {
   return from && from.startsWith("/") && !from.startsWith("//") ? from : null;
 }
 
-const LABELS: Record<string, string> = { "/profile": "Profile", "/profile?tab=about": "Profile", "/settings": "Settings" };
+const LABELS: Record<string, string> = { "/profile": "Profile", "/profile/edit": "Edit profile", "/profile?tab=about": "Profile", "/settings": "Settings" };
 
 /**
  * Sign-in for the optional cloud backup and sync (Supabase, Google). The page has no dock, so it

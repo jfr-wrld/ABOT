@@ -11,7 +11,7 @@ import { useT } from "@/i18n";
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
 
 /** The part of each page that shows the account, scrolled to so the result is in view. */
-const ANCHORS: Record<string, string> = { "/profile?tab=about": "account", "/settings": "sync" };
+const ANCHORS: Record<string, string> = { "/profile/edit": "account", "/profile?tab=about": "account", "/settings": "sync" };
 
 /** Waits for the page to render after navigating, then scrolls; returns a cancel. */
 function revealAccount(id: string | undefined): () => void {

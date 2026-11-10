@@ -213,7 +213,7 @@ test("a heavier repeat celebrates the record and compares with last time", async
 });
 
 test("the story carries the username from the profile", async ({ page }) => {
-  await page.goto("/profile?tab=about");
+  await page.goto("/profile/edit");
   await page.getByLabel(/^Username/).fill("@Jafar Lifts!");
   await expect(page.getByLabel(/^Username/)).toHaveValue("JafarLifts");
   await finishOneSet(page);

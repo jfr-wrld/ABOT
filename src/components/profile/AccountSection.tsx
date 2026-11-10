@@ -11,7 +11,8 @@ import { SyncError } from "@/components/sync/SyncError";
 import { useT, type T } from "@/i18n";
 
 /** Where the Account section lives, and where sign-in comes back to. */
-export const PROFILE_ABOUT = "/profile?tab=about";
+/** Edit profile, where the account section lives. */
+export const EDIT_PROFILE = "/profile/edit";
 
 const LINK =
   "flex min-h-11 items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 px-3 text-center text-sm font-semibold transition-colors hover:border-ink/25";
@@ -51,20 +52,15 @@ function chipText(tone: SyncTone | "guest", t: T): string {
 }
 
 /** The backup state in two or three words under the name; it jumps to the Account section. */
-export function AccountChip({ onOpen }: { onOpen?: () => void }) {
+export function AccountChip() {
   const s = useSyncStore();
   const now = useNow(30_000);
   const signedIn = s.userId !== null && s.phase !== "signed_out" && s.phase !== "signing_in" && s.phase !== "unconfigured";
   const tone: SyncTone | "guest" = signedIn ? syncStatus(s, now).tone : "guest";
   const t = useT();
   return (
-    <a
-      href="/profile?tab=about#account"
-      onClick={(e) => {
-        if (!onOpen) return;
-        e.preventDefault();
-        onOpen();
-      }}
+    <Link
+      href={`${EDIT_PROFILE}#account`}
       className={`-ml-1 inline-flex min-h-11 items-center gap-1.5 rounded-ctl px-1 text-sm font-semibold hover:bg-ink/[0.05] ${
         tone === "error" ? "text-failure" : tone === "ok" ? "text-text" : "text-text-muted"
       }`}
@@ -75,7 +71,7 @@ export function AccountChip({ onOpen }: { onOpen?: () => void }) {
         <StatusIcon tone={tone} size={16} />
       )}
       {chipText(tone, t)}
-    </a>
+    </Link>
   );
 }
 
@@ -136,7 +132,7 @@ function Guest() {
       {s.phase === "error" && s.lastError && (
         <SyncError stage={s.errorStage ?? "sign_in"} raw={s.lastError} className="mt-2 pl-8" />
       )}
-      <Link href={`/login?from=${encodeURIComponent(PROFILE_ABOUT)}`} className={`mt-3 ${LINK}`}>
+      <Link href={`/login?from=${encodeURIComponent(EDIT_PROFILE)}`} className={`mt-3 ${LINK}`}>
         {t("Back up with an account")}
       </Link>
     </>

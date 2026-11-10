@@ -1,32 +1,25 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Camera, Image as ImageIcon, Pencil, Settings } from "lucide-react";
+import { Camera, Pencil, Settings } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { HydrationGate } from "@/components/ui/Loading";
-import { Button } from "@/components/ui/Button";
 import { ProgressPanel } from "@/components/analytics/ProgressPanel";
-import { NumberField } from "@/components/ui/NumberField";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
-import { BodyweightSection } from "@/components/profile/BodyweightSection";
 import { LiftsBoard } from "@/components/profile/LiftsBoard";
-import { AccountChip, AccountSection } from "@/components/profile/AccountSection";
-import { normalizeHandle, profileStats } from "@/lib/profile";
+import { AccountChip, EDIT_PROFILE } from "@/components/profile/AccountSection";
+import { usePhotoPicker } from "@/components/profile/usePhotoPicker";
+import { profileStats } from "@/lib/profile";
 import { PlanBadge } from "@/components/paywall/PlanBadge";
 import { motion } from "framer-motion";
 import { PRESS_SPRING } from "@/components/ui/Button";
 import { weeklyBuckets } from "@/lib/analytics";
-import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
-import { cmToFtIn, formatVolume, ftInToCm } from "@/lib/units";
-import { PROFILE_LIMITS } from "@/types/workout";
-import { Sheet } from "@/components/ui/Sheet";
-import { isNativeApp } from "@/lib/native/files";
-import { openPhotoInput } from "@/lib/native/photo-input";
+import { formatVolume } from "@/lib/units";
 import { useT } from "@/i18n";
 
 export default function ProfilePage() {
@@ -37,28 +30,19 @@ export default function ProfilePage() {
   );
 }
 
-type Tab = "progress" | "lifts" | "about";
-const TABS: Tab[] = ["progress", "lifts", "about"];
+type Tab = "progress" | "lifts";
+const TABS: Tab[] = ["progress", "lifts"];
 
 /** The open tab lives in the address (?tab=lifts), so Back and shared links keep it. */
 function useTab(): [Tab, (t: Tab) => void] {
   const router = useRouter();
   const raw = useSearchParams().get("tab");
-  const tab: Tab = raw === "lifts" || raw === "about" ? raw : "progress";
+  const tab: Tab = raw === "lifts" ? raw : "progress";
+  // About used to be a tab here; old links and sign-in returns land on Edit profile instead.
+  useEffect(() => {
+    if (raw === "about") router.replace(`${EDIT_PROFILE}${window.location.hash}`);
+  }, [raw, router]);
   return [tab, (t) => router.replace(t === "progress" ? "/profile" : `/profile?tab=${t}`, { scroll: false })];
-}
-
-/** Waits for a section to render (after a tab switch) and brings it into view. */
-function reveal(id: string, focus = false) {
-  let tries = 0;
-  const look = () => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ block: "center" });
-      if (focus) el.focus({ preventScroll: true });
-    } else if (tries++ < 60) requestAnimationFrame(look);
-  };
-  requestAnimationFrame(look);
 }
 
 /**
@@ -77,18 +61,13 @@ function ProfileScreen() {
   const photo = usePhotoPicker((profilePhoto) => s.update({ profilePhoto }));
   const name = s.profileName.trim();
   const t = useT();
-  const tabLabel: Record<Tab, string> = { progress: t("Progress"), lifts: t("Lifts"), about: t("About") };
+  const tabLabel: Record<Tab, string> = { progress: t("Progress"), lifts: t("Lifts") };
 
   const record = [
     t.n(stats.workouts, "{n} workout", "{n} workouts"),
     stats.volumeKg > 0 ? t("{volume} lifted", { volume: formatVolume(stats.volumeKg, unit) }) : null,
     stats.weekStreak > 0 ? t("{n}-wk streak", { n: stats.weekStreak }) : null,
   ].filter(Boolean);
-
-  function edit(target: "profile-name" | "account") {
-    setTab("about");
-    reveal(target, target === "profile-name");
-  }
 
   return (
     <main className="flex flex-1 flex-col">
@@ -122,10 +101,13 @@ function ProfileScreen() {
               <Camera size={15} />
             </span>
           </button>
-          <Button onClick={() => edit("profile-name")} className="mb-1">
+          <Link
+            href={EDIT_PROFILE}
+            className="tap mb-1 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-ink/[0.12] bg-surface-2 px-4 text-sm font-semibold text-text hover:border-ink/25 hover:bg-press active:bg-press-strong"
+          >
             <Pencil aria-hidden="true" size={15} />
             {t("Edit profile")}
-          </Button>
+          </Link>
         </div>
         <div className="mt-2 flex flex-col items-start">
           <div className="flex max-w-full items-center gap-2">
@@ -138,7 +120,7 @@ function ProfileScreen() {
           </div>
           {s.profileHandle && <p className="num text-sm text-text-muted">@{s.profileHandle}</p>}
           <p className="num mt-0.5 text-xs text-text-muted">{record.join(" · ")}</p>
-          <AccountChip onOpen={() => edit("account")} />
+          <AccountChip />
         </div>
         {photo.error && (
           <p role="alert" className="text-xs text-failure">
@@ -187,66 +169,6 @@ function ProfileScreen() {
         )}
 
         {tab === "lifts" && <LiftsBoard sessions={sessions} byId={byId} unit={unit} bodyweightKg={s.bodyweightKg} now={now} />}
-
-        {tab === "about" && (
-          <>
-            <section aria-labelledby="body-heading" className="panel flex flex-col gap-3 p-3">
-              <h2 id="body-heading" className="label-caps">
-                {t("About you")}
-              </h2>
-              <div>
-                <label htmlFor="profile-name" className="mb-1 block text-sm font-semibold">
-                  {t("Name")}
-                </label>
-                <input
-                  id="profile-name"
-                  value={s.profileName}
-                  maxLength={PROFILE_LIMITS.nameMax}
-                  autoComplete="name"
-                  onChange={(e) => s.update({ profileName: e.target.value })}
-                  placeholder={t("What should ABOT call you?")}
-                  className="h-11 w-full rounded-ctl border border-zinc-800 bg-well px-3 text-base text-text placeholder:text-text-muted hover:border-zinc-700 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-                />
-              </div>
-              <div>
-                <label htmlFor="profile-handle" className="mb-1 block text-sm font-semibold">
-                  {t("Username")} <span className="font-normal text-text-muted">{t("(on shared stories)")}</span>
-                </label>
-                <div className="flex h-11 items-center rounded-ctl border border-zinc-800 bg-well focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30 hover:border-zinc-700">
-                  <span aria-hidden="true" className="num pl-3 text-base text-text-muted">
-                    @
-                  </span>
-                  <input
-                    id="profile-handle"
-                    value={s.profileHandle}
-                    maxLength={PROFILE_LIMITS.handleMax}
-                    autoComplete="username"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    onChange={(e) => s.update({ profileHandle: normalizeHandle(e.target.value) })}
-                    placeholder={t("yourname")}
-                    className="h-full min-w-0 flex-1 bg-transparent pl-0.5 pr-3 text-base text-text placeholder:text-text-muted focus:outline-none"
-                  />
-                </div>
-              </div>
-              <HeightField imperial={unit === "lbs"} heightCm={s.heightCm} onChange={(heightCm) => s.update({ heightCm })} />
-              {s.profilePhoto && (
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold">{t("Photo")}</span>
-                  <button
-                    type="button"
-                    onClick={() => s.update({ profilePhoto: null })}
-                    className="min-h-11 rounded-xl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
-                  >
-                    {t("Remove photo")}
-                  </button>
-                </div>
-              )}
-            </section>
-            <BodyweightSection now={now} />
-            <AccountSection />
-          </>
-        )}
       </div>
     </main>
   );
@@ -283,152 +205,4 @@ function Cover({ weeks }: { weeks: number[] }) {
       <span className="label-caps absolute top-3 right-3">{t("12 wk volume")}</span>
     </div>
   );
-}
-
-const FIELD = "!px-3 !text-left !text-base";
-
-/** Height in cm, or feet and inches for lbs users. Always stored in cm. */
-function HeightField({
-  imperial,
-  heightCm,
-  onChange,
-}: {
-  imperial: boolean;
-  heightCm: number | null;
-  onChange: (cm: number | null) => void;
-}) {
-  const [min, max] = PROFILE_LIMITS.heightCm;
-  // Stored as typed and flagged when out of range: a check per keystroke would wipe "1" on the way to "170".
-  const off = heightCm !== null && (heightCm < min || heightCm > max);
-  const t = useT();
-  const range = imperial
-    ? t("{min} to {max}", { min: `${cmToFtIn(min).ft} ft ${cmToFtIn(min).inch} in`, max: `${cmToFtIn(max).ft} ft ${cmToFtIn(max).inch} in` })
-    : t("{min} to {max}", { min, max: `${max} cm` });
-  const errorProps = { "aria-invalid": off || undefined, "aria-describedby": off ? "profile-height-error" : undefined };
-
-  if (!imperial) {
-    return (
-      <div>
-        <label htmlFor="profile-height" className="mb-1 block text-sm font-semibold">
-          {t("Height")} <span className="font-normal text-text-muted">(cm)</span>
-        </label>
-        <NumberField
-          id="profile-height"
-          aria-label={t("Height in cm")}
-          value={heightCm}
-          onCommit={onChange}
-          max={max}
-          placeholder="–"
-          className={FIELD}
-          {...errorProps}
-        />
-        {off && <HeightError range={range} />}
-      </div>
-    );
-  }
-
-  const parts = heightCm === null ? null : cmToFtIn(heightCm);
-  const set = (ft: number | null, inch: number | null) =>
-    onChange(ft === null && inch === null ? null : ftInToCm(ft ?? 0, Math.min(11, inch ?? 0)));
-  return (
-    <fieldset>
-      <legend className="mb-1 text-sm font-semibold">{t("Height")}</legend>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="relative">
-          <NumberField
-            aria-label={t("Height, feet")}
-            value={parts?.ft ?? null}
-            onCommit={(ft) => set(ft, parts?.inch ?? null)}
-            max={8}
-            placeholder="–"
-            className={`${FIELD} !pr-9`}
-            {...errorProps}
-          />
-          <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-muted">
-            ft
-          </span>
-        </div>
-        <div className="relative">
-          <NumberField
-            aria-label={t("Height, inches")}
-            value={parts?.inch ?? null}
-            onCommit={(inch) => set(parts?.ft ?? null, inch)}
-            max={11}
-            placeholder="–"
-            className={`${FIELD} !pr-9`}
-            {...errorProps}
-          />
-          <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-text-muted">
-            in
-          </span>
-        </div>
-      </div>
-      {off && <HeightError range={range} />}
-    </fieldset>
-  );
-}
-
-function HeightError({ range }: { range: string }) {
-  const t = useT();
-  return (
-    <p id="profile-height-error" className="mt-1 text-xs text-failure">
-      {t("Enter {range}", { range })}
-    </p>
-  );
-}
-
-/** The hidden file input behind the avatar. The photo is resized on the phone and never uploaded. */
-function usePhotoPicker(onChange: (url: string | null) => void) {
-  const ref = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const t = useT();
-
-  async function pick(file: File | undefined) {
-    if (!file) return;
-    setBusy(true);
-    setError(null);
-    try {
-      onChange(await squareJpeg(file));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("This photo could not be used."));
-    } finally {
-      setBusy(false);
-      if (ref.current) ref.current.value = "";
-    }
-  }
-
-  // The app's WebView offers no camera in its file picker, so there the avatar asks first.
-  const [choosing, setChoosing] = useState(false);
-  const choose = (source: "gallery" | "camera") => {
-    setChoosing(false);
-    openPhotoInput(ref.current, source, "user");
-  };
-  const input = (
-    <>
-      <input
-        ref={ref}
-        type="file"
-        accept="image/*"
-        aria-label={t("Profile photo file")}
-        className="sr-only"
-        tabIndex={-1}
-        onChange={(e) => pick(e.target.files?.[0])}
-      />
-      <Sheet open={choosing} onClose={() => setChoosing(false)} title={t("Profile photo")}>
-        <div className="grid grid-cols-2 gap-2 pb-2">
-          <Button onClick={() => choose("camera")} className="min-h-14">
-            <Camera aria-hidden="true" size={18} />
-            {t("Take photo")}
-          </Button>
-          <Button onClick={() => choose("gallery")} className="min-h-14">
-            <ImageIcon aria-hidden="true" size={18} />
-            {t("Choose photo")}
-          </Button>
-        </div>
-      </Sheet>
-    </>
-  );
-  const open = () => (isNativeApp() ? setChoosing(true) : ref.current?.click());
-  return { input, open, busy, error };
 }
