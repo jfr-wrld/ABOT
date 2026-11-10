@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { Select } from "@/components/ui/Select";
 import Link from "next/link";
 import { ChevronRight, Plus } from "lucide-react";
@@ -40,6 +40,8 @@ function LibraryScreen() {
   const addCustom = useExerciseStore((s) => s.addCustom);
   const sessions = useWorkoutStore((s) => s.sessions);
   const [query, setQuery] = useState("");
+  // The field follows every key; the list of about 1,000 rows filters a beat behind it.
+  const search = useDeferredValue(query);
   const [muscle, setMuscle] = useState<MuscleGroup | "">("");
   const [equipment, setEquipment] = useState<Equipment | "">("");
   const [formOpen, setFormOpen] = useState(false);
@@ -48,14 +50,14 @@ function LibraryScreen() {
   const prTable = useMemo(() => buildPRTable(sessions, byId, { allGyms: true }), [sessions, byId]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = search.trim().toLowerCase();
     return list.filter(
       (e) =>
         (!muscle || worksArea([...e.primaryMuscles, ...e.secondaryMuscles], muscle)) &&
         (!equipment || e.equipment === equipment) &&
         (!q || e.name.toLowerCase().includes(q)),
     );
-  }, [list, query, muscle, equipment]);
+  }, [list, search, muscle, equipment]);
 
   // One section per muscle, in the dropdown's order; an exercise sits under its first primary muscle.
   const [view, setView] = useViewMode("exercises");

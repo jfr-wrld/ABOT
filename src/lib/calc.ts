@@ -122,7 +122,7 @@ export function countSets(session: WorkoutSession) {
 /* Personal records                                                    */
 /* ------------------------------------------------------------------ */
 
-type PRTable = Record<string, Partial<Record<PRKind, PersonalRecord>>>;
+export type PRTable = Record<string, Partial<Record<PRKind, PersonalRecord>>>;
 
 /** `factor` is the load-mode volume factor: set volume for a pair of dumbbells counts both. */
 function prValue(kind: PRKind, weightKg: number, reps: number, factor: 1 | 2 = 1): number {
@@ -186,6 +186,21 @@ export function buildPRTable(
 }
 
 /**
+ * The records `session` is measured against: every other completed session that started before
+ * it. The logger works this out once per workout instead of on every keystroke.
+ */
+export function priorPRTable(
+  session: Pick<WorkoutSession, "id" | "startedAt">,
+  allSessions: WorkoutSession[],
+  byId?: Record<string, Exercise>,
+): PRTable {
+  const prior = allSessions.filter(
+    (s) => s.id !== session.id && s.status === "completed" && s.startedAt < session.startedAt,
+  );
+  return buildPRTable(prior, byId);
+}
+
+/**
  * PRs achieved in `session`, compared against all *other* completed sessions
  * that started before it. Works for both active and finished sessions so the
  * logger can show a live "🏆" badge as soon as a set is ticked.
@@ -194,11 +209,8 @@ export function detectSessionPRs(
   session: WorkoutSession,
   allSessions: WorkoutSession[],
   byId?: Record<string, Exercise>,
+  baseline: PRTable = priorPRTable(session, allSessions, byId),
 ): PersonalRecord[] {
-  const prior = allSessions.filter(
-    (s) => s.id !== session.id && s.status === "completed" && s.startedAt < session.startedAt,
-  );
-  const baseline = buildPRTable(prior, byId);
   const found: PersonalRecord[] = [];
   // Track best within this session so only the single best set per kind gets the badge.
   const best: PRTable = {};

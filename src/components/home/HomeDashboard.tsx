@@ -237,7 +237,7 @@ function ThumbRow({ exerciseIds, byId, size = 44 }: { exerciseIds: string[]; byI
 function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<string, Exercise> }) {
   const t = useT();
   const router = useRouter();
-  const { startEmpty, startFromRoutine } = useWorkoutStore();
+  const { startEmpty, startFromRoutine } = useWorkoutStore.getState();
   const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
 
   const empty = () => {

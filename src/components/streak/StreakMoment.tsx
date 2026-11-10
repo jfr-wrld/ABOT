@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { MotionConfig, motion, useReducedMotion } from "framer-motion";
 import { Share2 } from "lucide-react";
-import { StreakStudio } from "./StreakStudio";
+import dynamic from "next/dynamic";
+
+// The share studio loads on the first tap of Share, not with Home.
+const StreakStudio = dynamic(() => import("./StreakStudio").then((m) => m.StreakStudio), { ssr: false });
 import { feedback } from "@/lib/feedback";
 import { onBack } from "@/lib/native/back-stack";
 import { useEffectsMode } from "@/components/layout/EffectsController";
@@ -70,6 +73,8 @@ export function StreakMoment({
 
   const played = useRef(false);
   const [sharing, setSharing] = useState(false);
+  // Mounted from the first Share tap on, so its close animation still plays afterwards.
+  const [shared, setShared] = useState(false);
   useEffect(() => {
     if (sessionId) markStreakShown(sessionId);
     // Finish was just tapped, so sound is allowed. Once, even when effects run twice in development.
@@ -188,7 +193,10 @@ export function StreakMoment({
         <div className="mx-auto flex w-full max-w-[420px] gap-2">
           <motion.button
             type="button"
-            onClick={() => setSharing(true)}
+            onClick={() => {
+              setShared(true);
+              setSharing(true);
+            }}
             whileTap={{ scale: 0.97 }}
             className="flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-4 text-base font-semibold text-white hover:bg-white/10"
           >
@@ -206,7 +214,7 @@ export function StreakMoment({
           </motion.button>
         </div>
       </motion.div>
-      <StreakStudio open={sharing} onClose={() => setSharing(false)} />
+      {shared && <StreakStudio open={sharing} onClose={() => setSharing(false)} />}
     </div>
     </MotionConfig>
   );

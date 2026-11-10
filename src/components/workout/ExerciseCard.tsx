@@ -2,7 +2,7 @@
 
 import { setNumbers } from "@/lib/sets";
 import { Select } from "@/components/ui/Select";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState, type ComponentProps } from "react";
 import { setGridColumns } from "./setGrid";
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
 import type {
@@ -39,7 +39,7 @@ import { feedback } from "@/lib/feedback";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
 
-export function ExerciseCard({
+function ExerciseCardView({
   item,
   exercise,
   previous,
@@ -68,7 +68,8 @@ export function ExerciseCard({
   canMoveDown: boolean;
 }) {
   const t = useT();
-  const store = useWorkoutStore();
+  // Actions only, read at call time: a whole-store subscription re-rendered every card on each keystroke.
+  const store = useWorkoutStore.getState();
   const { list: library } = useAllExercises();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -429,3 +430,24 @@ function PlateIcon() {
     </svg>
   );
 }
+
+type CardProps = ComponentProps<typeof ExerciseCardView>;
+
+/** Re-renders only when this card's own props change. Superset labels and the record map are
+ *  rebuilt on every render of the list, so they are compared by value. */
+function sameCard(a: CardProps, b: CardProps): boolean {
+  if (Object.keys(a).length !== Object.keys(b).length) return false;
+  for (const k of Object.keys(a) as (keyof CardProps)[]) {
+    if (k === "superset" || k === "prBySet") continue;
+    if (a[k] !== b[k]) return false;
+  }
+  const pa = a.prBySet;
+  const pb = b.prBySet;
+  const ka = Object.keys(pa);
+  if (ka.length !== Object.keys(pb).length || ka.some((id) => (pa[id] ?? []).join() !== (pb[id] ?? []).join())) return false;
+  const x = a.superset;
+  const y = b.superset;
+  return x === y || (!!x && !!y && x.letter === y.letter && x.color === y.color && x.order === y.order && x.size === y.size);
+}
+
+export const ExerciseCard = memo(ExerciseCardView, sameCard);

@@ -17,7 +17,7 @@ import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { FinishDialog } from "@/components/workout/FinishDialog";
 import { Sheet } from "@/components/ui/Sheet";
 import { RoutineLibrary } from "@/components/routines/RoutineLibrary";
-import { detectSessionPRs, previousSets } from "@/lib/calc";
+import { detectSessionPRs, previousSets, priorPRTable } from "@/lib/calc";
 import { supersetLabels } from "@/lib/superset";
 import { scrollToExercise } from "@/lib/scroll-to-exercise";
 import type { PRKind } from "@/types/workout";
@@ -28,6 +28,8 @@ import { useReminderStore } from "@/store/useReminderStore";
 import { suggestNext, todaysTargets } from "@/lib/exercise-suggest";
 import { muscleText } from "@/lib/home";
 import { MUSCLE_GROUP_LABELS } from "@/types/workout";
+
+const NO_PRS: Record<string, PRKind[]> = {};
 
 export default function WorkoutPage() {
   return (
@@ -62,8 +64,11 @@ function WorkoutScreen() {
   const t = useT();
   const active = useWorkoutStore((s) => s.active);
   const sessions = useWorkoutStore((s) => s.sessions);
-  const { addExercise, finishActive, discardActive, completeAllRemaining } = useWorkoutStore();
-  const { weightUnit, showRpe, defaultRestSeconds } = useSettingsStore();
+  // Actions only: subscribing to the whole store re-rendered the screen on every change.
+  const { addExercise, finishActive, discardActive, completeAllRemaining } = useWorkoutStore.getState();
+  const weightUnit = useSettingsStore((s) => s.weightUnit);
+  const showRpe = useSettingsStore((s) => s.showRpe);
+  const defaultRestSeconds = useSettingsStore((s) => s.defaultRestSeconds);
   const { byId, list: library } = useAllExercises();
   const [pickerOpen, setPickerOpen] = useState(false);
   const routines = useRoutineStore((st) => st.routines);
@@ -98,12 +103,33 @@ function WorkoutScreen() {
     return () => cancelAnimationFrame(id);
   }, [handoffTo]);
 
-  const prs = useMemo(() => (active ? detectSessionPRs(active, sessions, byId) : []), [active, sessions, byId]);
-  const prBySet = useMemo(() => {
-    const m: Record<string, PRKind[]> = {};
-    for (const pr of prs) (m[pr.setId] ??= []).push(pr.kind);
+  // History is read once per workout (records to beat, last time's sets), not on every keystroke.
+  const startedAt = active?.startedAt;
+  const locationId = active?.locationId;
+  const baseline = useMemo(
+    () => (activeId && startedAt !== undefined ? priorPRTable({ id: activeId, startedAt }, sessions, byId) : {}),
+    [activeId, startedAt, sessions, byId],
+  );
+  const exerciseKey = active?.exercises.map((e) => e.exerciseId).join(",") ?? "";
+  const previousByExercise = useMemo(() => {
+    const m: Record<string, ReturnType<typeof previousSets>> = {};
+    for (const id of new Set(exerciseKey ? exerciseKey.split(",") : [])) m[id] = previousSets(id, sessions, activeId, { byId, locationId });
     return m;
-  }, [prs]);
+  }, [exerciseKey, sessions, activeId, byId, locationId]);
+  const prs = useMemo(() => (active ? detectSessionPRs(active, sessions, byId, baseline) : []), [active, sessions, byId, baseline]);
+  // One record map per card; ExerciseCard compares it by value, so a card re-renders only when
+  // its own sets or records change.
+  const prByCard = useMemo(() => {
+    const bySet: Record<string, PRKind[]> = {};
+    for (const pr of prs) (bySet[pr.setId] ??= []).push(pr.kind);
+    const out: Record<string, Record<string, PRKind[]>> = {};
+    for (const ex of active?.exercises ?? []) {
+      const value: Record<string, PRKind[]> = {};
+      for (const set of ex.sets) if (bySet[set.id]) value[set.id] = bySet[set.id]!;
+      out[ex.id] = value;
+    }
+    return out;
+  }, [prs, active]);
 
   if (!active) return <RoutineLibrary />;
 
@@ -130,10 +156,10 @@ function WorkoutScreen() {
             key={item.id}
             item={item}
             exercise={byId[item.exerciseId]}
-            previous={previousSets(item.exerciseId, sessions, active.id, { byId, locationId: active.locationId })}
+            previous={previousByExercise[item.exerciseId] ?? null}
             unit={weightUnit}
             showRpe={showRpe}
-            prBySet={prBySet}
+            prBySet={prByCard[item.id] ?? NO_PRS}
             canMoveUp={i > 0}
             canMoveDown={i < active.exercises.length - 1}
             superset={supersets[item.id]}

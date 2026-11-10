@@ -10,7 +10,11 @@ import { useLocationStore } from "@/store/useLocationStore";
 import { buildStoryData, type StoryData } from "@/lib/story-data";
 // Bundled with the page rather than loaded on tap, so the studio still opens with no signal
 // right after a workout.
-import { StoryCardStudio, type StudioPhoto } from "./StoryCardStudio";
+import dynamic from "next/dynamic";
+import type { StudioPhoto } from "./StoryCardStudio";
+
+// The studio and its image exporter load when a story is opened, not with the page.
+const StoryCardStudio = dynamic(() => import("./StoryCardStudio").then((m) => m.StoryCardStudio), { ssr: false });
 import { useT } from "@/i18n";
 
 /**

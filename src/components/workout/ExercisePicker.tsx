@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useId, useMemo, useState } from "react";
 import type { Exercise, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
@@ -42,6 +42,8 @@ export function ExercisePicker({
   const { list } = useAllExercises();
   const searchId = `exercise-search-${useId()}`;
   const [query, setQuery] = useState("");
+  // The field follows every key; the long list filters a beat behind it.
+  const search = useDeferredValue(query);
   const [muscle, setMuscle] = useState<MuscleGroup | null>(null);
   const [view, setView] = useViewMode("picker");
   const pick = (e: Exercise) => {
@@ -59,7 +61,7 @@ export function ExercisePicker({
   }, [open]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = search.trim().toLowerCase();
     return list.filter(
       (e) =>
         (!muscle || e.primaryMuscles.includes(muscle) || e.secondaryMuscles.includes(muscle)) &&
@@ -68,7 +70,7 @@ export function ExercisePicker({
           EQUIPMENT_LABELS[e.equipment].toLowerCase().includes(q) ||
           t(EQUIPMENT_LABELS[e.equipment]).toLowerCase().includes(q)),
     );
-  }, [list, query, muscle, t]);
+  }, [list, search, muscle, t]);
 
   return (
     <Sheet open={open} onClose={onClose} title={title ?? t("Add exercise")}>

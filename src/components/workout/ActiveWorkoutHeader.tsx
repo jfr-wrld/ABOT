@@ -28,8 +28,6 @@ export function ActiveWorkoutHeader({
 }) {
   const t = useT();
   const rename = useWorkoutStore((s) => s.renameActive);
-  const now = useNow(1000);
-  const duration = sessionDurationSec(session, now);
   const { byId } = useAllExercises();
   const volume = sessionVolume(session, byId);
   const { total, completed } = countSets(session);
@@ -95,19 +93,7 @@ export function ActiveWorkoutHeader({
             {paused && <span className="rounded bg-accent px-1 text-[9px] font-bold text-on-accent">{t("Paused")}</span>}
           </dt>
           <dd>
-            <button
-              type="button"
-              onClick={() => setStartOpen(true)}
-              aria-haspopup="dialog"
-              aria-label={
-                paused
-                  ? t("Duration {time}, paused. Pause or adjust the timer", { time: formatDuration(duration) })
-                  : t("Duration {time}. Pause or adjust the timer", { time: formatDuration(duration) })
-              }
-              className="num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-lg font-bold tracking-tight text-text underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
-            >
-              {formatDuration(duration)}
-            </button>
+            <DurationButton session={session} paused={paused} onOpen={() => setStartOpen(true)} />
           </dd>
         </div>
         <Stat label={t("Volume")} value={formatVolume(volume, unit)} />
@@ -223,5 +209,26 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
         </p>
       )}
     </Sheet>
+  );
+}
+
+/** The ticking clock on its own, so only this button re-renders each second, not the header. */
+function DurationButton({ session, paused, onOpen }: { session: WorkoutSession; paused: boolean; onOpen: () => void }) {
+  const t = useT();
+  const duration = sessionDurationSec(session, useNow(1000));
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-haspopup="dialog"
+      aria-label={
+        paused
+          ? t("Duration {time}, paused. Pause or adjust the timer", { time: formatDuration(duration) })
+          : t("Duration {time}. Pause or adjust the timer", { time: formatDuration(duration) })
+      }
+      className="num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-lg font-bold tracking-tight text-text underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
+    >
+      {formatDuration(duration)}
+    </button>
   );
 }

@@ -6,7 +6,10 @@ import { autoClaimFounder, updateEntitlement, usePaywallStore } from "@/store/us
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
 import { syncEntitlementWithAccount } from "@/lib/entitlement-sync";
-import { AbotProModal } from "./AbotProModal";
+import dynamic from "next/dynamic";
+
+// Loaded on the first openPaywall(): most visits never show it (performance audit 2026-11-11).
+const AbotProModal = dynamic(() => import("./AbotProModal").then((m) => m.AbotProModal), { ssr: false });
 import { RedeemCodeModal } from "./RedeemCodeModal";
 import { PaymentReturn } from "./PaymentReturn";
 import { ProCelebration } from "./ProCelebration";

@@ -458,7 +458,7 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
 function TrainBar({ exercise }: { exercise: Exercise }) {
   const router = useRouter();
   const active = useWorkoutStore((s) => s.active);
-  const { startEmpty, addExercise } = useWorkoutStore();
+  const { startEmpty, addExercise } = useWorkoutStore.getState();
   const rest = useSettingsStore((s) => s.defaultRestSeconds);
   const inWorkout = active?.exercises.some((e) => e.exerciseId === exercise.id) ?? false;
   const [added, setAdded] = useState(false);

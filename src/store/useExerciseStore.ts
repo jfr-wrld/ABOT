@@ -50,14 +50,26 @@ export const useExerciseStore = create<ExerciseState>()(
 );
 
 /** Seed + custom, as a sorted list and an id lookup. Stable while `custom` is unchanged. */
+/**
+ * One index for the whole app, rebuilt only when the custom or catalog lists change. Built per
+ * component before, so a workout with eight cards sorted about 1,000 exercises eight times.
+ */
+let cached: { custom: unknown; catalog: unknown; index: ReturnType<typeof buildExerciseIndex> } | null = null;
+function sharedIndex(custom: Parameters<typeof buildExerciseIndex>[0], catalog: Parameters<typeof buildExerciseIndex>[1]) {
+  if (!cached || cached.custom !== custom || cached.catalog !== catalog) {
+    cached = { custom, catalog, index: buildExerciseIndex(custom, catalog) };
+  }
+  return cached.index;
+}
+
 export function useAllExercises() {
   const custom = useExerciseStore((s) => s.custom);
   const catalog = useExerciseStore((s) => s.catalog);
-  return useMemo(() => buildExerciseIndex(custom, catalog), [custom, catalog]);
+  return useMemo(() => sharedIndex(custom, catalog), [custom, catalog]);
 }
 
 /** One exercise by id, outside React (seed, catalog or custom); undefined when unknown. */
 export function exerciseById(id: string): Exercise | undefined {
   const { custom, catalog } = useExerciseStore.getState();
-  return buildExerciseIndex(custom, catalog).byId[id];
+  return sharedIndex(custom, catalog).byId[id];
 }
