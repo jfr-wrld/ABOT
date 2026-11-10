@@ -4,7 +4,7 @@ import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
 import { ChevronDown, ChevronLeft, Dumbbell, Layers, MoreHorizontal, Play, Timer, Trash2, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -245,7 +245,7 @@ function Hero({
   onMenu: () => void;
 }) {
   const t = useT();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const defs = session.exercises.map((e) => byId[e.exerciseId]).filter(Boolean) as Exercise[];
   const photos = cover ? [cover] : (defs.map((d) => exercisePhoto(d)).filter(Boolean).slice(0, 4) as string[]);
   const date = new Date(session.startedAt);

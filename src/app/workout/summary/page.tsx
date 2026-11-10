@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotionConfig } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Sparkles, Timer, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -225,7 +225,7 @@ const HEX = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
  */
 function Celebration({ record }: { record: boolean }) {
   const controls = useEntrance();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const color = record ? "var(--color-pr)" : "var(--color-accent)";
   const shards = Array.from({ length: 12 }, (_, i) => {
     const a = (i / 12) * Math.PI * 2 + 0.2;

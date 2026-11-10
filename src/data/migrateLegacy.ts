@@ -68,6 +68,7 @@ export async function migrateFromLocalStorage(
       profileHandle: DEFAULT_SETTINGS.profileHandle,
       language: DEFAULT_SETTINGS.language,
       theme: DEFAULT_SETTINGS.theme,
+      visualEffects: DEFAULT_SETTINGS.visualEffects,
       tapFeedback: DEFAULT_SETTINGS.tapFeedback,
       healthAutoSync: DEFAULT_SETTINGS.healthAutoSync,
       lastSleep: DEFAULT_SETTINGS.lastSleep,

@@ -13,6 +13,7 @@ import { SignInReturn } from "@/components/sync/SignInReturn";
 import { NativeShell } from "@/components/layout/NativeShell";
 import { AutoGym } from "@/components/layout/AutoGym";
 import { THEME_SCRIPT, ThemeController } from "@/components/layout/ThemeController";
+import { EffectsController } from "@/components/layout/EffectsController";
 import { LangAttr } from "@/components/layout/LangAttr";
 import { LoadingStatus } from "@/components/ui/Loading";
 import { AudioUnlock } from "@/components/layout/AudioUnlock";
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeController />
+        <EffectsController />
         <LangAttr />
         <AudioUnlock />
         <RemoteConfigLoader />

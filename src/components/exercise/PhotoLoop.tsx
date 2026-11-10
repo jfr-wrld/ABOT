@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Pause, Play } from "lucide-react";
-import { useReducedMotion } from "framer-motion";
+import { useReducedMotionConfig } from "framer-motion";
 import type { Exercise } from "@/types/workout";
 import { BUNDLED_THUMBS } from "@/data/exercise-thumbs.generated";
 import { MotionFigure } from "@/components/motion/MotionFigure";
@@ -18,7 +18,7 @@ const isImage = (u: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
  * the app (offline, one frame), then to ABOT's own animated figure, so the box is never empty.
  */
 export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; className?: string }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const t = useT();
   const frames = (exercise.media.motionUrls ?? []).filter(isImage).slice(0, 2);
   const [online, setOnline] = useState(true);

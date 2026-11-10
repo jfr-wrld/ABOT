@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
 import { Bike, Footprints, HardHat, Laptop, ShieldCheck, Timer, TrendingDown, TrendingUp, Utensils } from "lucide-react";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -61,7 +61,7 @@ export default function PhaseSetupPage() {
 function Wizard() {
   const t = useT();
   const router = useRouter();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const settings = useSettingsStore();
   const { canAccessPro, openPaywall } = useEntitlements();
   const unit = settings.weightUnit;

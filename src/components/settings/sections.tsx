@@ -1,6 +1,7 @@
 "use client";
 
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useEffectsMode } from "@/components/layout/EffectsController";
 import { Select } from "@/components/ui/Select";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { formatClock } from "@/lib/calc";
@@ -28,6 +29,7 @@ export { LANGUAGE_LABEL, THEME_LABEL };
 export function GeneralSection() {
   const s = useSettingsStore();
   const t = useT();
+  const effects = useEffectsMode();
   return (
     <div className="flex flex-col gap-5">
       <Choice
@@ -45,6 +47,19 @@ export function GeneralSection() {
         value={s.theme}
         options={(["system", "dark", "light"] as const).map((v) => ({ value: v, label: t(THEME_LABEL[v]) }))}
         onChange={(theme) => s.update({ theme })}
+      />
+      <Choice
+        name="effects"
+        label={t("Visual effects")}
+        info={t(
+          "Full: the glass dock and every animation. Lite: solid surfaces and no movement, for a smoother phone and a longer battery. Auto picks Lite on phones with 4 cores or less, 4 GB of memory or less, Data Saver, or reduced motion or transparency.",
+        )}
+        value={s.visualEffects}
+        options={(["auto", "full", "lite"] as const).map((v) => ({
+          value: v,
+          label: v === "auto" ? t("Auto ({mode})", { mode: effects === "full" ? t("Full") : t("Lite") }) : v === "full" ? t("Full") : t("Lite"),
+        }))}
+        onChange={(visualEffects) => s.update({ visualEffects })}
       />
       <Choice
         name="unit"

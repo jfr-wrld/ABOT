@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { setGridColumns } from "./setGrid";
 import { Trophy } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotionConfig } from "framer-motion";
 import type { PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
 import { NumberField } from "@/components/ui/NumberField";
 import { press } from "@/components/ui/Button";
@@ -50,7 +50,7 @@ export function SetRow({
   // Bumped only by the lifter's own tap, so a restored or bulk-completed set does not flash.
   const [sweep, setSweep] = useState(0);
   const repsRef = useRef<HTMLInputElement>(null);
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionConfig();
 
   const prevLabel =
     previous && previous.reps !== null

@@ -22,7 +22,7 @@ const subscribe = (fn: () => void) => {
 
 /**
  * Reduced motion, read so hydration matches the server: false while the prerendered HTML is
- * adopted, the real setting right after. (framer's useReducedMotion is null on the server and
+ * adopted, the real setting right after. (framer's useReducedMotionConfig is null on the server and
  * true on such a phone's first render, so the two markups differed and every page re-rendered.)
  */
 function useReducedMotionAfterHydration(): boolean {

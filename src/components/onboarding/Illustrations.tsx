@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
+import { motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
 import { Check, Dumbbell, House, Search, Trophy, WifiOff } from "lucide-react";
 import { useT } from "@/i18n";
 
@@ -30,7 +30,7 @@ function Phone({ children }: { children: React.ReactNode }) {
  * switched off (AnimatePresence initial={false}), which would otherwise leave it frozen.
  */
 export function LogSetScene() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const controls = useAnimationControls();
   useEffect(() => {
     void controls.start(reduce ? "still" : "loop");
@@ -151,7 +151,7 @@ function Row({ n, weight, reps, dim }: { n: number; weight: string; reps: string
 
 /** Slide 2: a phone with the rest capsule above the dock, counting down inside the thumb's reach. */
 export function RestScene() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const t = useT();
   const [left, setLeft] = useState(90);
   useEffect(() => {
@@ -230,7 +230,7 @@ const COLLAR_X = 44 + PLATES.reduce((n, q) => n + q.w + 3, 0);
  * signal gone: everything is kept here, on this device.
  */
 export function DeviceScene() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const [cycle, setCycle] = useState(0);
   useEffect(() => {
     if (reduce) return;

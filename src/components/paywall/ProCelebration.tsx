@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { animate } from "framer-motion";
 import { create } from "zustand";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotionConfig } from "framer-motion";
 import { Activity, ArrowRight, Brain, Mic, Sparkles } from "lucide-react";
 import type { Unlocked } from "@/lib/celebration";
 import { AbotMark } from "@/components/brand/AbotMark";
@@ -49,7 +49,7 @@ export function ProCelebration() {
 function Celebration({ unlocked }: { unlocked: Unlocked }) {
   const t = useT();
   const close = useCelebrationStore((s) => s.close);
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const button = useRef<HTMLButtonElement>(null);
   const [phase, setPhase] = useState<"checking" | "armed" | "playing">("checking");
 

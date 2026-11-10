@@ -1,6 +1,6 @@
 "use client";
 
-import { animate, useReducedMotion } from "framer-motion";
+import { animate, useReducedMotionConfig } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 /**
@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
  * motion it jumps straight to the value.
  */
 export function CountUp({ value, format, className = "" }: { value: number; format: (n: number) => string; className?: string }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const [shown, setShown] = useState(value);
   const from = useRef(value);
 

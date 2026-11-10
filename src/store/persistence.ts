@@ -42,6 +42,7 @@ function pickSettings(s: SettingsState): StoredSettings {
     profileHandle: s.profileHandle,
     language: s.language,
     theme: s.theme,
+    visualEffects: s.visualEffects,
     tapFeedback: s.tapFeedback,
     healthAutoSync: s.healthAutoSync,
     lastSleep: s.lastSleep,

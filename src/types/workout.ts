@@ -249,6 +249,8 @@ export interface UserSettings {
   language: AppLanguage;
   /** "system" follows the phone's light or dark mode. */
   theme: AppTheme;
+  /** Glass and motion: "auto" picks light effects on modest phones (lib/effects). */
+  visualEffects: VisualEffects;
   /** Tick, latch and PR sounds with matching vibration on taps (Phase 2 tactile feedback). */
   tapFeedback: boolean;
   /** Send each finished workout to Health Connect (Android app). */
@@ -263,6 +265,7 @@ export interface UserSettings {
 
 export type AppLanguage = "auto" | "en" | "id";
 export type AppTheme = "system" | "dark" | "light";
+export type VisualEffects = "auto" | "full" | "lite";
 
 /** One weigh-in per local calendar day; `id` is that day as "YYYY-MM-DD". */
 export interface BodyweightEntry {
@@ -293,6 +296,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   profileHandle: "",
   language: "auto",
   theme: "system",
+  visualEffects: "auto",
   tapFeedback: true,
   healthAutoSync: false,
   lastSleep: null,

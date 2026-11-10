@@ -113,6 +113,7 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     profileHandle: typeof raw.profileHandle === "string" ? normalizeHandle(raw.profileHandle) : "",
     language: raw.language === "en" || raw.language === "id" ? raw.language : "auto",
     theme: raw.theme === "dark" || raw.theme === "light" ? raw.theme : "system",
+    visualEffects: raw.visualEffects === "full" || raw.visualEffects === "lite" ? raw.visualEffects : "auto",
     tapFeedback: raw.tapFeedback !== false,
     healthAutoSync: raw.healthAutoSync === true,
     lastSleep: normalizeSleep(raw.lastSleep),

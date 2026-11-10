@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotionConfig } from "framer-motion";
 import { Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
@@ -121,7 +121,7 @@ function WeekStrip({
 }) {
   const t = useT();
   const controls = useEntrance();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const focus = useMemo(
     () =>
       days.map((d) =>
@@ -296,7 +296,7 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
 
 /** A large plate outline turning slowly behind the hero: the brand mark as hardware, at rest. */
 function HeroPlate() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   return (
     <motion.svg
       aria-hidden="true"

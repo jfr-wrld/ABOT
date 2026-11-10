@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
 import { Dumbbell, RefreshCw } from "lucide-react";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -98,7 +98,7 @@ function Meals({ m }: { m: PhaseTelemetry }) {
 
 function MealStop({ combo, label, when, pick, last = false }: { combo: MealCombo; label: string; when: string; pick: number; last?: boolean }) {
   const t = useT();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   return (
     <li className="relative flex gap-3">
       <span aria-hidden="true" className="flex w-8 shrink-0 justify-center">

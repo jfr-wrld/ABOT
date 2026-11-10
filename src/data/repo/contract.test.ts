@@ -90,6 +90,7 @@ describe.each([
         profileHandle: "jafar.lifts",
         language: "id",
         theme: "light",
+        visualEffects: "lite",
         tapFeedback: false,
         healthAutoSync: true,
         lastSleep: { minutes: 430, endAt: 1_700_000_000_000 },

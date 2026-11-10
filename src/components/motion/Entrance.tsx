@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { animate, motion, useAnimationControls, useReducedMotion } from "framer-motion";
+import { animate, motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
 
@@ -13,7 +13,7 @@ const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
  */
 export function useEntrance(): ReturnType<typeof useAnimationControls> {
   const controls = useAnimationControls();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   useEffect(() => {
     void controls.start(reduce ? "still" : "show");
   }, [controls, reduce]);
@@ -57,7 +57,7 @@ export function CountFromZero({
   delay?: number;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const [shown, setShown] = useState(0);
   useEffect(() => {
     if (reduce) return;

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotionConfig } from "framer-motion";
 
 /**
  * Small drawn pieces for the body phase screens. Three macro colours only, all from the theme:
@@ -28,7 +28,7 @@ export function Ring({
   children?: ReactNode;
   label?: string;
 }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const f = Math.max(0, Math.min(1, max > 0 ? value / max : 0));
@@ -85,7 +85,7 @@ export function MacroBar({ protein, carbs, fat, className = "h-2" }: { protein: 
 
 /** A donut of the three macros with the calories in the middle. */
 export function MacroDonut({ protein, carbs, fat, size = 132, children }: { protein: number; carbs: number; fat: number; size?: number; children?: ReactNode }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const stroke = 12;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -183,7 +183,7 @@ export function MacroLegend({ protein, carbs, fat, labels }: { protein: number; 
  * the app rather than a generic progress ring.
  */
 export function BlockPlate({ weeks, done, current, size = 168, children }: { weeks: number; done: number; current: number | null; size?: number; children?: ReactNode }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const c = size / 2;
   const outer = c - 2;
   const inner = c * 0.56;
@@ -227,7 +227,7 @@ export function BlockPlate({ weeks, done, current, size = 168, children }: { wee
 
 /** The shape of each phase's body-weight line: falling, rising, flat with a cycle, stepped load. */
 export function PhaseCurve({ phase, active, width = 120, height = 44 }: { phase: "CUTTING" | "BULKING" | "RECOMP" | "STRENGTH_PEAK"; active: boolean; width?: number; height?: number }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
   const paths = {
     CUTTING: "M4,8 C30,10 40,18 60,22 S95,34 116,38",
     BULKING: "M4,38 C30,36 40,28 60,24 S95,12 116,6",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
 import { AnimatedAbotMark, AnimatedWordmark } from "@/components/brand/AnimatedAbotMark";
 import { useHydration } from "@/store/hydration";
 import { useT } from "@/i18n";
@@ -20,7 +20,7 @@ export function SplashScreen() {
   const t = useT();
   const hydrated = useHydration((s) => s.hydrated);
   const [minDone, setMinDone] = useState(false);
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionConfig();
 
   useEffect(() => {
     const id = setTimeout(() => setMinDone(true), MIN_MS);

@@ -351,3 +351,24 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* Settings > Visual effects: Light (or Auto on a modest phone). The glass surfaces become solid,
+   so nothing is blurred live while scrolling; their highlights stay. Movement is dropped by
+   MotionConfig; colour changes and fades remain. Unlayered, so it wins over the utilities. */
+[data-effects="lite"] .liquid-glass {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--color-surface);
+}
+[data-effects="lite"] .glass-capsule {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: #000000;
+}
+[data-effects="lite"] .glass-lens {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-effects="lite"] .tap:active {
+  scale: none;
+}
