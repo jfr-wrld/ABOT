@@ -5,8 +5,10 @@ import { MotionConfig, motion, useReducedMotion } from "framer-motion";
 import { Share2 } from "lucide-react";
 import dynamic from "next/dynamic";
 
-// The share studio loads on the first tap of Share, not with Home.
-const StreakStudio = dynamic(() => import("./StreakStudio").then((m) => m.StreakStudio), { ssr: false });
+// The share studio is not part of Home's first load; it is fetched in the background once the
+// streak moment shows, so Share still works with no network.
+const loadStudio = () => import("./StreakStudio");
+const StreakStudio = dynamic(() => loadStudio().then((m) => m.StreakStudio), { ssr: false });
 import { feedback } from "@/lib/feedback";
 import { onBack } from "@/lib/native/back-stack";
 import { useEffectsMode } from "@/components/layout/EffectsController";
@@ -75,6 +77,9 @@ export function StreakMoment({
   const [sharing, setSharing] = useState(false);
   // Mounted from the first Share tap on, so its close animation still plays afterwards.
   const [shared, setShared] = useState(false);
+  useEffect(() => {
+    void loadStudio();
+  }, []);
   useEffect(() => {
     if (sessionId) markStreakShown(sessionId);
     // Finish was just tapped, so sound is allowed. Once, even when effects run twice in development.

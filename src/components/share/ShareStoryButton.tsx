@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { WorkoutSession } from "@/types/workout";
 import { Button } from "@/components/ui/Button";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
@@ -13,8 +13,15 @@ import { buildStoryData, type StoryData } from "@/lib/story-data";
 import dynamic from "next/dynamic";
 import type { StudioPhoto } from "./StoryCardStudio";
 
-// The studio and its image exporter load when a story is opened, not with the page.
-const StoryCardStudio = dynamic(() => import("./StoryCardStudio").then((m) => m.StoryCardStudio), { ssr: false });
+// The studio and its image exporter are not part of the page's first load. They are fetched in
+// the background once a share button is on screen, so the studio still opens with no network.
+const loadStudio = () => import("./StoryCardStudio");
+const StoryCardStudio = dynamic(() => loadStudio().then((m) => m.StoryCardStudio), { ssr: false });
+function usePreloadStudio() {
+  useEffect(() => {
+    void loadStudio();
+  }, []);
+}
 import { useT } from "@/i18n";
 
 /**
@@ -34,6 +41,7 @@ export function StoryShareButton({
   label?: string;
   photos?: StudioPhoto[];
 }) {
+  usePreloadStudio();
   const [data, setData] = useState<StoryData | null>(null);
   const t = useT();
   return (
