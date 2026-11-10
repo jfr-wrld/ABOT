@@ -96,7 +96,7 @@ function useStartSound(hydrated: boolean) {
 }
 
 const capsule =
-  "force-dark pointer-events-auto flex items-center overflow-hidden rounded-full border border-accent/25 bg-black text-text shadow-[0_0_14px_rgb(204_255_0/0.14)]";
+  "force-dark glass-capsule pointer-events-auto relative flex items-center overflow-hidden rounded-full border border-accent/25 text-text";
 
 function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; onWorkoutPage: boolean }) {
   const t = useT();

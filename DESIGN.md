@@ -261,7 +261,10 @@ switches being thrown.
   round only for the camera capsule. The steps mark hierarchy.
 - Glow: two elements only. The Finish button (the one action that ends the session) and the
   camera capsule's edge (it sits over content and must read as an object).
-- Glass: the bottom dock only. The set list stays readable as it scrolls under it.
+- Glass: the two floating layers only, the bottom dock and the workout bar just above it (owner's
+  choice, 2026-11-10). Both sit over scrolling content, so glass says "this floats"; cards, set
+  rows, buttons, sheets and headers stay solid matte so figures read at a glance. The workout bar
+  keeps a dark glass in both themes and its Volt edge glow.
 - Shadow: the dock only, as the elevation of the one floating layer.
 
 ## Motion
