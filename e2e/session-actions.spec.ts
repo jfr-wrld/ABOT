@@ -66,7 +66,7 @@ test("a past workout is renamed and saved as a routine from its page", async ({ 
   await addExercise(page, "Squat (Barbell)");
   await logSet(page, 1, "100", "5");
   await finishWorkout(page);
-  await page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first().click();
+  await page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first().click();
   await page.waitForURL(/\/history/);
   await page.getByRole("button", { name: "Workout options" }).click();
   await page.getByRole("button", { name: "Rename workout" }).click();

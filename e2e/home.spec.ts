@@ -31,7 +31,7 @@ test("a finished workout lights today, fills the week and lists the session", as
   // One set adds 15% to the chest: still fresh (20% or less), so every muscle reads ready.
   await expect(week.getByRole("button", { name: "Muscle recovery: 17 of 17 muscles ready. Open the map." })).toBeVisible();
 
-  const card = page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first();
+  const card = page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first();
   await expect(card).toContainText("400 kg");
   await expect(card).toContainText("Today");
   await expect(card.locator("[data-thumb]")).toHaveCount(1);

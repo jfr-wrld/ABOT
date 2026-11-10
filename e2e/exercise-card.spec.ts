@@ -17,7 +17,7 @@ test("a variation is chosen on the card and kept in history", async ({ page }) =
   await logSet(page, 1, null, "8");
   await finishWorkout(page);
   await page.goto("/");
-  await page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first().click();
+  await page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first().click();
   await expect(page.getByText(/Bodyweight · Neutral grip · 1 set/)).toBeVisible();
 });
 

@@ -76,7 +76,7 @@ test("finish saves the workout and the previous column autofills next time", asy
   await reachSummary(page);
   await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
-  await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first()).toContainText(/480 kg\s*1 set/);
+  await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first()).toContainText(/480 kg\s*1 set/);
 
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");
@@ -117,7 +117,7 @@ test("mark remaining sets done from the finish dialog", async ({ page }) => {
   await reachSummary(page);
   await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
-  await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first()).toContainText(/960 kg\s*2 sets/);
+  await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first()).toContainText(/960 kg\s*2 sets/);
 });
 
 test("adjust start time", async ({ page }) => {

@@ -71,6 +71,6 @@ test("a finished workout shows its calories, on the summary and on Home, and exp
   await expect(kcal.getByRole("status")).toContainText("Saved the .tcx file");
 
   await page.getByRole("link", { name: "Back to Home" }).click();
-  const card = page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first();
+  const card = page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first();
   await expect(card).toContainText(/(19\d|20\d) kcal/);
 });

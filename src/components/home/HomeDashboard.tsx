@@ -623,7 +623,18 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
         <h2 id="recent-heading" className="label-caps">
           {t("Recent workouts")}
         </h2>
-        {recent.length > 0 && <ViewToggle value={view} onChange={setView} />}
+        {recent.length > 0 && (
+          <div className="flex items-center gap-1">
+            <Link
+              href="/history/all"
+              className="flex min-h-11 items-center gap-0.5 rounded-ctl px-2 text-xs font-semibold text-text-muted hover:bg-surface hover:text-text"
+            >
+              {t("See all")}
+              <ChevronRight aria-hidden="true" size={14} />
+            </Link>
+            <ViewToggle value={view} onChange={setView} />
+          </div>
+        )}
       </div>
       {recent.length === 0 ? (
         <div className={`${TILE} flex flex-col items-center gap-2 py-6 text-center`}>
@@ -641,7 +652,7 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
   );
 }
 
-function RecentCard({
+export function RecentCard({
   session: s,
   pr,
   unit,
