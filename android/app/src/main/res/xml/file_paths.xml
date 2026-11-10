@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="my_images" path="." />
+    <!-- FileSaverPlugin on Android 9 and older: only ABOT's own folders of shared storage, not all
+         of it (security audit 2026-11-11). -->
+    <external-path name="abot_pictures" path="Pictures/ABOT/" />
+    <external-path name="abot_downloads" path="Download/ABOT/" />
+    <!-- Capacitor's camera and share plugins hand over files from the cache. -->
     <cache-path name="my_cache_images" path="." />
-    <!-- In-app updates: the APK AppUpdatePlugin downloads, handed to the package installer. -->
-    <external-files-path name="updates" path="Download/" />
+    <!-- In-app updates: the checked copy of the APK, in ABOT's private storage. -->
+    <files-path name="updates" path="updates/" />
 </paths>

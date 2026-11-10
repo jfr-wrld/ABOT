@@ -3,6 +3,9 @@ package app.abot.gym;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -15,6 +18,14 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.MessageDigest;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Downloads a newer ABOT APK with Android's own DownloadManager and hands it to the package
@@ -23,12 +34,20 @@ import java.io.File;
  * the app follows the download itself (progress, failure) and opens the install screen when it
  * lands. The file goes to the app's own folder, so no storage permission is needed; installing
  * needs "Install unknown apps" for ABOT once, and the settings page for it opens when missing.
+ *
+ * Security (audit 2026-11-11): only ABOT's own release URL is downloaded, and before the install
+ * screen opens the file is copied into the app's private storage (no other app can swap it) and
+ * checked: it must be this app's package, signed by the same key as the installed app, and a
+ * newer version. Anything else is refused, whatever the JavaScript side asked for.
  */
 @CapacitorPlugin(name = "AppUpdate")
 public class AppUpdatePlugin extends Plugin {
 
     private static final String FILE = "abot-update.apk";
     private static final String APK_TYPE = "application/vnd.android.package-archive";
+    /** ABOT's release assets, and nothing else. */
+    private static final Pattern RELEASE_URL =
+        Pattern.compile("^https://github\\.com/jfr-wrld/ABOT/releases/download/abot-\\d+/[A-Za-z0-9._-]+\\.apk$");
 
     private File apkFile() {
         return new File(getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), FILE);
@@ -42,7 +61,7 @@ public class AppUpdatePlugin extends Plugin {
     public void download(PluginCall call) {
         String url = call.getString("url");
         // Only ABOT's own releases: the URL comes from the GitHub API answer.
-        if (url == null || !url.startsWith("https://github.com/")) {
+        if (url == null || !RELEASE_URL.matcher(url).matches() || url.contains("..")) {
             call.reject("Not a GitHub release download.", "BAD_URL");
             return;
         }
@@ -110,11 +129,88 @@ public class AppUpdatePlugin extends Plugin {
         }
     }
 
+    /** SHA-256 of each signing certificate. */
+    private static Set<String> digests(Signature[] sigs) throws Exception {
+        Set<String> out = new HashSet<>();
+        if (sigs == null) return out;
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        for (Signature sig : sigs) {
+            StringBuilder hex = new StringBuilder();
+            for (byte b : md.digest(sig.toByteArray())) hex.append(String.format("%02x", b));
+            out.add(hex.toString());
+        }
+        return out;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Signature[] signers(PackageInfo info) {
+        if (info == null) return null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (info.signingInfo == null) return null;
+            return info.signingInfo.hasMultipleSigners() ? info.signingInfo.getApkContentsSigners() : info.signingInfo.getSigningCertificateHistory();
+        }
+        return info.signatures;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static long version(PackageInfo info) {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? info.getLongVersionCode() : info.versionCode;
+    }
+
+    /** null when the APK is fit to install over this app; otherwise why not. */
+    @SuppressWarnings("deprecation")
+    private String refuse(File apk) {
+        try {
+            PackageManager pm = getContext().getPackageManager();
+            int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? PackageManager.GET_SIGNING_CERTIFICATES : PackageManager.GET_SIGNATURES;
+            PackageInfo update = pm.getPackageArchiveInfo(apk.getAbsolutePath(), flags);
+            PackageInfo self = pm.getPackageInfo(getContext().getPackageName(), flags);
+            if (update == null) return "The update file is not a readable app.";
+            if (!getContext().getPackageName().equals(update.packageName)) return "The update file is a different app.";
+            Set<String> theirs = digests(signers(update));
+            Set<String> mine = digests(signers(self));
+            // Every key this app is signed with must be in the update's signing history (the same
+            // key, or a rotation that still vouches for it).
+            if (theirs.isEmpty() || mine.isEmpty() || !theirs.containsAll(mine)) return "The update is not signed by ABOT's key.";
+            if (version(update) <= version(self)) return "The update is not newer than this version.";
+            return null;
+        } catch (Exception e) {
+            return "The update file could not be checked: " + e.getMessage();
+        }
+    }
+
+    /** Copies the download into private storage, where no other app can change it. */
+    private File privateCopy(File from) throws Exception {
+        File dir = new File(getContext().getFilesDir(), "updates");
+        if (!dir.exists() && !dir.mkdirs()) throw new Exception("No room for the update.");
+        File to = new File(dir, FILE);
+        try (InputStream in = new FileInputStream(from); OutputStream out = new FileOutputStream(to)) {
+            byte[] buf = new byte[64 * 1024];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+        }
+        return to;
+    }
+
     @PluginMethod
     public void install(PluginCall call) {
-        File apk = apkFile();
-        if (!apk.exists() || apk.length() == 0) {
+        File downloaded = apkFile();
+        if (!downloaded.exists() || downloaded.length() == 0) {
             call.reject("The update file is not there. Download it again.", "MISSING");
+            return;
+        }
+        File apk;
+        try {
+            apk = privateCopy(downloaded);
+        } catch (Exception e) {
+            call.reject("The update could not be prepared: " + e.getMessage(), "COPY");
+            return;
+        }
+        String why = refuse(apk);
+        if (why != null) {
+            apk.delete();
+            downloaded.delete();
+            call.reject(why, "UNTRUSTED");
             return;
         }
         JSObject ret = new JSObject();

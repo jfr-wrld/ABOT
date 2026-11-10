@@ -116,8 +116,23 @@ public class FileSaverPlugin extends Plugin {
             call.reject("uri is required.");
             return;
         }
+        // Only a file this plugin saved: a MediaStore entry, or ABOT's own Pictures/ABOT and
+        // Download/ABOT folders through the FileProvider. Any other content:// URI would be handed
+        // to another app with read access granted.
+        Uri parsed = Uri.parse(uri);
+        String auth = parsed.getAuthority();
+        String path = parsed.getPath() == null ? "" : parsed.getPath();
+        boolean ours = "content".equals(parsed.getScheme())
+            && ("media".equals(auth)
+                || ((getContext().getPackageName() + ".fileprovider").equals(auth)
+                    && (path.startsWith("/abot_pictures/") || path.startsWith("/abot_downloads/"))
+                    && !path.contains("..")));
+        if (!ours) {
+            call.reject("Not a file ABOT saved.", "BAD_URI");
+            return;
+        }
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.parse(uri), mimeType);
+        intent.setDataAndType(parsed, mimeType);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
         try {
             getContext().startActivity(intent);
