@@ -16,6 +16,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(LiveWorkoutPlugin.class);
         registerPlugin(AppPermissionsPlugin.class);
         registerPlugin(HealthConnectPlugin.class);
+        registerPlugin(AppUpdatePlugin.class);
         super.onCreate(savedInstanceState);
         // The rest timer beeps from a timer, not a tap; the WebView would otherwise mute it.
         getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);

@@ -81,6 +81,8 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Settings > About > Check for updates: opens the installer for a downloaded ABOT APK. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- Saving a story or backup on Android 9 and older; 10+ writes through MediaStore without it. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <!-- The workout notification and the rest alarm (Android 13+ asks the user). -->
