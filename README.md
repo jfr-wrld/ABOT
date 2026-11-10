@@ -257,7 +257,7 @@ Cloud sync is optional: copy `.env.example` to `.env` and fill in your Supabase 
 
 Android details (static export, native plugins, signing, CI): [`docs/android.md`](docs/android.md).
 
-The 60-second intro video (1080 x 1920, with its synthesised soundtrack) renders from real app
+The 90-second intro video (1080 x 1920, with its synthesised soundtrack) renders from real app
 screens on sample data: run `npm run dev`, then `node scripts/intro-video/render.mjs`. It writes
 `video-out/abot-intro.mp4`; scenes and sound cues share one timeline in
 `scripts/intro-video/timeline.mjs`.

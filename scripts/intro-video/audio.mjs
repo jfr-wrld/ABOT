@@ -205,8 +205,8 @@ function musicBed() {
       const t = t0 + q * BEAT;
       if (!quiet) kick(t, drop ? 0.8 : 0.62);
       hat(t + BEAT / 2, quiet ? 0.05 : 0.08);
-      if (drop || inS("share")) hat(t + BEAT / 4, 0.035);
-      if ((drop || inS("share")) && (q === 1 || q === 3)) clap(t);
+      if (drop || inS("share") || inS("story")) hat(t + BEAT / 4, 0.035);
+      if ((drop || inS("share") || inS("story")) && (q === 1 || q === 3)) clap(t);
       bassNote(t, ROOTS[idx], BEAT * 0.9, quiet ? 0.12 : 0.22);
       if (!quiet) bassNote(t + BEAT / 2, ROOTS[idx] * 2, BEAT * 0.4, 0.1);
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Renders the ABOT intro video: 1080 x 1920, 30 fps, about 60 s, with its synthesised soundtrack.
+ * Renders the ABOT intro video: 1080 x 1920, 30 fps, about 90 s, with its synthesised soundtrack.
  *
  *   npm run dev                                   (in another terminal)
  *   node scripts/intro-video/render.mjs [http://localhost:3000] [--skip-capture] [--preview]
@@ -144,8 +144,10 @@ const ff = spawn(
     "-f", "image2pipe", "-framerate", String(FPS), "-c:v", "mjpeg", "-i", "-",
     "-i", wav,
     "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
-    // Social apps play at about -14 LUFS; level the mix there, peaks under -1.5 dBTP.
-    "-af", "loudnorm=I=-14:TP=-1.5:LRA=11",
+    // Social apps play at about -14 LUFS. The 15 kHz low-pass comes first: AAC cuts there anyway,
+    // and cutting the synth's bright clicks inside the encoder made them ring about 3 dB over
+    // the limiter. Then loudness, then a limiter at about -2 dB.
+    "-af", "lowpass=f=15000,loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.8:level=false",
     "-c:a", "aac", "-b:a", "192k",
     "-shortest", "-movflags", "+faststart",
     mp4,

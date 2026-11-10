@@ -1,7 +1,7 @@
 /**
  * Real ABOT screens for the intro video, on the sample data, at 3x (1080 px wide). Also the
- * logger at 0 to 3 sets ticked with where each tick button sits, and the twelve streak theme
- * cards at full size, read from the streak studio's preview canvas.
+ * logger at 0 to 3 sets ticked with where each tick button sits, and, at full size from the
+ * studios' preview canvases, the eleven Story Studio layouts and the twelve streak theme cards.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -15,6 +15,7 @@ const SCALE = 3;
 
 export async function capture(base, dir) {
   mkdirSync(join(dir, "themes"), { recursive: true });
+  mkdirSync(join(dir, "layouts"), { recursive: true });
   const meta = { scale: SCALE, width: 360 * SCALE, height: 760 * SCALE, boxes: {} };
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 360, height: 760 }, deviceScaleFactor: SCALE, colorScheme: "dark" });
@@ -44,14 +45,50 @@ export async function capture(base, dir) {
   await settle();
   await shot("phase");
 
+  await page.goto(base + "/routines");
+  await settle();
+  await shot("routines");
+  await page.getByRole("tab", { name: "Template Vault" }).click();
+  await settle();
+  await shot("vault");
+
+  await page.goto(base + "/exercises");
+  await settle(2500);
+  await shot("exercises");
+  await page.goto(base + "/exercises/detail?id=bench-press-barbell");
+  await settle(2500);
+  await shot("exercise");
+
+  await page.goto(base + "/settings?section=general");
+  await settle();
+  await shot("settings");
+
   await page.goto(base + "/");
   await settle(2000);
   await page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first().click();
   await page.waitForURL(/\/history/);
   await settle();
+  await shot("history");
+  await page.getByText("Muscles worked").scrollIntoViewIfNeeded();
+  await page.mouse.wheel(0, 200);
+  await settle(800);
+  await shot("history-map");
+  await page.mouse.wheel(0, -4000);
+  await settle(600);
   await page.getByRole("button", { name: "Share story" }).click();
   await settle(2500);
   await shot("story");
+  // The eleven workout story layouts, full size, from Story Studio's preview canvas.
+  const story = page.getByRole("dialog", { name: "Share to Instagram Story" });
+  const layouts = story.getByRole("list", { name: "Layouts" }).getByRole("button");
+  const nLayouts = await layouts.count();
+  for (let i = 0; i < nLayouts; i++) {
+    await layouts.nth(i).click();
+    await settle(500);
+    const data = await story.locator("canvas[role=img]").evaluate((c) => c.toDataURL("image/png"));
+    writeFileSync(join(dir, "layouts", `${String(i).padStart(2, "0")}.png`), Buffer.from(data.split(",")[1], "base64"));
+  }
+  console.log(`  ${nLayouts} story layouts`);
   await page.keyboard.press("Escape");
 
   // The twelve streak cards, full size, from the studio's preview canvas.

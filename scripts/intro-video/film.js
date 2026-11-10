@@ -4,7 +4,7 @@
  * times come from timeline.mjs; real app screens, the logo and flame paths come in through
  * window.ASSETS (set by render.mjs).
  */
-import { SCENES, T } from "./timeline.mjs";
+import { SCENES, T, at, before } from "./timeline.mjs";
 
 const W = 1080;
 const H = 1920;
@@ -91,7 +91,9 @@ function text(s, x, y, o = {}) {
 /** Words that rise out of a slot one after another from `at`, centred on x. */
 function riseLine(t, at, s, x, y, o = {}) {
   const words = s.split(" ");
-  font(o.size ?? 88, o.weight ?? 800, o.family ?? SANS, o.tracking ?? -2);
+  // Measured and drawn with the same tracking, so the gaps between words stay even.
+  o = { ...o, tracking: o.tracking ?? -2 };
+  font(o.size ?? 88, o.weight ?? 800, o.family ?? SANS, o.tracking);
   const gap = (o.size ?? 88) * 0.28;
   const widths = words.map((w) => ctx.measureText(w).width);
   const total = widths.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
@@ -311,7 +313,7 @@ function label(s, y, alpha = 1, color = VOLT) {
 
 function hook(t) {
   background(t, 820, 0.08 + pulse(t, T.ignite, 1.2) * 0.25);
-  const out = 1 - inCubic(prog(t, 4.0, 4.5));
+  const out = 1 - inCubic(prog(t, before("hook", 0.5), before("hook", 0)));
   ctx.save();
   ctx.translate(W / 2, 820);
   ctx.scale(lerp(1, 0.8, 1 - out), lerp(1, 0.8, 1 - out));
@@ -364,7 +366,7 @@ function logging(t) {
   const n = T.ticks.filter((x) => t >= x).length;
   const screen = `logger-${n}`;
   const enter = outCubic(prog(t, T.logIn, T.logIn + 0.7));
-  const zoomIn = inOutCubic(prog(t, 5.6, 6.6)) * (1 - inOutCubic(prog(t, 9.2, 10.2)));
+  const zoomIn = inOutCubic(prog(t, at("log", 1.1), at("log", 2.1))) * (1 - inOutCubic(prog(t, at("log", 4.7), at("log", 5.7))));
   const zoom = lerp(1, 1.75, zoomIn);
   const focus = [lerp(540, 720, zoomIn), lerp(1140, 1250, zoomIn)];
   const pw = 600;
@@ -399,9 +401,9 @@ function logging(t) {
     },
   });
   const vol = Math.round(lerp(0, 2040, clamp(n / 3)));
-  text(`${vol.toLocaleString("en-US")} kg`, W / 2, 400, { size: 64, weight: 800, family: MONO, color: VOLT, alpha: clamp(prog(t, 6.6, 7.0)) * (1 - prog(t, 9.4, 9.8)) });
-  label("VOLUME THIS WORKOUT", 460, clamp(prog(t, 6.6, 7.0)) * (1 - prog(t, 9.4, 9.8)), MUTED);
-  text("Previous numbers, plates, supersets, RPE", W / 2, 1830, { size: 40, weight: 600, color: MUTED, alpha: clamp(prog(t, 9.6, 10.1)) });
+  text(`${vol.toLocaleString("en-US")} kg`, W / 2, 400, { size: 64, weight: 800, family: MONO, color: VOLT, alpha: clamp(prog(t, at("log", 2.1), at("log", 2.5))) * (1 - prog(t, at("log", 4.9), at("log", 5.3))) });
+  label("VOLUME THIS WORKOUT", 460, clamp(prog(t, at("log", 2.1), at("log", 2.5))) * (1 - prog(t, at("log", 4.9), at("log", 5.3))), MUTED);
+  text("Previous numbers, plates, supersets, RPE", W / 2, 1830, { size: 40, weight: 600, color: MUTED, alpha: clamp(prog(t, at("log", 5.1), at("log", 5.6))) });
   ctx.globalAlpha = 1;
 }
 
@@ -510,7 +512,7 @@ function progress(t) {
   });
   const enter = outCubic(prog(t, a + 0.3, a + 1.1));
   phone("progress", lerp(W + 500, 800, enter), 1080, 470, { rot: lerp(0.2, 0.04, enter) });
-  text("Volume · records · muscles · calendar", W / 2, 1890, { size: 34, weight: 600, color: MUTED, alpha: clamp(prog(t, 23.2, 23.6)) });
+  text("Volume · records · muscles · calendar", W / 2, 1890, { size: 34, weight: 600, color: MUTED, alpha: clamp(prog(t, at("progress", 5.2), at("progress", 5.6))) });
   ctx.globalAlpha = 1;
 }
 
@@ -655,8 +657,8 @@ function bodyPhase(t) {
     ctx.restore();
   });
   const enter = outCubic(prog(t, T.phaseIn, T.phaseIn + 0.7));
-  phone("phase", W / 2, lerp(2600, 1220, enter), 640, { zoom: lerp(1, 1.25, prog(t, T.phaseIn + 0.6, 48)), focus: [540, 760] });
-  text("Calories and macros from your training", W / 2, 1880, { size: 38, weight: 600, color: MUTED, alpha: clamp(prog(t, 46, 46.4)) });
+  phone("phase", W / 2, lerp(2600, 1220, enter), 640, { zoom: lerp(1, 1.25, prog(t, T.phaseIn + 0.6, before("phase", 0.5))), focus: [540, 760] });
+  text("Calories and macros from your training", W / 2, 1880, { size: 38, weight: 600, color: MUTED, alpha: clamp(prog(t, at("phase", 4), at("phase", 4.4))) });
   ctx.globalAlpha = 1;
 }
 
@@ -665,7 +667,7 @@ function trust(t) {
   const p = presence(t, "trust");
   ctx.globalAlpha = p;
   // Dark and light Home, split by a wipe that slides across.
-  const wipe = lerp(1080, 0, inOutCubic(prog(t, 50.5, 51.5)));
+  const wipe = lerp(1080, 0, inOutCubic(prog(t, at("trust", 2), at("trust", 3))));
   const pw = 560;
   const y = 1240;
   ctx.save();
@@ -684,14 +686,14 @@ function trust(t) {
     ctx.fillStyle = VOLT;
     ctx.fillRect(wipe - 3, 560, 6, 1200);
   }
-  const lines = ["Works offline.", "No ads. No tracking.", "Your data stays on your phone.", "English · Bahasa Indonesia"];
+  const lines = ["Works offline.", "No ads. No tracking.", "Your data stays on your phone.", "Google backup, only if you want it"];
   lines.forEach((s, i) => riseLine(t, T.trustLines[i], s, W / 2, 200 + i * 88, { size: i === 2 ? 60 : 56, weight: i === 2 ? 800 : 700, color: i === 2 ? VOLT : INK }));
   ctx.globalAlpha = 1;
 }
 
 function outro(t) {
   background(t, 820, 0.12 + pulse(t, T.outroHit, 1.5) * 0.25);
-  const p = clamp(prog(t, SCENES.outro[0], SCENES.outro[0] + 0.3)) * (1 - prog(t, 59.4, 60));
+  const p = clamp(prog(t, SCENES.outro[0], SCENES.outro[0] + 0.3)) * (1 - prog(t, before("outro", 0.6), before("outro", 0)));
   ctx.globalAlpha = p;
   ripple(t, T.outroHit, W / 2, 760, 100, 760, 1);
   mark(t, W / 2, 740, 360, T.outroHit - 0.35, T.outroHit, { glow: true, sweepAt: T.outroHit + 0.4 });
@@ -720,6 +722,168 @@ function outro(t) {
   flash(t, T.outroHit, 0.4, 0.5);
 }
 
+/** A phone sliding in from below over `len` seconds from `from`. */
+const slideUp = (t, from, len = 0.7) => outCubic(prog(t, from, from + len));
+
+function routines(t) {
+  const [a] = SCENES.routines;
+  background(t, 1100, 0.12);
+  const p = presence(t, "routines");
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.2, "Routines, ready to go.", W / 2, 230, { size: 80 });
+  const enter = slideUp(t, T.routinesIn);
+  const swap = inOutCubic(prog(t, T.vault - 0.15, T.vault + 0.35));
+  const pw = 600;
+  const cy = lerp(2700, 1200, enter);
+  // My Routines slides out to the left as the Template Vault comes in from the right.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.clip();
+  phone("routines", W / 2 - swap * 1200, cy, pw, { rot: (1 - enter) * 0.1 });
+  if (swap > 0) phone("vault", W / 2 + (1 - swap) * 1200, cy, pw);
+  ctx.restore();
+  text("Your own routines, start in one tap", W / 2, 360, { size: 38, weight: 600, color: MUTED, alpha: clamp(prog(t, a + 1.0, a + 1.4)) * (1 - prog(t, T.vault - 0.3, T.vault)) });
+  // The vault's splits, one per beat.
+  ["PPL", "Upper / Lower", "Full Body", "Calisthenics"].forEach((s, i) => {
+    const k = outBack(prog(t, T.splits[i], T.splits[i] + 0.35), 2.2);
+    if (k <= 0) return;
+    font(34, 700);
+    const widths = ["PPL", "Upper / Lower", "Full Body", "Calisthenics"].map((x) => ctx.measureText(x).width + 56);
+    const total = widths.reduce((x, y) => x + y, 0) + 14 * 3;
+    const x = W / 2 - total / 2 + widths.slice(0, i).reduce((x, y) => x + y + 14, 0) + widths[i] / 2;
+    ctx.save();
+    ctx.translate(x, 360);
+    ctx.scale(k, k);
+    rrect(-widths[i] / 2, -36, widths[i], 72, 36);
+    ctx.fillStyle = i === 0 ? VOLT : "rgba(255,255,255,0.09)";
+    ctx.fill();
+    text(s, 0, 12, { size: 34, weight: 700, color: i === 0 ? OBS : INK });
+    ctx.restore();
+  });
+  text("17 ready programs in the Template Vault", W / 2, 1870, { size: 38, weight: 600, color: MUTED, alpha: clamp(prog(t, T.vault + 0.6, T.vault + 1)) });
+  ctx.globalAlpha = 1;
+}
+
+function exercises(t) {
+  const [a] = SCENES.exercises;
+  background(t, 1100, 0.12);
+  const p = presence(t, "exercises");
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.2, "88 exercises, shown.", W / 2, 230, { size: 84 });
+  const enter = slideUp(t, T.exercisesIn);
+  const detail = t >= T.exerciseDetail;
+  // The list scrolls a little; then the detail opens with a pop and a slow push in on the photos.
+  const scroll = inOutCubic(prog(t, a + 1.0, T.exerciseDetail - 0.1));
+  const pop = outBack(prog(t, T.exerciseDetail, T.exerciseDetail + 0.45), 1.6);
+  const push = prog(t, T.exerciseDetail, SCENES.exercises[1]);
+  phone(detail ? "exercise" : "exercises", W / 2, lerp(2700, 1200, enter), detail ? lerp(560, 620, pop) : 600, {
+    zoom: detail ? lerp(1.15, 1.35, push) : 1,
+    focus: detail ? [540, 900] : [540, lerp(1140, 1240, scroll)],
+  });
+  text(detail ? "Start and end photos, steps, a muscle map" : "Search, filter by muscle or equipment", W / 2, 1870, {
+    size: 38,
+    weight: 600,
+    color: MUTED,
+    alpha: detail ? clamp(prog(t, T.exerciseDetail + 0.4, T.exerciseDetail + 0.8)) : clamp(prog(t, a + 1.2, a + 1.6)) * (1 - prog(t, T.exerciseDetail - 0.3, T.exerciseDetail)),
+  });
+  ctx.globalAlpha = 1;
+  flash(t, T.exerciseDetail, 0.15, 0.3);
+}
+
+function history(t) {
+  const [a] = SCENES.history;
+  background(t, 900, 0.12);
+  const p = presence(t, "history");
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.2, "Every record, counted.", W / 2, 230, { size: 80 });
+  const enter = slideUp(t, T.historyIn);
+  const map = t >= T.bodyMap;
+  phone(map ? "history-map" : "history", W / 2, lerp(2700, 1220, enter), 600, {
+    zoom: map ? 1.2 : lerp(1, 1.12, prog(t, T.historyIn, T.bodyMap)),
+    focus: map ? [540, 900] : [540, 700],
+  });
+  // A records badge pops on the chord.
+  const kr = outBack(prog(t, T.records, T.records + 0.4), 2.5) * (1 - prog(t, T.bodyMap - 0.2, T.bodyMap));
+  if (kr > 0) {
+    ctx.save();
+    ctx.translate(W / 2, 400);
+    ctx.scale(kr, kr);
+    rrect(-250, -50, 500, 100, 50);
+    ctx.fillStyle = "#00f0ff";
+    ctx.fill();
+    text("5 NEW RECORDS", 0, 14, { size: 40, weight: 800, family: MONO, color: OBS });
+    ctx.restore();
+  }
+  text("Muscles worked, on a body map", W / 2, 400, { size: 44, weight: 700, color: VOLT, alpha: clamp(prog(t, T.bodyMap + 0.2, T.bodyMap + 0.6)) });
+  ctx.globalAlpha = 1;
+}
+
+function storyLayouts(t) {
+  const [a] = SCENES.story;
+  background(t, 1000, 0.1);
+  const p = presence(t, "story");
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.2, "Your workout as a story.", W / 2, 210, { size: 78 });
+  riseLine(t, a + 0.5, "11 layouts.", W / 2, 300, { size: 56, weight: 700, color: VOLT });
+  // A carousel: the current layout large in the middle, its neighbours either side.
+  const steps = T.layouts.filter((x) => t >= x).length;
+  const last = T.layouts[Math.max(0, steps - 1)];
+  const move = steps === 0 ? 0 : outBack(prog(t, last, last + 0.35), 1.3);
+  const pos = Math.max(0, steps - 1) + move - 1 + (steps === 0 ? 1 : 0);
+  const cw = 520;
+  const ch = (cw * 1920) / 1080;
+  // Farthest first, so the middle card is drawn on top.
+  const order = Array.from({ length: 11 }, (_, i) => i).sort((x, y) => Math.abs(y - pos) - Math.abs(x - pos));
+  for (const i of order) {
+    const im = img[`layout${i}`];
+    if (!im) continue;
+    const d = i - pos;
+    if (Math.abs(d) > 2.2) continue;
+    const s = lerp(1, 0.62, clamp(Math.abs(d)));
+    const x = W / 2 + d * 430;
+    const y = 1110;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+    ctx.globalAlpha = p * clamp(1.6 - Math.abs(d) * 0.55);
+    ctx.shadowColor = "rgba(0,0,0,0.7)";
+    ctx.shadowBlur = 60;
+    rrect(-cw / 2, -ch / 2, cw, ch, 26);
+    ctx.fillStyle = "#000";
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.save();
+    rrect(-cw / 2, -ch / 2, cw, ch, 26);
+    ctx.clip();
+    ctx.drawImage(im, -cw / 2, -ch / 2, cw, ch);
+    ctx.restore();
+    if (Math.abs(d) < 0.5) {
+      ctx.strokeStyle = VOLT;
+      ctx.lineWidth = 6;
+      rrect(-cw / 2, -ch / 2, cw, ch, 26);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.globalAlpha = p;
+  text("Add a photo, share to Instagram Stories", W / 2, 1880, { size: 38, weight: 600, color: MUTED, alpha: clamp(prog(t, a + 1.2, a + 1.6)) });
+  ctx.globalAlpha = 1;
+}
+
+function settings(t) {
+  const [a] = SCENES.settings;
+  background(t, 1100, 0.1);
+  const p = presence(t, "settings");
+  ctx.globalAlpha = p;
+  riseLine(t, a + 0.2, "Make it yours.", W / 2, 230, { size: 88 });
+  const lines = ["English · Bahasa Indonesia", "Dark · Light", "kg · lbs"];
+  lines.forEach((s, i) => riseLine(t, T.settingsLines[i], s, W / 2, 330 + i * 70, { size: 46, weight: 700, color: i === 0 ? VOLT : INK }));
+  const enter = slideUp(t, T.settingsIn);
+  phone("settings", W / 2, lerp(2700, 1390, enter), 560);
+  ctx.globalAlpha = 1;
+}
+
 /* ------------------------------------------------------------------ */
 /* Entry points                                                        */
 /* ------------------------------------------------------------------ */
@@ -728,10 +892,15 @@ const ORDER = [
   ["hook", hook],
   ["log", logging],
   ["bar", workoutBar],
+  ["routines", routines],
+  ["exercises", exercises],
   ["progress", progress],
+  ["history", history],
   ["streak", streak],
+  ["story", storyLayouts],
   ["share", share],
   ["phase", bodyPhase],
+  ["settings", settings],
   ["trust", trust],
   ["outro", outro],
 ];
@@ -746,10 +915,11 @@ window.renderAt = (t) => {
 
 window.ready = (async () => {
   const src = A.src;
-  const screens = ["home", "home-light", "progress", "phase", "story", "logger-0", "logger-1", "logger-2", "logger-3", "logger-rest", "logger-bar"];
+  const screens = ["home", "home-light", "progress", "phase", "story", "routines", "vault", "exercises", "exercise", "history", "history-map", "settings", "logger-0", "logger-1", "logger-2", "logger-3", "logger-rest", "logger-bar"];
   await Promise.all([
     ...screens.map((s) => load(s, `${src}/${s}.png`)),
     ...Array.from({ length: 12 }, (_, i) => load(`theme${i}`, `${src}/themes/${String(i).padStart(2, "0")}.png`)),
+    ...Array.from({ length: 11 }, (_, i) => load(`layout${i}`, `${src}/layouts/${String(i).padStart(2, "0")}.png`)),
     document.fonts.load(`800 80px ${SANS}`),
     document.fonts.load(`700 80px ${SANS}`),
     document.fonts.load(`600 80px ${SANS}`),
