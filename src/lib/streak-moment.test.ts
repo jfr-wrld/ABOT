@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WorkoutSession } from "@/types/workout";
-import { streakMoment } from "./streak-moment";
+import { currentStreak, streakMoment } from "./streak-moment";
 
 const DAY = 86_400_000;
 // Wednesday 2026-11-11, noon local time; weeks start on Monday.
@@ -39,5 +39,17 @@ describe("streakMoment", () => {
   it("stays quiet for a workout that is not finished", () => {
     const s = [{ ...session("a", NOW - 3_600_000, NOW - 60_000), status: "active" as const }];
     expect(streakMoment(s, "a", NOW)).toBeNull();
+  });
+});
+
+describe("currentStreak", () => {
+  it("replays the streak as it stands, rolling up from one less", () => {
+    const s = [session("old1", NOW - 7 * DAY), session("a", NOW - 2 * DAY)];
+    expect(currentStreak(s, NOW)).toEqual({ before: 1, after: 2, weeks: [false, false, false, true, true] });
+  });
+
+  it("is null without a streak", () => {
+    expect(currentStreak([], NOW)).toBeNull();
+    expect(currentStreak([session("old", NOW - 21 * DAY)], NOW)).toBeNull();
   });
 });

@@ -407,6 +407,8 @@ export const workout: Record<string, string> = {
   "Could not reach the map service. Check your connection and try again.": "Layanan peta tidak bisa dihubungi. Periksa koneksi lalu coba lagi.",
   "Continue": "Lanjut",
   "Streak started": "Streak dimulai",
+  "Your week streak": "Streak mingguanmu",
+  "Train once this week to keep it burning.": "Latihan sekali minggu ini supaya apinya tetap menyala.",
   "Streak extended": "Streak bertambah",
   "week in a row": "minggu berturut-turut",
   "weeks in a row": "minggu berturut-turut",

@@ -33,6 +33,11 @@ export function streakMoment(
     firstDay,
   );
   if (after <= before) return null;
+  return { before, after, weeks: weekRow(sessions, now, firstDay) };
+}
+
+/** Trained or not for the last STREAK_WEEKS weeks, oldest first, this week last. */
+function weekRow(sessions: WorkoutSession[], now: number, firstDay: 0 | 1): boolean[] {
   const trained = new Set(sessions.filter((s) => s.status === "completed").map((s) => startOfWeek(s.startedAt, firstDay)));
   const weeks: boolean[] = [];
   const cursor = new Date(startOfWeek(now, firstDay));
@@ -40,7 +45,17 @@ export function streakMoment(
     weeks.unshift(trained.has(cursor.getTime()));
     cursor.setDate(cursor.getDate() - 7);
   }
-  return { before, after, weeks };
+  return weeks;
+}
+
+/**
+ * The streak as it stands, to play again from Home: the count rolls up from one less to the
+ * current number. Null without a streak.
+ */
+export function currentStreak(sessions: WorkoutSession[], now = Date.now(), firstDay: 0 | 1 = 1): StreakMoment | null {
+  const after = weekStreak(sessions, now, firstDay);
+  if (after === 0) return null;
+  return { before: after - 1, after, weeks: weekRow(sessions, now, firstDay) };
 }
 
 const SHOWN_KEY = "abot.streak-shown";

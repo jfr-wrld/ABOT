@@ -36,7 +36,16 @@ const LAYERS = [
  * week's plate lights at the end of the row. One action closes it and opens the summary. With
  * reduced motion (or Lite effects) the finished screen appears without the movement.
  */
-export function StreakMoment({ moment, sessionId, onClose }: { moment: Moment; sessionId: string; onClose: () => void }) {
+export function StreakMoment({
+  moment,
+  sessionId,
+  onClose,
+}: {
+  moment: Moment;
+  /** The workout that grew the streak; left out when the lifter plays it again from Home. */
+  sessionId?: string;
+  onClose: () => void;
+}) {
   const t = useT();
   const reduce = useReducedMotionConfig();
   const button = useRef<HTMLButtonElement>(null);
@@ -45,7 +54,7 @@ export function StreakMoment({ moment, sessionId, onClose }: { moment: Moment; s
 
   const played = useRef(false);
   useEffect(() => {
-    markStreakShown(sessionId);
+    if (sessionId) markStreakShown(sessionId);
     // Finish was just tapped, so sound is allowed. Once, even when effects run twice in development.
     if (!played.current) feedback.streak();
     played.current = true;
@@ -87,7 +96,7 @@ export function StreakMoment({ moment, sessionId, onClose }: { moment: Moment; s
         <Flame reduce={!!reduce} />
 
         <h1 id="streak-title" className="mt-4 font-mono text-xs font-bold uppercase tracking-[0.22em] text-[#ccff00]">
-          {first ? t("Streak started") : t("Streak extended")}
+          {!sessionId ? t("Your week streak") : first ? t("Streak started") : t("Streak extended")}
         </h1>
 
         <Count before={before} after={after} reduce={!!reduce} />
@@ -139,7 +148,9 @@ export function StreakMoment({ moment, sessionId, onClose }: { moment: Moment; s
           animate={reduce ? undefined : { opacity: 1, y: 0 }}
           transition={at(LIGHT + 0.2)}
         >
-          {t("Train at least once next week to keep it burning.")}
+          {weeks[weeks.length - 1]
+            ? t("Train at least once next week to keep it burning.")
+            : t("Train once this week to keep it burning.")}
         </motion.p>
       </div>
 

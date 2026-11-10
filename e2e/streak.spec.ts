@@ -55,3 +55,22 @@ test("a second workout in the same week goes straight to the summary", async ({ 
   await expect(page.getByRole("heading", { level: 1, name: "Workout saved" })).toBeVisible();
   await expect(page.getByRole("dialog", { name: /^Streak/ })).toHaveCount(0);
 });
+
+test("tapping the streak on Home plays the flame again", async ({ page }) => {
+  await freshStart(page);
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.getByRole("dialog", { name: "Streak started" }).getByRole("button", { name: "Continue" }).click();
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "1-week streak" }).click();
+  const replay = page.getByRole("dialog", { name: "Your week streak" });
+  await expect(replay).toBeVisible();
+  await expect(replay.getByText("1-week streak")).toBeAttached();
+  await replay.getByRole("button", { name: "Continue" }).click();
+  await expect(replay).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "1-week streak" })).toBeVisible();
+});

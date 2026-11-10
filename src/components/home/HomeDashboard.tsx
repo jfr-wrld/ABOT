@@ -41,6 +41,8 @@ import { useT } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { trainingFocus } from "@/lib/training-focus";
 import { weekStreak } from "@/lib/analytics";
+import { currentStreak, type StreakMoment as StreakMomentData } from "@/lib/streak-moment";
+import { StreakMoment } from "@/components/streak/StreakMoment";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
@@ -122,6 +124,8 @@ function WeekStrip({
   const t = useT();
   const controls = useEntrance();
   const reduce = useReducedMotionConfig();
+  const firstDay = useSettingsStore((st) => st.firstDayOfWeek);
+  const [replay, setReplay] = useState<StreakMomentData | null>(null);
   const focus = useMemo(
     () =>
       days.map((d) =>
@@ -135,12 +139,19 @@ function WeekStrip({
       <div className="flex items-center justify-between gap-2">
         <p className="label-caps">{month}</p>
         {streak > 0 && (
-          <p className="num flex items-center gap-1 text-xs font-bold text-accent">
+          // The streak plays its flame again on a tap, the same screen as after Finish.
+          <button
+            type="button"
+            onClick={() => setReplay(currentStreak(sessions, Date.now(), firstDay))}
+            aria-haspopup="dialog"
+            className="tap num -my-2 -mr-2 flex min-h-11 items-center gap-1 rounded-ctl px-2 text-xs font-bold text-accent hover:bg-accent/10"
+          >
             <Flame aria-hidden="true" size={14} />
             {t.n(streak, "{n}-week streak", "{n}-week streak")}
-          </p>
+          </button>
         )}
       </div>
+      {replay && <StreakMoment moment={replay} onClose={() => setReplay(null)} />}
       <ol aria-label={t("This week")} className="grid grid-cols-7 gap-1.5">
         {days.map((d, i) => {
           const date = new Date(d.start);
