@@ -76,3 +76,42 @@ export function markStreakShown(sessionId: string): void {
     // Storage blocked: at worst the screen plays again on a reload.
   }
 }
+
+/** What a streak share card shows. */
+export interface StreakCardData {
+  weeks: number;
+  /** The last 12 weeks, oldest first, this week last. */
+  row: boolean[];
+  /** Workouts finished since the streak began. */
+  workouts: number;
+  /** The first day of the streak's first week. */
+  since: number;
+  handle: string | null;
+}
+
+export const CARD_WEEKS = 12;
+
+export function streakCardData(
+  sessions: WorkoutSession[],
+  handle: string | null,
+  now = Date.now(),
+  firstDay: 0 | 1 = 1,
+): StreakCardData | null {
+  const weeks = weekStreak(sessions, now, firstDay);
+  if (weeks === 0) return null;
+  const done = sessions.filter((s) => s.status === "completed");
+  const trained = new Set(done.map((s) => startOfWeek(s.startedAt, firstDay)));
+  const row: boolean[] = [];
+  const cursor = new Date(startOfWeek(now, firstDay));
+  for (let i = 0; i < CARD_WEEKS; i++) {
+    row.unshift(trained.has(cursor.getTime()));
+    cursor.setDate(cursor.getDate() - 7);
+  }
+  // The streak's first week: walk back over trained weeks from the newest one in the streak.
+  const start = new Date(startOfWeek(now, firstDay));
+  if (!trained.has(start.getTime())) start.setDate(start.getDate() - 7);
+  for (let i = 1; i < weeks; i++) start.setDate(start.getDate() - 7);
+  const since = start.getTime();
+  return { weeks, row, workouts: done.filter((s) => s.startedAt >= since).length, since, handle };
+}
+

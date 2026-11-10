@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotionConfig } from "framer-motion";
+import { Share2 } from "lucide-react";
+import { StreakStudio } from "./StreakStudio";
 import { feedback } from "@/lib/feedback";
 import { markStreakShown, type StreakMoment as Moment } from "@/lib/streak-moment";
 import { useT } from "@/i18n";
+import { FLAME_CORE, FLAME_MIDDLE, FLAME_OUTER } from "./flame-path";
 
 /** Everything dramatic is timed from the moment the flame catches. */
 const IGNITE = 0.35;
@@ -18,11 +21,9 @@ const PLATE = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
 
 // The flame in three layers, drawn for ABOT: a Volt body with a side tongue, a yellow heart, a
 // near-white core. Each layer flickers on its own clock so the fire never repeats in step.
-const OUTER =
-  "M60 6 C70 34 98 52 100 92 C102 128 82 154 60 154 C38 154 18 128 20 94 C22 70 34 58 40 40 C44 58 50 64 54 64 C52 44 54 24 60 6 Z";
-const MIDDLE =
-  "M60 50 C68 72 86 84 86 110 C86 134 74 148 60 148 C46 148 34 134 34 112 C34 96 44 88 48 76 C52 88 56 90 58 90 C56 76 56 64 60 50 Z";
-const CORE = "M60 92 C66 106 74 114 74 128 C74 140 68 148 60 148 C52 148 46 140 46 130 C46 118 54 110 60 92 Z";
+const OUTER = FLAME_OUTER;
+const MIDDLE = FLAME_MIDDLE;
+const CORE = FLAME_CORE;
 
 const LAYERS = [
   { d: OUTER, fill: VOLT, duration: 1.5, scaleY: [1, 1.06, 0.97, 1.04, 1], skewX: [0, -2.5, 1.5, -1, 0] },
@@ -53,13 +54,15 @@ export function StreakMoment({
   const first = before === 0;
 
   const played = useRef(false);
+  const [sharing, setSharing] = useState(false);
   useEffect(() => {
     if (sessionId) markStreakShown(sessionId);
     // Finish was just tapped, so sound is allowed. Once, even when effects run twice in development.
     if (!played.current) feedback.streak();
     played.current = true;
     button.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    // Escape inside the share studio closes the studio only (its <dialog> handles it).
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !document.querySelector("dialog[open]") && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [sessionId, onClose]);
@@ -160,16 +163,28 @@ export function StreakMoment({
         animate={reduce ? undefined : { opacity: 1, y: 0 }}
         transition={at(LIGHT + 0.35)}
       >
-        <motion.button
-          ref={button}
-          type="button"
-          onClick={onClose}
-          whileTap={{ scale: 0.97 }}
-          className="mx-auto flex min-h-12 w-full max-w-[420px] items-center justify-center rounded-xl bg-[#ccff00] text-base font-bold text-[#09090b] shadow-[0_0_28px_rgb(204_255_0/0.35)] hover:brightness-110"
-        >
-          {t("Continue")}
-        </motion.button>
+        <div className="mx-auto flex w-full max-w-[420px] gap-2">
+          <motion.button
+            type="button"
+            onClick={() => setSharing(true)}
+            whileTap={{ scale: 0.97 }}
+            className="flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-4 text-base font-semibold text-white hover:bg-white/10"
+          >
+            <Share2 aria-hidden="true" size={18} />
+            {t("Share")}
+          </motion.button>
+          <motion.button
+            ref={button}
+            type="button"
+            onClick={onClose}
+            whileTap={{ scale: 0.97 }}
+            className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-[#ccff00] text-base font-bold text-[#09090b] shadow-[0_0_28px_rgb(204_255_0/0.35)] hover:brightness-110"
+          >
+            {t("Continue")}
+          </motion.button>
+        </div>
       </motion.div>
+      <StreakStudio open={sharing} onClose={() => setSharing(false)} />
     </div>
   );
 }

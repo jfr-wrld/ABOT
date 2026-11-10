@@ -74,3 +74,28 @@ test("tapping the streak on Home plays the flame again", async ({ page }) => {
   await expect(replay).toHaveCount(0);
   await expect(page.getByRole("button", { name: "1-week streak" })).toBeVisible();
 });
+
+test("the streak can be shared as a story card in twelve themes", async ({ page }) => {
+  await freshStart(page);
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  const streak = page.getByRole("dialog", { name: "Streak started" });
+  await streak.getByRole("button", { name: "Share" }).click();
+
+  const studio = page.getByRole("dialog", { name: "Share your streak" });
+  await expect(studio).toBeVisible();
+  const themes = studio.getByRole("list", { name: "Themes" }).getByRole("button");
+  await expect(themes).toHaveCount(12);
+  await expect(studio.getByRole("img", { name: "Volt Flame streak card: 1-week streak" })).toBeVisible();
+  await expect(studio.getByRole("button", { name: "Download High-Res PNG" })).toBeEnabled({ timeout: 10_000 });
+  await themes.nth(1).click();
+  await expect(studio.getByRole("img", { name: "Inferno streak card: 1-week streak" })).toBeVisible();
+
+  // Closing the studio leaves the streak screen in place.
+  await studio.getByRole("button", { name: "Close" }).click();
+  await expect(studio).toBeHidden();
+  await expect(streak).toBeVisible();
+});

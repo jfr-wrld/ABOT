@@ -280,6 +280,19 @@ Owner brief 2026-11-08: a moment of completion, then the numbers, with motion.
   It plays once per workout and not for a summary opened later. Reduced motion or Lite effects
   show the finished screen still.
 
+## Streak sharing
+
+Owner brief 2026-11-10: tap the streak to play its flame again, and share it in twelve themes.
+The week streak on Home is a button that replays the streak screen (titled Your week streak,
+the count rolling up from one less). The streak screen has Share beside Continue, which opens a
+studio like Story Studio's: a 9:16 preview, twelve theme thumbnails, Share and Download. The
+themes are looks, not recolours (`src/lib/streak-card.ts`): Volt Flame, Inferno, Paper, Poster
+(Volt edge to edge, the count as wide as it fits), Neon Grid, Blue Flame, Steel, Gold (a framed
+black-and-gold card), Heatmap (the twelve weeks as tiles), Badge (an emblem with words around
+the ring), Sunset and Terminal (the streak as a command and its output). Each card carries the
+count, the last twelve weeks, the workouts since the streak began, @username and the ABOT mark.
+The first two themes are free, like Story Studio's layouts; the rest come with PRO.
+
 ## Story Studio
 
 - Eleven layouts drawn straight to a 1080 x 1920 canvas (`src/lib/story-exporter.ts`).

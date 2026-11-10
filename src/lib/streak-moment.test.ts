@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WorkoutSession } from "@/types/workout";
-import { currentStreak, streakMoment } from "./streak-moment";
+import { currentStreak, streakCardData, streakMoment } from "./streak-moment";
 
 const DAY = 86_400_000;
 // Wednesday 2026-11-11, noon local time; weeks start on Monday.
@@ -53,3 +53,22 @@ describe("currentStreak", () => {
     expect(currentStreak([session("old", NOW - 21 * DAY)], NOW)).toBeNull();
   });
 });
+
+describe("streakCardData", () => {
+  it("counts the streak's workouts and the date it began", () => {
+    const s = [session("gone", NOW - 35 * DAY), session("w1", NOW - 14 * DAY), session("w2", NOW - 7 * DAY), session("w2b", NOW - 6 * DAY), session("now", NOW - DAY)];
+    const d = streakCardData(s, "jafar", NOW)!;
+    expect(d.weeks).toBe(3);
+    expect(d.workouts).toBe(4);
+    expect(new Date(d.since).getDay()).toBe(1);
+    expect(d.since).toBeLessThanOrEqual(NOW - 14 * DAY);
+    expect(d.row).toHaveLength(12);
+    expect(d.row.slice(-3)).toEqual([true, true, true]);
+    expect(d.handle).toBe("jafar");
+  });
+
+  it("is null without a streak", () => {
+    expect(streakCardData([], null, NOW)).toBeNull();
+  });
+});
+
