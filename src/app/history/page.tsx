@@ -38,6 +38,7 @@ import {
 import { exercisePath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { muscleText } from "@/lib/home";
+import { variationLabel } from "@/data/variations";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
 
@@ -62,6 +63,7 @@ function asRoutine(s: WorkoutSession): Routine {
       restSeconds: ex.restSeconds,
       notes: ex.notes,
       ...(ex.supersetId ? { supersetId: ex.supersetId } : {}),
+      ...(ex.variation ? { variation: ex.variation } : {}),
       sets: ex.sets.map((set) => ({ id: set.id, type: set.type, targetWeightKg: set.weightKg, targetReps: set.reps })),
     })),
   };
@@ -387,7 +389,8 @@ function ExerciseCard({
           {def && (
             <p className="flex items-center gap-1.5 text-xs text-text-muted">
               <EquipmentIcon equipment={def.equipment} size={14} />
-              {t(EQUIPMENT_LABELS[def.equipment])} · <span className="num">{t.n(ex.sets.filter((s) => s.completed).length, "{n} set", "{n} sets")}</span>
+              {t(EQUIPMENT_LABELS[def.equipment])}
+              {ex.variation && <> · {t(variationLabel(ex.variation))}</>} · <span className="num">{t.n(ex.sets.filter((s) => s.completed).length, "{n} set", "{n} sets")}</span>
             </p>
           )}
           {share > 0 && (

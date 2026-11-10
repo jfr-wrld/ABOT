@@ -9,6 +9,7 @@ import { REDEEM_REASONS } from "@/lib/redeem-service";
 import { PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
 import { CHECKOUT_MESSAGE, PAYMENT_STATUS_MESSAGE } from "@/lib/checkout";
 import { AXIS_LABEL, DIAGNOSTIC_KEYS } from "@/lib/symmetry-analyzer";
+import { VARIATION_LABEL } from "@/data/variations";
 
 /**
  * English texts that reach t() through a variable (labels kept in constants and maps), so the
@@ -134,5 +135,7 @@ export const DYNAMIC_KEYS: string[] = [
   ...Object.values(DIGEST_LABEL),
   ...FOODS.flatMap((f) => [f.name, f.servingVisual, f.tacticalNote]),
   ...Object.values(REDEEM_REASONS),
+  // Exercise variations (data/variations.ts)
+  ...Object.values(VARIATION_LABEL),
   "Pro",
 ];
