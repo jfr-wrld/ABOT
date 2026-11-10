@@ -196,12 +196,13 @@ Owner brief 2026-11-08:
   empty it shows the set before it as the number to beat ("last 60 kg × 8"). Right: the clock
   with the live dot, and sets done ("7/16 sets"). The share of sets done runs as a Volt hairline
   along the bottom edge, the same mark the rest countdown uses.
-- **Wave while it runs** (owner brief 2026-11-10, "seperti wave Siri"). Behind the bar's text,
-  three thin sine lines (a Volt lead at 42%, a softer Volt echo running the other way, a faint
-  white thread) drift sideways at their own speeds while their height breathes, faded at both
-  ends. Paused, they settle to a flat line: the bar reads as live or stopped at a glance. It is
-  transform-only CSS, so it costs the phone almost nothing; Lite effects and reduced motion
-  hold it still.
+- **Wave while it runs** (owner brief 2026-11-10, "seperti wave Siri"; revised the same day: at
+  the bottom, solid, rising and falling). Along the bar's bottom edge, three filled swells (a Volt
+  back wave, a brighter Volt front wave running the other way, a faint light crest) drift sideways
+  at their own speeds while their height rises and falls from the floor, like a level breathing.
+  Paused, they sink to a thin floor: the bar reads as live or stopped at a glance. It is
+  transform-only CSS, so it costs the phone almost nothing; Lite effects and reduced motion hold
+  it still.
 - **Shortcuts in the bar** (owner brief 2026-11-10). A tap opens the bar upward, the same shape
   growing (Dynamic Island), into four 56 px targets: Pause or Resume, Done set (Volt, the one
   primary; it ticks the set with the numbers the bar shows, so what you read is what is saved),

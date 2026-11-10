@@ -274,24 +274,30 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
   );
 }
 
-/** A sine line across 0..400 (two bar widths) with whole periods, so sliding by half loops cleanly. */
-function sinePath(period: number, amp: number): string {
+/**
+ * A filled wave across 0..400 (two bar widths) with whole periods, so sliding by half loops
+ * cleanly: the crest runs along y = 8 +/- amp and the shape is filled down to the bottom (y = 40).
+ */
+function wavePath(period: number, amp: number): string {
   let d = "";
-  for (let x = 0; x <= 400; x += 4) d += `${x === 0 ? "M" : "L"}${x} ${(20 + amp * Math.sin((2 * Math.PI * x) / period)).toFixed(2)}`;
-  return d;
+  for (let x = 0; x <= 400; x += 4) d += `${x === 0 ? "M" : "L"}${x} ${(14 + amp * Math.sin((2 * Math.PI * x) / period)).toFixed(2)}`;
+  return `${d} L400 40 L0 40 Z`;
 }
 
-/** Three lines: a bright Volt lead, a softer Volt echo the other way, and a faint white thread. */
+/** Three filled swells: a Volt back wave, a brighter Volt front wave the other way, a light crest. */
 const WAVES = [
-  { d: sinePath(100, 13), color: "var(--color-accent)", opacity: 0.42, width: 1.6, run: "3.4s", breathe: "1.9s", reverse: false },
-  { d: sinePath(200 / 3, 9), color: "var(--color-accent)", opacity: 0.28, width: 1.3, run: "5.2s", breathe: "2.7s", reverse: true },
-  { d: sinePath(50, 6), color: "#ffffff", opacity: 0.16, width: 1, run: "2.6s", breathe: "3.3s", reverse: false },
+  { d: wavePath(200, 9), color: "var(--color-accent)", opacity: 0.16, run: "6s", breathe: "2.6s", reverse: true },
+  { d: wavePath(100, 7), color: "var(--color-accent)", opacity: 0.26, run: "3.8s", breathe: "1.9s", reverse: false },
+  { d: wavePath(400 / 6, 4), color: "#ffffff", opacity: 0.07, run: "2.8s", breathe: "3.2s", reverse: false },
 ];
 
-/** The wave behind the running bar's text: it moves while the workout runs and lies flat when paused. */
+/**
+ * The running bar's wave: solid swells along its bottom edge that rise and fall while the
+ * workout runs, like a level breathing, and sink to a thin floor when it is paused.
+ */
 function LiveWave({ paused }: { paused: boolean }) {
   return (
-    <span aria-hidden="true" data-paused={paused || undefined} className="live-wave pointer-events-none absolute inset-x-0 top-0 h-14 overflow-hidden">
+    <span aria-hidden="true" data-paused={paused || undefined} className="live-wave pointer-events-none absolute inset-x-0 top-5 h-9 overflow-hidden">
       {WAVES.map((w, i) => (
         <span
           key={i}
@@ -304,7 +310,7 @@ function LiveWave({ paused }: { paused: boolean }) {
             className="live-wave-line absolute top-0 left-0 h-full w-[200%]"
             style={{ "--run": w.run, animationDirection: w.reverse ? "reverse" : "normal" } as React.CSSProperties}
           >
-            <path d={w.d} fill="none" stroke={w.color} strokeOpacity={w.opacity} strokeWidth={w.width} vectorEffect="non-scaling-stroke" />
+            <path d={w.d} fill={w.color} fillOpacity={w.opacity} />
           </svg>
         </span>
       ))}
