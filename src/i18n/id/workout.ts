@@ -480,5 +480,8 @@ export const workout: Record<string, string> = {
   "Rope": "Tali",
   "Single handle": "Pegangan tunggal",
   "EZ bar": "Bar EZ",
-  "Neutral wide handle": "Pegangan netral lebar",
+  "MAG grip": "Pegangan MAG",
+  "Ankle strap": "Tali pergelangan kaki",
+  "Hook grip": "Hook grip",
+  "Thumbless grip": "Grip tanpa jempol",
 };

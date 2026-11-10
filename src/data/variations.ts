@@ -13,6 +13,8 @@ export const VARIATION_LABEL: Record<string, string> = {
   close: "Close grip",
   neutral: "Neutral grip",
   mixed: "Mixed grip",
+  hook: "Hook grip",
+  thumbless: "Thumbless grip",
   overhand: "Overhand grip",
   underhand: "Underhand grip",
   incline: "Incline",
@@ -40,11 +42,12 @@ export const VARIATION_LABEL: Record<string, string> = {
   rope: "Rope",
   "single-handle": "Single handle",
   "ez-bar": "EZ bar",
-  "mag-grip": "Neutral wide handle",
+  "mag-grip": "MAG grip",
+  "ankle-strap": "Ankle strap",
 };
 
 const BY_PATTERN: Partial<Record<MovementPattern, string[]>> = {
-  "vertical-pull": ["wide", "close", "neutral", "mixed"],
+  "vertical-pull": ["wide", "close", "neutral", "mixed", "thumbless"],
   "horizontal-pull": ["overhand", "underhand", "neutral", "wide", "single-arm"],
   // Incline and decline are their own exercises, so a press offers grips and a pause.
   "horizontal-push": ["wide", "close", "paused"],
@@ -102,7 +105,6 @@ const BY_ID: Record<string, string[]> = {
   "shoulder-press-machine": ["neutral", "single-arm"],
   "seated-overhead-press-barbell": [],
   "push-press": [],
-  "trap-bar-deadlift": [],
   "romanian-deadlift-dumbbell": ["single-leg"],
   "reverse-lunge-dumbbell": [],
   "lunge-barbell": [],
@@ -117,6 +119,12 @@ const BY_ID: Record<string, string[]> = {
   "bodyweight-squat": ["wide-stance", "narrow-stance", "paused"],
   "box-squat": ["high-bar", "low-bar", "wide-stance", "narrow-stance"],
   "straight-arm-pulldown-cable": ["straight-bar", "rope"],
+  "glute-kickback-cable": ["ankle-strap", "single-handle"],
+  // Heavy pulls: the grip that holds the bar is the choice that matters.
+  "deadlift-barbell": ["mixed", "hook", "deficit", "paused"],
+  "sumo-deadlift-barbell": ["mixed", "hook", "deficit"],
+  "rack-pull-barbell": ["mixed", "hook"],
+  "trap-bar-deadlift": [],
   "lateral-raise-cable": [],
   "rear-delt-fly-cable": [],
   "cable-woodchopper": [],

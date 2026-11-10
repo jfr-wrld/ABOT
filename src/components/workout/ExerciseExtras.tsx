@@ -8,6 +8,7 @@ import { variationLabel, variationsFor } from "@/data/variations";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { feedback } from "@/lib/feedback";
+import { VariationIcon } from "./VariationIcon";
 import { useT } from "@/i18n";
 
 /**
@@ -35,6 +36,7 @@ export function ExerciseExtras({ item, exercise, name }: { item: SessionExercise
               item.variation ? "border-accent/50 bg-accent-tint text-text" : "border-line-strong text-text-muted hover:text-text"
             }`}
           >
+            {item.variation && <VariationIcon variation={item.variation} size={18} />}
             {item.variation ? t(variationLabel(item.variation)) : t("Variation")}
             <ChevronDown aria-hidden="true" size={14} />
           </button>
@@ -79,10 +81,11 @@ export function ExerciseExtras({ item, exercise, name }: { item: SessionExercise
                   useWorkoutStore.getState().setExerciseVariation(item.id, key);
                   setVariationOpen(false);
                 }}
-                className={`min-h-12 rounded-ctl border px-3 text-left text-sm font-semibold ${
+                className={`flex min-h-14 items-center gap-2.5 rounded-ctl border px-3 text-left text-sm font-semibold ${
                   on ? "border-accent bg-accent-tint text-text" : "border-line-strong text-text hover:bg-surface-2"
                 }`}
               >
+                <VariationIcon variation={key} size={28} className={on ? "text-text" : "text-text-muted"} />
                 {key ? t(variationLabel(key)) : t("Standard")}
               </button>
             );
