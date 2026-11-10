@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { addExercise, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
 
 const SCAN = readFileSync(path.join(__dirname, "support", "contrast-scan.js"), "utf8");
 
@@ -20,7 +20,7 @@ test.describe("light theme", () => {
     expect(await scan(page), "logger").toEqual([]);
     await page.getByRole("button", { name: "Finish", exact: true }).click();
     await page.getByRole("button", { name: "Finish workout" }).click();
-    await page.waitForURL(/\/workout\/summary\?id=/);
+    await reachSummary(page);
     await page.waitForTimeout(800);
     expect(await scan(page), "summary").toEqual([]);
     const detail = page.url().replace("/workout/summary?", "/history?");

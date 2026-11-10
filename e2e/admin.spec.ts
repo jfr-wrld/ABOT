@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, finishWorkout, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
 
 /** The build under test has Supabase when .env carries it; then the console is in server mode. */
 function supabaseConfigured(): boolean {
@@ -126,7 +126,7 @@ test("algorithm calibration, exercise CMS and database tools change the app for 
   await logSet(page, 1, "20", "10");
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
   await expect(page.getByText("Worked out for 100 kg.", { exact: false })).toBeVisible();
 
   await page.goto("/admin#database");

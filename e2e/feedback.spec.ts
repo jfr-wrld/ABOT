@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, freshStart, logSet, startEmptyWorkout, waitForSavedSetting } from "./helpers";
+import { addExercise, freshStart, logSet, startEmptyWorkout, waitForSavedSetting, reachSummary } from "./helpers";
 
 /** Records every oscillator frequency the page schedules. */
 async function recordTones(page: Page) {
@@ -58,7 +58,7 @@ test("a heavier repeat of a lift plays the record chord; a first-ever lift does 
   expect(await tones(page)).not.toContain(440);
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/summary/);
+  await reachSummary(page);
 
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");
@@ -75,7 +75,7 @@ test("starting plays the power-on glide and finishing plays the closing chord", 
   const before = (await tones(page)).length;
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/summary/);
+  await reachSummary(page);
   await expect.poll(async () => (await tones(page)).slice(before)).toEqual(expect.arrayContaining([523, 659, 784, 1047]));
 });
 

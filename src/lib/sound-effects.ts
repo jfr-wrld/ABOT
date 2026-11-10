@@ -13,6 +13,7 @@
  * - workout start: a 220 to 440 Hz glide, then an 880 Hz click
  * - workout complete: C major rolled upward (523, 659, 784, 1047 Hz; 1319 Hz on top for a record)
  * - pro unlocked: a three-second sting timed to the celebration screen (see playProUnlocked)
+ * - streak grew: a two-second ignition timed to the streak screen (see playStreakFire)
  */
 
 type Wave = OscillatorType;
@@ -173,5 +174,43 @@ export function playProUnlocked(): boolean {
     s(783.99, 1.55, 1.4, 0.05),
     s(987.77, 1.55, 1.4, 0.05),
     s(1174.66, 1.55, 1.5, 0.05),
+  ]);
+}
+
+/**
+ * The week streak grew: about two seconds timed to the streak screen.
+ * 0.00 s an ember rising (a soft upward glide); 0.35 s ignition (a low thump under a short roar);
+ * 0.40 to 1.20 s crackles; 0.85 s the count rolls over (a two-note pickup); 1.00 s a bright
+ * G major chord that rings out; 1.15 s this week's plate lights (the app's lock click).
+ */
+export function playStreakFire(): boolean {
+  const s = (f: number, at: number, dur: number, peak: number, wave: Wave = "sine"): Tone => ({ wave, from: f, at, dur, peak });
+  const crackles = [0.42, 0.51, 0.63, 0.7, 0.84, 0.97, 1.08, 1.2].map((at, i) => ({
+    wave: "triangle" as Wave,
+    from: 2400 - (i % 3) * 400,
+    to: 900,
+    at,
+    dur: 0.014,
+    peak: 0.05,
+  }));
+  return play([
+    // Ember.
+    { wave: "sine", from: 300, to: 1200, at: 0, dur: 0.32, peak: 0.06 },
+    // Ignition.
+    { wave: "sine", from: 140, to: 45, at: 0.35, dur: 0.38, peak: 0.36 },
+    { wave: "sawtooth", from: 90, to: 420, at: 0.35, dur: 0.55, peak: 0.045 },
+    ...crackles,
+    // The count rolls over.
+    s(587.33, 0.85, 0.1, 0.12),
+    s(783.99, 0.93, 0.12, 0.12),
+    // Chord.
+    s(392, 1.0, 1.2, 0.08),
+    s(493.88, 1.0, 1.2, 0.08),
+    s(587.33, 1.0, 1.25, 0.08),
+    s(783.99, 1.0, 1.3, 0.08),
+    s(196, 1.0, 1.0, 0.12, "triangle"),
+    // This week's plate lights.
+    s(600, 1.15, 0.04, 0.1, "triangle"),
+    s(900, 1.2, 0.05, 0.1, "triangle"),
   ]);
 }

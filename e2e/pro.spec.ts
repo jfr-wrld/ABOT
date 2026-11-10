@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
@@ -93,7 +93,7 @@ test("Story Studio: free layouts export, PRO layouts and the watermark switch as
   await logSet(page, 1, "60", "8");
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
   const summary = page.url();
 
   await simulate(page, "Free locked");

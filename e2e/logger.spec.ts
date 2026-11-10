@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await freshStart(page);
@@ -73,7 +73,7 @@ test("finish saves the workout and the previous column autofills next time", asy
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await expect(page.getByText("2 sets were not marked done and will not be saved.")).toBeVisible();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
   await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
   await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first()).toContainText(/480 kg\s*1 set/);
@@ -114,7 +114,7 @@ test("mark remaining sets done from the finish dialog", async ({ page }) => {
   await page.getByRole("button", { name: "Mark 1 remaining set done" }).click();
   await expect(page.getByText("1 set was not marked done and will not be saved.")).toBeVisible();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
   await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
   await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("link").first()).toContainText(/960 kg\s*2 sets/);

@@ -58,9 +58,24 @@ export async function logSet(page: Page, n: number, kg: string | null, reps: str
 export async function finishWorkout(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
   await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
+}
+
+/**
+ * After Finish: waits for the summary, passing the streak screen first when the workout grew
+ * the week streak (a first workout always does).
+ */
+export async function reachSummary(page: Page): Promise<void> {
+  await page.waitForURL(/\/workout\/summary\?id=/);
+  const streak = page.getByRole("dialog", { name: /^Streak (started|extended)$/ });
+  const saved = page.getByRole("heading", { level: 1, name: "Workout saved" });
+  await expect(streak.or(saved)).toBeVisible();
+  if (await streak.isVisible()) {
+    await streak.getByRole("button", { name: "Continue" }).click();
+    await expect(saved).toBeVisible();
+  }
 }
 
 function escape(s: string): string {

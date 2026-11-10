@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { addExercise, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -51,7 +51,7 @@ test("a finished workout shows its calories, on the summary and on Home, and exp
   await page.getByRole("button", { name: "Skip rest" }).click();
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
 
   const kcal = page.getByRole("region", { name: "Calories (estimate)" });
   // About 40 minutes at 80 kg with a light session (MET 3.5): 3.5 x 3.5 x 0.4 x 40, about 196.

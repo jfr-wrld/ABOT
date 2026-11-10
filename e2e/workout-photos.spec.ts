@@ -1,7 +1,7 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
 
 const PHOTO = path.join(__dirname, "fixtures", "frame0.jpg");
 const PHOTO_2 = path.join(__dirname, "fixtures", "frame1.jpg");
@@ -19,7 +19,7 @@ async function finishToSummary(page: Page) {
   await logSet(page, 1, "100", "5");
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
 }
 
 test("a photo added on the summary stays with the workout on this phone, and can be deleted", async ({ page }) => {

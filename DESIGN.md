@@ -176,9 +176,11 @@ out like a social profile.
   profile beside it, then the name, one mono line (workouts, streak) and the backup chip. The
   cover is the last twelve weeks of volume drawn as a skyline in dim Volt with the current week
   brighter: the lifter's own data instead of a stock banner, plain Carbon until there is any.
-  Below, a sticky tab bar (Progress, Lifts, About; the open tab is kept in `?tab=`) with a Volt
-  underline on the current one. Progress holds the lifetime figures and the charts, Lifts the
-  e1RM ranking, About the bodyweight log, name and height, the account and settings.
+  Below, a sticky tab bar (Progress, Lifts; the open tab is kept in `?tab=`) with a Volt
+  underline on the current one. Progress is the summary with its detail pages, Lifts the e1RM
+  ranking. Edit profile (`/profile/edit`, owner brief 2026-11-10) holds what the lifter types in
+  about themselves: photo, name, username, height, the bodyweight log, and the account. The
+  backup chip opens it at the account. The old `?tab=about` address forwards there.
 
 ## Workout bar, info tips and status outside the app
 
@@ -224,6 +226,17 @@ Owner brief 2026-11-08: a moment of completion, then the numbers, with motion.
   it broke (WEIGHT, E1RM, VOLUME). **New lifts** (first time logged) are listed as the baseline,
   not as records: there was nothing to beat. Same rule as Home and the workout detail.
 - A body map of the muscles worked; a bottom bar with Share to IG Story, See every set, Home.
+- **Streak screen** (owner brief 2026-11-10, "api streak yang berkobar"): when the workout grew
+  the week streak (the first workout of a week that continues it, or the first ever), the
+  summary opens on a full-screen dark moment first. A spark rises and catches at 0.35 s with a
+  flash and a ring; a flame drawn for ABOT (Volt body, yellow heart, near-white core, each layer
+  flickering on its own clock, embers drifting up) keeps burning. The count rolls from the old
+  number to the new at 0.85 s; five week plates follow, this week's lighting at 1.15 s. Volt
+  carries it because the streak flame is already Volt on Home. Its own sound
+  (`playStreakFire`: ember glide, ignition thump, crackles, G major) and a buzz on ignition. One
+  action, Continue, then the summary plays its own moment and chord, so the two never overlap.
+  It plays once per workout and not for a summary opened later. Reduced motion or Lite effects
+  show the finished screen still.
 
 ## Story Studio
 

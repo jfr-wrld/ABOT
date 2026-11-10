@@ -405,4 +405,12 @@ export const workout: Record<string, string> = {
   "Map data © OpenStreetMap contributors": "Data peta © kontributor OpenStreetMap",
   "The map service is busy. Try again in a minute.": "Layanan peta sedang sibuk. Coba lagi sebentar lagi.",
   "Could not reach the map service. Check your connection and try again.": "Layanan peta tidak bisa dihubungi. Periksa koneksi lalu coba lagi.",
+  "Continue": "Lanjut",
+  "Streak started": "Streak dimulai",
+  "Streak extended": "Streak bertambah",
+  "week in a row": "minggu berturut-turut",
+  "weeks in a row": "minggu berturut-turut",
+  "Recent weeks": "Minggu terakhir",
+  "This wk": "Mg ini",
+  "Train at least once next week to keep it burning.": "Latihan minimal sekali minggu depan supaya apinya tetap menyala.",
 };

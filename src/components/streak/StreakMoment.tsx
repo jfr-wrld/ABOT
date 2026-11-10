@@ -1,0 +1,260 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { motion, useReducedMotionConfig } from "framer-motion";
+import { feedback } from "@/lib/feedback";
+import { markStreakShown, type StreakMoment as Moment } from "@/lib/streak-moment";
+import { useT } from "@/i18n";
+
+/** Everything dramatic is timed from the moment the flame catches. */
+const IGNITE = 0.35;
+/** When the count rolls over to the new number. */
+const ROLL = 0.85;
+/** When this week's plate lights. */
+const LIGHT = 1.15;
+const VOLT = "#ccff00";
+const EMBERS = 14;
+const PLATE = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
+
+// The flame in three layers, drawn for ABOT: a Volt body with a side tongue, a yellow heart, a
+// near-white core. Each layer flickers on its own clock so the fire never repeats in step.
+const OUTER =
+  "M60 6 C70 34 98 52 100 92 C102 128 82 154 60 154 C38 154 18 128 20 94 C22 70 34 58 40 40 C44 58 50 64 54 64 C52 44 54 24 60 6 Z";
+const MIDDLE =
+  "M60 50 C68 72 86 84 86 110 C86 134 74 148 60 148 C46 148 34 134 34 112 C34 96 44 88 48 76 C52 88 56 90 58 90 C56 76 56 64 60 50 Z";
+const CORE = "M60 92 C66 106 74 114 74 128 C74 140 68 148 60 148 C52 148 46 140 46 130 C46 118 54 110 60 92 Z";
+
+const LAYERS = [
+  { d: OUTER, fill: VOLT, duration: 1.5, scaleY: [1, 1.06, 0.97, 1.04, 1], skewX: [0, -2.5, 1.5, -1, 0] },
+  { d: MIDDLE, fill: "#facc15", duration: 1.1, scaleY: [1, 0.95, 1.07, 0.98, 1], skewX: [0, 2, -2, 1, 0] },
+  { d: CORE, fill: "#fffbe6", duration: 0.8, scaleY: [1, 1.08, 0.94, 1.05, 1], skewX: [0, -1.5, 1.5, 0, 0] },
+] as const;
+
+/**
+ * The week streak grew. A spark rises in the dark and catches; the flame bursts up with a flash
+ * and a ring, then keeps burning. The count rolls from the old number to the new one, and this
+ * week's plate lights at the end of the row. One action closes it and opens the summary. With
+ * reduced motion (or Lite effects) the finished screen appears without the movement.
+ */
+export function StreakMoment({ moment, sessionId, onClose }: { moment: Moment; sessionId: string; onClose: () => void }) {
+  const t = useT();
+  const reduce = useReducedMotionConfig();
+  const button = useRef<HTMLButtonElement>(null);
+  const { before, after, weeks } = moment;
+  const first = before === 0;
+
+  const played = useRef(false);
+  useEffect(() => {
+    markStreakShown(sessionId);
+    // Finish was just tapped, so sound is allowed. Once, even when effects run twice in development.
+    if (!played.current) feedback.streak();
+    played.current = true;
+    button.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sessionId, onClose]);
+
+  const at = (delay: number) => (reduce ? { duration: 0 } : { delay });
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="streak-title"
+      className="force-dark fixed inset-0 z-[60] flex flex-col overflow-hidden bg-[#09090b] text-text"
+    >
+      {/* The flash when the flame catches. */}
+      {!reduce && (
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{ opacity: 0, background: "radial-gradient(60% 45% at 50% 38%, rgb(204 255 0 / 0.55), transparent 70%)" }}
+          animate={{ opacity: [0, 0.9, 0.25] }}
+          transition={{ delay: IGNITE, duration: 0.7, times: [0, 0.15, 1] }}
+        />
+      )}
+      {/* A slow glow that breathes under the flame for as long as the screen is open. */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-[12%] mx-auto size-80 rounded-full"
+        style={{ opacity: reduce ? 0.3 : 0, background: "radial-gradient(circle, rgb(204 255 0 / 0.35), transparent 65%)" }}
+        animate={reduce ? undefined : { opacity: [0, 0.4, 0.25, 0.4], scale: [0.8, 1.05, 0.98, 1.05] }}
+        transition={{ delay: IGNITE, duration: 3, times: [0, 0.2, 0.6, 1], repeat: Infinity, repeatType: "mirror" }}
+      />
+
+      <div className="relative flex flex-1 flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] text-center">
+        <Flame reduce={!!reduce} />
+
+        <h1 id="streak-title" className="mt-4 font-mono text-xs font-bold uppercase tracking-[0.22em] text-[#ccff00]">
+          {first ? t("Streak started") : t("Streak extended")}
+        </h1>
+
+        <Count before={before} after={after} reduce={!!reduce} />
+        <p className="text-base font-semibold">
+          <span aria-hidden="true">{t.n(after, "week in a row", "weeks in a row")}</span>
+          <span className="sr-only">{t.n(after, "{n}-week streak", "{n}-week streak")}</span>
+        </p>
+
+        <ol aria-label={t("Recent weeks")} className="mt-6 flex gap-2.5">
+          {weeks.map((on, i) => {
+            const current = i === weeks.length - 1;
+            return (
+              <li key={i} className="flex flex-col items-center gap-1.5">
+                <motion.svg
+                  viewBox="0 0 100 100"
+                  width={30}
+                  height={30}
+                  aria-hidden="true"
+                  style={current && !reduce ? { scale: 0.6, opacity: 0.4 } : undefined}
+                  animate={current && !reduce ? { scale: [0.6, 1.35, 1], opacity: 1 } : undefined}
+                  transition={current ? { ...at(LIGHT), duration: 0.45, times: [0, 0.6, 1] } : undefined}
+                >
+                  <path d={PLATE} fill="none" stroke={on ? VOLT : "rgb(255 255 255 / 0.25)"} strokeWidth={8} />
+                  {on && (
+                    // This week's plate starts as an outline and fills when it lights.
+                    <motion.path
+                      d={PLATE}
+                      fill={VOLT}
+                      style={{ filter: `drop-shadow(0 0 ${current ? 8 : 3}px rgb(204 255 0 / 0.6))` }}
+                      // An SVG path takes its opacity as an attribute, so it starts from initial, not style.
+                      initial={current && !reduce ? { opacity: 0 } : false}
+                      animate={current && !reduce ? { opacity: 1 } : undefined}
+                      transition={current ? { ...at(LIGHT), duration: 0.15 } : undefined}
+                    />
+                  )}
+                </motion.svg>
+                <span className={`font-mono text-[10px] uppercase tracking-wider ${current ? "font-bold text-[#ccff00]" : "text-text-muted"}`}>
+                  {current ? t("This wk") : `-${weeks.length - 1 - i}`}
+                </span>
+                <span className="sr-only">{on ? t("trained") : t("rest")}</span>
+              </li>
+            );
+          })}
+        </ol>
+
+        <motion.p
+          className="mt-6 max-w-[30ch] text-balance text-sm text-text-muted"
+          style={reduce ? undefined : { opacity: 0, y: 8 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0 }}
+          transition={at(LIGHT + 0.2)}
+        >
+          {t("Train at least once next week to keep it burning.")}
+        </motion.p>
+      </div>
+
+      <motion.div
+        className="relative px-6 pb-[calc(24px+env(safe-area-inset-bottom))]"
+        style={reduce ? undefined : { opacity: 0, y: 12 }}
+        animate={reduce ? undefined : { opacity: 1, y: 0 }}
+        transition={at(LIGHT + 0.35)}
+      >
+        <motion.button
+          ref={button}
+          type="button"
+          onClick={onClose}
+          whileTap={{ scale: 0.97 }}
+          className="mx-auto flex min-h-12 w-full max-w-[420px] items-center justify-center rounded-xl bg-[#ccff00] text-base font-bold text-[#09090b] shadow-[0_0_28px_rgb(204_255_0/0.35)] hover:brightness-110"
+        >
+          {t("Continue")}
+        </motion.button>
+      </motion.div>
+    </div>
+  );
+}
+
+/** The flame: a spark rises and catches, then three layers burn with embers drifting up. */
+function Flame({ reduce }: { reduce: boolean }) {
+  const embers = Array.from({ length: EMBERS }, (_, i) => ({
+    x: ((i * 37) % 70) - 35,
+    drift: (i % 2 ? 1 : -1) * (6 + (i % 4) * 4),
+    size: 2 + (i % 3),
+    delay: IGNITE + 0.1 + (i * 0.23) % 1.6,
+    duration: 1.4 + (i % 4) * 0.25,
+  }));
+  return (
+    <div aria-hidden="true" className="relative flex h-52 w-44 items-end justify-center">
+      {!reduce && (
+        <>
+          {/* The spark before ignition. */}
+          <motion.span
+            className="absolute bottom-0 size-2 rounded-full bg-[#ccff00] shadow-[0_0_12px_#ccff00]"
+            style={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 1, 0], y: [80, 20, -30, -40], scale: [0.6, 1, 1.4, 3] }}
+            transition={{ duration: IGNITE + 0.05, times: [0, 0.3, 0.9, 1], ease: "easeOut" }}
+          />
+          {/* The ring that rolls out when it catches. */}
+          <motion.span
+            className="absolute bottom-6 size-40 rounded-full border-2 border-[#ccff00]"
+            style={{ opacity: 0, scale: 0.3 }}
+            animate={{ opacity: [0, 0.8, 0], scale: [0.3, 1.9] }}
+            transition={{ delay: IGNITE, duration: 0.8, ease: "easeOut" }}
+          />
+          {embers.map((e, i) => (
+            <motion.span
+              key={i}
+              className="absolute bottom-10 rounded-full"
+              style={{ width: e.size, height: e.size, left: `calc(50% + ${e.x}px)`, opacity: 0, background: i % 3 ? "#ccff00" : "#facc15" }}
+              animate={{ opacity: [0, 1, 0], y: [0, -150 - (i % 5) * 18], x: [0, e.drift] }}
+              transition={{ delay: e.delay, duration: e.duration, repeat: Infinity, ease: "easeOut" }}
+            />
+          ))}
+        </>
+      )}
+      <motion.svg
+        viewBox="0 0 120 160"
+        className="relative h-48 w-36 overflow-visible"
+        style={{
+          filter: "drop-shadow(0 0 22px rgb(204 255 0 / 0.55))",
+          originY: 1,
+          ...(reduce ? {} : { scale: 0, opacity: 0 }),
+        }}
+        animate={reduce ? undefined : { scale: [0, 1.28, 0.94, 1], opacity: 1 }}
+        transition={{ delay: IGNITE, duration: 0.6, times: [0, 0.45, 0.75, 1], ease: "easeOut" }}
+      >
+        {LAYERS.map((l, i) => (
+          <motion.path
+            key={i}
+            d={l.d}
+            fill={l.fill}
+            style={{ originX: 0.5, originY: 1 }}
+            animate={reduce ? undefined : { scaleY: [...l.scaleY], skewX: [...l.skewX] }}
+            transition={{ delay: IGNITE + 0.5, duration: l.duration, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ))}
+      </motion.svg>
+    </div>
+  );
+}
+
+/** The old count slides up and away as the new one rises into place with a small pop. */
+function Count({ before, after, reduce }: { before: number; after: number; reduce: boolean }) {
+  const big = "num block text-7xl leading-none font-extrabold tracking-tight";
+  if (reduce) {
+    return (
+      <span aria-hidden="true" className={`${big} mt-2 text-[#ccff00]`}>
+        {after}
+      </span>
+    );
+  }
+  return (
+    <span aria-hidden="true" className="relative mt-2 block h-[1.1em] overflow-hidden text-7xl">
+      <motion.span
+        className={`${big} text-text-muted`}
+        style={{ y: "0%" }}
+        animate={{ y: "-110%", opacity: 0 }}
+        transition={{ delay: ROLL, duration: 0.3, ease: "easeIn" }}
+      >
+        {before}
+      </motion.span>
+      <motion.span
+        className={`${big} absolute inset-x-0 top-0 text-[#ccff00]`}
+        style={{ y: "110%", scale: 1 }}
+        animate={{ y: "0%", scale: [1, 1.18, 1] }}
+        transition={{ delay: ROLL + 0.12, duration: 0.5, ease: "easeOut", scale: { delay: ROLL + 0.3, duration: 0.35 } }}
+      >
+        {after}
+      </motion.span>
+    </span>
+  );
+}

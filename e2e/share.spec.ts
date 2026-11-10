@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
 
 const LAYOUTS = [
   "Obsidian Raw",
@@ -23,7 +23,7 @@ async function finishOneSet(page: Page) {
   await logSet(page, 1, "60", "8");
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
 }
 
 async function openStudio(page: Page) {
@@ -204,7 +204,7 @@ test("a heavier repeat celebrates the record and compares with last time", async
   await logSet(page, 1, "70", "8");
   await page.getByRole("button", { name: "Finish", exact: true }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.waitForURL(/\/workout\/summary\?id=/);
+  await reachSummary(page);
   await expect(page.getByRole("heading", { name: "1 personal record" })).toBeVisible();
   await expect(page.getByRole("heading", { name: /new lift/ })).toHaveCount(0);
   const compare = page.getByRole("region", { name: /Volume vs last/ });

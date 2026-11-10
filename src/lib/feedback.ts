@@ -8,6 +8,7 @@ import {
   playRestCountdown,
   playRestTimerZero,
   playSetComplete,
+  playStreakFire,
   playWorkoutComplete,
   playWorkoutStart,
 } from "./sound-effects";
@@ -42,6 +43,12 @@ export const feedback = {
     if (!on()) return;
     playProUnlocked();
     setTimeout(() => buzz([60, 50, 30, 50, 30, 90, 120]), 420);
+  },
+  /** The week streak grew: the fire sting, with a pulse on ignition (0.35 s). */
+  streak(): void {
+    if (!on()) return;
+    playStreakFire();
+    setTimeout(() => buzz([40, 40, 25, 40, 25, 60]), 350);
   },
   /** An entry was refused (out of range, wrong code): a short double buzz, no sound. */
   error(): void {

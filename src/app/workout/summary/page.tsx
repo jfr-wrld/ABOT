@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotionConfig } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Sparkles, Timer, Trophy } from "lucide-react";
@@ -28,6 +28,8 @@ import { HealthSyncService } from "@/lib/health-sync";
 import { useHealthSyncStore } from "@/store/useHealthSyncStore";
 import type { WorkoutSession } from "@/types/workout";
 import { muscleText } from "@/lib/home";
+import { StreakMoment } from "@/components/streak/StreakMoment";
+import { streakAlreadyShown, streakMoment } from "@/lib/streak-moment";
 
 export default function WorkoutSummaryPage() {
   return (
@@ -46,7 +48,7 @@ function Summary() {
   const t = useT();
   const id = useSearchParams().get("id") ?? "";
   const sessions = useWorkoutStore((s) => s.sessions);
-  const { weightUnit } = useSettingsStore();
+  const { weightUnit, firstDayOfWeek } = useSettingsStore();
   const { byId } = useAllExercises();
   const session = sessions.find((s) => s.id === id);
 
@@ -66,13 +68,22 @@ function Summary() {
   const recordLifts = insights ? Object.keys(insights.byLift).length : 0;
   const photos = useWorkoutPhotos(session?.id);
 
-  // The finish chord and a buzz, behind Sounds & vibration. Finish was just tapped, so audio is unlocked.
+  // A workout that grew the week streak opens on the streak screen; the summary follows it.
+  const [streak, setStreak] = useState(() =>
+    streakAlreadyShown(id) ? null : streakMoment(sessions, id, Date.now(), firstDayOfWeek),
+  );
+  const closeStreak = useCallback(() => setStreak(null), []);
+
+  // The finish chord and a buzz, behind Sounds & vibration, once the summary itself is in view.
+  // Finish was just tapped, so audio is unlocked.
+  const chimed = useRef(false);
   useEffect(() => {
-    if (!session) return;
+    if (!session || streak || chimed.current) return;
+    chimed.current = true;
     feedback.finish(recordLifts > 0);
     // Once per opening of the page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [streak]);
 
   if (!session || !insights) {
     return (
@@ -82,6 +93,8 @@ function Summary() {
       </main>
     );
   }
+
+  if (streak) return <StreakMoment moment={streak} sessionId={id} onClose={closeStreak} />;
 
   const volume = sessionVolume(session, byId);
   const sets = countSets(session).completed;
