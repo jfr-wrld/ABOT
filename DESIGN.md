@@ -189,6 +189,14 @@ Owner brief 2026-11-08:
   -15 s, +15 s and skip) moved from under the status bar to just above the dock, where the thumb
   already is between sets. Pages add its height to their bottom padding (`--live-bar`), so it
   never covers the last row.
+- **What the bar says between sets** (owner brief 2026-11-10: "ngga cuman menampilkan timer tapi
+  juga exercise, set, rep"). The running bar is as tall as the rest bar (56 px), so switching
+  between them is one shape changing content, not height. Left: the set the lifter is on ("Set 2
+  of 4 · 60 kg × 8", the first set not ticked off) over the exercise name. While that set is still
+  empty it shows the set before it as the number to beat ("last 60 kg × 8"). Right: the clock
+  with the live dot, and sets done ("7/16 sets"). The share of sets done runs as a Volt hairline
+  along the bottom edge, the same mark the rest countdown uses. On the workout page a tap brings
+  that exercise into view; elsewhere it opens the workout.
 - **Info tips in Settings.** Each setting is a short title with an (i) beside it; the sentence
   that explains it opens under the title on tap, instead of every explanation always showing.
 - **Status outside the app.** The owner asked for a Dynamic Island while ABOT is in the

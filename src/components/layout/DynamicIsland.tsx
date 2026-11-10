@@ -9,8 +9,10 @@ import { useSettingsStore } from "@/store/useSettingsStore";
 import { useHydration } from "@/store/hydration";
 import { useNow } from "@/lib/useNow";
 import { formatClock, formatDuration, sessionDurationSec } from "@/lib/calc";
+import { formatWeight } from "@/lib/units";
+import { liveSet, setProgress } from "@/lib/live-set";
 import { useLiveWorkoutNotification } from "@/lib/notifications/useLiveWorkoutNotification";
-import type { WorkoutSession } from "@/types/workout";
+import type { WeightUnit, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { usePagePath } from "@/components/layout/usePagePath";
 import { feedback } from "@/lib/feedback";
 import { isNativeApp } from "@/lib/native/files";
@@ -27,8 +29,9 @@ const ISLAND_SPRING = { type: "spring", stiffness: 520, damping: 38, mass: 0.9 }
 const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.14, delay: 0.06 } };
 
 /**
- * A black capsule that sits just above the dock, where the thumb already is. Compact while a
- * workout runs (elapsed time, tap to return to it); it morphs open into the rest countdown with
+ * A black capsule that sits just above the dock, where the thumb already is. While a workout runs
+ * it says where the lifter is: the exercise, the set and its target, the elapsed time and how many
+ * sets are done (tap to go to that exercise); it morphs open into the rest countdown with
  * its controls, then shows "Go" when rest is over. Mid-superset it names the next exercise instead,
  * since there is no rest until the last one. One layoutId, so the change is a single shape
  * stretching, not one box swapped for another. Outside the app, the same state is shown as a
@@ -56,9 +59,9 @@ function Island() {
 
   // Pages pad their bottom by this much more, so the bar never covers the last row.
   useEffect(() => {
-    document.documentElement.style.setProperty("--live-bar", shown ? (timer || handoff ? "72px" : "52px") : "0px");
+    document.documentElement.style.setProperty("--live-bar", shown ? "72px" : "0px");
     return () => document.documentElement.style.setProperty("--live-bar", "0px");
-  }, [shown, timer, handoff]);
+  }, [shown]);
 
   if (!shown || !active) return null;
 
@@ -98,43 +101,92 @@ function useStartSound(hydrated: boolean) {
 const capsule =
   "force-dark glass-capsule pointer-events-auto relative flex items-center overflow-hidden rounded-full border border-accent/25 text-text";
 
+/** What the set asks for, as typed so far: "60 kg × 8", "8 reps", "45s"; empty when nothing is. */
+function targetText(set: WorkoutSet, unit: WeightUnit, t: ReturnType<typeof useT>): string {
+  if (set.durationSec) return formatDuration(set.durationSec);
+  if (set.weightKg !== null && set.reps !== null) return `${formatWeight(set.weightKg, unit)} × ${set.reps}`;
+  if (set.reps !== null) return t.n(set.reps, "{n} rep", "{n} reps");
+  if (set.weightKg !== null) return formatWeight(set.weightKg, unit);
+  return "";
+}
+
+/**
+ * The running workout: the exercise and set the lifter is on (with its weight and reps) on the
+ * left, the clock and sets done on the right, and the share of sets done as a hairline along the
+ * bottom edge, like the rest countdown. On the workout page a tap brings that exercise into view.
+ */
 function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; onWorkoutPage: boolean }) {
   const t = useT();
   const now = useNow(1000);
+  const { byId } = useAllExercises();
+  const unit = useSettingsStore((st) => st.weightUnit);
   const elapsed = formatDuration(sessionDurationSec(session, now));
   const paused = session.pausedAt !== undefined;
+  const live = liveSet(session);
+  const { done, total } = setProgress(session);
+
+  const headline = live
+    ? (byId[live.exercise.exerciseId]?.name ?? t("Unknown exercise"))
+    : total === 0
+      ? t("No exercises yet")
+      : t("All sets done");
+  const detail = live
+    ? [
+        live.number === null ? t("Warm-up") : t("Set {n} of {of}", { n: live.number, of: live.of }),
+        // Nothing typed for this set yet: what the set before it was, as the number to beat.
+        targetText(live.set, unit, t) || (live.last ? t("last {set}", { set: targetText(live.last, unit, t) }) : ""),
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : total === 0
+      ? t("Add an exercise to start")
+      : t("Finish to save it");
+  const status = paused ? t("Workout paused, {time}", { time: elapsed }) : t("Workout running, {time}", { time: elapsed });
+  const aria = `${status}. ${headline}, ${detail}`;
+
   const body = (
-    <motion.span {...fade} className="flex items-center gap-2 px-4">
-      {paused ? (
-        <Pause aria-hidden="true" size={12} className="text-accent" />
-      ) : (
-        <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
-      )}
-      <span className="num text-[13px] font-semibold" aria-hidden="true">
-        {elapsed}
+    <motion.span {...fade} className="flex min-w-0 flex-1 items-center gap-3 pl-5 pr-5">
+      <span className="flex min-w-0 flex-1 flex-col items-start" aria-hidden="true">
+        <span className="label-caps max-w-full truncate">{detail}</span>
+        <span className="max-w-full truncate text-sm font-semibold">{headline}</span>
       </span>
-      {paused && (
-        <span className="text-[11px] font-semibold text-text-muted" aria-hidden="true">
-          {t("Paused")}
+      <span className="flex shrink-0 flex-col items-end" aria-hidden="true">
+        <span className="flex items-center gap-1.5">
+          {paused ? <Pause size={11} className="text-accent" /> : <span className="size-1.5 rounded-full bg-accent" />}
+          <span className="num text-[15px] font-bold">{elapsed}</span>
         </span>
-      )}
+        {(paused || total > 0) && (
+          <span className="num text-[11px] text-text-muted">{paused ? t("Paused") : t("{done}/{total} sets", { done, total })}</span>
+        )}
+      </span>
     </motion.span>
   );
+  const fraction = total > 0 ? done / total : 0;
   return (
-    <motion.div layoutId="island" transition={ISLAND_SPRING} className={`${capsule} h-9`}>
+    <motion.div layoutId="island" transition={ISLAND_SPRING} className={`${capsule} h-14 w-full rounded-[28px]`}>
       {onWorkoutPage ? (
-        <span className="flex h-full items-center" role="status" aria-label={paused ? t("Workout paused, {time}", { time: elapsed }) : t("Workout running, {time}", { time: elapsed })}>
-          {body}
-        </span>
+        live ? (
+          <button
+            type="button"
+            onClick={() => scrollToExercise(live.exercise.id)}
+            aria-label={aria}
+            className="flex h-full w-full items-center text-left hover:bg-ink/[0.06]"
+          >
+            {body}
+          </button>
+        ) : (
+          <span className="flex h-full w-full items-center" role="status" aria-label={aria}>
+            {body}
+          </span>
+        )
       ) : (
-        <Link
-          href="/workout"
-          aria-label={t("Open the workout in progress")}
-          className="flex h-full items-center hover:bg-ink/[0.06]"
-        >
+        <Link href="/workout" aria-label={t("Open the workout in progress")} title={aria} className="flex h-full w-full items-center hover:bg-ink/[0.06]">
           {body}
         </Link>
       )}
+      <div className="absolute inset-x-6 bottom-0 h-px bg-ink/10" aria-hidden="true">
+        <div className="h-full bg-accent transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${fraction * 100}%` }} />
+      </div>
     </motion.div>
   );
 }

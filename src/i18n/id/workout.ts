@@ -413,4 +413,10 @@ export const workout: Record<string, string> = {
   "Recent weeks": "Minggu terakhir",
   "This wk": "Mg ini",
   "Train at least once next week to keep it burning.": "Latihan minimal sekali minggu depan supaya apinya tetap menyala.",
+  "Set {n} of {of}": "Set {n} dari {of}",
+  "Add an exercise to start": "Tambah latihan untuk mulai",
+  "Finish to save it": "Tekan Selesai untuk menyimpan",
+  "{done}/{total} sets": "{done}/{total} set",
+  "{n} rep": "{n} rep",
+  "last {set}": "terakhir {set}",
 };
