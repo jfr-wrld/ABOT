@@ -113,6 +113,7 @@ async function main() {
   // full list follows the first workout), so it is opened directly. It must fit the screen.
   await page.getByRole("button", { name: "Skip intro" }).click();
   await page.getByRole("button", { name: "Start an empty workout" }).waitFor({ timeout: 15000 });
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- a test script driving the WebView, not app code
   await page.evaluate(() => window.location.assign("/permissions/?next=%2F"));
   await page.getByRole("heading", { name: "Allow access" }).waitFor({ timeout: 15000 });
   screenshot("permissions");
