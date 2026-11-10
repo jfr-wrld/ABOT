@@ -7,7 +7,8 @@ Commands: `npm run dev`, `npm test` (vitest), `npm run e2e` (Playwright), `npm r
 Zero External Paid API: no runtime network calls, no tokens. Plans live in `docs/plans/`.
 Exceptions, both optional and owner-approved: Supabase cloud sync, and payments (Midtrans checkout and
 webhook through Supabase Edge Functions, web and Android, 2026-11-11; see `docs/payments-setup.md`),
-and the Android app's "Check for updates" (GitHub Releases API, only when tapped; `src/lib/app-update.ts`).
+and the Android app's update check (GitHub Releases API, on launch at most every 12 hours and when
+tapped; the APK downloads only after the user taps Update now; `src/lib/app-update.ts`).
 
 <!-- antislop:start -->
 ## antislop

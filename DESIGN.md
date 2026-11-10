@@ -209,6 +209,19 @@ Owner brief 2026-11-08:
   workout: "<workout> · rest until 14:32" with the next set below, cleared on return. Times are
   absolute because background pages cannot tick. Opt-in under Settings, Status outside the app.
 
+## App updates (Android)
+
+Owner brief 2026-11-10: update inside the app, download in the background, a pop-up with the
+changelog. On launch or return (at most every 12 hours) the app asks GitHub Releases for a newer
+build. If there is one, a sheet titled New version shows the version, how many builds the phone
+is behind, and every skipped build's notes as a changelog (newest first, up to five), with Later
+(that version waits a day) and Update now (Volt). The sheet waits while a workout runs and on the
+workout, sign-in and intro pages. Android's DownloadManager fetches the APK, so it carries on with
+ABOT in the background and shows its own progress notification; Settings > About shows the
+percentage. When it is in, a banner at the top offers Install, which opens Android's installer
+(or the "Install unknown apps" switch the first time). A failed or stalled download offers the
+browser instead.
+
 ## Dock scope and the workout detail
 
 Owner brief 2026-11-08:

@@ -1,8 +1,9 @@
 /**
  * Android app updates from GitHub Releases. Builds of main are published as release
  * "apk-<run number>" with the APK attached (.github/workflows/android.yml); the installed app's
- * build number is the same run number (versionCode), so newer means a bigger number. Checked only
- * when the lifter taps "Check for updates" (CLAUDE.md network exceptions).
+ * build number is the same run number (versionCode), so newer means a bigger number. Checked when
+ * the app opens (at most every 12 hours) and when the lifter taps "Check for updates" (CLAUDE.md
+ * network exceptions).
  */
 
 export const UPDATE_REPO = process.env.NEXT_PUBLIC_ABOT_UPDATE_REPO || "jfr-wrld/ABOT";
@@ -30,29 +31,59 @@ export function parseRelease(raw: unknown): LatestRelease | null {
     version: `1.0.${build}`,
     apkUrl: String(apk.browser_download_url),
     publishedAt: typeof r.published_at === "string" ? r.published_at : null,
-    notes: typeof r.body === "string" ? r.body.slice(0, 280) : "",
+    notes: typeof r.body === "string" ? r.body.slice(0, 2000) : "",
   };
 }
 
 export type UpdateCheck =
-  | { kind: "available"; release: LatestRelease }
+  | { kind: "available"; release: LatestRelease; changes: LatestRelease[] }
   | { kind: "current"; build: number }
   | { kind: "none" }
   | { kind: "error" };
 
-/** Compares the newest release with the installed build. */
-export function compareBuild(release: LatestRelease | null, installedBuild: number): UpdateCheck {
-  if (!release) return { kind: "none" };
-  return release.build > installedBuild ? { kind: "available", release } : { kind: "current", build: installedBuild };
+/**
+ * Compares the newest releases with the installed build. `changes` is every newer release,
+ * newest first, so the changelog covers all the builds this phone skipped.
+ */
+export function compareBuild(releases: LatestRelease | LatestRelease[] | null, installedBuild: number): UpdateCheck {
+  const list = (Array.isArray(releases) ? releases : releases ? [releases] : []).slice().sort((a, b) => b.build - a.build);
+  if (list.length === 0) return { kind: "none" };
+  const newer = list.filter((r) => r.build > installedBuild);
+  return newer.length > 0 ? { kind: "available", release: newer[0]!, changes: newer } : { kind: "current", build: installedBuild };
 }
 
 export async function checkForUpdate(installedBuild: number, fetcher: typeof fetch = fetch): Promise<UpdateCheck> {
   try {
-    const res = await fetcher(`https://api.github.com/repos/${UPDATE_REPO}/releases/latest`, { headers: { Accept: "application/vnd.github+json" } });
+    const res = await fetcher(`https://api.github.com/repos/${UPDATE_REPO}/releases?per_page=10`, { headers: { Accept: "application/vnd.github+json" } });
     if (res.status === 404) return { kind: "none" };
     if (!res.ok) return { kind: "error" };
-    return compareBuild(parseRelease(await res.json()), installedBuild);
+    const body: unknown = await res.json();
+    const list = (Array.isArray(body) ? body : [body]).map(parseRelease).filter((r): r is LatestRelease => r !== null);
+    return compareBuild(list, installedBuild);
   } catch {
     return { kind: "error" };
   }
+}
+
+/** A release's notes as changelog lines: list and heading markers and blank lines dropped, at most `max`. */
+export function changelogLines(notes: string, max = 8): string[] {
+  return notes
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\s*(?:[-*•]|\d+\.|#+)\s+/, "").trim())
+    .filter((l) => l.length > 0 && !/^#+$/.test(l))
+    .slice(0, max);
+}
+
+/** How often the app asks GitHub on its own. */
+export const AUTO_CHECK_MS = 12 * 3_600_000;
+/** "Later" keeps a version's pop-up away this long. */
+export const LATER_MS = 24 * 3_600_000;
+
+export function checkDue(lastCheckedAt: number | null, now: number): boolean {
+  return lastCheckedAt === null || now - lastCheckedAt >= AUTO_CHECK_MS;
+}
+
+/** The pop-up for `build` was put off and the wait is not over (a newer build shows at once). */
+export function putOff(later: { build: number; until: number } | null, build: number, now: number): boolean {
+  return later !== null && later.build >= build && now < later.until;
 }
