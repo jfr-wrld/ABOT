@@ -15,14 +15,16 @@ export interface DeviceHints {
 /**
  * Settings > Visual effects resolved for this phone. "full" keeps the glass dock and every
  * animation; "lite" drops the glass blur and movement (fades stay). "auto" is lite on modest
- * phones: 4 cores or fewer, 4 GB of memory or less, Data Saver, or reduced transparency/motion.
+ * phones: 4 cores or fewer, under 4 GB of memory, Data Saver, or reduced transparency/motion.
+ * The browser rounds memory down to 2, 4 or 8 GB, so a 6 GB phone reports 4: "under 4" keeps
+ * those on Full and still catches the 2 GB and 3 GB phones.
  * Unknown hints count as capable, so a phone is not downgraded on a guess.
  */
 export function resolveEffects(choice: VisualEffects, hints: DeviceHints): "full" | "lite" {
   if (choice !== "auto") return choice;
   const modest =
     (hints.cores !== undefined && hints.cores <= 4) ||
-    (hints.memoryGb !== undefined && hints.memoryGb <= 4) ||
+    (hints.memoryGb !== undefined && hints.memoryGb < 4) ||
     hints.saveData === true ||
     hints.reduced === true;
   return modest ? "lite" : "full";

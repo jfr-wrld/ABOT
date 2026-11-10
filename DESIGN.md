@@ -291,7 +291,7 @@ themes are looks, not recolours (`src/lib/streak-card.ts`): Volt Flame, Inferno,
 black-and-gold card), Heatmap (the twelve weeks as tiles), Badge (an emblem with words around
 the ring), Sunset and Terminal (the streak as a command and its output). Each card carries the
 count, the last twelve weeks, the workouts since the streak began, @username and the ABOT mark.
-The first two themes are free, like Story Studio's layouts; the rest come with PRO.
+All twelve themes are free (owner, 2026-11-10).
 
 ## Story Studio
 

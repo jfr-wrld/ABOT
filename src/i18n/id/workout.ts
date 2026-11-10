@@ -429,6 +429,5 @@ export const workout: Record<string, string> = {
   "Sharing failed. Download the PNG and post it from your gallery.": "Gagal membagikan. Unduh PNG-nya lalu unggah dari galeri.",
   "The PNG could not be saved.": "PNG tidak bisa disimpan.",
   "{theme} streak card: {n}-week streak": "Kartu streak {theme}: streak {n} minggu",
-  "PRO theme preview": "Pratinjau tema PRO",
   "Themes": "Tema",
 };

@@ -13,10 +13,12 @@ import { hasSeenOnboarding } from "@/lib/onboarding";
 import { withPermissionsStep } from "@/lib/native/permissions-step";
 import { finishNativeSignIn } from "@/store/useSyncStore";
 import { startApp } from "@/store/appSession";
+import { runBack } from "@/lib/native/back-stack";
 
 /**
  * Android-only wiring, mounted once:
- * - Back (button or edge swipe) closes the open sheet, then goes to the previous page. On the
+ * - Back (button or edge swipe) closes the open sheet or full-screen moment (back-stack), then
+ *   goes to the previous page. On the
  *   first page it sends ABOT to the background instead of closing it.
  * - Notification channels, and a tap on a notification (or its Start button) opens that page.
  * - Google sign-in coming back through the app.abot.gym://auth deep link, also when Android
@@ -43,6 +45,7 @@ export function NativeShell() {
         const dialogs = document.querySelectorAll<HTMLDialogElement>("dialog[open]");
         const top = dialogs[dialogs.length - 1];
         if (top) top.close();
+        else if (runBack()) return;
         else if (closeMenu()) return;
         else if (canGoBack) window.history.back();
         else void App.minimizeApp();

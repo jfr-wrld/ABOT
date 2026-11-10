@@ -93,6 +93,11 @@ test("the streak can be shared as a story card in twelve themes", async ({ page 
   await expect(studio.getByRole("button", { name: "Download High-Res PNG" })).toBeEnabled({ timeout: 10_000 });
   await themes.nth(1).click();
   await expect(studio.getByRole("img", { name: "Inferno streak card: 1-week streak" })).toBeVisible();
+  // Every theme is free, the last one included.
+  await themes.nth(11).click();
+  await expect(studio.getByRole("img", { name: "Terminal streak card: 1-week streak" })).toBeVisible();
+  await expect(studio.getByRole("button", { name: "Download High-Res PNG" })).toBeEnabled({ timeout: 10_000 });
+  await expect(studio.getByRole("button", { name: "Share", exact: true })).toBeEnabled();
 
   // Closing the studio leaves the streak screen in place.
   await studio.getByRole("button", { name: "Close" }).click();

@@ -9,6 +9,7 @@ import type { Unlocked } from "@/lib/celebration";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { audioReady, unlockAudio } from "@/lib/sound-effects";
 import { feedback } from "@/lib/feedback";
+import { onBack } from "@/lib/native/back-stack";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useT } from "@/i18n";
 
@@ -49,6 +50,8 @@ export function ProCelebration() {
 function Celebration({ unlocked }: { unlocked: Unlocked }) {
   const t = useT();
   const close = useCelebrationStore((s) => s.close);
+  // Android's back closes it, like the X.
+  useEffect(() => onBack(close), [close]);
   const reduce = useReducedMotionConfig();
   const button = useRef<HTMLButtonElement>(null);
   const [phase, setPhase] = useState<"checking" | "armed" | "playing">("checking");

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotionConfig } from "framer-motion";
+import { MotionConfig, motion, useReducedMotion } from "framer-motion";
 import { Share2 } from "lucide-react";
 import { StreakStudio } from "./StreakStudio";
 import { feedback } from "@/lib/feedback";
+import { onBack } from "@/lib/native/back-stack";
+import { useEffectsMode } from "@/components/layout/EffectsController";
 import { markStreakShown, type StreakMoment as Moment } from "@/lib/streak-moment";
 import { useT } from "@/i18n";
 import { FLAME_CORE, FLAME_MIDDLE, FLAME_OUTER } from "./flame-path";
@@ -35,7 +37,8 @@ const LAYERS = [
  * The week streak grew. A spark rises in the dark and catches; the flame bursts up with a flash
  * and a ring, then keeps burning. The count rolls from the old number to the new one, and this
  * week's plate lights at the end of the row. One action closes it and opens the summary. With
- * reduced motion (or Lite effects) the finished screen appears without the movement.
+ * the phone's reduced motion the finished screen appears without the movement; Lite effects keep
+ * the opening and drop only the endless loops. Android's back closes it.
  */
 export function StreakMoment({
   moment,
@@ -48,7 +51,11 @@ export function StreakMoment({
   onClose: () => void;
 }) {
   const t = useT();
-  const reduce = useReducedMotionConfig();
+  // The moment plays even under Lite effects (it is short and rare); only the phone's own
+  // "remove animations" setting stills it. Lite does drop the endless loops (embers, flicker).
+  const reduce = useReducedMotion() ?? false;
+  const effects = useEffectsMode();
+  const loops = !reduce && effects === "full";
   const button = useRef<HTMLButtonElement>(null);
   const { before, after, weeks } = moment;
   const first = before === 0;
@@ -64,12 +71,19 @@ export function StreakMoment({
     // Escape inside the share studio closes the studio only (its <dialog> handles it).
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && !document.querySelector("dialog[open]") && onClose();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Android's back closes it, instead of leaving the page or sending ABOT to the background.
+    const offBack = onBack(onClose);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      offBack();
+    };
   }, [sessionId, onClose]);
 
   const at = (delay: number) => (reduce ? { duration: 0 } : { delay });
 
   return (
+    // "user": the app's Lite setting turns motion off app-wide; here only the phone's setting counts.
+    <MotionConfig reducedMotion="user">
     <div
       role="dialog"
       aria-modal="true"
@@ -92,17 +106,17 @@ export function StreakMoment({
         className="pointer-events-none absolute inset-x-0 top-[12%] mx-auto size-80 rounded-full"
         style={{ opacity: reduce ? 0.3 : 0, background: "radial-gradient(circle, rgb(204 255 0 / 0.35), transparent 65%)" }}
         animate={reduce ? undefined : { opacity: [0, 0.4, 0.25, 0.4], scale: [0.8, 1.05, 0.98, 1.05] }}
-        transition={{ delay: IGNITE, duration: 3, times: [0, 0.2, 0.6, 1], repeat: Infinity, repeatType: "mirror" }}
+        transition={{ delay: IGNITE, duration: 3, times: [0, 0.2, 0.6, 1], repeat: loops ? Infinity : 0, repeatType: "mirror" }}
       />
 
       <div className="relative flex flex-1 flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] text-center">
-        <Flame reduce={!!reduce} />
+        <Flame reduce={reduce} loops={loops} />
 
         <h1 id="streak-title" className="mt-4 font-mono text-xs font-bold uppercase tracking-[0.22em] text-[#ccff00]">
           {!sessionId ? t("Your week streak") : first ? t("Streak started") : t("Streak extended")}
         </h1>
 
-        <Count before={before} after={after} reduce={!!reduce} />
+        <Count before={before} after={after} reduce={reduce} />
         <p className="text-base font-semibold">
           <span aria-hidden="true">{t.n(after, "week in a row", "weeks in a row")}</span>
           <span className="sr-only">{t.n(after, "{n}-week streak", "{n}-week streak")}</span>
@@ -186,11 +200,12 @@ export function StreakMoment({
       </motion.div>
       <StreakStudio open={sharing} onClose={() => setSharing(false)} />
     </div>
+    </MotionConfig>
   );
 }
 
 /** The flame: a spark rises and catches, then three layers burn with embers drifting up. */
-function Flame({ reduce }: { reduce: boolean }) {
+function Flame({ reduce, loops }: { reduce: boolean; loops: boolean }) {
   const embers = Array.from({ length: EMBERS }, (_, i) => ({
     x: ((i * 37) % 70) - 35,
     drift: (i % 2 ? 1 : -1) * (6 + (i % 4) * 4),
@@ -216,7 +231,8 @@ function Flame({ reduce }: { reduce: boolean }) {
             animate={{ opacity: [0, 0.8, 0], scale: [0.3, 1.9] }}
             transition={{ delay: IGNITE, duration: 0.8, ease: "easeOut" }}
           />
-          {embers.map((e, i) => (
+          {loops &&
+            embers.map((e, i) => (
             <motion.span
               key={i}
               className="absolute bottom-10 rounded-full"
@@ -244,7 +260,7 @@ function Flame({ reduce }: { reduce: boolean }) {
             d={l.d}
             fill={l.fill}
             style={{ originX: 0.5, originY: 1 }}
-            animate={reduce ? undefined : { scaleY: [...l.scaleY], skewX: [...l.skewX] }}
+            animate={loops ? { scaleY: [...l.scaleY], skewX: [...l.skewX] } : undefined}
             transition={{ delay: IGNITE + 0.5, duration: l.duration, repeat: Infinity, ease: "easeInOut" }}
           />
         ))}

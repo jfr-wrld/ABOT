@@ -9,7 +9,9 @@ describe("resolveEffects", () => {
 
   it("auto is lite on a modest phone: few cores, little memory, Data Saver or reduced effects", () => {
     expect(resolveEffects("auto", { cores: 4, memoryGb: 8 })).toBe("lite");
-    expect(resolveEffects("auto", { cores: 8, memoryGb: 4 })).toBe("lite");
+    expect(resolveEffects("auto", { cores: 8, memoryGb: 2 })).toBe("lite");
+    // 4 is what a 4 to 7.9 GB phone reports (rounded down), so it stays on Full.
+    expect(resolveEffects("auto", { cores: 8, memoryGb: 4 })).toBe("full");
     expect(resolveEffects("auto", { cores: 8, memoryGb: 8, saveData: true })).toBe("lite");
     expect(resolveEffects("auto", { cores: 8, memoryGb: 8, reduced: true })).toBe("lite");
   });

@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Image as ImageIcon, Lock, Share2, X } from "lucide-react";
+import { Download, Image as ImageIcon, Share2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { ProBadge } from "@/components/paywall/ProBadge";
-import { useEntitlements } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
-import { tunables } from "@/lib/tunables";
 import { useNow } from "@/lib/useNow";
 import { streakCardData } from "@/lib/streak-moment";
 import { STREAK_THEMES, exportStreakPng, renderStreakCard, streakFileName, type StreakThemeId } from "@/lib/streak-card";
@@ -19,13 +16,11 @@ import { useT } from "@/i18n";
 const THUMB_W = 108;
 const THUMB_H = (THUMB_W * STORY_HEIGHT) / STORY_WIDTH;
 
-/** The first themes are free, like Story Studio's layouts; the rest come with ABOT // BLACK PRO. */
-const isPro = (id: StreakThemeId) => STREAK_THEMES.findIndex((t) => t.id === id) >= tunables().story.freePresets;
-
 type Message = { kind: "info" | "error"; text: string; saved?: Extract<SaveResult, { kind: "saved" }> };
 
 /**
- * Share the week streak as a 1080 x 1920 story: the card in the theme picked from twelve, then
+ * Share the week streak as a 1080 x 1920 story: the card in the theme picked from twelve (all
+ * free), then
  * Share (the system sheet, Instagram included) or Download. Full screen, opened as a modal
  * <dialog> so Escape and Android's back close it.
  */
@@ -55,7 +50,6 @@ function Studio({ onClose }: { onClose: () => void }) {
   const sessions = useWorkoutStore((s) => s.sessions);
   const handle = useSettingsStore((s) => s.profileHandle);
   const firstDay = useSettingsStore((s) => s.firstDayOfWeek);
-  const { proActive, openPaywall } = useEntitlements();
   const now = useNow(60_000);
   const data = useMemo(() => streakCardData(sessions, handle || null, now, firstDay), [sessions, handle, now, firstDay]);
   const [theme, setTheme] = useState<StreakThemeId>("volt-flame");
@@ -64,7 +58,6 @@ function Studio({ onClose }: { onClose: () => void }) {
   const [message, setMessage] = useState<Message | null>(null);
   const preview = useRef<HTMLCanvasElement>(null);
   const thumbs = useRef<Partial<Record<StreakThemeId, HTMLCanvasElement | null>>>({});
-  const locked = !proActive && isPro(theme);
   const opts = useMemo(() => ({ theme, hideWatermark: false }), [theme]);
   const blob = png?.theme === theme ? png.blob : null;
 
@@ -124,7 +117,6 @@ function Studio({ onClose }: { onClose: () => void }) {
   const ready = blob !== null;
 
   async function share() {
-    if (locked) return openPaywall("story_studio_pro_presets");
     if (!blob) return;
     try {
       const r = await shareStoryPng(blob, fileName);
@@ -136,7 +128,6 @@ function Studio({ onClose }: { onClose: () => void }) {
   }
 
   async function download() {
-    if (locked) return openPaywall("story_studio_pro_presets");
     if (!blob) return;
     try {
       const saved = await downloadStoryPng(blob, fileName);
@@ -186,20 +177,6 @@ function Studio({ onClose }: { onClose: () => void }) {
           className="block h-full max-h-full w-auto max-w-full rounded-card border border-line bg-surface shadow-2xl"
           style={{ aspectRatio: `${STORY_WIDTH} / ${STORY_HEIGHT}` }}
         />
-        {locked && (
-          <div className="force-dark absolute inset-x-8 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 rounded-card border border-[#ccff00]/50 bg-black/85 p-4 text-center backdrop-blur">
-            <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#ccff00]">
-              <Lock aria-hidden="true" size={12} /> {t("PRO theme preview")}
-            </p>
-            <button
-              type="button"
-              onClick={() => openPaywall("story_studio_pro_presets")}
-              className="min-h-11 rounded-ctl bg-[#ccff00] px-4 font-mono text-xs font-black uppercase tracking-[0.1em] text-black"
-            >
-              {t("Unlock with ABOT // BLACK")}
-            </button>
-          </div>
-        )}
         {!fonts && (
           <p role="status" className="absolute inset-0 flex items-center justify-center text-sm text-text-muted">
             {t("Preparing the card")}
@@ -225,7 +202,6 @@ function Studio({ onClose }: { onClose: () => void }) {
           const selected = th.id === theme;
           return (
             <li key={th.id} className="relative h-full shrink-0 snap-start">
-              {isPro(th.id) && <ProBadge className="pointer-events-none absolute bottom-1.5 left-1/2 z-10 -translate-x-1/2 scale-90" />}
               <button
                 type="button"
                 aria-pressed={selected}
@@ -254,9 +230,9 @@ function Studio({ onClose }: { onClose: () => void }) {
       </ul>
 
       <div className="shrink-0 px-4 pt-2">
-        <Button variant="primary" onClick={() => void share()} disabled={!ready && !locked} className="w-full">
-          {locked ? <Lock aria-hidden="true" size={16} /> : <Share2 aria-hidden="true" size={16} />}
-          {locked ? t("Unlock with ABOT // BLACK") : t("Share")}
+        <Button variant="primary" onClick={() => void share()} disabled={!ready} className="w-full">
+          <Share2 aria-hidden="true" size={16} />
+          {t("Share")}
         </Button>
       </div>
     </div>
