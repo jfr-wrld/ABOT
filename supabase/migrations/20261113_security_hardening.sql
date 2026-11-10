@@ -225,4 +225,11 @@ alter function public.abot_touch_updated_at() set search_path = pg_catalog, publ
 
 -- New projects start with simulated payments off. An existing project keeps its value: set it
 -- to false when going live (update public.app_remote_config set payments_sandbox = false).
-alter table public.app_remote_config alter column payments_sandbox set default false;
+-- (The column comes from 20261112_payment_test_tools.sql; skipped if that one is not applied yet.)
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'app_remote_config' and column_name = 'payments_sandbox') then
+    alter table public.app_remote_config alter column payments_sandbox set default false;
+  end if;
+end $$;
