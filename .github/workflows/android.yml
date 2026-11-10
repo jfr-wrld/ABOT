@@ -4,9 +4,10 @@ name: Android APK
 # - The build job runs npm and Gradle with a read-only token and no secrets. It makes an unsigned
 #   release APK (not debuggable) and a debug APK for the emulator smoke test.
 # - Only the release job holds the signing key and write access. It runs no npm code: it signs
-#   the build job's APK and publishes it. It runs when someone presses Run workflow on main, in
-#   the "release" environment (add required reviewers there), so a push alone never reaches
-#   users' phones.
+#   the build job's APK and publishes it. It starts on every push to main (and on Run workflow),
+#   in the "release" environment, and waits there until the owner approves (Review deployments).
+#   The environment MUST list the owner as a required reviewer: without one, every push to main
+#   would reach users' phones unchecked.
 # Actions are pinned to full commit SHAs (the tag each one was in the comment).
 on:
   push:
@@ -78,10 +79,15 @@ jobs:
   # ABOT_KEYSTORE_PASSWORD, ABOT_KEY_ALIAS, ABOT_KEY_PASSWORD.
   release:
     needs: apk
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: release
+    # One release waits for approval at a time: a newer push replaces the older one still waiting,
+    # so approving always ships the latest main.
+    concurrency:
+      group: release
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:

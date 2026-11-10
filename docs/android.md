@@ -48,10 +48,12 @@ as burnt.
   password in a password manager: losing it ends updates for installed apps.
 - **Builds**: every push builds an unsigned release APK (not debuggable) and a debug APK for the
   emulator smoke test, with a read-only token and no secrets.
-- **Releases**: Actions > Android APK > Run workflow on `main`. The `release` job (environment
-  `release`, where required reviewers can be set) signs the build and publishes `abot-<n>`.
-  A push alone never reaches users. `versionCode` is the run number, so each release installs
-  over the last and keeps the data.
+- **Releases**: every push to `main` (or Run workflow) starts the `release` job, which waits in
+  the `release` environment until the owner approves it (Review deployments, also from GitHub's
+  mobile notification). Approved, it signs the build and publishes `abot-<n>`; a newer push
+  replaces a release still waiting. The environment must list the owner under Required
+  reviewers, or pushes would publish unchecked. `versionCode` is the run number, so each release
+  installs over the last and keeps the data.
 - **The move from the old key**: phones on the old key cannot update in place. The last
   old-key build (an `apk-<n>` release) sees `abot-<n>` releases and walks the lifter through
   backup, uninstall, install, restore (`src/components/update/MoveGuide.tsx`).
