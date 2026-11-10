@@ -137,7 +137,7 @@ const SFX = {
     const big = c.big ? 1.3 : 1;
     put(c.t, mix([tone({ from: 120 * big, to: 36, dur: 0.6 * big, curve: 4 }), 1], [burst({ dur: 0.35 * big, lp: 0.15, curve: 9 }), 0.7], [noiseSweep({ dur: 1.2 * big, f0: 3000, f1: 300, shape: (k) => Math.exp(-4 * k) }), 0.25]), 0.75 * big);
   },
-  hit: (c) => put(c.t, mix([tone({ from: 140, to: 50, dur: 0.22, curve: 5 }), 0.9], [burst({ dur: 0.12, hp: 0.6, curve: 14 }), 0.45], [tone({ type: "tri", from: c.high ? 880 : 440, dur: 0.18, curve: 7 }), 0.25]), 0.55),
+  hit: (c) => put(c.t, mix([tone({ from: 140, to: 50, dur: 0.22, curve: 5 }), 0.9], [burst({ dur: 0.12, hp: 0.6, curve: 14 }), 0.45], [tone({ type: "tri", from: c.high ? 880 : 440, dur: 0.18, curve: 7 }), 0.25]), c.gain ?? 0.55),
   whoosh: (c) => put(c.t, noiseSweep({ dur: c.dur, f0: c.up ? 300 : 2800, f1: c.up ? 3200 : 260, shape: (k) => Math.pow(Math.sin(Math.PI * k), 1.6) }), c.soft ? 0.18 : 0.32),
   swipe: (c) => put(c.t, noiseSweep({ dur: 0.22, f0: 900, f1: 4200, shape: (k) => Math.sin(Math.PI * k) }), 0.22, c.pan ?? 0),
   riser: (c) => put(c.t, mix([noiseSweep({ dur: c.dur, f0: 200, f1: 5000, shape: (k) => k * k }), 0.9], [tone({ type: "saw", from: 180, to: 720, dur: c.dur, attack: c.dur * 0.8, curve: 0.2 }), 0.08]), c.soft ? 0.18 : 0.3),

@@ -168,7 +168,8 @@ export function cues() {
   add(T.gather + 0.1, "sparkle");
   out("share");
   // Body phase.
-  T.phaseWords.forEach((t, i) => add(t, "hit", { high: i === 3 }));
+  // Quieter than other hits: four in two seconds over the kick stack up.
+  T.phaseWords.forEach((t, i) => add(t, "hit", { high: i === 3, gain: 0.38 }));
   add(T.phaseIn, "whoosh", { dur: 0.5, up: true });
   out("phase");
   // Settings.
