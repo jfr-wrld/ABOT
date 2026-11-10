@@ -6,13 +6,17 @@
     <meta name="robots" content="noindex" />
     <title>ABOT · Payment</title>
     <style>
+      /* ABOT's own typefaces, from this site (latin subset, variable weight; SIL Open Font License),
+         so this page reads like the app and asks no font service. */
+      @font-face { font-family: "Plus Jakarta Sans"; src: url(/fonts/plus-jakarta-sans-latin.woff2) format("woff2"); font-weight: 200 800; font-display: swap; }
+      @font-face { font-family: "JetBrains Mono"; src: url(/fonts/jetbrains-mono-latin.woff2) format("woff2"); font-weight: 100 800; font-display: swap; }
       :root { color-scheme: dark; }
-      html, body { margin: 0; height: 100%; background: #09090b; color: #fafafa; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+      html, body { margin: 0; height: 100%; background: #09090b; color: #fafafa; font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
       main { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; box-sizing: border-box; }
       svg { color: #ccff00; filter: drop-shadow(0 0 18px rgb(204 255 0 / 0.5)); }
       h1 { margin: 6px 0 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
       p { margin: 0; max-width: 320px; color: #a1a1aa; font-size: 14px; line-height: 1.5; }
-      a { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 24px; margin-top: 8px; border-radius: 12px; background: #ccff00; color: #000; font: 800 13px ui-monospace, monospace; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; }
+      a { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 24px; margin-top: 8px; border-radius: 12px; background: #ccff00; color: #000; font: 800 13px "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none; }
     </style>
   </head>
   <body>
@@ -23,8 +27,9 @@
       ABOT, which checks the order when it comes to the front.
     -->
     <main>
+      <!-- The ABOT mark, the same path as src/components/brand/mark-path.ts. -->
       <svg width="72" height="72" viewBox="0 0 100 100" aria-hidden="true">
-        <path d="M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z M50 28 A22 22 0 1 0 50.01 28 Z" fill="currentColor" fill-rule="evenodd" />
+        <path d="M41.46 8.50 L58.54 8.50 Q61.74 8.50 62.85 11.50 L90.48 85.50 Q91.60 88.50 88.40 88.50 L68.42 88.50 Q65.22 88.50 64.17 85.48 L51.05 47.65 Q50 44.63 48.95 47.65 L35.83 85.48 Q34.78 88.50 31.58 88.50 L11.60 88.50 Q8.40 88.50 9.52 85.50 L37.15 11.50 Q38.26 8.50 41.46 8.50 Z M48.16 59 L51.84 59 Q52.34 59 52.50 59.47 L55.30 67.53 Q55.46 68 54.96 68 L45.04 68 Q44.54 68 44.70 67.53 L47.50 59.47 Q47.66 59 48.16 59 Z M7 43 L10 43 Q15 43 15 48 L15 58.60 Q15 59 15.40 59 L16.14 59 Q16.74 59 16.53 59.56 L7.97 82.50 Q7.41 84 5.81 84 L4.46 84 Q2 84 2 79 L2 48 Q2 43 7 43 Z M95.54 84 L94.19 84 Q92.59 84 92.03 82.50 L83.47 59.56 Q83.26 59 83.86 59 L84.60 59 Q85 59 85 58.60 L85 48 Q85 43 90 43 L93 43 Q98 43 98 48 L98 79 Q98 84 95.54 84 Z" fill="currentColor" />
       </svg>
       <h1 id="title">Payment finished</h1>
       <p id="body">Go back to ABOT. It checks the payment and turns PRO on by itself. / Kembali ke ABOT; PRO aktif otomatis setelah pembayaran dicek.</p>
