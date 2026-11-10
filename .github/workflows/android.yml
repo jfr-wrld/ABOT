@@ -127,10 +127,14 @@ jobs:
           NOTES=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq '.commit.message' | head -n 1)
           gh release create "abot-$N" "abot-1.0.$N.apk" --repo "$GITHUB_REPOSITORY" \
             --title "ABOT 1.0.$N" --notes "$NOTES" --target "$GITHUB_SHA" --latest
-          # Keep the ten newest abot- releases. The older apk- releases stay: the last of them
-          # is the bridge that guides phones on the old key to reinstall.
+          # Keep the ten newest abot- releases, and of the old apk- releases only the newest: the
+          # bridge that guides phones on the old key to reinstall. GitHub lists apk- before abot-,
+          # so more apk- releases pushed abot- off the first page the app reads (no update shown).
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' \
             | grep '^abot-' | sort -t- -k2 -n -r | tail -n +11 \
+            | xargs -r -I{} gh release delete {} --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' \
+            | grep '^apk-' | sort -t- -k2 -n -r | tail -n +2 \
             | xargs -r -I{} gh release delete {} --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
 
   # The APK on a real Android 14 emulator: intro and permissions screens, Android's permission

@@ -55,6 +55,20 @@ describe("app updates", () => {
     expect(await checkForUpdate(1, (async () => { throw new Error("offline"); }) as unknown as typeof fetch)).toEqual({ kind: "error" });
   });
 
+  it("finds the newest abot- release behind ten older apk- ones, in GitHub's order", async () => {
+    const list = [...Array.from({ length: 10 }, (_, i) => rel("apk", 170 - i)), rel("abot", 180), rel("abot", 176)];
+    let asked = "";
+    const fetcher = (async (url: string) => {
+      asked = url;
+      return new Response(JSON.stringify(list), { status: 200 });
+    }) as unknown as typeof fetch;
+    const r = await checkForUpdate(176, fetcher);
+    expect(asked).toContain("per_page=30");
+    // Tests run as a legacy build, so seeing abot-180 at all shows up as "moved".
+    expect(r.kind).toBe("moved");
+    expect(compareBuild(list.map((x) => parseRelease(x)!), 176, "abot")).toMatchObject({ kind: "available", release: { build: 180 } });
+  });
+
   it("gathers every newer build into the changelog, newest first", () => {
     const at = (n: number) => parseRelease(rel("apk", n))!;
     const r = compareBuild([at(128), at(130), at(129), at(127)], 128);

@@ -82,7 +82,7 @@ export function compareBuild(releases: LatestRelease | LatestRelease[] | null, i
 
 export async function checkForUpdate(installedBuild: number, fetcher: typeof fetch = fetch): Promise<UpdateCheck> {
   try {
-    const res = await fetcher(`https://api.github.com/repos/${UPDATE_REPO}/releases?per_page=10`, { headers: { Accept: "application/vnd.github+json" } });
+    const res = await fetcher(`https://api.github.com/repos/${UPDATE_REPO}/releases?per_page=30`, { headers: { Accept: "application/vnd.github+json" } });
     if (res.status === 404) return { kind: "none" };
     if (!res.ok) return { kind: "error" };
     const body: unknown = await res.json();
