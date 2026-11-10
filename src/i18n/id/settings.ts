@@ -570,4 +570,11 @@ export const settings: Record<string, string> = {
   "Terms of Use": "Ketentuan Penggunaan",
   "By signing in you agree to the": "Dengan masuk, kamu menyetujui",
   "and the": "dan",
+  // Moving to the release-signed build.
+  "A safer ABOT is out": "ABOT versi lebih aman sudah rilis",
+  "ABOT is now signed with its own private key, so no one else can publish an update that looks like it. This one time, the new version cannot install over this one.": "ABOT sekarang ditandatangani dengan kunci privatnya sendiri, jadi tidak ada orang lain yang bisa menerbitkan update palsu. Kali ini saja, versi baru tidak bisa dipasang di atas versi ini.",
+  "Back up your data to a file. With cloud sync on, signing in again brings your workouts back too.": "Backup datamu ke file. Kalau cloud sync aktif, login lagi juga mengembalikan workout-mu.",
+  "Uninstall ABOT from the phone's settings.": "Uninstall ABOT dari pengaturan HP.",
+  "Install the new version, then restore the backup in Settings > Data.": "Pasang versi baru, lalu pulihkan backup di Pengaturan > Data.",
+  "Download ABOT {version}": "Unduh ABOT {version}",
 };

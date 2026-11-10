@@ -7,6 +7,7 @@ import { isNativeApp } from "@/lib/native/files";
 import { useAppUpdate } from "@/store/useAppUpdate";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { MoveSteps } from "@/components/update/MoveGuide";
 
 /**
  * Settings > About, in the Android app: the same update the pop-up offers (UpdateCenter), with
@@ -67,6 +68,8 @@ export function UpdateCheck() {
             {t("Install")}
           </Button>
         </>
+      ) : r?.kind === "moved" ? (
+        <MoveSteps release={r.release} />
       ) : r?.kind === "available" ? (
         <>
           <p className="text-sm">{t("ABOT {version} is ready", { version: r.release.version })}</p>

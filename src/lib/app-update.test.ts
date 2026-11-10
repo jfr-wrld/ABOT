@@ -9,7 +9,30 @@ const release = {
   assets: [{ name: "abot-1.0.130.apk", browser_download_url: "https://github.com/jfr-wrld/ABOT/releases/download/apk-130/abot-1.0.130.apk" }],
 };
 
+const rel = (channel: "apk" | "abot", n: number) => ({
+  ...release,
+  tag_name: `${channel}-${n}`,
+  body: `Build ${n}`,
+  assets: [{ name: `abot-1.0.${n}.apk`, browser_download_url: `https://github.com/jfr-wrld/ABOT/releases/download/${channel}-${n}/abot-1.0.${n}.apk` }],
+});
+
 describe("app updates", () => {
+  it("takes the APK only from this repository's release for that tag", () => {
+    const url = (u: string) => ({ ...release, assets: [{ name: "abot-1.0.130.apk", browser_download_url: u }] });
+    expect(parseRelease(url("https://github.com/attacker/ABOT/releases/download/apk-130/abot-1.0.130.apk"))).toBeNull();
+    expect(parseRelease(url("https://github.com/jfr-wrld/ABOT/releases/download/apk-129/abot-1.0.130.apk"))).toBeNull();
+    expect(parseRelease(url("https://github.com/jfr-wrld/ABOT/releases/download/apk-130/../x/evil.apk"))).toBeNull();
+    expect(parseRelease(url("http://github.com/jfr-wrld/ABOT/releases/download/apk-130/abot-1.0.130.apk"))).toBeNull();
+  });
+
+  it("a build on the old key is told to reinstall once releases are signed with the release key", () => {
+    const r = compareBuild([parseRelease(rel("apk", 170))!, parseRelease(rel("abot", 171))!], 169, "apk");
+    expect(r.kind).toBe("moved");
+    // A release-signed build ignores the old channel.
+    const n = compareBuild([parseRelease(rel("apk", 175))!, parseRelease(rel("abot", 171))!], 170, "abot");
+    expect(n.kind === "available" && n.release.channel).toBe("abot");
+  });
+
   it("reads an APK release: build, version, download link", () => {
     expect(parseRelease(release)).toMatchObject({ build: 130, version: "1.0.130", apkUrl: release.assets[0]!.browser_download_url });
     expect(parseRelease({ ...release, tag_name: "v2" })).toBeNull();
@@ -33,7 +56,7 @@ describe("app updates", () => {
   });
 
   it("gathers every newer build into the changelog, newest first", () => {
-    const at = (n: number) => parseRelease({ ...release, tag_name: `apk-${n}`, body: `Build ${n}` })!;
+    const at = (n: number) => parseRelease(rel("apk", n))!;
     const r = compareBuild([at(128), at(130), at(129), at(127)], 128);
     expect(r.kind).toBe("available");
     if (r.kind !== "available") return;

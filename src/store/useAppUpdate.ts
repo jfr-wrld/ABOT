@@ -116,7 +116,7 @@ export const useAppUpdate = create<State>()((set, get) => {
       set({ result, checking: false });
       if (
         auto &&
-        result.kind === "available" &&
+        (result.kind === "available" || result.kind === "moved") &&
         get().phase === "idle" &&
         !putOff(read<{ build: number; until: number }>(LATER_KEY), result.release.build, now)
       )
@@ -127,7 +127,7 @@ export const useAppUpdate = create<State>()((set, get) => {
 
     later: () => {
       const r = get().result;
-      if (r?.kind === "available") write(LATER_KEY, { build: r.release.build, until: Date.now() + LATER_MS });
+      if (r?.kind === "available" || r?.kind === "moved") write(LATER_KEY, { build: r.release.build, until: Date.now() + LATER_MS });
       set({ modal: false });
     },
 

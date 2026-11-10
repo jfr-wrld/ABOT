@@ -14,6 +14,7 @@ import { isNativeApp } from "@/lib/native/files";
 import { useAppResumed } from "@/lib/native/useAppResumed";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { MoveSteps } from "./MoveGuide";
 
 /** Pages where a pop-up would get in the way of something the lifter must finish first. */
 const QUIET = ["/onboarding", "/login", "/permissions", "/workout"];
@@ -62,7 +63,16 @@ export function WhatsNew() {
   const path = usePagePath();
   const working = useWorkoutStore((s) => s.active !== null);
   const { modal, result, later, start } = useAppUpdate();
-  const open = modal && !working && !QUIET.some((p) => path.startsWith(p)) && result?.kind === "available";
+  const open = modal && !working && !QUIET.some((p) => path.startsWith(p)) && (result?.kind === "available" || result?.kind === "moved");
+  if (result?.kind === "moved") {
+    return (
+      <Sheet open={open} onClose={later} title={t("A safer ABOT is out")} footer={<Button onClick={later}>{t("Later")}</Button>}>
+        <div className="pb-2">
+          <MoveSteps release={result.release} onBackup={later} />
+        </div>
+      </Sheet>
+    );
+  }
   if (result?.kind !== "available") return null;
   const { release, changes } = result;
   const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(t.locale, { day: "numeric", month: "long" }) : "");
