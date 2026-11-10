@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useState, type ReactNode } from "react";
+import { motion } from "framer-motion";
 import { Beef, ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "lucide-react";
 import { useFuelPacer, useTodayFuel } from "@/store/useFuelPacer";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -111,32 +113,121 @@ function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number
   const { proteinG, waterMl } = useTodayFuel(now);
   const add = useFuelPacer((s) => s.add);
   const litres = (n: number) => (n / 1000).toLocaleString(t.locale, { maximumFractionDigits: 1 });
-  const chip = (key: string, label: string, value: number, target: number, figure: string, step: string, aria: string, onAdd: () => void, Icon: typeof Droplets) => (
+  return (
+    <div role="group" aria-label={t("Today's protein and water")} className="flex gap-1 border-t border-line px-1 py-0.5">
+      <PacerChip
+        label={t("Protein")}
+        value={proteinG}
+        target={proteinTarget}
+        step={25}
+        figure={`${proteinG}/${proteinTarget} g`}
+        stepText="25 g"
+        aria={t("Add 25 g protein")}
+        onAdd={() => add({ proteinG: 25 })}
+        Icon={Beef}
+      />
+      <PacerChip
+        label={t("Water")}
+        value={waterMl}
+        target={waterTarget}
+        step={500}
+        figure={`${litres(waterMl)}/${litres(waterTarget)} L`}
+        stepText="0.5 L"
+        aria={t("Add 500 ml water")}
+        onAdd={() => add({ waterMl: 500 })}
+        Icon={Droplets}
+      />
+    </div>
+  );
+}
+
+type ChipProps = {
+  label: string;
+  value: number;
+  target: number;
+  step: number;
+  figure: string;
+  stepText: string;
+  aria: string;
+  onAdd: () => void;
+  Icon: typeof Droplets;
+};
+
+/**
+ * What a protein or water tap feels like: a "+25 g" ghost rises from the chip, and the tap that
+ * reaches the target pulses the ring in Volt with the set-complete sound. Ticks otherwise.
+ */
+function useAddMoment(value: number, target: number, step: number) {
+  const [ghosts, setGhosts] = useState<number[]>([]);
+  const [pulse, setPulse] = useState(0);
+  const fire = () => {
+    const reached = value < target && value + step >= target;
+    if (reached) {
+      feedback.setComplete();
+      setPulse((p) => p + 1);
+    } else feedback.tick();
+    setGhosts((g) => [...g, Date.now() + Math.random()]);
+  };
+  const done = (id: number) => setGhosts((g) => g.filter((x) => x !== id));
+  return { ghosts, pulse, fire, done };
+}
+
+function Ghost({ id, text, done }: { id: number; text: string; done: (id: number) => void }) {
+  return (
+    <motion.span
+      aria-hidden="true"
+      className="num pointer-events-none absolute right-2 top-1 text-[11px] font-bold text-accent"
+      initial={{ y: 0, opacity: 1 }}
+      animate={{ y: -18, opacity: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      onAnimationComplete={() => done(id)}
+    >
+      +{text}
+    </motion.span>
+  );
+}
+
+/** The ring wrapper: one Volt pulse each time `pulse` goes up (never on first show). */
+function PulseRing({ pulse, children }: { pulse: number; children: ReactNode }) {
+  return (
+    <motion.span
+      key={pulse}
+      className="inline-flex rounded-full"
+      initial={pulse ? { scale: 1, boxShadow: "0 0 0px rgb(204 255 0 / 0)" } : false}
+      animate={pulse ? { scale: [1, 1.22, 1], boxShadow: ["0 0 0px rgb(204 255 0 / 0)", "0 0 16px rgb(204 255 0 / 0.7)", "0 0 0px rgb(204 255 0 / 0)"] } : undefined}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+function PacerChip({ label, value, target, step, figure, stepText, aria, onAdd, Icon }: ChipProps) {
+  const m = useAddMoment(value, target, step);
+  return (
     <button
-      key={key}
       type="button"
       onClick={() => {
-        feedback.tick();
+        m.fire();
         onAdd();
       }}
       aria-label={aria}
-      className="tap flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ctl px-2 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
+      className="tap relative flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ctl px-2 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
     >
-      <Ring value={value} max={target} size={28} stroke={3} label={`${label}: ${value} / ${target}`}>
-        <Icon aria-hidden="true" size={11} className={value >= target ? "text-accent" : "text-text-muted"} />
-      </Ring>
+      <PulseRing pulse={m.pulse}>
+        <Ring value={value} max={target} size={28} stroke={3} label={`${label}: ${value} / ${target}`}>
+          <Icon aria-hidden="true" size={11} className={value >= target ? "text-accent" : "text-text-muted"} />
+        </Ring>
+      </PulseRing>
       <span className="num min-w-0 flex-1 truncate text-xs font-bold">{figure}</span>
       <span aria-hidden="true" className="num inline-flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-accent">
         <Plus size={10} />
-        {step}
+        {stepText}
       </span>
+      {m.ghosts.map((id) => (
+        <Ghost key={id} id={id} text={stepText} done={m.done} />
+      ))}
     </button>
-  );
-  return (
-    <div role="group" aria-label={t("Today's protein and water")} className="flex gap-1 border-t border-line px-1 py-0.5">
-      {chip("p", t("Protein"), proteinG, proteinTarget, `${proteinG}/${proteinTarget} g`, "25 g", t("Add 25 g protein"), () => add({ proteinG: 25 }), Beef)}
-      {chip("w", t("Water"), waterMl, waterTarget, `${litres(waterMl)}/${litres(waterTarget)} L`, "0.5 L", t("Add 500 ml water"), () => add({ waterMl: 500 }), Droplets)}
-    </div>
   );
 }
 
@@ -175,39 +266,69 @@ export function Pacer({
   const add = useFuelPacer((s) => s.add);
   // Water reads in litres ("1.5/2.5 L"): four-digit millilitres do not fit beside the ring at 360px.
   const show = (n: number, litres: boolean) => (litres ? (n / 1000).toLocaleString(t.locale, { maximumFractionDigits: 1 }) : n.toLocaleString(t.locale));
-  const item = (key: string, label: string, value: number, target: number, unitLabel: string, step: string, aria: string, onAdd: () => void, Icon: typeof Droplets, litres = false) => (
+  return (
+    <div role="group" aria-label={t("Today's protein and water")} className={`flex gap-1 px-2 py-1.5 ${bordered ? "border-t border-line" : ""}`}>
+      <PacerItem
+        label={t("Protein")}
+        value={proteinG}
+        target={proteinTarget}
+        step={25}
+        figure={show(proteinG, false)}
+        targetText={`/${show(proteinTarget, false)} g`}
+        stepText="25 g"
+        aria={t("Add 25 g protein")}
+        onAdd={() => add({ proteinG: 25 })}
+        Icon={Beef}
+        size={size}
+      />
+      <PacerItem
+        label={t("Water")}
+        value={waterMl}
+        target={waterTarget}
+        step={500}
+        figure={show(waterMl, true)}
+        targetText={`/${show(waterTarget, true)} L`}
+        stepText="0.5 L"
+        aria={t("Add 500 ml water")}
+        onAdd={() => add({ waterMl: 500 })}
+        Icon={Droplets}
+        size={size}
+      />
+    </div>
+  );
+}
+
+function PacerItem({ label, value, target, step, figure, targetText, stepText, aria, onAdd, Icon, size }: Omit<ChipProps, "figure"> & { figure: string; targetText: string; size: number }) {
+  const m = useAddMoment(value, target, step);
+  return (
     <button
-      key={key}
       type="button"
       onClick={() => {
-        feedback.tick();
+        m.fire();
         onAdd();
       }}
       aria-label={aria}
-      className="tap flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-ctl px-2 py-1.5 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
+      className="tap relative flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-ctl px-2 py-1.5 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
     >
-      <Ring value={value} max={target} size={size} stroke={4} label={`${label}: ${value} / ${target}`}>
-        <Icon aria-hidden="true" size={Math.round(size * 0.36)} className={value >= target ? "text-accent" : "text-text-muted"} />
-      </Ring>
+      <PulseRing pulse={m.pulse}>
+        <Ring value={value} max={target} size={size} stroke={4} label={`${label}: ${value} / ${target}`}>
+          <Icon aria-hidden="true" size={Math.round(size * 0.36)} className={value >= target ? "text-accent" : "text-text-muted"} />
+        </Ring>
+      </PulseRing>
       <span className="min-w-0 flex-1">
         <span className="block text-[11px] font-semibold text-text-muted">{label}</span>
         <span className="num block whitespace-nowrap text-sm font-bold">
-          {show(value, litres)}
-          <span className="text-[11px] font-semibold text-text-muted">
-            /{show(target, litres)} {unitLabel}
-          </span>
+          {figure}
+          <span className="text-[11px] font-semibold text-text-muted">{targetText}</span>
         </span>
         <span aria-hidden="true" className="num mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-bold text-accent">
           <Plus size={11} />
-          {step}
+          {stepText}
         </span>
       </span>
+      {m.ghosts.map((id) => (
+        <Ghost key={id} id={id} text={stepText} done={m.done} />
+      ))}
     </button>
-  );
-  return (
-    <div role="group" aria-label={t("Today's protein and water")} className={`flex gap-1 px-2 py-1.5 ${bordered ? "border-t border-line" : ""}`}>
-      {item("p", t("Protein"), proteinG, proteinTarget, "g", "25 g", t("Add 25 g protein"), () => add({ proteinG: 25 }), Beef)}
-      {item("w", t("Water"), waterMl, waterTarget, "L", "0.5 L", t("Add 500 ml water"), () => add({ waterMl: 500 }), Droplets, true)}
-    </div>
   );
 }

@@ -76,13 +76,14 @@ test("Free locked: the Coach Pill, the radar and PRO story layouts open the payw
   await page.getByRole("button", { name: "Discard workout" }).click();
   await page.getByRole("button", { name: /^Discard/ }).last().click();
 
-  await page.goto("/profile");
+  // The balance radar lives on Progress > Muscles.
+  await page.goto("/progress/muscles");
   const radar = page.getByRole("region", { name: "Muscle balance" });
   await expect(radar.getByText("Locked: ABOT // BLACK")).toBeVisible();
   await expect(radar.getByText(/SYMMETRY SCORE/)).toHaveCount(0);
 
   await simulate(page, "Pro active");
-  await page.goto("/profile");
+  await page.goto("/progress/muscles");
   await expect(page.getByRole("region", { name: "Muscle balance" }).getByRole("status")).toContainText("SYMMETRY SCORE");
 });
 

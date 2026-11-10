@@ -62,7 +62,7 @@ test("the balance radar reads push-heavy training and says what to add", async (
   }
   await finishWorkout(page);
 
-  await page.goto("/profile");
+  await page.goto("/progress/muscles");
   const card = page.getByRole("region", { name: "Muscle balance" });
   await card.scrollIntoViewIfNeeded();
   await expect(card.getByRole("status")).toContainText(/SYMMETRY SCORE: \d+\/100 \[(OPTIMAL|BALANCED|IMBALANCED|CRITICAL)\]/);

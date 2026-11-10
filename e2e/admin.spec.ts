@@ -102,7 +102,8 @@ test("a code made in the console is redeemed on the device; built-in codes stop 
   await expect(redeem.getByRole("alert")).toHaveText("This code is not valid, or it has been used up.");
   await page.keyboard.press("Escape");
   await expect(card).toContainText("BLACK PRO");
-  await expect(card.getByText("30", { exact: true })).toBeVisible();
+  // Days left is a counting figure (a visible copy and a screen-reader copy).
+  await expect(card.getByText("30", { exact: true }).first()).toBeVisible();
 });
 
 test("algorithm calibration, exercise CMS and database tools change the app for real", async ({ page }) => {

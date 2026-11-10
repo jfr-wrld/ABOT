@@ -14,6 +14,12 @@ import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
 import { PROFILE_LIMITS } from "@/types/workout";
 import { useT } from "@/i18n";
 import { Sparkline } from "@/components/phase/visuals";
+import { DrawnCheck } from "@/components/ui/DrawnCheck";
+import { AnimatePresence, motion } from "framer-motion";
+import { LIST_ITEM } from "@/components/motion/listItem";
+import { feedback } from "@/lib/feedback";
+import { useShake } from "@/lib/useShake";
+import { useSavedFlash } from "@/lib/useSavedFlash";
 
 const shortDate = (at: number, locale: string) => new Date(at).toLocaleDateString(locale, { day: "numeric", month: "short" });
 
@@ -27,6 +33,8 @@ export function BodyweightSection({ now }: { now: number }) {
   const [draft, setDraft] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const t = useT();
+  const { controls, shake } = useShake();
+  const [saved, flash] = useSavedFlash();
 
   const current = entries[entries.length - 1]?.weightKg ?? bodyweightKg;
   const change = changeOver(entries, 30, now);
@@ -41,11 +49,14 @@ export function BodyweightSection({ now }: { now: number }) {
     const [min, max] = PROFILE_LIMITS.bodyweightKg;
     if (kg === null || kg < min || kg > max) {
       setError(t("Enter {min} to {max}", { min: formatWeight(min, unit), max: formatWeight(max, unit) }));
+      shake();
       return;
     }
     logWeight(kg);
     setDraft(null);
     setError(null);
+    feedback.setComplete();
+    flash();
   }
 
   return (
@@ -83,7 +94,7 @@ export function BodyweightSection({ now }: { now: number }) {
           save();
         }}
       >
-        <div className="min-w-0 flex-1">
+        <motion.div animate={controls} className="min-w-0 flex-1">
           <label htmlFor="bw-log" className="sr-only">
             {t("Weight to log in {unit}", { unit })}
           </label>
@@ -105,9 +116,18 @@ export function BodyweightSection({ now }: { now: number }) {
               {error}
             </p>
           )}
-        </div>
+        </motion.div>
         <Button type="submit" variant="primary" className="shrink-0">
-          {loggedToday ? t("Update") : t("Log weight")}
+          {saved ? (
+            <>
+              <DrawnCheck />
+              {t("Saved")}
+            </>
+          ) : loggedToday ? (
+            t("Update")
+          ) : (
+            t("Log weight")
+          )}
         </Button>
       </form>
 
@@ -144,8 +164,9 @@ export function BodyweightSection({ now }: { now: number }) {
 
       {recent.length > 0 && (
         <ul className="mt-3 flex flex-col" aria-label={t("Recent weigh-ins")}>
+          <AnimatePresence initial={false}>
           {recent.map((e) => (
-            <li key={e.id} className="flex min-h-11 items-center gap-3 border-t border-line">
+            <motion.li key={e.id} {...LIST_ITEM} className="flex min-h-11 items-center gap-3 overflow-hidden border-t border-line">
               <time dateTime={e.id} className="num flex-1 text-sm text-text-muted">
                 {new Date(e.date).toLocaleDateString(t.locale, { weekday: "short", day: "numeric", month: "short" })}
               </time>
@@ -160,8 +181,9 @@ export function BodyweightSection({ now }: { now: number }) {
               >
                 <Trash2 aria-hidden="true" size={16} />
               </button>
-            </li>
+            </motion.li>
           ))}
+          </AnimatePresence>
         </ul>
       )}
         </details>

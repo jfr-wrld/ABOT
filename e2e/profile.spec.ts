@@ -4,7 +4,8 @@ import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, log
 
 async function logWeighIn(page: Page, value: string) {
   await page.getByLabel(/^Weight to log in /).fill(value);
-  await page.getByRole("button", { name: /^(Log weight|Update)$/ }).click();
+  // The button reads "Saved" for a moment after each save; it still submits.
+  await page.getByRole("button", { name: /^(Log weight|Update|Saved)$/ }).click();
 }
 
 test("profile opens from Home and starts honestly empty", async ({ page }) => {

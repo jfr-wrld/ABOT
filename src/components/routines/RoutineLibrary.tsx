@@ -16,6 +16,9 @@ import { TemplateVault } from "@/components/routines/TemplateVault";
 import { RoutineCard } from "@/components/routines/RoutineCard";
 import { routineEditPath } from "@/lib/routes";
 import { useT } from "@/i18n";
+import { AnimatePresence, motion } from "framer-motion";
+import { LIST_ITEM } from "@/components/motion/listItem";
+import { useShake } from "@/lib/useShake";
 
 /**
  * The Workout tab when no workout is running: an empty start, then My Routines and the Template
@@ -36,6 +39,7 @@ export function RoutineLibrary() {
   const [newName, setNewName] = useState("");
   const [newFolder, setNewFolder] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
+  const { controls, shake } = useShake();
   const [toDelete, setToDelete] = useState<Routine | null>(null);
   const [startBlocked, setStartBlocked] = useState<Routine | null>(null);
   // Someone with no routines yet lands on the templates.
@@ -62,6 +66,7 @@ export function RoutineLibrary() {
     const name = newName.trim();
     if (!name) {
       setNameError(t("Give the routine a name, like Push A or Leg day"));
+      shake();
       return;
     }
     const r = create(name, newFolder.trim() || undefined);
@@ -119,11 +124,13 @@ export function RoutineLibrary() {
                 {folder || (folderNames.length > 1 ? t("No folder") : t("All routines"))}
               </h2>
               <ul className="mt-2 flex flex-col gap-3">
-                {folders.get(folder)!.map((r) => (
-                  <li key={r.id}>
-                    <RoutineCard routine={r} byId={byId} onStart={() => start(r)} onDuplicate={() => duplicate(r.id)} onDelete={() => setToDelete(r)} />
-                  </li>
-                ))}
+                <AnimatePresence initial={false}>
+                  {folders.get(folder)!.map((r) => (
+                    <motion.li key={r.id} {...LIST_ITEM} className="overflow-hidden">
+                      <RoutineCard routine={r} byId={byId} onStart={() => start(r)} onDuplicate={() => duplicate(r.id)} onDelete={() => setToDelete(r)} />
+                    </motion.li>
+                  ))}
+                </AnimatePresence>
               </ul>
             </section>
           ))}
@@ -159,7 +166,8 @@ export function RoutineLibrary() {
             <label htmlFor="routine-name" className="mb-1 block text-sm font-semibold">
               {t("Name")}
             </label>
-            <input
+            <motion.input
+              animate={controls}
               id="routine-name"
               value={newName}
               onChange={(e) => {

@@ -11,6 +11,8 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
 import { ActiveWorkoutHeader } from "@/components/workout/ActiveWorkoutHeader";
 import { ExerciseCard } from "@/components/workout/ExerciseCard";
+import { AnimatePresence, motion } from "framer-motion";
+import { LIST_ITEM } from "@/components/motion/listItem";
 import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { FinishDialog } from "@/components/workout/FinishDialog";
 import { Sheet } from "@/components/ui/Sheet";
@@ -103,7 +105,10 @@ function WorkoutScreen() {
             {t("This workout has no exercises yet. Add one below to start logging sets.")}
           </p>
         )}
+        <AnimatePresence initial={false}>
         {active.exercises.map((item, i) => (
+          // layout="position": moving an exercise up or down slides it; removing one closes the gap.
+          <motion.div key={item.id} layout="position" {...LIST_ITEM} transition={{ ...LIST_ITEM.transition, layout: { type: "spring", stiffness: 500, damping: 40 } }}>
           <ExerciseCard
             key={item.id}
             item={item}
@@ -118,7 +123,9 @@ function WorkoutScreen() {
             joinedAbove={!!item.supersetId && active.exercises[i - 1]?.supersetId === item.supersetId}
             joinedBelow={!!item.supersetId && active.exercises[i + 1]?.supersetId === item.supersetId}
           />
+          </motion.div>
         ))}
+        </AnimatePresence>
 
         <button
           type="button"

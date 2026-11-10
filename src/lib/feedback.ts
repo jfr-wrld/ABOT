@@ -43,6 +43,11 @@ export const feedback = {
     playProUnlocked();
     setTimeout(() => buzz([60, 50, 30, 50, 30, 90, 120]), 420);
   },
+  /** An entry was refused (out of range, wrong code): a short double buzz, no sound. */
+  error(): void {
+    if (!on()) return;
+    buzz([20, 40, 20]);
+  },
   /** A workout started. */
   start(): void {
     if (!on()) return;

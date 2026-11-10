@@ -15,6 +15,7 @@ import { useNow } from "@/lib/useNow";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 import { AbotMark } from "@/components/brand/AbotMark";
+import { CountUp } from "@/components/progress/CountUp";
 
 /** A week or less of PRO left: the card says so in words, not only in colour. */
 const ENDS_SOON_DAYS = 7;
@@ -100,7 +101,10 @@ export function BillingSection() {
           {s.daysLeft !== null && (
             <div className="flex gap-1.5">
               <dt className="text-zinc-400">{t("Days left")}</dt>
-              <dd className={`font-mono font-semibold tabular-nums ${s.daysLeft <= ENDS_SOON_DAYS ? "text-[#f59e0b]" : "text-[#ccff00]"}`}>{s.daysLeft}</dd>
+              <dd className={`font-mono font-semibold tabular-nums ${s.daysLeft <= ENDS_SOON_DAYS ? "text-[#f59e0b]" : "text-[#ccff00]"}`}>
+                {/* Counts up when a code or a purchase adds days while the card is on screen. */}
+                <CountUp value={s.daysLeft} format={(n) => String(Math.round(n))} />
+              </dd>
             </div>
           )}
         </dl>

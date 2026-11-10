@@ -11,6 +11,8 @@ import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
 import { feedback } from "@/lib/feedback";
 import { newId } from "@/lib/id";
 import { useT } from "@/i18n";
+import { motion } from "framer-motion";
+import { useShake } from "@/lib/useShake";
 
 /** One redeem sheet for the app: opened from the paywall and from the founder card. */
 export const useRedeemStore = create<{ open: boolean; show: () => void; close: () => void }>()((set) => ({
@@ -47,6 +49,7 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { controls, shake } = useShake();
   const [granted, setGranted] = useState<Grant | null>(null);
 
   useEffect(() => {
@@ -60,7 +63,10 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
     const r = await redeemAndApply(code);
     setBusy(false);
     if (r.ok) setGranted(r.grant);
-    else setError(t(r.reason));
+    else {
+      setError(t(r.reason));
+      shake();
+    }
   }
 
   const access = granted
@@ -104,7 +110,8 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
             <label htmlFor="redeem-code" className="text-sm text-zinc-300">
               {t("VIP, influencer or promo code")}
             </label>
-            <input
+            <motion.input
+              animate={controls}
               id="redeem-code"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}

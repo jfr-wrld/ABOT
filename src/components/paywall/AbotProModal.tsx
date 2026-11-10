@@ -4,6 +4,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Check, Minus, X, Zap } from "lucide-react";
 import { useEntitlements, usePaywallStore, updateEntitlement, autoClaimFounder } from "@/store/useEntitlements";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { PRESS_SPRING } from "@/components/ui/Button";
 import { PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, plansFor, rupiah, type PlanId } from "@/lib/entitlements";
 import { CHECKOUT_MESSAGE, checkoutBlock, openPaymentTab, startMidtransCheckout } from "@/lib/checkout";
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
@@ -187,10 +189,17 @@ export function AbotProModal() {
             return (
               <label
                 key={p.id}
-                className={`relative flex min-h-16 cursor-pointer items-center gap-3 rounded-ctl border bg-[#121215] px-3 py-3 transition-colors ${
-                  selected ? (best ? "border-[#ccff00] shadow-[0_0_18px_rgb(204_255_0/0.18)]" : "border-zinc-300") : best ? "border-[#ccff00]/50" : "border-[#27272a]"
-                }`}
+                className={`tap relative flex min-h-16 cursor-pointer items-center gap-3 rounded-ctl border bg-[#121215] px-3 py-3 ${best ? "border-[#ccff00]/50" : "border-[#27272a]"}`}
               >
+                {/* The selection is one Volt frame that slides to the chosen plan. */}
+                {selected && (
+                  <motion.span
+                    layoutId="plan-pick"
+                    transition={PRESS_SPRING}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -inset-px rounded-ctl border-2 border-[#ccff00] shadow-[0_0_18px_rgb(204_255_0/0.18)]"
+                  />
+                )}
                 <input type="radio" name="abot-plan" value={p.id} checked={selected} onChange={() => setPlan(p.id)} className="peer sr-only" />
                 <span aria-hidden="true" className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-[#ccff00]" : "border-zinc-600"}`}>
                   {selected && <span className="size-2.5 rounded-full bg-[#ccff00]" />}
