@@ -4,8 +4,6 @@ import { memo, useState } from "react";
 import type { Exercise } from "@/types/workout";
 import { BUNDLED_THUMBS } from "@/data/exercise-thumbs.generated";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
-import { patternFor } from "@/components/motion/patterns";
-import { MotionScene } from "@/components/motion/MotionFigure";
 
 type ThumbExercise = Pick<Exercise, "id" | "name" | "category" | "equipment" | "primaryMuscles" | "media">;
 
@@ -40,11 +38,10 @@ export const ExerciseThumb = memo(function ExerciseThumb({ exercise, size = 48 }
   const bundled = BUNDLED_THUMBS.has(exercise.id) ? `/thumbs/${exercise.id}.webp` : undefined;
   const remote = online ? remotePhotoOf(exercise) : undefined;
   const src = failed ? undefined : (bundled ?? remote);
-  const pattern = src ? null : patternFor(exercise);
 
   return (
     <span
-      data-thumb={src ? "photo" : pattern ? "figure" : "icon"}
+      data-thumb={src ? "photo" : "icon"}
       aria-hidden="true"
       style={{ width: size, height: size }}
       className="relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-ink/[0.06] bg-surface-2"
@@ -61,10 +58,6 @@ export const ExerciseThumb = memo(function ExerciseThumb({ exercise, size = 48 }
           onError={() => setFailed(true)}
           className="size-full object-cover"
         />
-      ) : pattern ? (
-        <span className="block w-full p-0.5">
-          <MotionScene pattern={pattern} progress={0.55} exercise={exercise} fit />
-        </span>
       ) : (
         <span className="text-text-muted">
           <EquipmentIcon equipment={exercise.equipment} size={Math.round(size * 0.5)} />

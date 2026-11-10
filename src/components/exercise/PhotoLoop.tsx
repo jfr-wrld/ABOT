@@ -5,10 +5,9 @@ import { Pause, Play } from "lucide-react";
 import { useReducedMotionConfig } from "framer-motion";
 import type { Exercise } from "@/types/workout";
 import { BUNDLED_THUMBS } from "@/data/exercise-thumbs.generated";
-import { MotionFigure } from "@/components/motion/MotionFigure";
-import { patternFor } from "@/components/motion/patterns";
 import { useT } from "@/i18n";
 import { useAppActive } from "@/lib/native/app-active";
+import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 
 const FRAME_MS = 900;
 const isImage = (u: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
@@ -49,7 +48,6 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
   }, [moving, appActive]);
 
   const bundled = BUNDLED_THUMBS.has(exercise.id) ? `/thumbs/${exercise.id}.webp` : null;
-  const pattern = patternFor(exercise);
 
   return (
     <div className={`force-dark relative overflow-hidden bg-black ${className}`}>
@@ -71,13 +69,11 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
       ) : bundled ? (
         // eslint-disable-next-line @next/next/no-img-element -- bundled 128 px photo
         <img src={bundled} alt={t("{name}, start position", { name: exercise.name })} className="absolute inset-0 size-full object-cover" />
-      ) : pattern ? (
-        <div className="absolute inset-0 flex items-center justify-center p-4">
-          <div className="w-full max-w-[260px]">
-            <MotionFigure pattern={pattern} exercise={exercise} playing={!reduce} onPhase={noop} />
-          </div>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center text-ink/40">
+          <EquipmentIcon equipment={exercise.equipment} size={56} />
         </div>
-      ) : null}
+      )}
 
       {pair && (
         <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent px-3 pb-2 pt-8">
@@ -105,4 +101,3 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
   );
 }
 
-const noop = () => {};

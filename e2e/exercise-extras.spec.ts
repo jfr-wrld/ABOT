@@ -74,15 +74,15 @@ test("exercise detail is split into Summary, History and How to", async ({ page 
   await expect(page.getByRole("region", { name: "Exercise media" })).toBeVisible();
 });
 
-test("a photo thumbnail falls back to the movement figure when the photo cannot load", async ({ page }) => {
-  // Both the photo bundled with the app and the online one fail, so the figure must take over.
+test("a photo thumbnail falls back to the equipment icon when the photo cannot load", async ({ page }) => {
+  // Both the photo bundled with the app and the online one fail, so the equipment icon shows.
   await page.route("https://raw.githubusercontent.com/**", (route) => route.abort());
   await page.route("**/thumbs/**", (route) => route.abort());
   await page.goto("/exercises");
   const squat = page.getByRole("link", { name: /^Squat \(Barbell\)/ });
   // Lazy photos load only on screen; bring the row into view so its photo is requested and fails.
   await squat.scrollIntoViewIfNeeded();
-  await expect(squat.locator('[data-thumb="figure"]')).toBeVisible();
+  await expect(squat.locator('[data-thumb="icon"]')).toBeVisible();
   await expect(squat.getByText("Quads")).toBeVisible();
 });
 

@@ -4,8 +4,6 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { ExternalLink, Link2, Pause, Play, Trash2 } from "lucide-react";
 import type { Exercise } from "@/types/workout";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
-import { MotionFigure } from "@/components/motion/MotionFigure";
-import { patternFor, type PhaseLabel } from "@/components/motion/patterns";
 import { Button } from "@/components/ui/Button";
 import { embedUrl, parseVideoUrl, searchLinks, type ParsedVideo } from "@/lib/videoUrl";
 import { useExerciseStore } from "@/store/useExerciseStore";
@@ -81,72 +79,9 @@ function prefersReducedMotion(): boolean {
  */
 const FRAME_FILTER = "brightness(0.88) contrast(1.06) saturate(0.9)";
 
-/**
- * Animated figure when ABOT has a movement pattern for the exercise, with the real photos one
- * tap away; photos only otherwise.
- */
+/** The exercise's own two photos, start and end, playing as a loop. */
 function MotionPanel({ exercise }: { exercise: Exercise }) {
-  const pattern = patternFor(exercise);
-  const hasPhotos = (exercise.media.motionUrls ?? []).length > 0;
-  // Real photos first when there are any; the animated figure is one tap away (and the only view
-  // for exercises without photos).
-  const [view, setView] = useState<"animation" | "photos">(pattern && !hasPhotos ? "animation" : "photos");
-  const [playing, setPlaying] = useState(() => !prefersReducedMotion());
-  const [phase, setPhase] = useState<PhaseLabel | null>(null);
-  const t = useT();
-
-  if (!pattern || view === "photos") {
-    return (
-      <div>
-        {pattern && <ViewToggle view={view} setView={setView} hasPhotos={hasPhotos} />}
-        <PhotoMotion exercise={exercise} />
-      </div>
-    );
-  }
-  return (
-    <div>
-      <ViewToggle view={view} setView={setView} hasPhotos={hasPhotos} />
-      <div className="force-dark aspect-[12/11] w-full overflow-hidden rounded-ctl bg-black">
-        <MotionFigure pattern={pattern} exercise={exercise} playing={playing} onPhase={setPhase} />
-      </div>
-      <div className="mt-2 flex items-center justify-between gap-2 px-1">
-        <span data-testid="motion-phase" aria-live="off" className="text-xs font-semibold text-text-muted">
-          {phase ? t(phase) : ""}
-        </span>
-        <PlayPause playing={playing} onToggle={() => setPlaying((p) => !p)} />
-      </div>
-    </div>
-  );
-}
-
-function ViewToggle({
-  view,
-  setView,
-  hasPhotos,
-}: {
-  view: "animation" | "photos";
-  setView: (v: "animation" | "photos") => void;
-  hasPhotos: boolean;
-}) {
-  const t = useT();
-  if (!hasPhotos) return null;
-  return (
-    <div className="mb-2 grid grid-cols-2 gap-1" role="group" aria-label={t("Motion view")}>
-      {(["animation", "photos"] as const).map((v) => (
-        <button
-          key={v}
-          type="button"
-          aria-pressed={view === v}
-          onClick={() => setView(v)}
-          className={`h-9 rounded-ctl border text-xs font-semibold ${
-            view === v ? "border-accent bg-accent-tint text-text" : "border-line-strong text-text-muted hover:text-text"
-          }`}
-        >
-          {v === "animation" ? t("Animation") : t("Photos")}
-        </button>
-      ))}
-    </div>
-  );
+  return <PhotoMotion exercise={exercise} />;
 }
 
 function PlayPause({ playing, onToggle }: { playing: boolean; onToggle: () => void }) {
