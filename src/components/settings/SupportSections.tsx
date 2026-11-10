@@ -5,6 +5,7 @@ import { ChevronDown, Mail } from "lucide-react";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { CONTACT_EMAIL, contactHref } from "@/lib/social";
 import { useAppVersion } from "./AppVersion";
+import { UpdateCheck } from "./UpdateCheck";
 import { FAQ } from "./labels";
 import { useT } from "@/i18n";
 
@@ -55,6 +56,8 @@ export function AboutSection() {
         <p className="text-sm text-text-muted">{t("A strength training log that works offline.")}</p>
         {version && <p className="num text-xs text-text-muted">{t("Version {version}", { version })}</p>}
       </div>
+
+      <UpdateCheck />
 
       <section aria-labelledby="about-privacy" className="panel p-3">
         <h2 id="about-privacy" className="text-sm font-semibold">

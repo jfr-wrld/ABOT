@@ -543,4 +543,13 @@ export const settings: Record<string, string> = {
   "Auto ({mode})": "Otomatis ({mode})",
   "Full": "Penuh",
   Lite: "Ringan",
+  "App update": "Pembaruan aplikasi",
+  "ABOT {version} is ready": "ABOT {version} sudah tersedia",
+  "Download and install": "Unduh dan pasang",
+  "The APK downloads in the browser; open it from the notification and tap Update. Your data stays on the phone.": "APK diunduh di browser; buka dari notifikasi lalu ketuk Perbarui. Datamu tetap ada di HP.",
+  "You have the newest version.": "Kamu sudah memakai versi terbaru.",
+  "No release has been published yet.": "Belum ada rilis yang diterbitkan.",
+  "Could not reach GitHub. Check the connection and try again.": "GitHub tidak bisa dihubungi. Periksa koneksi lalu coba lagi.",
+  "Check GitHub for a newer ABOT build.": "Cek GitHub untuk build ABOT yang lebih baru.",
+  "Check for updates": "Cek pembaruan",
 };

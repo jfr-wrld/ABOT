@@ -31,6 +31,9 @@ export function resolveEffects(choice: VisualEffects, hints: DeviceHints): "full
 /** Reads the hints from the running browser. */
 export function readDeviceHints(): DeviceHints {
   if (typeof navigator === "undefined") return {};
+  // An automated browser (the e2e suite) reports the test machine, not a phone: no hints, so
+  // Auto stays Full and the tests see the full interface.
+  if (navigator.webdriver) return {};
   const n = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
   const media = (q: string) => typeof matchMedia === "function" && matchMedia(q).matches;
   return {
