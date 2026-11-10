@@ -35,11 +35,29 @@ After changing web code, `npm run build:android` refreshes the copy.
 - App id is `app.abot.gym` (`capacitor.config.ts`). It cannot change once the app is on
   Google Play.
 
-## Updates keep your data
+## Signing, releases and updates
 
-Every APK is signed with the same debug key (`android/app/abot-debug.keystore`, Android's public
-debug passwords) and CI numbers each build (`versionCode` = run number). A new APK therefore
-installs over the old one and keeps the workouts. That key is for side-loaded test builds only.
+Security audit 2026-11-11: the old debug key (`abot-debug.keystore`, public passwords) was in the
+repository, so anyone could sign an APK that phones took as an ABOT update. It is gone; treat it
+as burnt.
+
+- **Release key**: private, never in the repository. Make it once with
+  `bash scripts/make-release-keystore.sh` and add the four values it prints as secrets of the
+  GitHub environment `release` (Settings > Environments): `ABOT_KEYSTORE_B64`,
+  `ABOT_KEYSTORE_PASSWORD`, `ABOT_KEY_ALIAS`, `ABOT_KEY_PASSWORD`. Keep the `.jks` and its
+  password in a password manager: losing it ends updates for installed apps.
+- **Builds**: every push builds an unsigned release APK (not debuggable) and a debug APK for the
+  emulator smoke test, with a read-only token and no secrets.
+- **Releases**: Actions > Android APK > Run workflow on `main`. The `release` job (environment
+  `release`, where required reviewers can be set) signs the build and publishes `abot-<n>`.
+  A push alone never reaches users. `versionCode` is the run number, so each release installs
+  over the last and keeps the data.
+- **The move from the old key**: phones on the old key cannot update in place. The last
+  old-key build (an `apk-<n>` release) sees `abot-<n>` releases and walks the lifter through
+  backup, uninstall, install, restore (`src/components/update/MoveGuide.tsx`).
+- **Backups**: `allowBackup` is off, with rules that exclude everything, so the sign-in session
+  and health data never go into a device or cloud backup. The in-app backup file and cloud sync
+  move data instead.
 
 ## Native pieces
 

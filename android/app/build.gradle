@@ -18,21 +18,10 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    signingConfigs {
-        // One fixed debug key for every build (local and CI), so updates keep the app's data.
-        // It uses Android's public debug passwords: for side-loaded test builds only. A Play
-        // release needs its own key, kept out of the repo.
-        debug {
-            storeFile file("abot-debug.keystore")
-            storePassword "android"
-            keyAlias "androiddebugkey"
-            keyPassword "android"
-        }
-    }
+    // Release builds come out unsigned and not debuggable. CI's release job signs them with the
+    // private release key from its secrets (.github/workflows/android.yml); the key never sits in
+    // the repository. Debug builds use the machine's own debug key, for local testing only.
     buildTypes {
-        debug {
-            signingConfig signingConfigs.debug
-        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
