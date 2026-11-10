@@ -132,3 +132,11 @@ test("each summary tile opens its page and Back returns to Profile", async ({ pa
     await expect(page.getByRole("tab", { name: "Progress", selected: true })).toBeVisible();
   }
 });
+
+test("the body phase tile leads to choosing a program when none runs", async ({ page }) => {
+  await page.goto("/profile");
+  const tile = page.getByRole("navigation", { name: "Progress details" }).getByRole("link", { name: /Body phase/ });
+  await expect(tile).toContainText("Choose a program");
+  await tile.click();
+  await page.waitForURL(/\/phase\/setup/);
+});

@@ -536,4 +536,6 @@ export const settings: Record<string, string> = {
   "{n} day trained this month": "{n} hari latihan bulan ini",
   "{n} days trained this month": "{n} hari latihan bulan ini",
   "{n} of {total} weeks trained": "{n} dari {total} minggu latihan",
+  "Choose a program": "Pilih program",
+  "Trend {weight}": "Tren {weight}",
 };

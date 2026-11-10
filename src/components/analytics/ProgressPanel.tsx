@@ -3,7 +3,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { motion, type Variants } from "framer-motion";
-import { CalendarDays, ChevronRight, Flame } from "lucide-react";
+import { CalendarDays, ChevronRight, Flame, Hammer } from "lucide-react";
+import { PHASE_ICON } from "@/components/phase/PhaseCommandCard";
+import { usePhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { PHASE_LABEL } from "@/lib/phase-engine";
+import { toDisplay } from "@/lib/units";
 import type { MuscleGroup } from "@/types/workout";
 import { RangeTabs } from "@/components/progress/RangeTabs";
 import { ProgressHero } from "@/components/progress/ProgressHero";
@@ -122,6 +127,7 @@ export function ProgressPanel() {
           headline={t.n(daysThisMonth, "{n} day trained this month", "{n} days trained this month")}
           line={last !== null ? t("Last workout: {when}", { when: relativeDay(last, d.now, t) }) : t("No workouts yet")}
         />
+        <PhaseTile now={d.now} />
       </motion.nav>
     </div>
   );
@@ -140,5 +146,41 @@ function SummaryTile({ href, title, icon, headline, line, aside }: { href: strin
       {aside}
       <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
     </Link>
+  );
+}
+
+/**
+ * The body phase (cut, bulk, recomp, peak) as the fourth tile: phase and block week with the
+ * trend weight when one runs, or a way in to choose one when none does.
+ */
+function PhaseTile({ now }: { now: number }) {
+  const t = useT();
+  const m = usePhaseTelemetry(now);
+  const unit = useSettingsStore((s) => s.weightUnit);
+  if (!m) {
+    return (
+      <SummaryTile
+        href="/phase/setup"
+        title={t("Body phase")}
+        icon={<Hammer aria-hidden="true" size={20} className="text-text-muted" />}
+        headline={t("Cut, bulk, recomp or peak")}
+        line={t("Choose a program")}
+      />
+    );
+  }
+  const Icon = PHASE_ICON[m.phase.phaseType];
+  const { meso } = m;
+  const stage = meso.finished ? t("Done") : `${t("W{week}/{of}", { week: meso.week, of: meso.of })}${meso.deload ? ` · ${t("Deload")}` : ""}`;
+  const weight = `${(Math.round(toDisplay(m.trendKg, unit) * 10) / 10).toFixed(1)} ${unit}`;
+  const rate = m.ratePerWeek;
+  const pace = rate === null ? "" : ` · ${rate > 0 ? "+" : rate < 0 ? "-" : "±"}${Math.abs(Math.round(toDisplay(rate, unit) * 10) / 10)} ${unit}/${t("wk")}`;
+  return (
+    <SummaryTile
+      href="/phase"
+      title={t("Body phase")}
+      icon={<Icon aria-hidden="true" size={20} className="text-accent" />}
+      headline={`${t(PHASE_LABEL[m.phase.phaseType])} · ${stage}`}
+      line={t("Trend {weight}", { weight }) + pace}
+    />
   );
 }
