@@ -119,7 +119,7 @@ function Row({ to, icon: Icon, title, value, external }: { to: string; icon: Luc
       <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
     </>
   );
-  const cls = "flex min-h-14 items-center gap-3 px-3 py-2 hover:bg-surface-2";
+  const cls = "tap flex min-h-14 items-center gap-3 px-3 py-2 hover:bg-surface-2 active:bg-press";
   return (
     <li>
       {external ? (

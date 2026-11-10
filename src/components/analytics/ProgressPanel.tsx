@@ -136,7 +136,7 @@ export function ProgressPanel() {
 /** One summary row: icon, what it is, the headline figure, one supporting line, and where it goes. */
 function SummaryTile({ href, title, icon, headline, line, aside }: { href: string; title: string; icon: ReactNode; headline: string; line: string; aside?: ReactNode }) {
   return (
-    <Link href={href} className="panel flex min-h-[72px] items-center gap-3 px-3 py-3 transition-colors hover:border-line-hover active:bg-surface-2">
+    <Link href={href} className="tap panel flex min-h-[72px] items-center gap-3 px-3 py-3 hover:border-line-hover active:bg-surface-2">
       <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-2">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="label-caps block">{title}</span>

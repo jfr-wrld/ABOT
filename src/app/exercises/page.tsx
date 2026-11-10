@@ -162,7 +162,7 @@ function LibraryScreen() {
                       <li key={e.id}>
                         <Link
                           href={exercisePath(e.id)}
-                          className="flex h-full flex-col gap-2 rounded-card border border-line bg-surface p-2 hover:border-line-hover active:bg-surface-2"
+                          className="tap flex h-full flex-col gap-2 rounded-card border border-line bg-surface p-2 hover:border-line-hover active:bg-surface-2"
                         >
                           {/* The photo fills the card's width. */}
                           <span className="block aspect-square overflow-hidden rounded-lg [&>span]:!size-full [&>span]:!rounded-none [&>span]:!border-0">
@@ -181,7 +181,7 @@ function LibraryScreen() {
                     <li key={e.id}>
                       <Link
                         href={exercisePath(e.id)}
-                        className="flex min-h-16 items-center gap-3 rounded-xl px-2 py-1 hover:bg-surface active:bg-surface-2"
+                        className="tap flex min-h-16 items-center gap-3 rounded-xl px-2 py-1 hover:bg-surface active:bg-surface-2"
                       >
                         <ExerciseThumb exercise={e} size={52} />
                         <span className="min-w-0 flex-1">

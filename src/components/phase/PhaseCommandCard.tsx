@@ -120,7 +120,7 @@ function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number
         onAdd();
       }}
       aria-label={aria}
-      className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ctl px-2 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
+      className="tap flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ctl px-2 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
     >
       <Ring value={value} max={target} size={28} stroke={3} label={`${label}: ${value} / ${target}`}>
         <Icon aria-hidden="true" size={11} className={value >= target ? "text-accent" : "text-text-muted"} />
@@ -184,7 +184,7 @@ export function Pacer({
         onAdd();
       }}
       aria-label={aria}
-      className="flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-ctl px-2 py-1.5 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
+      className="tap flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-ctl px-2 py-1.5 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
     >
       <Ring value={value} max={target} size={size} stroke={4} label={`${label}: ${value} / ${target}`}>
         <Icon aria-hidden="true" size={Math.round(size * 0.36)} className={value >= target ? "text-accent" : "text-text-muted"} />

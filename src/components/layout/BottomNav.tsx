@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { PRESS_SPRING } from "@/components/ui/Button";
 import { Dumbbell, House, Search } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useHydration } from "@/store/hydration";
@@ -78,10 +80,12 @@ function NavBar({ pathname }: { pathname: string | null }) {
               <Link
                 href={href}
                 aria-current={current ? "page" : undefined}
-                className={`relative flex h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium transition-colors duration-150 hover:bg-ink/[0.05] active:bg-ink/[0.08] ${
-                  current ? "bg-ink/[0.06] text-text" : "text-text-muted"
+                className={`tap relative flex h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium hover:bg-ink/[0.05] active:bg-ink/[0.08] ${
+                  current ? "text-text" : "text-text-muted"
                 }`}
               >
+                {/* One pill that slides to the current tab instead of jumping. */}
+                {current && <motion.span layoutId="nav-pill" transition={PRESS_SPRING} aria-hidden="true" className="absolute inset-0 rounded-xl bg-ink/[0.06]" />}
                 <span className="relative">
                   {Icon ? (
                     <Icon aria-hidden="true" size={21} strokeWidth={current ? 2.25 : 1.75} className={current ? "text-accent" : ""} />
@@ -95,7 +99,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
                     <span className="absolute -right-1.5 -top-0.5 size-2 rounded-full bg-accent ring-2 ring-bg" aria-hidden="true" />
                   )}
                 </span>
-                <span className="truncate">{t(label)}</span>
+                <span className="relative truncate">{t(label)}</span>
                 {live && <span className="sr-only">{t("(workout in progress)")}</span>}
               </Link>
             </li>

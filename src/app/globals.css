@@ -195,6 +195,23 @@
   }
 }
 
+/* Every custom tappable (cards, tiles, chips, rows) gives a little under the thumb, the same way
+   Button does: a 120 ms scale to 0.97 while pressed. Colours share the transition so an element
+   does not also need transition-colors. With reduced motion only the colour changes. */
+@utility tap {
+  transition-property: color, background-color, border-color, opacity, box-shadow, scale;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  &:active {
+    scale: 0.97;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:active {
+      scale: none;
+    }
+  }
+}
+
 /* The one card style: carbon surface, a hairline edge, 16px corners. Edges brighten on hover
    only when the card itself is the control. */
 @utility panel {

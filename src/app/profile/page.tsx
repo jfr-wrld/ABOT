@@ -17,6 +17,8 @@ import { LiftsBoard } from "@/components/profile/LiftsBoard";
 import { AccountChip, AccountSection } from "@/components/profile/AccountSection";
 import { normalizeHandle, profileStats } from "@/lib/profile";
 import { PlanBadge } from "@/components/paywall/PlanBadge";
+import { motion } from "framer-motion";
+import { PRESS_SPRING } from "@/components/ui/Button";
 import { weeklyBuckets } from "@/lib/analytics";
 import { squareJpeg } from "@/lib/photo";
 import { useNow } from "@/lib/useNow";
@@ -167,12 +169,12 @@ function ProfileScreen() {
             aria-controls={`panel-${id}`}
             tabIndex={tab === id ? 0 : -1}
             onClick={() => setTab(id)}
-            className={`relative min-h-12 flex-1 text-sm font-semibold transition-colors ${
-              tab === id ? "text-text" : "text-text-muted hover:text-text"
-            }`}
+            className={`tap relative min-h-12 flex-1 text-sm font-semibold ${tab === id ? "text-text" : "text-text-muted hover:text-text"}`}
           >
             {tabLabel[id]}
-            {tab === id && <span aria-hidden="true" className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-accent" />}
+            {tab === id && (
+              <motion.span layoutId="profile-tab" transition={PRESS_SPRING} aria-hidden="true" className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-accent" />
+            )}
           </button>
         ))}
       </div>

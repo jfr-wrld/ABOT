@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, type KeyboardEvent } from "react";
+import { motion } from "framer-motion";
+import { PRESS_SPRING } from "./Button";
 
 /**
  * A row of tabs (WAI-ARIA tabs pattern): arrow keys move between tabs and select them, Home and
@@ -46,13 +48,13 @@ export function Tabs<T extends string>({
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(t.value)}
             onKeyDown={(e) => onKey(e, i)}
-            className={`relative min-h-11 text-sm font-semibold transition-colors ${
-              selected
-                ? "text-text after:absolute after:inset-x-4 after:-bottom-px after:h-0.5 after:rounded-full after:bg-accent"
-                : "text-text-muted hover:text-text"
-            }`}
+            className={`tap relative min-h-11 text-sm font-semibold ${selected ? "text-text" : "text-text-muted hover:text-text"}`}
           >
             {t.label}
+            {/* The underline slides between tabs. */}
+            {selected && (
+              <motion.span layoutId={`${id}-tab-line`} transition={PRESS_SPRING} aria-hidden="true" className="absolute inset-x-4 -bottom-px h-0.5 rounded-full bg-accent" />
+            )}
           </button>
         );
       })}

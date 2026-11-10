@@ -69,7 +69,7 @@ export function LiftsBoard({
                 if (bucket !== b) feedback.tick();
                 setBucket(b);
               }}
-              className={`h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold ${
+              className={`tap h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold ${
                 bucket === b ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
               }`}
             >
@@ -85,7 +85,7 @@ export function LiftsBoard({
             <Rise order={i}>
               <Link
                 href={exercisePath(r.exercise.id)}
-                className={`flex h-full flex-col gap-1.5 rounded-card border bg-surface p-2.5 hover:border-line-hover ${i === 0 ? "border-pr/50" : "border-line"}`}
+                className={`tap flex h-full flex-col gap-1.5 rounded-card border bg-surface p-2.5 hover:border-line-hover ${i === 0 ? "border-pr/50" : "border-line"}`}
               >
                 <span className="flex items-start justify-between">
                   <ExerciseThumb exercise={r.exercise} size={40} />
@@ -122,7 +122,7 @@ function LiftLine({ row: r, rank, unit, now }: { row: LiftRow; rank: number; uni
   return (
     <li>
       {/* Name gets the width; the trend sits under the number so names stay readable at 360px. */}
-      <Link href={exercisePath(r.exercise.id)} className="flex min-h-16 items-center gap-2.5 rounded-xl px-1.5 py-1.5 hover:bg-ink/[0.04]">
+      <Link href={exercisePath(r.exercise.id)} className="tap flex min-h-16 items-center gap-2.5 rounded-xl px-1.5 py-1.5 hover:bg-ink/[0.04]">
         <span className="num w-5 shrink-0 text-center text-xs text-text-muted">{rank}</span>
         <ExerciseThumb exercise={r.exercise} size={40} />
         <span className="min-w-0 flex-1">

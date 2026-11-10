@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
+import { feedback } from "@/lib/feedback";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { useT } from "@/i18n";
 
@@ -36,14 +38,20 @@ export function Toggle({
         type="button"
         role="switch"
         aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative h-8 w-14 shrink-0 rounded-full border transition-colors ${
-          checked ? "border-accent bg-accent" : "border-line-strong bg-surface-2"
+        onClick={() => {
+          feedback.tick();
+          onChange(!checked);
+        }}
+        className={`relative flex h-8 w-14 shrink-0 items-center rounded-full border px-0.5 transition-colors ${
+          checked ? "justify-end border-accent bg-accent" : "justify-start border-line-strong bg-surface-2"
         }`}
       >
-        <span
+        {/* The knob springs across with a slight overshoot, like a physical toggle. */}
+        <motion.span
+          layout
+          transition={{ type: "spring", stiffness: 700, damping: 30 }}
           aria-hidden="true"
-          className={`absolute top-0.5 size-6 rounded-full transition-[left] ${checked ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`}
+          className={`size-6 rounded-full ${checked ? "bg-on-accent" : "bg-text"}`}
         />
         <span className="sr-only">{checked ? t("On") : t("Off")}</span>
       </button>
