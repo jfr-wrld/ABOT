@@ -30,7 +30,7 @@ The Server Key only lives in Supabase secrets. It is never in the app, this repo
 
 You need the Supabase CLI logged in and linked to the project (`supabase link --project-ref <ref>`).
 
-1. **Database:** apply `supabase/migrations/20261111_midtrans_payments.sql`, then `20261112_payment_test_tools.sql`, using the SQL editor or `supabase db push`.
+1. **Database:** apply `supabase/migrations/20261111_midtrans_payments.sql`, then `20261112_payment_test_tools.sql`, then `20261113_security_hardening.sql`, using the SQL editor or `supabase db push`.
 2. **Secrets.** Use the Sandbox Server Key from Midtrans Dashboard → Settings → Access Keys (it starts with `SB-Mid-server-`). Replace `<site>` with the web app's domain.
 
    ```bash
@@ -47,7 +47,9 @@ You need the Supabase CLI logged in and linked to the project (`supabase link --
    supabase functions deploy midtrans-notify --no-verify-jwt
    ```
 
-   `--no-verify-jwt` is required on `midtrans-notify` because Midtrans sends no Supabase token. The signature check protects it instead.
+   `--no-verify-jwt` is required on `midtrans-notify` because Midtrans sends no Supabase token. The signature check protects it instead. `supabase/config.toml` pins the same settings, so a deploy that forgets the flag keeps them.
+
+   After `20261113_security_hardening.sql`, redeploy both functions: checkout then reuses a pending order's payment page for 30 minutes and returns error codes only, and notify checks the signature before it looks up the order.
 4. **Midtrans Dashboard (Sandbox) → Settings → Payment:**
    - Payment Notification URL: `https://<ref>.supabase.co/functions/v1/midtrans-notify`
    - Finish, Unfinish and Error Redirect URL: `https://<site>/payment-done.html`. The checkout also sends this per payment.

@@ -108,6 +108,7 @@ export const pro: Record<string, string> = {
     "⚡ Ini kode akses VIP ABOT // BLACK PRO kamu: {code}. Buka aplikasi ABOT > Settings > Redeem Code untuk mengaktifkan semua fitur Telemetry Pro!",
   "Enter a code.": "Masukkan kode.",
   "This code is not valid, or it has been used up.": "Kode ini tidak valid, atau kuotanya sudah habis.",
+  "Too many tries. Wait an hour, then enter the code again.": "Terlalu banyak percobaan. Tunggu satu jam, lalu masukkan kodenya lagi.",
   "Until {date}": "Sampai {date}",
   "Upgrade to lifetime": "Upgrade ke lifetime",
   "Add another year": "Tambah satu tahun lagi",

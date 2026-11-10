@@ -27,6 +27,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261110_lock_down_grants.sql
 \i supabase/migrations/20261111_midtrans_payments.sql
 \i supabase/migrations/20261112_payment_test_tools.sql
+\i supabase/migrations/20261113_security_hardening.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
@@ -34,6 +35,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261110_lock_down_grants.sql
 \i supabase/migrations/20261111_midtrans_payments.sql
 \i supabase/migrations/20261112_payment_test_tools.sql
+\i supabase/migrations/20261113_security_hardening.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
 insert into auth.users values
@@ -130,8 +132,12 @@ begin
     raise exception 'anon can list redeem codes';
   exception when insufficient_privilege then null;
   end;
-  select * into g from public.redeem_code('NOPE-NOPE');
-  if found then raise exception 'unknown code redeemed'; end if;
+  -- Signed out, a code cannot be redeemed at all (audit 2026-11-11).
+  begin
+    select * into g from public.redeem_code('NOPE-NOPE');
+    raise exception 'anon called redeem_code';
+  exception when insufficient_privilege then null;
+  end;
   begin
     perform public.abot_apply_grant('00000000-0000-0000-0000-00000000000a', 'lifetime', null, true, 'anon');
     raise exception 'anon called abot_apply_grant';
@@ -227,9 +233,11 @@ set request.jwt.claim.email = '';
 do $$
 declare g record;
 begin
-  -- One use, taken by A: nobody else gets it.
-  select * into g from public.redeem_code('ABOT-PRO-TEST');
-  if found then raise exception 'used-up code redeemed again'; end if;
+  begin
+    select * into g from public.redeem_code('ABOT-PRO-TEST');
+    raise exception 'anon redeemed a code';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 
 reset role;
@@ -339,6 +347,80 @@ do $$ begin
     perform public.admin_simulate_payment('ABOT-ANNUAL-SIM-444', 'paid');
     raise exception 'simulated a payment outside the sandbox';
   exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- Audit 2026-11-11 hardening.
+reset role;
+set role authenticated;
+-- B never claimed ABOT-PRO-TEST, and A took its one use.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+set request.jwt.claim.email = 'boss@example.com';
+do $$
+declare g record;
+begin
+  select * into g from public.redeem_code('ABOT-PRO-TEST');
+  if found then raise exception 'used-up code redeemed again'; end if;
+end $$;
+-- The throttle counts from here: earlier checks redeemed a few codes as A.
+reset role;
+delete from public.redeem_attempts;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+set request.jwt.claim.email = 'a@example.com';
+do $$
+declare g record; res record;
+begin
+  -- Ten tries an hour, then the function refuses.
+  for i in 1..12 loop
+    begin
+      perform public.redeem_code('NOPE-' || i);
+    exception when program_limit_exceeded then
+      if i <= 10 then raise exception 'throttled too early, at try %', i; end if;
+    end;
+  end loop;
+  begin
+    perform public.redeem_code('NOPE-LAST');
+    raise exception 'redeem not throttled';
+  exception when program_limit_exceeded then null;
+  end;
+  -- Sync: a batch over 500 rows, a huge record and a long id are refused.
+  begin
+    perform public.upsert_if_newer((select jsonb_agg(jsonb_build_object('kind', 'session', 'id', 'b' || n, 'payload', '{}'::jsonb, 'updated_at', 1)) from generate_series(1, 501) as s(n)));
+    raise exception 'oversized batch accepted';
+  exception when program_limit_exceeded then null;
+  end;
+  begin
+    perform public.upsert_if_newer(jsonb_build_array(jsonb_build_object('kind', 'session', 'id', 'big', 'payload', jsonb_build_object('x', repeat('y', 300000)), 'updated_at', 1)));
+    raise exception 'huge record accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    perform public.upsert_if_newer(jsonb_build_array(jsonb_build_object('kind', 'session', 'id', repeat('i', 101), 'payload', '{}'::jsonb, 'updated_at', 1)));
+    raise exception 'long id accepted';
+  exception when check_violation then null;
+  end;
+  -- No one writes their own entitlement row, or reads the admin list.
+  begin
+    update public.user_entitlements set tier = 'lifetime';
+    raise exception 'user updated an entitlement';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform count(*) from public.app_admins;
+    raise exception 'user read app_admins';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- One pending order per account and plan.
+reset role;
+do $$ begin
+  insert into public.payment_orders (order_id, user_id, plan, amount_idr) values ('ABOT-ANNUAL-ONE-AAA', '00000000-0000-0000-0000-00000000000a', 'annual', 1000);
+  begin
+    insert into public.payment_orders (order_id, user_id, plan, amount_idr) values ('ABOT-ANNUAL-TWO-BBB', '00000000-0000-0000-0000-00000000000a', 'annual', 1000);
+    raise exception 'second pending order accepted';
+  exception when unique_violation then null;
   end;
 end $$;
 

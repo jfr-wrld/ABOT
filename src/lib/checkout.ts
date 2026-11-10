@@ -21,6 +21,7 @@ export type CheckoutFailure =
   | "seats_gone"
   | "already_lifetime"
   | "gateway"
+  | "busy"
   | "network";
 
 export const CHECKOUT_MESSAGE: Record<CheckoutFailure, string> = {
@@ -31,6 +32,7 @@ export const CHECKOUT_MESSAGE: Record<CheckoutFailure, string> = {
   seats_gone: "The founder seats are all taken. Lifetime and annual are still open.",
   already_lifetime: "You already hold a lifetime license.",
   gateway: "The payment page could not be opened. Try again in a moment.",
+  busy: "Your payment page is still being made. Try again in a few seconds.",
   network: "Could not reach the payment service. Check the connection and try again.",
 };
 

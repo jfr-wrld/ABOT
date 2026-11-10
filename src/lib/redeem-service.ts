@@ -1,4 +1,4 @@
-import { SUPABASE_ENV, isCloudSyncConfigured } from "@/data/sync/supabase";
+import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
 import { currentMonetizationMode, useRemoteConfig } from "./remote-config";
 import type { Tier } from "./entitlements";
@@ -102,32 +102,24 @@ export function generateCode(kind: string, random: (n: number) => Uint8Array = (
 
 /* ------------------------------------------------------------------- redeem */
 
-type ServerAnswer = { grant: Grant; onAccount: boolean } | { none: true } | { unreachable: true };
+type ServerAnswer = { grant: Grant; onAccount: true } | { none: true } | { tooMany: true } | { unreachable: true };
 
-/** The redeem_code RPC: with the session when signed in (the grant lands on the account). */
+/**
+ * The redeem_code RPC, with the account's session: the server refuses signed-out calls and allows
+ * 10 tries an hour (security audit 2026-11-11), and the grant lands on the account.
+ */
 async function redeemOnServer(code: string): Promise<ServerAnswer> {
-  if (!isCloudSyncConfigured()) return { unreachable: true };
+  if (!isCloudSyncConfigured() || !maySignedIn()) return { unreachable: true };
   try {
-    let rows: { grant_tier: string; duration_days: number | null; grants_founder_badge: boolean }[] | null;
-    if (maySignedIn()) {
-      const { data, error } = await (await getSupabase()).rpc("redeem_code", { p_code: code });
-      if (error) return { unreachable: true };
-      rows = data as typeof rows;
-    } else {
-      const res = await fetch(`${SUPABASE_ENV.url}/rest/v1/rpc/redeem_code`, {
-        method: "POST",
-        headers: { apikey: SUPABASE_ENV.anonKey!, Authorization: `Bearer ${SUPABASE_ENV.anonKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ p_code: code }),
-      });
-      if (!res.ok) return { unreachable: true };
-      rows = await res.json();
-    }
+    const { data, error } = await (await getSupabase()).rpc("redeem_code", { p_code: code });
+    if (error) return error.code === "54000" ? { tooMany: true } : { unreachable: true };
+    const rows = data as { grant_tier: string; duration_days: number | null; grants_founder_badge: boolean }[] | null;
     const r = Array.isArray(rows) ? rows[0] : null;
     if (!r) return { none: true };
     const tier = r.grant_tier === "lifetime" ? "lifetime" : "pro";
     return {
       grant: { tier, days: tier === "lifetime" ? null : (r.duration_days ?? 30), founder: r.grants_founder_badge === true },
-      onAccount: maySignedIn(),
+      onAccount: true,
     };
   } catch {
     return { unreachable: true };
@@ -143,6 +135,7 @@ export const REDEEM_REASONS = {
   empty: "Enter a code.",
   signIn: "Sign in to redeem a code: it is checked on ABOT's server and kept on your account.",
   unknown: "This code is not valid, or it has been used up.",
+  tooMany: "Too many tries. Wait an hour, then enter the code again.",
 } as const;
 
 /**
@@ -159,6 +152,7 @@ export async function redeemLicenseCode(input: string): Promise<RedeemResult> {
   if (!DEV_TOOLS && !maySignedIn()) return { ok: false, reason: REDEEM_REASONS.signIn };
   const server = await redeemOnServer(code);
   if ("grant" in server) return { ok: true, code, grant: server.grant, source: "server", onAccount: server.onAccount };
+  if ("tooMany" in server) return { ok: false, reason: REDEEM_REASONS.tooMany };
   if (!DEV_TOOLS) return { ok: false, reason: REDEEM_REASONS.unknown };
 
   if (builtInCodesAccepted()) {

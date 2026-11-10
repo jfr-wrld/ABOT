@@ -1,0 +1,11 @@
+# Settings the Supabase CLI reads on `supabase functions deploy` (security audit 2026-11-11).
+# Pinned here so a deploy without --no-verify-jwt cannot change them.
+project_id = "abot"
+
+# The gateway checks the caller's token, and the function checks the user again (getUser).
+[functions.midtrans-checkout]
+verify_jwt = true
+
+# Midtrans calls it with no Supabase token; it checks the SHA-512 signature instead.
+[functions.midtrans-notify]
+verify_jwt = false

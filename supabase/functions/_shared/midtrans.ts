@@ -37,11 +37,16 @@ export const PLAN_LABEL: Record<WebPlan, string> = {
   founders: "ABOT BLACK PRO lifetime (founder)",
 };
 
-/** ABOT-<PLAN>-<base36 time>-<6 random>, uppercase, under Midtrans' 50-character limit. */
-export function makeOrderId(plan: WebPlan, now: number, random: () => number = Math.random): string {
+/** Cryptographic random in [0, 1): order ids are not guessable from Math.random's state. */
+function secureRandom(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0]! / 2 ** 32;
+}
+
+/** ABOT-<PLAN>-<base36 time>-<8 random>, uppercase, under Midtrans' 50-character limit. */
+export function makeOrderId(plan: WebPlan, now: number, random: () => number = secureRandom): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let tail = "";
-  for (let i = 0; i < 6; i++) tail += alphabet[Math.floor(random() * alphabet.length)];
+  for (let i = 0; i < 8; i++) tail += alphabet[Math.floor(random() * alphabet.length)];
   return `ABOT-${plan.toUpperCase()}-${now.toString(36).toUpperCase()}-${tail}`;
 }
 

@@ -30,8 +30,17 @@ function respond(req: Request, status: number, body: unknown): Response {
   return new Response(status === 204 ? null : JSON.stringify(body), { status, headers });
 }
 
-/** A refusal the app shows as is. `code` lets it pick a translated message; `detail` helps debugging. */
-const refuse = (req: Request, status: number, code: string, detail?: string) => respond(req, status, { error: code, ...(detail ? { detail } : {}) });
+/**
+ * A refusal the app shows as is. `code` lets it pick a translated message. The detail (a database
+ * or Midtrans error) goes to the function's log only, never to the client (audit 2026-11-11).
+ */
+const refuse = (req: Request, status: number, code: string, detail?: string) => {
+  if (detail) console.error(code, detail);
+  return respond(req, status, { error: code });
+};
+
+/** How long a pending order's payment page is offered again before a new order is made. */
+const REUSE_MS = 30 * 60_000;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return respond(req, 204, null);
@@ -69,10 +78,28 @@ Deno.serve(async (req) => {
   }
 
   const amount = priceIdr(plan, config);
+  // One pending order per account and plan (a unique index enforces it): a recent one with its
+  // payment page is offered again at the same price; an older one is closed first.
+  const { data: pending } = await db
+    .from("payment_orders")
+    .select("order_id, amount_idr, redirect_url, created_at")
+    .eq("user_id", user.id)
+    .eq("plan", plan)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (pending) {
+    const fresh = Date.now() - Date.parse(pending.created_at) < REUSE_MS;
+    if (fresh && pending.redirect_url && pending.amount_idr === amount) {
+      return respond(req, 200, { order_id: pending.order_id, redirect_url: pending.redirect_url, amount_idr: amount });
+    }
+    if (fresh && !pending.redirect_url) return refuse(req, 409, "busy");
+    await db.rpc("abot_order_closed", { p_order_id: pending.order_id, p_status: "expired" });
+  }
   const orderId = makeOrderId(plan, Date.now());
   const { error: insertError } = await db.from("payment_orders").insert({ order_id: orderId, user_id: user.id, plan, amount_idr: amount });
   if (insertError) {
-    console.error("order insert failed", insertError.message);
+    // A second tap racing the first meets the unique index.
+    if (insertError.code === "23505") return refuse(req, 409, "busy");
     return refuse(req, 500, "gateway", `order insert: ${insertError.message.slice(0, 160)}`);
   }
 
@@ -92,10 +119,10 @@ Deno.serve(async (req) => {
   const answer = snap ? await snap.json().catch(() => null) : null;
   if (!snap?.ok || !answer?.redirect_url) {
     await db.rpc("abot_order_closed", { p_order_id: orderId, p_status: "failed" });
-    // Midtrans says why (wrong key, sandbox vs production, bad field); never the key itself.
+    // Midtrans says why (wrong key, sandbox vs production, bad field); logged, never the key.
     const why = snap ? `midtrans ${snap.status}: ${(answer?.error_messages ?? []).join("; ").slice(0, 200)}` : "midtrans unreachable";
-    console.error("snap failed", why);
     return refuse(req, 502, "gateway", why);
   }
+  await db.from("payment_orders").update({ redirect_url: answer.redirect_url }).eq("order_id", orderId);
   return respond(req, 200, { order_id: orderId, redirect_url: answer.redirect_url, amount_idr: amount });
 });

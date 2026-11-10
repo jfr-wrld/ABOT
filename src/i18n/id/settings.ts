@@ -513,6 +513,7 @@ export const settings: Record<string, string> = {
   "The founder seats are all taken. Lifetime and annual are still open.": "Kursi founder sudah habis. Lifetime dan tahunan masih tersedia.",
   "You already hold a lifetime license.": "Kamu sudah punya lisensi lifetime.",
   "The payment page could not be opened. Try again in a moment.": "Halaman pembayaran tidak bisa dibuka. Coba lagi sebentar lagi.",
+  "Your payment page is still being made. Try again in a few seconds.": "Halaman pembayaranmu masih dibuat. Coba lagi beberapa detik lagi.",
   "Could not reach the payment service. Check the connection and try again.": "Layanan pembayaran tidak terjangkau. Periksa koneksi lalu coba lagi.",
   "Checking your payment...": "Memeriksa pembayaranmu...",
   "Payment received. ABOT // BLACK PRO is active on your account.": "Pembayaran diterima. ABOT // BLACK PRO aktif di akunmu.",

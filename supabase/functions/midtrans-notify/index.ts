@@ -37,15 +37,14 @@ Deno.serve(async (req) => {
   if (typeof n.order_id === "string" && !n.order_id.startsWith("ABOT-")) return reply(200, "not an ABOT order, ignored");
   if (!n.order_id || !n.status_code || !n.gross_amount || !n.signature_key) return reply(400, "missing fields");
 
-  // Orders ABOT did not create (the dashboard's "Test notification URL" button, other apps on the
-  // same merchant account) change nothing here, so they get 200 before the signature check and
-  // Midtrans stops retrying. Only orders found in payment_orders go further.
+  // Orders ABOT did not create (other apps on the same merchant account) change nothing here, so
+  // they get 200 and Midtrans stops retrying. The signature is checked before the database is
+  // asked anything, so an unsigned request cannot learn which order ids exist (audit 2026-11-11).
   if (!/^ABOT-[A-Z]+-[A-Z0-9]+-[A-Z0-9]+$/.test(n.order_id)) return reply(200, "not an ABOT order, ignored");
-  const { data: order } = await db.from("payment_orders").select("order_id, amount_idr, status").eq("order_id", n.order_id).maybeSingle();
-  if (!order) return reply(200, "unknown order, ignored");
-
   const want = await midtransSignature(n.order_id, n.status_code, n.gross_amount, SERVER_KEY);
   if (!safeEqual(want, n.signature_key.toLowerCase())) return reply(401, "bad signature");
+  const { data: order } = await db.from("payment_orders").select("order_id, amount_idr, status").eq("order_id", n.order_id).maybeSingle();
+  if (!order) return reply(200, "unknown order, ignored");
 
   // The notification says something changed; Midtrans' status API says what is true now.
   const res = await fetch(statusUrl(PRODUCTION, n.order_id), { headers: { accept: "application/json", authorization: basicAuth(SERVER_KEY) } }).catch(() => null);
