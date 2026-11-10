@@ -86,7 +86,7 @@ interface WorkoutState {
   /** Marks complete and starts the rest timer; or un-completes and clears the timer for that set. */
   completeSet: (sessionExerciseId: string, setId: string, completed: boolean) => void;
 
-  /** Ticks every unticked set that has reps; returns how many. Does not start the rest timer. */
+  /** Ticks every unticked set that has reps, a time or a distance; returns how many. Does not start the rest timer. */
   completeAllRemaining: () => number;
   /** Moves the workout start earlier, e.g. when the timer was started late or left running. */
   setStartedAt: (ts: number) => { ok: true } | { ok: false; reason: string };
@@ -366,7 +366,8 @@ export const useWorkoutStore = create<WorkoutState>()(
         const exercises = a.exercises.map((ex) => ({
           ...ex,
           sets: ex.sets.map((st) => {
-            if (st.completed || st.reps === null || st.reps <= 0) return st;
+            const measured = (st.reps ?? 0) > 0 || (st.durationSec ?? 0) > 0 || (st.distanceM ?? 0) > 0;
+            if (st.completed || !measured) return st;
             n++;
             return ticked(st, ex.exerciseId, true, now);
           }),

@@ -40,8 +40,10 @@ export function defaultLoadMode(equipment: Equipment, name: string): LoadMode {
   return "total";
 }
 
-function defaultLogType(name: string, isBodyweight: boolean | undefined): LogType {
-  if (/plank|hold|hang\b/i.test(name)) return "duration";
+function defaultLogType(name: string, isBodyweight: boolean | undefined, category?: ExerciseCategory): LogType {
+  if (/plank|hold|hang\b|wall sit/i.test(name)) return "duration";
+  // Treadmill, rowing, cycling and the like: distance and time, not weight and reps.
+  if (category === "cardio") return "distance_duration";
   return isBodyweight ? "reps_only" : "weight_reps";
 }
 
@@ -63,7 +65,7 @@ export function normalizeExercise(raw: ExerciseInput): Exercise {
     category:
       raw.category && CATEGORIES.includes(raw.category) ? raw.category : secondaryMuscles.length > 0 ? "compound" : "isolation",
     loadMode: raw.loadMode && LOAD_MODES.includes(raw.loadMode) ? raw.loadMode : defaultLoadMode(raw.equipment, raw.name),
-    logType: raw.logType && LOG_TYPES.includes(raw.logType) ? raw.logType : defaultLogType(raw.name, raw.isBodyweight),
+    logType: raw.logType && LOG_TYPES.includes(raw.logType) ? raw.logType : defaultLogType(raw.name, raw.isBodyweight, raw.category),
     isMachineDependent:
       typeof raw.isMachineDependent === "boolean"
         ? raw.isMachineDependent

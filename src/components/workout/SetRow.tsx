@@ -4,8 +4,10 @@ import { useRef, useState } from "react";
 import { setGridColumns } from "./setGrid";
 import { Trash2, Trophy } from "lucide-react";
 import { animate, motion, useMotionValue, useReducedMotionConfig, useTransform } from "framer-motion";
-import type { PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
+import type { LogType, PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
 import { NumberField } from "@/components/ui/NumberField";
+import { TimeField } from "@/components/ui/TimeField";
+import { clockText, distanceUnit, fromDistance, hasMeasure, isTimed, setText, toDistance } from "@/lib/set-metrics";
 import { press } from "@/components/ui/Button";
 import { SetTypeChip, setTypeA11yName } from "./SetTypeChip";
 import { SetTypeMenu } from "./SetTypeMenu";
@@ -30,6 +32,7 @@ export function SetRow({
   showRpe,
   isBodyweight,
   assisted = false,
+  logType = "weight_reps",
   prKinds,
   onUpdate,
   onSetType,
@@ -44,6 +47,8 @@ export function SetRow({
   isBodyweight: boolean;
   /** Bodyweight exercises: the weight column is assistance, stored as a negative load. */
   assisted?: boolean;
+  /** Weight and reps, reps only, a time, or a distance and time (src/lib/set-metrics). */
+  logType?: LogType;
   prKinds: PRKind[];
   onUpdate: (patch: Partial<WorkoutSet>) => void;
   onSetType: (t: SetType) => void;
@@ -62,9 +67,13 @@ export function SetRow({
   const armed = useRef(false);
   const rowWidth = useRef<HTMLDivElement>(null);
 
-  // Bodyweight: "BW × 10", "BW+10 × 8", "BW−20 × 10" (assisted).
-  const prevLabel =
-    previous && previous.reps !== null
+  const timed = isTimed(logType);
+  // Bodyweight: "BW × 10", "BW+10 × 8", "BW−20 × 10" (assisted). Timed: "1:30", "5 km · 28:10".
+  const prevLabel = timed
+    ? previous && (previous.durationSec || previous.distanceM)
+      ? setText(previous, logType, unit, { reps: (n) => t("{n} reps", { n }) })
+      : null
+    : previous && previous.reps !== null
       ? isBodyweight
         ? `BW${!previous.weightKg ? "" : previous.weightKg > 0 ? `+${formatWeight(previous.weightKg, unit, false)}` : `−${formatWeight(-previous.weightKg, unit, false)}`} × ${previous.reps}`
         : previous.weightKg === null || previous.weightKg <= 0
@@ -77,6 +86,14 @@ export function SetRow({
 
   function fillFromPrevious() {
     if (!previous) return;
+    if (timed) {
+      onUpdate({
+        durationSec: set.durationSec ?? previous.durationSec ?? null,
+        distanceM: set.distanceM ?? previous.distanceM ?? null,
+        rpe: set.rpe ?? previous.rpe,
+      });
+      return;
+    }
     onUpdate({
       weightKg: set.weightKg ?? previous.weightKg,
       reps: set.reps ?? previous.reps,
@@ -87,6 +104,25 @@ export function SetRow({
   function toggleComplete() {
     if (set.completed) {
       onComplete(false);
+      return;
+    }
+    if (timed) {
+      // Nothing typed: last time's values count, as with reps.
+      let { durationSec, distanceM } = set;
+      if (!hasMeasure(set, logType) && previous && hasMeasure(previous, logType)) {
+        durationSec = previous.durationSec ?? null;
+        distanceM = previous.distanceM ?? null;
+        onUpdate({ durationSec, distanceM });
+      }
+      if (!hasMeasure({ reps: null, durationSec, distanceM }, logType)) {
+        setError(logType === "duration" ? t("Enter a time before completing this set") : t("Enter a distance or time before completing this set"));
+        repsRef.current?.focus();
+        return;
+      }
+      setError(null);
+      setSweep((n) => n + 1);
+      feedback.setComplete();
+      onComplete(true);
       return;
     }
     let reps = set.reps;
@@ -132,7 +168,7 @@ export function SetRow({
         dragMomentum={false}
         style={{
           x,
-          gridTemplateColumns: setGridColumns(showRpe),
+          gridTemplateColumns: setGridColumns(showRpe, logType),
           touchAction: "pan-y",
           // The row's tint is see-through, so it is laid over the card's own colour: the red
           // behind it never shows through.
@@ -202,6 +238,45 @@ export function SetRow({
         )}
       </div>
 
+      {logType === "distance_duration" && (
+        <NumberField
+          ref={repsRef}
+          aria-label={t("{set} distance in {unit}", { set: a11yName, unit: distanceUnit(unit) })}
+          aria-invalid={error ? true : undefined}
+          placeholder={previous?.distanceM ? String(toDistance(previous.distanceM, unit)) : "0"}
+          value={set.distanceM == null ? null : toDistance(set.distanceM, unit)}
+          onCommit={(n) => {
+            setError(null);
+            onUpdate({ distanceM: n === null ? null : fromDistance(n, unit) });
+          }}
+          disabled={set.completed}
+          className={set.completed ? "border-transparent bg-transparent" : ""}
+          max={1000}
+        />
+      )}
+
+      {timed && (
+        <TimeField
+          ref={logType === "duration" ? repsRef : undefined}
+          aria-label={
+            logType === "duration"
+              ? t("{set} time, minutes and seconds", { set: a11yName })
+              : t("{set} time, minutes", { set: a11yName })
+          }
+          aria-invalid={error ? true : undefined}
+          plain={logType === "duration" ? "sec" : "min"}
+          placeholder={previous?.durationSec ? clockText(previous.durationSec) : logType === "duration" ? "0:30" : "20:00"}
+          value={set.durationSec ?? null}
+          onCommit={(sec) => {
+            setError(null);
+            onUpdate({ durationSec: sec });
+          }}
+          disabled={set.completed}
+          className={set.completed ? "border-transparent bg-transparent" : ""}
+        />
+      )}
+
+      {!timed && (<>
       <NumberField
           aria-label={
             isBodyweight
@@ -233,6 +308,7 @@ export function SetRow({
         className={set.completed ? "border-transparent bg-transparent" : ""}
         max={999}
       />
+      </>)}
 
       {showRpe && (
         <NumberField

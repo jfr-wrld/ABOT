@@ -1,5 +1,6 @@
 "use client";
 
+import { setText } from "@/lib/set-metrics";
 import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -26,7 +27,7 @@ import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { sessionRecords, workedMuscles } from "@/lib/session-insights";
 import { countSets, estimate1RM, formatDuration, isWorkingSet, sessionDurationSec, sessionVolume } from "@/lib/calc";
-import { formatVolume, formatWeight } from "@/lib/units";
+import { formatVolume } from "@/lib/units";
 import {
   EQUIPMENT_LABELS,
   MUSCLE_GROUP_LABELS,
@@ -461,7 +462,7 @@ function ExerciseCard({
                 <li key={s.id} className={`flex min-h-10 items-center gap-3 rounded-lg px-1 text-sm ${s.completed ? "" : "opacity-45"}`}>
                   <SetTypeChip type={s.type} number={num} />
                   <span className="num w-28 shrink-0">
-                    {def?.isBodyweight || s.weightKg === null ? t("{n} reps", { n: String(s.reps) }) : `${formatWeight(s.weightKg, unit)} × ${s.reps}`}
+                    {setText(s, def?.logType, unit, { isBodyweight: def?.isBodyweight, reps: (n) => t("{n} reps", { n: String(n) }) })}
                   </span>
                   <span aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-800/80">
                     <motion.span

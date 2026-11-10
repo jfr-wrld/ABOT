@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Select } from "@/components/ui/Select";
-import type { Equipment, Exercise, ExerciseDraft, LoadMode, MuscleGroup } from "@/types/workout";
+import type { Equipment, Exercise, ExerciseDraft, LoadMode, LogType, MuscleGroup } from "@/types/workout";
 import { defaultLoadMode } from "@/data/normalize";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
@@ -33,6 +33,9 @@ export function ExerciseForm({
   const [loadChoice, setLoadChoice] = useState<LoadMode | null>(initial?.loadMode ?? null);
   const [machineChoice, setMachineChoice] = useState<boolean | null>(initial?.isMachineDependent ?? null);
   const loadMode = loadChoice ?? defaultLoadMode(equipment, name);
+  // Like the load: follows the equipment until picked.
+  const [logChoice, setLogChoice] = useState<LogType | null>(initial?.logType ?? null);
+  const logType = logChoice ?? (equipment === "bodyweight" ? "reps_only" : "weight_reps");
   const machineDependent = machineChoice ?? (equipment === "machine" || equipment === "cable");
 
   function submit() {
@@ -49,6 +52,7 @@ export function ExerciseForm({
       equipment,
       isBodyweight: equipment === "bodyweight",
       loadMode,
+      logType,
       isMachineDependent: machineDependent,
     });
   }
@@ -135,6 +139,23 @@ export function ExerciseForm({
               { value: "total", label: t("Total (one bar or stack)") },
               { value: "per_hand", label: t("Per hand (volume counts both)") },
               { value: "unilateral", label: t("One side at a time (volume counts both sides)") },
+            ]}
+            className="w-full !text-base"
+          />
+        </div>
+        <div>
+          <label htmlFor="ex-log" className="mb-1 block text-sm font-semibold">
+            {t("Log as")}
+          </label>
+          <Select
+            id="ex-log"
+            value={logType}
+            onChange={(v: LogType) => setLogChoice(v)}
+            options={[
+              { value: "weight_reps", label: t("Weight and reps") },
+              { value: "reps_only", label: t("Reps only") },
+              { value: "duration", label: t("Time (plank, hold)") },
+              { value: "distance_duration", label: t("Distance and time (run, row, bike)") },
             ]}
             className="w-full !text-base"
           />

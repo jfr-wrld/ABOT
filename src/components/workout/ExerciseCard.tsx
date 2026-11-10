@@ -4,6 +4,7 @@ import { setNumbers } from "@/lib/sets";
 import { Select } from "@/components/ui/Select";
 import { memo, useEffect, useRef, useState, type ComponentProps } from "react";
 import { setGridColumns } from "./setGrid";
+import { distanceUnit } from "@/lib/set-metrics";
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
 import type {
   Exercise,
@@ -98,6 +99,7 @@ function ExerciseCardView({
   const locationId = useWorkoutStore((s) => s.active?.locationId);
 
   const numbers = setNumbers(item.sets);
+  const logType = exercise?.logType ?? "weight_reps";
   // Plate calculator: barbells only, starting from the next set waiting to be done.
   const loadsPlates = exercise?.equipment === "barbell" || exercise?.equipment === "smith_machine";
   const nextIndex = item.sets.findIndex((x) => !x.completed);
@@ -224,13 +226,24 @@ function ExerciseCardView({
 
       <div
         className="label-caps mt-3 grid gap-1 px-[5px]"
-        style={{ gridTemplateColumns: setGridColumns(showRpe) }}
+        style={{ gridTemplateColumns: setGridColumns(showRpe, logType) }}
         aria-hidden="true"
       >
         <span className="text-center">{t("Set")}</span>
         <span className="truncate">{t("Prev")}</span>
-        <span className="text-center normal-case">{weightColumnLabel(exercise, unit, t, item.assisted === true)}</span>
-        <span className="text-center">{t("Reps")}</span>
+        {logType === "duration" ? (
+          <span className="text-center">{t("Time")}</span>
+        ) : logType === "distance_duration" ? (
+          <>
+            <span className="text-center normal-case">{distanceUnit(unit)}</span>
+            <span className="text-center">{t("Time")}</span>
+          </>
+        ) : (
+          <>
+            <span className="text-center normal-case">{weightColumnLabel(exercise, unit, t, item.assisted === true)}</span>
+            <span className="text-center">{t("Reps")}</span>
+          </>
+        )}
         {showRpe && <span className="text-center">RPE</span>}
         <span className="text-center">{t("Done")}</span>
       </div>
@@ -246,6 +259,7 @@ function ExerciseCardView({
             showRpe={showRpe}
             isBodyweight={exercise?.isBodyweight ?? false}
             assisted={item.assisted === true}
+            logType={logType}
             prKinds={prBySet[set.id] ?? []}
             onUpdate={(patch) => store.updateSet(item.id, set.id, patch)}
             onSetType={(type) => store.setSetType(item.id, set.id, type)}

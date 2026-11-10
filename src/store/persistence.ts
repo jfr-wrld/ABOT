@@ -63,7 +63,10 @@ let loadingFromRepo = false;
 export async function hydrateStores(repo: Repository): Promise<void> {
   const snap = await repo.snapshot();
   const restTimer = (await repo.kv.get("restTimer")) ?? null;
-  const catalog = await repo.catalog.all();
+  // Catalog cardio downloaded before timed sets existed was stored as weight and reps.
+  const catalog = (await repo.catalog.all()).map((e) =>
+    e.category === "cardio" && e.logType === "weight_reps" ? { ...e, logType: "distance_duration" as const } : e,
+  );
   loadingFromRepo = true;
   try {
     useWorkoutStore.setState({ sessions: snap.sessions, active: snap.activeWorkout, restTimer });

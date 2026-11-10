@@ -1,5 +1,6 @@
 "use client";
 
+import { setText } from "@/lib/set-metrics";
 import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -429,7 +430,7 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
             <li key={st.id} className="num flex items-center gap-3 text-sm">
               <SetTypeChip type={st.type} number={num} />
               <span className="w-28 shrink-0">
-                {exercise.isBodyweight || st.weightKg === null ? t("{n} reps", { n: String(st.reps) }) : `${formatWeight(st.weightKg, unit)} × ${st.reps}`}
+                {setText(st, exercise.logType, unit, { isBodyweight: exercise.isBodyweight, reps: (n) => t("{n} reps", { n: String(n) }) })}
               </span>
               <span aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-800/80">
                 <motion.span
