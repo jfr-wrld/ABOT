@@ -13,6 +13,7 @@ import { regionsFor, type Region } from "@/components/anatomy/regions";
 import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT } from "@/components/anatomy/bodyPaths.generated";
 import type { StoryData, StorySet } from "@/lib/story-data";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
+import { MARK_PATH } from "@/components/brand/mark-path";
 
 export const STORY_WIDTH = 1080;
 export const STORY_HEIGHT = 1920;
@@ -380,29 +381,23 @@ function chamfer(ctx: Ctx, x: number, y: number, w: number, h: number, c: number
   ctx.closePath();
 }
 
-const MARK_PATH = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z M50 28 A22 22 0 1 0 50.01 28 Z";
 let markPath: Path2D | null = null;
 
-/** The ABOT plate mark, same geometry as components/brand/AbotMark. */
-function mark(ctx: Ctx, x: number, y: number, size: number, color: string, ringColor: string) {
+/** The ABOT mark, the same path as components/brand/AbotMark. */
+function mark(ctx: Ctx, x: number, y: number, size: number, color: string) {
   markPath ??= new Path2D(MARK_PATH);
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(size / 100, size / 100);
   ctx.fillStyle = color;
-  ctx.fill(markPath, "evenodd");
-  ctx.strokeStyle = ringColor;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.arc(50, 50, 31, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.fill(markPath, "nonzero");
   ctx.restore();
 }
 
 /** Mark plus wordmark; `y` is the vertical centre. Returns the total width. */
-function wordmark(s: Scene, x: number, y: number, size: number, color: string, wordColor = TEXT, ring = OBSIDIAN) {
+function wordmark(s: Scene, x: number, y: number, size: number, color: string, wordColor = TEXT) {
   if (s.opts.hideWatermark) return 0;
-  mark(s.ctx, x, y - size / 2, size, color, ring);
+  mark(s.ctx, x, y - size / 2, size, color);
   const w = text(s, "ABOT", x + size + size * 0.28, y, {
     size: size * 0.82,
     weight: 800,
@@ -749,7 +744,7 @@ function brutalistReceipt(s: Scene) {
     setFont(s, 84, 800);
     const nameW = ctx.measureText("ABOT").width - 2 * 4;
     const left = W / 2 - (size + 20 + nameW) / 2;
-    mark(ctx, left, y - 66, size, INK, PAPER);
+    mark(ctx, left, y - 66, size, INK);
     text(s, "ABOT", left + size + 20, y, { size: 84, weight: 800, color: INK, tracking: -2 });
   }
   y += 52;
@@ -942,7 +937,7 @@ function cyberVoltHud(s: Scene) {
     y += 62;
   });
 
-  wordmark(s, x, H - 140, 52, VOLT, TEXT, "#050507");
+  wordmark(s, x, H - 140, 52, VOLT, TEXT);
   caps(s, "Flight recorder", W - x, H - 130, { align: "right" });
 }
 
@@ -955,7 +950,7 @@ function monochromeSteel(s: Scene) {
 
   hline(ctx, x, W - x, SAFE_TOP - 50, "#ffffff", 4);
   if (!s.opts.hideWatermark) {
-    mark(ctx, x, SAFE_TOP - 40, 46, "#ffffff", "#000000");
+    mark(ctx, x, SAFE_TOP - 40, 46, "#ffffff");
     text(s, "ABOT", x + 58, SAFE_TOP, { size: 44, weight: 900, color: "#ffffff", tracking: -1 });
   }
   caps(s, `Issue ${dateLabel(data)}`, W - x, SAFE_TOP - 4, { color: "#ffffff", align: "right" });
@@ -1313,7 +1308,7 @@ function splitSpecSheet(s: Scene) {
     text(s, value, W - x, y + 48, { size: 32, weight: 700, family: "mono", align: "right", maxWidth: inner / 2 });
     y += 70;
   }
-  if (!s.opts.hideWatermark) mark(ctx, W - x - 56, H - 130, 56, VOLT, CARBON);
+  if (!s.opts.hideWatermark) mark(ctx, W - x - 56, H - 130, 56, VOLT);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1539,7 +1534,7 @@ function voltPoster(s: Scene) {
 
   // Header.
   if (!s.opts.hideWatermark) {
-    mark(ctx, m, SAFE_TOP - 80, 60, INK, VOLT);
+    mark(ctx, m, SAFE_TOP - 80, 60, INK);
     ink("ABOT", m + 78, SAFE_TOP - 34, { size: 46, weight: 900 });
   }
   ink(dateLabel(data).toUpperCase(), W - m, SAFE_TOP - 34, { size: 30, weight: 700, family: "mono", align: "right", tracking: 2 });

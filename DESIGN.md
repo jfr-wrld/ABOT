@@ -357,9 +357,15 @@ Added at the owner's request (2026-11-08), each with its job:
 
 ## Logo
 
-A flat-top hexagon weight plate with a round centre hole and a thin inner ring
-(`src/components/brand/AbotMark.tsx`, favicon `src/app/icon.svg`), in Volt on Obsidian, with the
-wordmark in Inter Black, tight tracking.
+Owner brief 2026-11-10: rounder, with more character, more masculine; the hexagon plate read as
+a bolt nut. The mark is now a heavy, flat-topped A with wide legs and an open counter, a barbell
+passing behind it (only the piece inside the counter shows) and a plate on each side, cut back
+along the legs; every corner rounded. It is filled shapes only, one path
+(`src/components/brand/mark-path.ts`), so the SVG mark, the story canvas, the favicon and the
+Android icons all draw the same thing; `node scripts/make-app-icons.mjs` regenerates the favicon,
+the status-bar icon and the launcher PNGs from it. Volt on Obsidian. The splash loads it like a
+bar: the A punches up, the bar shows through it, the plates slide on and lock, one band of
+light passes. The hexagon plate stays as a UI motif (week plates, the Profile tab), not the logo.
 
 ## Icons
 

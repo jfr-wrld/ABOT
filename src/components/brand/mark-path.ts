@@ -1,0 +1,13 @@
+/**
+ * The ABOT mark, in a 100 x 100 box: a heavy A with wide legs and an open counter, a barbell
+ * passing behind it (only the piece inside the counter shows), and a plate on each side, cut back
+ * to leave a gap along the legs. Every corner is rounded. Filled shapes only, none overlapping,
+ * so the same path serves the SVG mark, the story canvas, the favicon and the Android icons. The
+ * gaps were computed from the A's outline (offset 5, drawn at 2.5), not drawn as a stroke.
+ */
+export const MARK_A =
+  "M41.46 8.50 L58.54 8.50 Q61.74 8.50 62.85 11.50 L90.48 85.50 Q91.60 88.50 88.40 88.50 L68.42 88.50 Q65.22 88.50 64.17 85.48 L51.05 47.65 Q50 44.63 48.95 47.65 L35.83 85.48 Q34.78 88.50 31.58 88.50 L11.60 88.50 Q8.40 88.50 9.52 85.50 L37.15 11.50 Q38.26 8.50 41.46 8.50 Z";
+export const MARK_BAR = "M48.16 59 L51.84 59 Q52.34 59 52.50 59.47 L55.30 67.53 Q55.46 68 54.96 68 L45.04 68 Q44.54 68 44.70 67.53 L47.50 59.47 Q47.66 59 48.16 59 Z";
+export const MARK_PLATE_LEFT = "M7 43 L10 43 Q15 43 15 48 L15 58.60 Q15 59 15.40 59 L16.14 59 Q16.74 59 16.53 59.56 L7.97 82.50 Q7.41 84 5.81 84 L4.46 84 Q2 84 2 79 L2 48 Q2 43 7 43 Z";
+export const MARK_PLATE_RIGHT = "M95.54 84 L94.19 84 Q92.59 84 92.03 82.50 L83.47 59.56 Q83.26 59 83.86 59 L84.60 59 Q85 59 85 58.60 L85 48 Q85 43 90 43 L93 43 Q98 43 98 48 L98 79 Q98 84 95.54 84 Z";
+export const MARK_PATH = [MARK_A, MARK_BAR, MARK_PLATE_LEFT, MARK_PLATE_RIGHT].join(" ");
