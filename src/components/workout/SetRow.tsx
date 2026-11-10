@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { setGridColumns } from "./setGrid";
-import { Trophy } from "lucide-react";
-import { motion, useReducedMotionConfig } from "framer-motion";
+import { Trash2, Trophy } from "lucide-react";
+import { animate, motion, useMotionValue, useReducedMotionConfig } from "framer-motion";
 import type { PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
 import { NumberField } from "@/components/ui/NumberField";
 import { press } from "@/components/ui/Button";
@@ -54,6 +54,8 @@ export function SetRow({
   const [sweep, setSweep] = useState(0);
   const repsRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotionConfig();
+  const x = useMotionValue(0);
+  const rowWidth = useRef<HTMLDivElement>(null);
 
   // Bodyweight: "BW × 10", "BW+10 × 8", "BW−20 × 10" (assisted).
   const prevLabel =
@@ -103,12 +105,35 @@ export function SetRow({
   const a11yName = setTypeA11yName(set.type, number, t);
 
   return (
-    <li
-      className={`relative grid items-center gap-1 overflow-hidden rounded-xl border px-1 py-1 transition-colors duration-200 ${
-        set.completed ? "border-accent/20 bg-accent-tint" : "border-ink/[0.04] bg-row"
-      }`}
-      style={{ gridTemplateColumns: setGridColumns(showRpe) }}
-    >
+    // Swipe the row left to remove the set: past a third of the way, or with a quick flick, it
+    // slides off; less springs back. The set-type menu still offers Remove for anyone not swiping.
+    <li className="relative overflow-hidden rounded-xl">
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 flex items-center justify-end gap-1.5 rounded-xl bg-failure pr-4 text-sm font-semibold text-white"
+      >
+        <Trash2 size={16} />
+        {t("Remove")}
+      </span>
+      <motion.div
+        drag="x"
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0.9, right: 0 }}
+        dragSnapToOrigin
+        style={{ x, gridTemplateColumns: setGridColumns(showRpe), touchAction: "pan-y" }}
+        onDragEnd={(_, info) => {
+          const width = rowWidth.current?.offsetWidth ?? 320;
+          if (info.offset.x < -width / 3 || info.velocity.x < -700) {
+            feedback.tick();
+            void animate(x, -width, { duration: 0.18, ease: "easeIn" }).then(onRemove);
+          }
+        }}
+        ref={rowWidth}
+        className={`relative grid items-center gap-1 overflow-hidden rounded-xl border px-1 py-1 transition-colors duration-200 ${
+          set.completed ? "border-accent/20 bg-accent-tint" : "border-ink/[0.04] bg-row"
+        }`}
+      >
       {sweep > 0 && (
         <span key={sweep} aria-hidden="true" className="pointer-events-none absolute inset-0">
           <span className="absolute inset-y-0 left-0 w-full animate-[sweep_650ms_cubic-bezier(0.2,0.7,0.2,1)_forwards] bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
@@ -224,6 +249,7 @@ export function SetRow({
           {error}
         </p>
       )}
+      </motion.div>
 
       <SetTypeMenu
         open={menuOpen}

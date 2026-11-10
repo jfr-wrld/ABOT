@@ -48,3 +48,34 @@ test("an added set starts with the last set's numbers", async ({ page }) => {
   await page.getByRole("button", { name: "Add set" }).click();
   await expect(page.getByLabel("Set 4 reps")).toHaveValue("8");
 });
+
+test("a set is removed by swiping it left; a short swipe springs back", async ({ page }) => {
+  const row = page.getByRole("listitem").filter({ has: page.getByRole("button", { name: "Mark Set 2 done" }) });
+  const box = (await row.boundingBox())!;
+  const y = box.y + box.height / 2;
+  const swipe = async (dx: number) => {
+    // Start on the Prev column: a swipe that starts in a number field types instead.
+    const from = box.x + 70;
+    await page.mouse.move(from, y);
+    await page.mouse.down();
+    await page.mouse.move(from - dx, y, { steps: 12 });
+    await page.waitForTimeout(50);
+    await page.mouse.up();
+  };
+  await swipe(40);
+  await expect(page.getByRole("button", { name: "Mark Set 2 done" })).toBeVisible();
+  // Past a third of the row's width.
+  await swipe(box.width * 0.5);
+  // Three sets became two (the last one is now Set 2).
+  await expect(page.getByRole("button", { name: "Mark Set 3 done" })).toBeHidden();
+  await expect(page.getByRole("button", { name: /^Mark Set \d done$/ })).toHaveCount(2);
+});
+
+test("the exercise picker switches to a grid of photos and filters with muscle icons", async ({ page }) => {
+  await page.getByRole("button", { name: "Add exercise" }).first().click();
+  const picker = page.getByRole("dialog", { name: "Add exercise" });
+  await picker.getByRole("button", { name: "Grid view" }).click();
+  await expect(picker.getByRole("button", { name: "Grid view" })).toHaveAttribute("aria-pressed", "true");
+  await picker.getByRole("button", { name: /Chest/ }).first().click();
+  await expect(picker.getByRole("button", { name: /^Bench Press \(Barbell\)/ })).toBeVisible();
+});

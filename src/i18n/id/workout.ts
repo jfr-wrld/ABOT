@@ -100,7 +100,7 @@ export const workout: Record<string, string> = {
   "{unit}/side": "{unit}/sisi",
   "Full exercise details": "Detail lengkap gerakan",
   "Search exercises": "Cari gerakan",
-  "Search by name or equipment": "Cari nama atau alat",
+  "Name or equipment": "Nama atau alat",
   "Filter by muscle": "Saring berdasarkan otot",
   All: "Semua",
   "No exercise matches “{query}” in {muscle}. Try another name, or clear the filter.": "Tidak ada gerakan yang cocok dengan “{query}” di {muscle}. Coba nama lain, atau hapus filternya.",
