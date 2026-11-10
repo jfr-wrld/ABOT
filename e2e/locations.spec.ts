@@ -56,12 +56,12 @@ test("bodyweight exercises accept added weight", async ({ page }) => {
 test("custom exercise form sets the load mode", async ({ page }) => {
   await page.goto("/exercises");
   await page.getByRole("button", { name: "New", exact: true }).click();
-  await page.getByLabel("Name").fill("Spider Curl");
+  await page.getByLabel("Name").fill("Bayesian Curl");
   await choose(page, page.getByLabel("Equipment", { exact: true }).last(), "Dumbbell");
   await expect(page.getByLabel("Load")).toHaveText("Per hand (volume counts both)");
   await choose(page, page.getByLabel("Load"), "One side at a time (volume counts both sides)");
   await page.getByRole("button", { name: "Add to library" }).click();
   await startEmptyWorkout(page);
-  await addExercise(page, "Spider Curl");
+  await addExercise(page, "Bayesian Curl");
   await expect(page.getByText("kg/side", { exact: true })).toBeVisible();
 });

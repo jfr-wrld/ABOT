@@ -474,4 +474,11 @@ export const workout: Record<string, string> = {
   "Feet elevated": "Kaki ditinggikan",
   "Knees down": "Lutut di lantai",
   "Reverse": "Mundur",
+  "V handle": "Pegangan V",
+  "Straight bar": "Bar lurus",
+  "Wide bar": "Bar lebar",
+  "Rope": "Tali",
+  "Single handle": "Pegangan tunggal",
+  "EZ bar": "Bar EZ",
+  "Neutral wide handle": "Pegangan netral lebar",
 };

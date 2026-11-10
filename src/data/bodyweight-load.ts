@@ -15,6 +15,8 @@ const BY_ID: Record<string, number> = {
   "push-up": 0.64,
   "diamond-push-up": 0.66,
   "pike-push-up": 0.7,
+  "incline-push-up": 0.45,
+  "bench-dip": 0.5,
   "bodyweight-squat": 0.85,
   "single-leg-calf-raise": 1,
   "back-extension": 0.5,
@@ -24,6 +26,8 @@ const BY_ID: Record<string, number> = {
   "russian-twist": 0,
   "ab-wheel-rollout": 0,
   "mountain-climber": 0,
+  "dead-bug": 0,
+  "box-jump": 0,
 };
 
 /** Catalog and custom exercises: matched by name, in this order. */

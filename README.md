@@ -145,7 +145,7 @@ in again after installing.
 - The targets are estimates, not medical advice.
 
 ### Exercises
-- 88 built-in exercises with start and end photos that play like a short loop, steps and form
+- 138 built-in exercises with start and end photos that play like a short loop, steps and form
   cues, and a muscle map. About 800 more from the full catalog, downloaded once on request.
 - The catalog opens from a button on Exercises, and each muscle section has its own figure.
 - Your own exercises, with a video link if you like.

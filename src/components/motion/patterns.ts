@@ -626,6 +626,24 @@ const SEED: Record<string, PatternId | null> = {
   crunch: "crunch",
   "russian-twist": null,
   "ab-wheel-rollout": "rollout",
+  // Added with the larger library. No figure where none of the patterns shows the movement.
+  "pullover-dumbbell": null,
+  "triceps-kickback-dumbbell": null,
+  "jm-press": null,
+  "glute-kickback-cable": null,
+  "pull-through-cable": "good_morning",
+  "dead-bug": null,
+  "pallof-press": null,
+  "power-clean": null,
+  "box-jump": null,
+  "lying-leg-raise": null,
+  "knee-raise-captains-chair": "hanging_leg_raise",
+  "side-plank": null,
+  "calf-press-leg-press": null,
+  "sumo-squat-dumbbell": "squat_goblet",
+  "inverted-row": null,
+  "high-row-machine": "row_seated",
+  "chest-supported-t-bar-row": "row_chest_supported",
 };
 
 /** Ordered keyword rules for catalog and custom exercises; the first match wins. */

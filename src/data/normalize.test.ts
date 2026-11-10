@@ -44,7 +44,7 @@ describe("normalizeExercise", () => {
     expect(e.secondaryMuscles).toEqual([]);
   });
   it("seed exercises are all normalized with stable ids", () => {
-    expect(SEED_EXERCISES).toHaveLength(88);
+    expect(SEED_EXERCISES).toHaveLength(138);
     for (const e of SEED_EXERCISES) {
       expect(e.loadMode).toBeDefined();
       expect(e.logType).toBeDefined();

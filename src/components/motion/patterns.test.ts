@@ -21,8 +21,9 @@ describe("patterns", () => {
     }
   });
 
-  it("covers every seed exercise (front view for the sideways and rotating ones)", () => {
-    const missing = SEED_EXERCISES.filter((e) => !patternFor(e)).map((e) => e.id).sort();
+  it("shows every seed exercise moving: a figure (front view for the sideways and rotating ones), or its photos", () => {
+    // A wrong figure teaches the wrong movement, so a few exercises show only their two photos.
+    const missing = SEED_EXERCISES.filter((e) => !patternFor(e) && (e.media.motionUrls ?? []).length < 2).map((e) => e.id).sort();
     expect(missing).toEqual([]);
   });
 

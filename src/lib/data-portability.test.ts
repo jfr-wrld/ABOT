@@ -135,7 +135,7 @@ describe("matching exercise names to the library", () => {
   it("tolerates one typo but not a different word", () => {
     expect(find("Bench Press (Dumbell)")).toBe("bench-press-dumbbell");
     expect(find("Incline Bench Press (Barbell)")).toBe("incline-bench-press-barbell");
-    expect(find("Decline Bench Press (Dumbbell)")).toBeNull();
+    expect(find("Decline Bench Press (Smith Machine)")).toBeNull();
   });
   it("a new name becomes a custom exercise with its equipment and muscle guessed", () => {
     const e = exerciseFromCsvName("Cable Zottman Curl", [{ type: "normal", weight: 20, reps: 10, rpe: null, durationSec: null, distanceM: null }]);
