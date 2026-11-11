@@ -14,12 +14,13 @@ import { SyncSection } from "./SyncSection";
 import { WorkoutReminderSettings } from "./WorkoutReminderSettings";
 import { LocationsSection } from "./LocationsSection";
 import { LiveStatusSetting } from "./LiveStatusSetting";
+import { NotificationAccess } from "./NotificationAccess";
+import { RestAlertSetting } from "./RestAlertSetting";
 import { AppPermissionsSection } from "./AppPermissions";
 import { Choice, Toggle } from "./controls";
 import { useT } from "@/i18n";
 import { LANGUAGE_LABEL, THEME_LABEL } from "./labels";
 import { playSetComplete } from "@/lib/sound-effects";
-import { feedback } from "@/lib/feedback";
 import { hapticLock } from "@/lib/haptics";
 
 const REST_OPTIONS = [30, 45, 60, 90, 120, 150, 180, 240, 300];
@@ -96,7 +97,7 @@ export function GeneralSection() {
   );
 }
 
-/** Rest timer, logger columns, and gyms. */
+/** Rest, the logger's columns, and sounds. */
 export function WorkoutSection() {
   const s = useSettingsStore();
   const t = useT();
@@ -122,17 +123,6 @@ export function WorkoutSection() {
         />
       </div>
       <Toggle
-        id="rest-alert"
-        label={t("Rest alert")}
-        info={t("Three short pips at 3, 2, 1, then a beep and a vibration when rest reaches zero.")}
-        checked={s.restTimerAlert}
-        onChange={(v) => {
-          s.update({ restTimerAlert: v });
-          // Let the lifter hear what the end of a rest sounds like.
-          if (v) feedback.restZero();
-        }}
-      />
-      <Toggle
         id="show-rpe"
         label={t("RPE column")}
         info={t("Rate of perceived exertion, 1 to 10: how hard each set felt. Shown in the logger next to weight and reps.")}
@@ -153,24 +143,31 @@ export function WorkoutSection() {
           }
         }}
       />
-      <div className="border-t border-line pt-5">
-        <LocationsSection />
-      </div>
     </div>
   );
 }
 
-/** Everything that rings or shows outside the app. */
+/** Each gym's name, bar and plates, and where it is; its own page since the list grows. */
+export function GymsSection() {
+  return <LocationsSection />;
+}
+
+/**
+ * Everything that rings or shows outside the app: access asked for once on top, then the end of
+ * a rest, the live status, and the weekly reminders.
+ */
 export function NotificationsSection() {
   return (
     <div className="flex flex-col gap-5">
+      <NotificationAccess />
+      <RestAlertSetting />
       <LiveStatusSetting />
       <div id="schedule" className="scroll-mt-16">
         <WorkoutReminderSettings />
       </div>
       {isNativeApp() && (
         <div className="border-t border-line pt-5">
-          <AppPermissionsSection />
+          <AppPermissionsSection kinds={["camera", "location"]} />
         </div>
       )}
     </div>

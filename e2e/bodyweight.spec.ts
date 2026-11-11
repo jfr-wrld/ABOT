@@ -1,13 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, freshStart, startEmptyWorkout } from "./helpers";
-
-async function setBodyWeight(page: Page, kg: string): Promise<void> {
-  await page.goto("/settings?section=health");
-  const field = page.getByLabel("Body weight (kg)");
-  await field.fill(kg);
-  await field.press("Enter");
-  await expect(field).toHaveValue(kg);
-}
+import { addExercise, freshStart, setBodyWeight, startEmptyWorkout } from "./helpers";
 
 const volume = (page: Page) => page.locator("dd").nth(1);
 

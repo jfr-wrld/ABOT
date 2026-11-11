@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Select } from "@/components/ui/Select";
 import { useLocationStore } from "@/store/useLocationStore";
 import { Button } from "@/components/ui/Button";
@@ -12,17 +12,9 @@ import { currentPosition, openAppSettings, requestAccess } from "@/lib/native/pe
 import { isNativeApp } from "@/lib/native/files";
 import { findNearbyGyms, type NearbyGym } from "@/lib/nearby-gyms";
 import { useT } from "@/i18n";
-
-const BARS = [20, 15, 10, 7];
-
-/** "25, 20, 10, 2.5" -> [25, 20, 10, 2.5]; null when any entry is not a positive number. */
-export function parsePlates(text: string): number[] | null {
-  const parts = text.split(",").map((p) => p.trim()).filter(Boolean);
-  if (parts.length === 0) return null;
-  const nums = parts.map(Number);
-  if (nums.some((n) => !Number.isFinite(n) || n <= 0)) return null;
-  return [...nums].sort((a, b) => b - a);
-}
+import { NumberField } from "@/components/ui/NumberField";
+import { PLATE_SETS } from "@/lib/plate-calculator";
+import { equipmentUnit, gymSetup, setupPatch, standardSetup, type GymSetup } from "@/lib/gym-equipment";
 
 export function LocationsSection() {
   const { locations, add, update, setDefault } = useLocationStore();
@@ -103,11 +95,28 @@ export function LocationsSection() {
 
 function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () => void }) {
   const { update, remove } = useLocationStore();
-  const [plates, setPlates] = useState(gym.plateInventoryKg.join(", "));
-  const [platesError, setPlatesError] = useState<string | null>(null);
+  const [name, setName] = useState(gym.name);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const base = `gym-${gym.id}`;
   const t = useT();
+  const unit = equipmentUnit(gym);
+  const setup = gymSetup(gym, unit)!;
+  const standard = PLATE_SETS[unit];
+  const save = (next: GymSetup) => update(gym.id, setupPatch(next, unit));
+  // The unit's standard sizes plus any odd ones this gym has, heaviest first.
+  const sizes = [...new Set([...standard.plates, ...setup.plates])].sort((a, b) => b - a);
+  const bars = standard.bars.some((b) => b.weight === setup.bar) ? standard.bars : [...standard.bars, { weight: setup.bar, label: "Gym bar" }];
+
+  function togglePlate(p: number) {
+    const i = setup.plates.indexOf(p);
+    if (i >= 0) save({ ...setup, plates: setup.plates.filter((_, k) => k !== i), pairs: setup.pairs.filter((_, k) => k !== i) });
+    else save({ ...setup, plates: [...setup.plates, p], pairs: [...setup.pairs, undefined] });
+  }
+  function setPairs(p: number, n: number | null) {
+    const i = setup.plates.indexOf(p);
+    save({ ...setup, pairs: setup.pairs.map((v, k) => (k === i ? (n === null ? undefined : Math.max(0, Math.round(n))) : v)) });
+  }
 
   return (
     <li className="rounded-ctl border border-line p-3">
@@ -121,50 +130,115 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
           </Button>
         )}
       </div>
-      <div className="mt-2 grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2">
-        <label htmlFor={`${base}-name`} className="text-xs text-text-muted">
-          {t("Name")}
-        </label>
-        <input
-          id={`${base}-name`}
-          value={gym.name}
-          onChange={(e) => update(gym.id, { name: e.target.value })}
-          className="h-11 min-w-0 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
-        />
-        <label htmlFor={`${base}-bar`} className="text-xs text-text-muted">
-          {t("Bar")}
-        </label>
-        <Select
-          id={`${base}-bar`}
-          value={gym.barWeightKg}
-          onChange={(barWeightKg) => update(gym.id, { barWeightKg })}
-          options={BARS.map((b) => ({ value: b, label: `${b} kg` }))}
-        />
-        <label htmlFor={`${base}-plates`} className="text-xs text-text-muted">
-          {t("Plates (kg)")}
-        </label>
-        <input
-          id={`${base}-plates`}
-          value={plates}
-          inputMode="decimal"
-          onChange={(e) => {
-            setPlates(e.target.value);
-            const parsed = parsePlates(e.target.value);
-            if (parsed) {
-              setPlatesError(null);
-              update(gym.id, { plateInventoryKg: parsed });
-            } else setPlatesError(t("List positive numbers separated by commas, like 25, 20, 10, 5"));
-          }}
-          aria-invalid={platesError ? true : undefined}
-          aria-describedby={platesError ? `${base}-plates-error` : undefined}
-          className="h-11 min-w-0 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
-        />
+      <div className="mt-2 flex flex-col gap-3">
+        <div>
+          <label htmlFor={`${base}-name`} className="mb-1 block text-xs text-text-muted">
+            {t("Name")}
+          </label>
+          <input
+            id={`${base}-name`}
+            value={name}
+            maxLength={80}
+            onChange={(e) => {
+              setName(e.target.value);
+              // A gym always keeps a name: an empty field is not saved.
+              if (e.target.value.trim()) {
+                setNameError(null);
+                update(gym.id, { name: e.target.value });
+              } else setNameError(t("A gym needs a name"));
+            }}
+            onBlur={() => {
+              if (!name.trim()) {
+                setName(gym.name);
+                setNameError(null);
+              }
+            }}
+            aria-invalid={nameError ? true : undefined}
+            aria-describedby={nameError ? `${base}-name-error` : undefined}
+            className="h-11 w-full min-w-0 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
+          />
+          {nameError && (
+            <p id={`${base}-name-error`} role="alert" className="mt-1 text-xs text-failure">
+              {nameError}
+            </p>
+          )}
+        </div>
+
+        <fieldset>
+          <legend className="mb-1 text-xs text-text-muted">{t("Weights marked in")}</legend>
+          <div role="radiogroup" className="grid grid-cols-2 gap-1 rounded-ctl border border-line p-1">
+            {(["kg", "lbs"] as const).map((u) => (
+              <button
+                key={u}
+                type="button"
+                role="radio"
+                aria-checked={unit === u}
+                onClick={() => {
+                  if (u === unit) return;
+                  // 20 kg plates are no whole number of pounds: a switch starts from that unit's standard set.
+                  update(gym.id, setupPatch(standardSetup(u), u));
+                }}
+                className={`min-h-11 rounded-lg text-sm font-semibold ${unit === u ? "bg-ink/[0.1] text-text" : "text-text-muted hover:text-text"}`}
+              >
+                {u === "kg" ? "kg" : "lb"}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <div>
+          <label htmlFor={`${base}-bar`} className="mb-1 block text-xs text-text-muted">
+            {t("Bar")}
+          </label>
+          <Select
+            id={`${base}-bar`}
+            value={setup.bar}
+            onChange={(bar) => save({ ...setup, bar })}
+            options={bars.map((b) => ({ value: b.weight, label: `${b.weight} ${unit === "kg" ? "kg" : "lb"} · ${t(b.label)}` }))}
+            className="w-full"
+          />
+        </div>
+
+        <fieldset>
+          <legend className="mb-1 text-xs text-text-muted">{t("Plates: tap the sizes this gym has. Pairs blank means plenty.")}</legend>
+          <ul className="flex flex-col divide-y divide-line rounded-ctl border border-line">
+            {sizes.map((p) => {
+              const i = setup.plates.indexOf(p);
+              const on = i >= 0;
+              const label = `${p} ${unit === "kg" ? "kg" : "lb"}`;
+              return (
+                <li key={p} className="flex items-center gap-2 px-2">
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => togglePlate(p)}
+                    className={`num my-1 min-h-11 min-w-20 rounded-lg px-3 text-sm font-semibold ${on ? "bg-accent text-on-accent" : "border border-line-strong text-text-muted"}`}
+                  >
+                    {label}
+                  </button>
+                  {on && (
+                    <>
+                      <span aria-hidden="true" className="ml-auto text-xs text-text-muted">
+                        {t("Pairs")}
+                      </span>
+                      <NumberField
+                        id={`${base}-pairs-${p}`}
+                        value={setup.pairs[i] ?? null}
+                        onCommit={(n) => setPairs(p, n)}
+                        max={50}
+                        placeholder={t("Any")}
+                        aria-label={t("Pairs of {plate}", { plate: label })}
+                        className="!h-11 !w-20 !text-base"
+                      />
+                    </>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <AddPlateSize unit={unit} onAdd={(p) => !setup.plates.includes(p) && save({ ...setup, plates: [...setup.plates, p], pairs: [...setup.pairs, undefined] })} />
+        </fieldset>
       </div>
-      {platesError && (
-        <p id={`${base}-plates-error`} role="alert" className="mt-1 text-xs text-failure">
-          {platesError}
-        </p>
-      )}
       <GymPin gym={gym} />
       <Button variant="danger" onClick={() => setConfirm(true)} className="mt-3 w-full">
         {t("Delete {name}", { name: gym.name })}
@@ -187,6 +261,32 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
         </p>
       </Sheet>
     </li>
+  );
+}
+
+/** An odd plate size (0.5 kg fractionals, 55 lb bumpers) the standard list does not have. */
+function AddPlateSize({ unit, onAdd }: { unit: "kg" | "lbs"; onAdd: (plate: number) => void }) {
+  const t = useT();
+  const [v, setV] = useState<number | null>(null);
+  const id = useId();
+  return (
+    <form
+      className="mt-2 flex items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (v === null || v <= 0) return;
+        onAdd(Math.round(v * 100) / 100);
+        setV(null);
+      }}
+    >
+      <label htmlFor={id} className="sr-only">
+        {t("Other plate size in {unit}", { unit: unit === "kg" ? "kg" : "lb" })}
+      </label>
+      <NumberField id={id} value={v} onCommit={setV} max={100} placeholder={t("Other size ({unit})", { unit: unit === "kg" ? "kg" : "lb" })} className="!h-11 min-w-0 flex-1 !px-3 !text-left !text-base" />
+      <Button type="submit" variant="ghost" className="shrink-0">
+        {t("Add size")}
+      </Button>
+    </form>
   );
 }
 

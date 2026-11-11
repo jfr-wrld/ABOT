@@ -77,7 +77,7 @@ export function ActiveWorkoutHeader({
       )}
       {locations.length === 0 && (
         <Link
-          href="/settings?section=workout"
+          href="/settings?section=gyms"
           className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-ctl px-1 text-sm text-text-muted hover:text-text"
         >
           <MapPin aria-hidden="true" size={16} />

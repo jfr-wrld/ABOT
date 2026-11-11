@@ -5,6 +5,7 @@ import { Minus, Plus, TriangleAlert } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { useLocationStore } from "@/store/useLocationStore";
+import { gymSetup, setupPatch } from "@/lib/gym-equipment";
 import { useT } from "@/i18n";
 import {
   PLATE_SETS,
@@ -86,15 +87,19 @@ function Calculator({
 }) {
   const t = useT();
   const set = PLATE_SETS[unit];
-  // A gym keeps its bar and plates in kg, so it drives the calculator only in kg.
-  const gym = useLocationStore((s) => (unit === "kg" && locationId ? s.locations.find((l) => l.id === locationId) : undefined));
+  // A gym drives the calculator when its equipment is marked in this unit (a 20 kg plate is no
+  // whole number of pounds); otherwise this device's own setup is used.
+  const gymRow = useLocationStore((s) => (locationId ? s.locations.find((l) => l.id === locationId) : undefined));
+  const gymSet = useMemo(() => (gymRow ? gymSetup(gymRow, unit) : null), [gymRow, unit]);
+  const gym = gymSet ? gymRow : undefined;
   const updateGym = useLocationStore((s) => s.update);
   const [device, setDevice] = useState<Setup>(() => readDevice(unit));
-  const setup: Setup = gym ? { bar: gym.barWeightKg, plates: gym.plateInventoryKg } : device;
+  const setup: Setup = gymSet ? { bar: gymSet.bar, plates: gymSet.plates } : device;
 
   const save = (next: Setup) => {
     if (gym) {
-      updateGym(gym.id, { barWeightKg: next.bar, plateInventoryKg: [...next.plates].sort((a, b) => b - a) });
+      const pairs = next.plates.map((p) => gymSet?.pairs[gymSet.plates.indexOf(p)]);
+      updateGym(gym.id, setupPatch({ bar: next.bar, plates: next.plates, pairs }, unit));
       return;
     }
     setDevice(next);
@@ -106,7 +111,7 @@ function Calculator({
   };
 
   const [target, setTarget] = useState<number>(() => Math.max(initialTarget ?? 0, setup.bar) || set.bars[0].weight);
-  const load = useMemo(() => calculatePlates(target, setup.bar, setup.plates), [target, setup.bar, setup.plates]);
+  const load = useMemo(() => calculatePlates(target, setup.bar, setup.plates, gymSet ? setup.plates.map((p) => gymSet.pairs[gymSet.plates.indexOf(p)]) : []), [target, setup.bar, setup.plates, gymSet]);
 
   // The standard sizes plus any odd ones the gym lists, heaviest first.
   const sizes = [...new Set([...set.plates, ...setup.plates])].sort((a, b) => b - a);

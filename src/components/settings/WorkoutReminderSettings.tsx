@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/Button";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { isNativeApp, saveFile } from "@/lib/native/files";
 import { useT } from "@/i18n";
-import { openNotificationSettings } from "@/lib/native/permissions";
 import { Switch } from "./controls";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
@@ -32,7 +31,7 @@ function weekNames(locale: string): { wd: Weekday; short: string; long: string }
  * how early to be told. Saved in IndexedDB on this device.
  */
 export function WorkoutReminderSettings() {
-  const { schedule, permission, update, setDay, requestPermission } = useReminderStore();
+  const { schedule, permission, update, setDay } = useReminderStore();
   const t = useT();
   const week = weekNames(t.locale);
   const routines = useRoutineStore((s) => s.routines);
@@ -187,43 +186,19 @@ export function WorkoutReminderSettings() {
               : t("No training day picked yet.")}
           </p>
 
-          <div className="border-t border-line pt-3">
-            {permission === "granted" ? (
+          {/* Access is asked for once, above this panel (NotificationAccess). */}
+          {permission === "granted" && (
+            <div className="border-t border-line pt-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm">{t("Notifications on")}</p>
+                <p role="status" className="text-sm text-text-muted">
+                  {tested ?? t("Notifications on")}
+                </p>
                 <Button variant="ghost" onClick={() => void sendTest()}>
                   {t("Send a test")}
                 </Button>
               </div>
-            ) : permission === "default" ? (
-              <>
-                <p className="text-sm text-text-muted">{t("Allow notifications so ABOT can call you to the session.")}</p>
-                <Button variant="primary" onClick={() => void requestPermission()} className="mt-2 w-full">
-                  {t("Allow notifications")}
-                </Button>
-              </>
-            ) : permission === "denied" ? (
-              <>
-                <p className="text-sm text-text-muted">
-                  {isNativeApp()
-                    ? t("Notifications are off for ABOT. Turn them on in Android settings, under Apps, ABOT, Notifications.")
-                    : t("Notifications are blocked for ABOT. Allow them in this site's browser settings, or use the calendar below.")}
-                </p>
-                {isNativeApp() && (
-                  <Button onClick={() => void openNotificationSettings().catch((e: unknown) => setTested(e instanceof Error ? e.message : String(e)))} className="mt-2 w-full">
-                    {t("Turn on in Android settings")}
-                  </Button>
-                )}
-              </>
-            ) : (
-              <p className="text-sm text-text-muted">{t("This browser cannot show notifications. Use the calendar below.")}</p>
-            )}
-            {tested && (
-              <p role="status" className="mt-1 text-xs text-text-muted">
-                {tested}
-              </p>
-            )}
-          </div>
+            </div>
+          )}
 
           <div>
             <p className="text-xs text-text-muted">

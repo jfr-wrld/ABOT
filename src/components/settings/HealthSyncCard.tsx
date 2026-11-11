@@ -7,12 +7,11 @@ import { Toggle } from "./controls";
 import { HealthSyncService, type HealthStatus } from "@/lib/health-sync";
 import { useAppResumed } from "@/lib/native/useAppResumed";
 import { useSettingsStore } from "@/store/useSettingsStore";
-import { useBodyStore } from "@/store/useBodyStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
-import { fromDisplay, toDisplay } from "@/lib/units";
-import { PROFILE_LIMITS } from "@/types/workout";
+import { toDisplay } from "@/lib/units";
 import { useT } from "@/i18n";
+import { BodyLink } from "@/components/profile/BodyLink";
 
 const STATUS_LINE: Record<HealthStatus, { text: string; on: boolean }> = {
   connected: { text: "Connected to Health Connect", on: true },
@@ -28,26 +27,21 @@ const hm = (minutes: number) => `${Math.floor(minutes / 60)}h ${String(Math.roun
 
 /**
  * Settings, Health apps: connect ABOT to Health Connect (and through it Samsung Health, Huawei
- * Health and Google Fit), sync finished workouts on their own, set the body weight the calorie
+ * Health and Google Fit), sync finished workouts on their own, link to the body weight the calorie
  * estimate uses, and try a sync now.
  */
 export function HealthSyncCard() {
   const t = useT();
   const unit = useSettingsStore((s) => s.weightUnit);
-  const bodyweightKg = useSettingsStore((s) => s.bodyweightKg);
   const autoSync = useSettingsStore((s) => s.healthAutoSync);
   const lastSleep = useSettingsStore((s) => s.lastSleep);
   const update = useSettingsStore((s) => s.update);
-  const logWeight = useBodyStore((s) => s.logWeight);
   const sessions = useWorkoutStore((s) => s.sessions);
   const { byId } = useAllExercises();
   const [status, setStatus] = useState<HealthStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [lines, setLines] = useState<{ text: string; error?: boolean }[]>([]);
-  // What is being typed; null shows the saved body weight.
-  const [draft, setDraft] = useState<string | null>(null);
-  const weightText = draft ?? (bodyweightKg ? String(toDisplay(bodyweightKg, unit)) : "");
 
   const refresh = useCallback(() => {
     HealthSyncService.status()
@@ -102,20 +96,6 @@ export function HealthSyncCard() {
     } finally {
       setBusy(false);
     }
-  }
-
-  function saveWeight() {
-    if (draft === null) return;
-    setDraft(null);
-    const v = Number(draft.replace(",", "."));
-    if (!draft.trim()) return;
-    const kg = fromDisplay(v, unit);
-    const [min, max] = PROFILE_LIMITS.bodyweightKg;
-    if (!Number.isFinite(kg) || kg < min || kg > max) {
-      setLines([{ text: t("Enter a body weight between {min} and {max} {unit}.", { min: Math.round(toDisplay(min, unit)), max: Math.round(toDisplay(max, unit)), unit }), error: true }]);
-      return;
-    }
-    if (bodyweightKg === null || Math.abs(kg - bodyweightKg) > 0.01) logWeight(Math.round(kg * 10) / 10);
   }
 
   const line = status ? STATUS_LINE[status] : null;
@@ -178,25 +158,7 @@ export function HealthSyncCard() {
         />
       )}
 
-      <div>
-        <label htmlFor="health-weight" className="mb-1 block text-sm font-semibold">
-          {t("Body weight ({unit})", { unit })}
-        </label>
-        <input
-          id="health-weight"
-          inputMode="decimal"
-          value={weightText}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={saveWeight}
-          onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()}
-          placeholder={unit === "kg" ? "75" : "165"}
-          aria-describedby="health-weight-hint"
-          className="min-h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 font-mono text-base tabular-nums text-text"
-        />
-        <p id="health-weight-hint" className="mt-1 text-xs text-text-muted">
-          {t("Used for the calorie estimate. A newer weigh-in from Health Connect replaces it.")}
-        </p>
-      </div>
+      <BodyLink hint={t("Used for the calorie estimate. A newer weigh-in from Health Connect replaces it.")} />
 
       {lastSleep && (
         <p className="text-xs text-text-muted tabular-nums">

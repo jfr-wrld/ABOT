@@ -109,7 +109,18 @@ function normalizeLocation(raw: unknown): GymLocation | null {
     plateInventoryKg: plates,
     isDefault: raw.isDefault === true,
     ...(isCoord(raw.lat, 90) && isCoord(raw.lng, 180) ? { lat: raw.lat, lng: raw.lng } : {}),
+    ...(raw.equipmentUnit === "kg" || raw.equipmentUnit === "lbs" ? { equipmentUnit: raw.equipmentUnit } : {}),
+    ...(isObj(raw.platePairs) ? { platePairs: normalizePairs(raw.platePairs) } : {}),
   };
+}
+
+/** Pairs per plate size: whole numbers 0 to 50, keyed by grams. */
+function normalizePairs(raw: Record<string, unknown>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (/^\d{1,6}$/.test(k) && typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 50) out[k] = v;
+  }
+  return out;
 }
 
 const isCoord = (v: unknown, max: number): v is number => typeof v === "number" && Number.isFinite(v) && Math.abs(v) <= max;

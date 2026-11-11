@@ -100,7 +100,7 @@ export function Choice<T extends string | number>({
   onChange: (v: T) => void;
 }) {
   return (
-    <fieldset>
+    <fieldset id={`setting-${name}`} className="scroll-mt-20">
       <legend className="mb-2">
         {info ? (
           <InfoTip title={<span className="text-sm font-semibold">{label}</span>} name={label}>

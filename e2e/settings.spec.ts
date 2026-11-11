@@ -90,3 +90,18 @@ test("language and theme choices are saved", async ({ page }) => {
   await expect(nav.getByRole("link", { name: "Profil" })).toBeVisible();
 });
 
+
+test("search finds a setting and opens its section at it", async ({ page }) => {
+  await page.goto("/settings");
+  const search = page.getByRole("searchbox", { name: "Search settings" });
+  await search.fill("week");
+  const results = page.getByRole("region", { name: "Results" });
+  await results.getByRole("link", { name: /^Week starts on/ }).click();
+  await expect(page).toHaveURL(/section=general#first-day$/);
+  await expect(page.getByRole("combobox", { name: "Week starts on" })).toBeInViewport();
+
+  await page.goto("/settings");
+  await search.fill("zzzz");
+  await expect(page.getByRole("status").filter({ hasText: "Nothing in Settings matches “zzzz”." })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});

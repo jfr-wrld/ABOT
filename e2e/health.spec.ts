@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
-import { addExercise, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
+import { addExercise, freshStart, logSet, setBodyWeight, startEmptyWorkout, reachSummary } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -19,19 +19,15 @@ test("Settings, Health apps in a browser: status, the .tcx route, and the body w
   await expect(page.getByRole("button", { name: "How to link Huawei or Samsung Health" })).toHaveCount(0);
   await expect(page.getByRole("switch", { name: "Auto-sync completed workouts" })).toHaveCount(0);
 
-  const weight = page.getByLabel("Body weight (kg)");
-  await weight.fill("82.5");
-  await weight.press("Enter");
-  await expect(weight).toHaveValue("82.5");
-  await page.reload();
-  await expect(page.getByLabel("Body weight (kg)")).toHaveValue("82.5");
+  // Body weight is entered on Profile > Body; this page links there and shows it.
+  await expect(page.getByRole("link", { name: /^Body Add your weight/ })).toBeVisible();
+  await setBodyWeight(page, "82.5");
+  await page.goto("/settings?section=health");
+  await expect(page.getByRole("link", { name: /^Body 82\.5 kg/ })).toBeVisible();
 });
 
 test("a finished workout shows its calories, on the summary and on Home, and exports a .tcx", async ({ page }, info) => {
-  await page.goto("/settings?section=health");
-  await page.getByLabel("Body weight (kg)").fill("80");
-  await page.getByLabel("Body weight (kg)").press("Enter");
-  await expect(page.getByLabel("Body weight (kg)")).toHaveValue("80");
+  await setBodyWeight(page, "80");
 
   await startEmptyWorkout(page);
   const start = new Date(Date.now() - 40 * 60_000);

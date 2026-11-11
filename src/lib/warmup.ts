@@ -1,3 +1,4 @@
+import type { GymSetup } from "./gym-equipment";
 import type { Equipment, Exercise, WeightUnit } from "@/types/workout";
 import { PLATE_SETS, calculatePlates } from "./plate-calculator";
 import { fromDisplay, toDisplay } from "./units";
@@ -34,17 +35,18 @@ export function warmsUp(ex: Exercise | undefined): boolean {
 export function warmupSets(
   workKg: number,
   ex: Exercise,
-  opts: { unit: WeightUnit; barKg?: number; platesKg?: number[] },
+  opts: { unit: WeightUnit; gym?: GymSetup | null },
 ): WarmupSet[] {
   if (!warmsUp(ex) || workKg <= 0) return [];
   const barbell = ex.equipment === "barbell" || ex.equipment === "smith_machine";
   const unitSet = PLATE_SETS[opts.unit === "lbs" ? "lbs" : "kg"];
   const work = toDisplay(workKg, opts.unit);
-  // A gym keeps its bar and plates in kg; in pounds the standard set is used.
-  const bar = barbell ? (opts.unit === "kg" && opts.barKg !== undefined ? opts.barKg : unitSet.bars[0]!.weight) : 0;
-  const plates = opts.unit === "kg" && opts.platesKg?.length ? opts.platesKg : unitSet.plates;
+  // The gym's bar and plates when they are marked in this unit (gymSetup); else the standard set.
+  const gym = opts.gym?.plates.length ? opts.gym : null;
+  const bar = barbell ? (gym ? gym.bar : unitSet.bars[0]!.weight) : 0;
+  const plates = gym ? gym.plates : unitSet.plates;
   const round = (w: number) =>
-    barbell ? calculatePlates(w, bar, plates).loaded : Math.floor(w / unitSet.step) * unitSet.step;
+    barbell ? calculatePlates(w, bar, plates, gym?.pairs).loaded : Math.floor(w / unitSet.step) * unitSet.step;
 
   const out: { w: number; reps: number }[] = [];
   if (barbell && bar > 0 && work >= bar * 2) out.push({ w: bar, reps: 10 });

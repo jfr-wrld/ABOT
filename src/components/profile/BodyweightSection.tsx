@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronRight, Scale, Trash2 } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme";
 import { changeOver, dayKey } from "@/lib/bodyweight";
 import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
-import { PROFILE_LIMITS } from "@/types/workout";
+import { PROFILE_LIMITS, type BodyweightEntry } from "@/types/workout";
 import { useT } from "@/i18n";
 import { Sparkline } from "@/components/phase/visuals";
 import { DrawnCheck } from "@/components/ui/DrawnCheck";
@@ -23,11 +23,29 @@ import { useSavedFlash } from "@/lib/useSavedFlash";
 
 const shortDate = (at: number, locale: string) => new Date(at).toLocaleDateString(locale, { day: "numeric", month: "short" });
 
-/** Daily weigh-ins: log today's weight, see the trend, correct a mistake. */
+/** Rows shown before "See all": a week of daily weigh-ins. */
+const RECENT = 7;
+/** How long Undo stays after a weigh-in is deleted. */
+const UNDO_MS = 6000;
+
+/**
+ * Daily weigh-ins: log today's weight (with body fat and waist when measured), see the trend,
+ * correct a mistake and take a deletion back.
+ */
 export function BodyweightSection({ now }: { now: number }) {
   const entries = useBodyStore((s) => s.entries);
   const logWeight = useBodyStore((s) => s.logWeight);
   const remove = useBodyStore((s) => s.remove);
+  const restore = useBodyStore((s) => s.restore);
+  const [more, setMore] = useState(false);
+  const [fat, setFat] = useState<number | null>(null);
+  const [waist, setWaist] = useState<number | null>(null);
+  const [all, setAll] = useState(false);
+  const [deleted, setDeleted] = useState<BodyweightEntry | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+  }, []);
   const { weightUnit: unit, bodyweightKg } = useSettingsStore();
   const phaseActive = useSettingsStore((s) => s.bodyPhase?.isActive === true);
   const [draft, setDraft] = useState<number | null>(null);
@@ -39,7 +57,8 @@ export function BodyweightSection({ now }: { now: number }) {
   const current = entries[entries.length - 1]?.weightKg ?? bodyweightKg;
   const change = changeOver(entries, 30, now);
   const loggedToday = entries.some((e) => e.id === dayKey(now));
-  const recent = [...entries].reverse().slice(0, 7);
+  const newestFirst = [...entries].reverse();
+  const recent = all ? newestFirst : newestFirst.slice(0, RECENT);
   const chartData = entries.slice(-90).map((e) => ({ date: shortDate(e.date, t.locale), w: Math.round(toDisplay(e.weightKg, unit) * 10) / 10 }));
   /** Bodyweight reads to 0.1 in the user's unit: "79.5", "80". */
   const shown = (kg: number) => String(Math.round(toDisplay(kg, unit) * 10) / 10);
@@ -52,7 +71,18 @@ export function BodyweightSection({ now }: { now: number }) {
       shake();
       return;
     }
-    logWeight(kg);
+    if (more && fat !== null && (fat < 2 || fat > 70)) {
+      setError(t("Body fat: enter 2 to 70%"));
+      shake();
+      return;
+    }
+    if (more && waist !== null && (waist < 40 || waist > 250)) {
+      setError(t("Waist: enter 40 to 250 cm"));
+      shake();
+      return;
+    }
+    const extra = more ? { ...(fat !== null ? { bodyFatPercent: fat } : {}), ...(waist !== null ? { waistCm: waist } : {}) } : {};
+    logWeight(kg, undefined, extra);
     setDraft(null);
     setError(null);
     feedback.setComplete();
@@ -130,6 +160,30 @@ export function BodyweightSection({ now }: { now: number }) {
           )}
         </Button>
       </form>
+      {more && (
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <div>
+            <label htmlFor="bw-fat" className="mb-1 block text-xs font-semibold text-text-muted">
+              {t("Body fat %")}
+            </label>
+            <NumberField id="bw-fat" value={fat} onCommit={setFat} max={70} placeholder="20" className="!px-3 !text-left !text-base" />
+          </div>
+          <div>
+            <label htmlFor="bw-waist" className="mb-1 block text-xs font-semibold text-text-muted">
+              {t("Waist (cm)")}
+            </label>
+            <NumberField id="bw-waist" value={waist} onCommit={setWaist} max={250} placeholder="80" className="!px-3 !text-left !text-base" />
+          </div>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => setMore((v) => !v)}
+        aria-expanded={more}
+        className="mt-1 min-h-11 rounded-ctl px-1 text-sm font-semibold text-text-muted hover:text-text"
+      >
+        {more ? t("Weight only") : t("Add body fat and waist")}
+      </button>
 
       {entries.length < 2 && (
         <p className="mt-3 text-sm text-text-muted">
@@ -172,10 +226,20 @@ export function BodyweightSection({ now }: { now: number }) {
               </time>
               <span className="num text-sm font-semibold">
                 {shown(e.weightKg)} {unit}
+                {(e.bodyFatPercent !== undefined || e.waistCm !== undefined) && (
+                  <span className="block text-right text-xs font-normal text-text-muted">
+                    {[e.bodyFatPercent !== undefined ? `${e.bodyFatPercent}%` : null, e.waistCm !== undefined ? `${e.waistCm} cm` : null].filter(Boolean).join(" · ")}
+                  </span>
+                )}
               </span>
               <button
                 type="button"
-                onClick={() => remove(e.id)}
+                onClick={() => {
+                  remove(e.id);
+                  setDeleted(e);
+                  if (undoTimer.current) clearTimeout(undoTimer.current);
+                  undoTimer.current = setTimeout(() => setDeleted(null), UNDO_MS);
+                }}
                 aria-label={t("Delete weigh-in on {date}", { date: shortDate(e.date, t.locale) })}
                 className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted transition-colors hover:bg-failure/10 hover:text-failure"
               >
@@ -186,8 +250,31 @@ export function BodyweightSection({ now }: { now: number }) {
           </AnimatePresence>
         </ul>
       )}
+      {entries.length > RECENT && (
+        <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="min-h-11 w-full border-t border-line text-sm font-semibold text-text-muted hover:text-text">
+          {all ? t("Show fewer") : t("See all {n}", { n: entries.length })}
+        </button>
+      )}
         </details>
       )}
+      <div role="status" aria-live="polite">
+        {deleted && (
+          <div className="mt-2 flex items-center justify-between gap-3 rounded-ctl bg-surface-2 py-1 pl-3 pr-1 text-sm">
+            <span>{t("Weigh-in deleted")}</span>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                restore(deleted);
+                setDeleted(null);
+                if (undoTimer.current) clearTimeout(undoTimer.current);
+              }}
+              className="text-accent"
+            >
+              {t("Undo")}
+            </Button>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

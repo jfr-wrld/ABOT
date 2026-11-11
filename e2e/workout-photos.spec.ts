@@ -172,7 +172,7 @@ test.describe("gyms from the map", () => {
 
   test("Settings lists the gyms around you, nearest first, and adds one already pinned", async ({ page }) => {
     const queries = await answerMap(page);
-    await page.goto("/settings?section=workout");
+    await page.goto("/settings?section=gyms");
     await page.getByRole("button", { name: "Find gyms near me" }).click();
     const list = page.getByRole("list", { name: "Gyms near you" });
     await expect(list.getByRole("button")).toHaveCount(2);
@@ -214,7 +214,7 @@ test.describe("gyms from the map", () => {
         ),
       });
     });
-    await page.goto("/settings?section=workout");
+    await page.goto("/settings?section=gyms");
     await page.getByRole("button", { name: "Find gyms near me" }).click();
     const list = page.getByRole("list", { name: "Gyms near you" });
     await expect(list.getByRole("button")).toHaveCount(2);
@@ -226,7 +226,7 @@ test.describe("gyms from the map", () => {
   test("an unreachable map service says so", async ({ page }) => {
     await page.route("https://overpass-api.de/api/interpreter?**", (route) => route.abort());
     await page.route("https://nominatim.openstreetmap.org/search?**", (route) => route.abort());
-    await page.goto("/settings?section=workout");
+    await page.goto("/settings?section=gyms");
     await page.getByRole("button", { name: "Find gyms near me" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Could not reach the map service." })).toBeVisible();
   });
@@ -243,7 +243,7 @@ test.describe("a gym that is not on the map", () => {
 
   test("is marked where you stand from Settings, and becomes the default", async ({ page }) => {
     await emptyMap(page);
-    await page.goto("/settings?section=workout");
+    await page.goto("/settings?section=gyms");
     await page.getByRole("button", { name: "Find gyms near me" }).click();
     await expect(page.getByText(/Many local gyms are not mapped yet/)).toBeVisible();
     await page.getByRole("button", { name: "At the gym? Mark it here" }).click();

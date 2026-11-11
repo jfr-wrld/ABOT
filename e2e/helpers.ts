@@ -110,3 +110,11 @@ export async function choose(page: Page, dropdown: Locator, option: string): Pro
   await page.getByRole("option", { name: option, exact: true }).click();
   await expect(page.getByRole("listbox")).toHaveCount(0);
 }
+
+/** Logs today's weigh-in on Profile > Body, the one place body weight is entered. */
+export async function setBodyWeight(page: Page, kg: string): Promise<void> {
+  await page.goto("/profile/body");
+  await page.getByLabel(/^Weight to log in /).fill(kg);
+  await page.getByRole("button", { name: /^(Log weight|Update)$/ }).click();
+  await waitForSavedSetting(page, "bodyweightKg", Number(kg));
+}

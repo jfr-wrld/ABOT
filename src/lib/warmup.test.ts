@@ -14,7 +14,7 @@ describe("warm-up sets", () => {
       { weightKg: 80, reps: 2 },
     ]);
     // No 2.5 or 1.25 plates: 60% of 70 (42) loads as 40.
-    const sets = warmupSets(70, bench, { unit: "kg", barKg: 20, platesKg: [20, 10, 5] });
+    const sets = warmupSets(70, bench, { unit: "kg", gym: { bar: 20, plates: [20, 10, 5], pairs: [] } });
     expect(sets.map((s) => s.weightKg)).toEqual([20, 40, 50]);
   });
 

@@ -30,7 +30,7 @@ export function BodyweightLoad({ item, exercise, unit }: { item: SessionExercise
           {factor < 1 && <span> · {t("{n}% counted", { n: Math.round(factor * 100) })}</span>}
         </span>
       ) : (
-        <Link href="/profile/edit" className="min-h-11 content-center font-semibold text-accent underline-offset-2 hover:underline">
+        <Link href="/profile/body" className="min-h-11 content-center font-semibold text-accent underline-offset-2 hover:underline">
           {t("Add your body weight to count it in volume")}
         </Link>
       )}

@@ -21,7 +21,8 @@ test("profile opens from Home and starts honestly empty", async ({ page }) => {
   await page.getByRole("link", { name: "Edit profile" }).click();
   await expect(page).toHaveURL(/\/profile\/edit$/);
   await expect(page.getByRole("heading", { level: 1, name: "Edit profile" })).toBeVisible();
-  await expect(page.getByText("One weigh-in a day builds your trend.")).toBeVisible();
+  // Weigh-ins live on Body, one tap away.
+  await expect(page.getByRole("link", { name: /^Body Add your weight/ })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   // The backup chip opens Edit profile at the Account section.
@@ -93,7 +94,7 @@ test("weigh-ins build a history; the same day updates, a mistake can be deleted"
       };
     });
   });
-  await page.goto("/profile/edit");
+  await page.goto("/profile/body");
   await page.getByText("History", { exact: true }).click();
   const recent = page.getByRole("list", { name: "Recent weigh-ins" });
   await expect(recent.getByRole("listitem")).toHaveCount(1);
@@ -108,6 +109,11 @@ test("weigh-ins build a history; the same day updates, a mistake can be deleted"
   await expect(recent.getByRole("listitem")).toHaveCount(2);
   await expect(recent.getByRole("listitem").first()).toContainText("79.5 kg");
 
+  // A deletion can be taken back, then made for good.
+  await recent.getByRole("button", { name: /^Delete weigh-in on/ }).first().click();
+  await expect(recent.getByRole("listitem")).toHaveCount(1);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(recent.getByRole("listitem")).toHaveCount(2);
   await recent.getByRole("button", { name: /^Delete weigh-in on/ }).first().click();
   await expect(recent.getByRole("listitem")).toHaveCount(1);
   await page.reload();
@@ -118,7 +124,7 @@ test("weigh-ins build a history; the same day updates, a mistake can be deleted"
 
 test("an impossible weigh-in is refused with the range", async ({ page }) => {
   await freshStart(page);
-  await page.goto("/profile/edit");
+  await page.goto("/profile/body");
   await logWeighIn(page, "7");
   await expect(page.locator("#bw-log-error")).toHaveText("Enter 20 kg to 400 kg");
   await expect(page.getByLabel("Weight to log in kg")).toHaveAttribute("aria-invalid", "true");

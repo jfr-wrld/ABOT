@@ -56,10 +56,16 @@ test("with permission, a test reminder shows the session call with Start and Sno
   });
 });
 
-test("without permission the panel asks with one clear button", async ({ page }) => {
+test("without permission, Notifications asks once, on top, with one clear button", async ({ page }) => {
   await freshStart(page);
   const panel = await turnOn(page);
-  await expect(panel.getByRole("button", { name: "Allow notifications" })).toBeVisible();
+  const access = page.getByRole("region", { name: "Notifications are off" });
+  await expect(access.getByRole("button", { name: "Allow notifications" })).toBeVisible();
+  // The panels below do not ask again.
+  await expect(page.getByRole("button", { name: "Allow notifications" })).toHaveCount(1);
+  await expect(panel.getByRole("button", { name: "Send a test" })).toHaveCount(0);
+  // The rest alert lives here now, with the other alerts.
+  await expect(page.getByRole("switch", { name: "Rest alert" })).toBeVisible();
 });
 
 test("the reminder fires at the scheduled minute", async ({ page, context }) => {

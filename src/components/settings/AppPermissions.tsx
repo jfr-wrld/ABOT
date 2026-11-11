@@ -94,11 +94,11 @@ export function useAppPermissions() {
   return { access, allow, allowAll, openSettings, errors };
 }
 
-export function AppPermissionsList({ perms }: { perms: ReturnType<typeof useAppPermissions> }) {
+export function AppPermissionsList({ perms, kinds }: { perms: ReturnType<typeof useAppPermissions>; kinds?: Kind[] }) {
   const t = useT();
   return (
     <ul className="flex flex-col gap-2">
-      {ROWS.map(({ kind, icon: Icon }) => {
+      {ROWS.filter((r) => !kinds || kinds.includes(r.kind)).map(({ kind, icon: Icon }) => {
         const { title, why } = rowText(kind, t);
         const a = perms.access(kind);
         const error = perms.errors[kind];
@@ -141,8 +141,8 @@ export function AppPermissionsList({ perms }: { perms: ReturnType<typeof useAppP
   );
 }
 
-/** Settings section; the Android app only. */
-export function AppPermissionsSection() {
+/** Settings section; the Android app only. `kinds` leaves out access asked for elsewhere. */
+export function AppPermissionsSection({ kinds }: { kinds?: Kind[] }) {
   const perms = useAppPermissions();
   const t = useT();
   return (
@@ -150,7 +150,7 @@ export function AppPermissionsSection() {
       <h2 id="permissions-heading" className="text-sm font-semibold">
         {t("App permissions")}
       </h2>
-      <AppPermissionsList perms={perms} />
+      <AppPermissionsList perms={perms} kinds={kinds} />
     </section>
   );
 }

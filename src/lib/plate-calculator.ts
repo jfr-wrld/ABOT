@@ -2,7 +2,8 @@
  * Barbell plate loading: which plates go on each sleeve for a target weight.
  *
  * Greedy from the heaviest plate down, per side: weightPerSide = (target - bar) / 2. Plates come
- * in pairs and every size in the inventory is assumed to be available in any number. Whatever
+ * in pairs; a size is available in any number unless `pairs` caps it (pairs[i] for inventory[i],
+ * so 2 pairs of 20s put at most two 20s on each sleeve). Whatever
  * the plates cannot make is returned as `remainder` (total, both sides), so the lifter sees how
  * close the bar gets. Arithmetic runs in integer grams, so 1.25 kg steps never drift.
  */
@@ -56,7 +57,12 @@ export const PLATE_SETS: Record<PlateUnit, { plates: number[]; bars: { weight: n
 const G = 1000;
 const grams = (w: number) => Math.round(w * G);
 
-export function calculatePlates(target: number, bar: number, inventory: number[]): PlateLoad {
+export function calculatePlates(target: number, bar: number, inventory: number[], pairs: (number | undefined)[] = []): PlateLoad {
+  const cap = new Map<number, number>();
+  inventory.forEach((p, i) => {
+    const n = pairs[i];
+    if (n !== undefined && Number.isFinite(n) && n >= 0) cap.set(grams(p), Math.floor(n));
+  });
   const sizes = [...new Set(inventory.filter((p) => Number.isFinite(p) && p > 0).map(grams))].sort((a, b) => b - a);
   const targetG = Math.max(0, grams(target));
   const barG = Math.max(0, grams(bar));
@@ -66,7 +72,7 @@ export function calculatePlates(target: number, bar: number, inventory: number[]
   let left = Math.floor((targetG - barG) / 2);
   const perSide: PlateCount[] = [];
   for (const size of sizes) {
-    const count = Math.floor(left / size);
+    const count = Math.min(Math.floor(left / size), cap.get(size) ?? Infinity);
     if (count > 0) {
       perSide.push({ plate: size / G, count });
       left -= count * size;

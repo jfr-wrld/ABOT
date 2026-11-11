@@ -197,9 +197,14 @@ function Weigh({ m, now }: { m: PhaseTelemetry; now: number }) {
 
   return (
     <section aria-labelledby="weigh-heading" className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
-      <h2 id="weigh-heading" className="label-caps">
-        {today ? t("Today's weigh-in") : t("Weigh in")}
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="weigh-heading" className="label-caps">
+          {today ? t("Today's weigh-in") : t("Weigh in")}
+        </h2>
+        <Link href="/profile/body" className="-my-3 -mr-2 flex min-h-11 items-center rounded-ctl px-2 text-xs font-semibold text-text-muted hover:text-text">
+          {t("All weigh-ins")}
+        </Link>
+      </div>
       <Stepper label={t("Weight")} value={value} onChange={(n) => (setValue(n), setSaved(false))} step={0.1} min={20} max={unit === "lbs" ? 880 : 400} unit={unit} decimals={1} />
       {more && (
         <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">

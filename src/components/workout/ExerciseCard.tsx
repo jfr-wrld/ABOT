@@ -7,6 +7,7 @@ import { setGridColumns } from "./setGrid";
 import { distanceUnit } from "@/lib/set-metrics";
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Flame, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
 import { useLocationStore } from "@/store/useLocationStore";
+import { gymSetup } from "@/lib/gym-equipment";
 import { warmupSets } from "@/lib/warmup";
 import { formatWeight } from "@/lib/units";
 import type {
@@ -110,7 +111,7 @@ function ExerciseCardView({
     0;
   const warmups =
     exercise && !item.sets.some((x) => x.type === "warmup")
-      ? warmupSets(workKg, exercise, { unit, barKg: gym?.barWeightKg, platesKg: gym?.plateInventoryKg })
+      ? warmupSets(workKg, exercise, { unit, gym: gym ? gymSetup(gym, unit) : null })
       : [];
   const logType = exercise?.logType ?? "weight_reps";
   // Plate calculator: barbells only, starting from the next set waiting to be done.

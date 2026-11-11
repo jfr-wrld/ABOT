@@ -12,6 +12,7 @@ import { ProgressPanel } from "@/components/analytics/ProgressPanel";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { LiftsBoard } from "@/components/profile/LiftsBoard";
 import { AccountChip, EDIT_PROFILE } from "@/components/profile/AccountSection";
+import { BodyChip } from "@/components/profile/BodyLink";
 import { usePhotoPicker } from "@/components/profile/usePhotoPicker";
 import { profileStats } from "@/lib/profile";
 import { PlanBadge } from "@/components/paywall/PlanBadge";
@@ -121,7 +122,10 @@ function ProfileScreen() {
           </div>
           {s.profileHandle && <p className="num text-sm text-text-muted">@{s.profileHandle}</p>}
           <p className="num mt-0.5 text-xs text-text-muted">{record.join(" · ")}</p>
-          <AccountChip />
+          <div className="flex flex-wrap items-center gap-x-2">
+            <AccountChip />
+            <BodyChip />
+          </div>
         </div>
         {photo.error && (
           <p role="alert" className="text-xs text-failure">

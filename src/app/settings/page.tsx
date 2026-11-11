@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SECTION_TITLE, SettingsHome, type SettingsSection } from "@/components/settings/SettingsHome";
-import { DataSection, GeneralSection, NotificationsSection, WorkoutSection } from "@/components/settings/sections";
+import { DataSection, GeneralSection, GymsSection, NotificationsSection, WorkoutSection } from "@/components/settings/sections";
 import { AboutSection, FaqSection } from "@/components/settings/SupportSections";
 import { HealthSyncCard } from "@/components/settings/HealthSyncCard";
 import { useT } from "@/i18n";
@@ -13,6 +13,7 @@ import { useT } from "@/i18n";
 const SECTIONS: Record<SettingsSection, () => React.ReactNode> = {
   general: GeneralSection,
   workout: WorkoutSection,
+  gyms: GymsSection,
   notifications: NotificationsSection,
   health: HealthSyncCard,
   data: DataSection,
@@ -41,6 +42,21 @@ function SettingsScreen() {
     const to = HASH_SECTION[window.location.hash];
     if (!section && to) router.replace(`/settings?section=${to}${window.location.hash}`);
   }, [section, router]);
+
+  // A search result (or an old deep link) names a setting: bring it into view once it renders.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!section || !id) return;
+    let tries = 0;
+    let frame = 0;
+    const look = () => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ block: "center" });
+      else if (tries++ < 60) frame = requestAnimationFrame(look);
+    };
+    frame = requestAnimationFrame(look);
+    return () => cancelAnimationFrame(frame);
+  }, [section]);
 
   if (!section) {
     return (

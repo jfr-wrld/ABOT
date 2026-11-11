@@ -6,12 +6,11 @@ import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
-import { BodyweightSection } from "@/components/profile/BodyweightSection";
+import { BodyLink } from "@/components/profile/BodyLink";
 import { AccountSection } from "@/components/profile/AccountSection";
 import { HeightField } from "@/components/profile/HeightField";
 import { usePhotoPicker } from "@/components/profile/usePhotoPicker";
 import { normalizeHandle } from "@/lib/profile";
-import { useNow } from "@/lib/useNow";
 import { PROFILE_LIMITS } from "@/types/workout";
 import { useT } from "@/i18n";
 import { CoverPickerSheet, CoverThumb } from "@/components/profile/ProfileCover";
@@ -29,11 +28,10 @@ const INPUT =
 
 /**
  * Profile > Edit profile: everything about the lifter that they type in themselves. Photo, name,
- * username and height first, then bodyweight, then the account. #account scrolls to the account.
+ * username and height first, then a row to Body (weigh-ins), then the account. #account scrolls to the account.
  */
 function EditProfile() {
   const s = useSettingsStore();
-  const now = useNow(60_000);
   const t = useT();
   const photo = usePhotoPicker((profilePhoto) => s.update({ profilePhoto }));
   const [coverOpen, setCoverOpen] = useState(false);
@@ -154,7 +152,7 @@ function EditProfile() {
           </div>
           <HeightField imperial={s.weightUnit === "lbs"} heightCm={s.heightCm} onChange={(heightCm) => s.update({ heightCm })} />
         </section>
-        <BodyweightSection now={now} />
+        <BodyLink />
         <AccountSection />
       </div>
     </main>

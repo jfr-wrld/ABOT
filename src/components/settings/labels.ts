@@ -5,11 +5,12 @@ import type { AppLanguage, AppTheme } from "@/types/workout";
  * src/i18n/dynamic-keys.ts can list them for the translation coverage test.
  */
 
-export type SettingsSection = "general" | "workout" | "notifications" | "health" | "data" | "faq" | "about";
+export type SettingsSection = "general" | "workout" | "gyms" | "notifications" | "health" | "data" | "faq" | "about";
 
 export const SECTION_TITLE: Record<SettingsSection, string> = {
   general: "General",
   workout: "Workout",
+  gyms: "Gyms",
   notifications: "Notifications",
   health: "Health apps",
   data: "Data & backup",

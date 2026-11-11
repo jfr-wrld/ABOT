@@ -201,6 +201,13 @@ export interface GymLocation {
   /** Where the gym is, if pinned in Settings: lets ABOT pick it when a workout starts there. */
   lat?: number;
   lng?: number;
+  /** What the gym's bars and plates are marked in. Values above stay in kg; absent means kg. */
+  equipmentUnit?: WeightUnit;
+  /**
+   * Pairs of each plate size the gym has, keyed by the size in grams ("20000" for 20 kg). A
+   * size missing here has enough for any load.
+   */
+  platePairs?: Record<string, number>;
 }
 
 export interface RoutineFolder {
