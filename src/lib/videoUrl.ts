@@ -22,8 +22,8 @@ function youtube(id: string | undefined, start?: number, vertical = false): Pars
 
 /**
  * Understands YouTube (watch, youtu.be, Shorts, embed), full TikTok video links, and direct
- * .mp4/.webm/.mov/.gif files. Anything else, including non-http(s) schemes and TikTok short
- * links (which need the network to resolve), returns null.
+ * .mp4/.webm/.mov/.gif files. Anything else, including non-http(s) schemes and TikTok share
+ * links (they hold no video id; see isTikTokShortLink and lib/tiktok-resolve), returns null.
  */
 export function parseVideoUrl(input: string): ParsedVideo | null {
   let url: URL;
@@ -52,6 +52,24 @@ export function parseVideoUrl(input: string): ParsedVideo | null {
   if (ext === "mp4" || ext === "webm" || ext === "mov") return { kind: "file", url: url.toString(), media: "video" };
   if (ext === "gif") return { kind: "file", url: url.toString(), media: "image" };
   return null;
+}
+
+/**
+ * The link TikTok's Share > Copy link gives: vt.tiktok.com/<code>, vm.tiktok.com/<code> or
+ * tiktok.com/t/<code>. It only redirects to the video, so the id has to be looked up.
+ */
+export function isTikTokShortLink(input: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(input.trim());
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+  const host = url.hostname.toLowerCase();
+  if (host === "vt.tiktok.com" || host === "vm.tiktok.com") return /^\/[A-Za-z0-9]+\/?$/.test(url.pathname);
+  if (host === "tiktok.com" || host === "www.tiktok.com") return /^\/t\/[A-Za-z0-9]+\/?$/.test(url.pathname);
+  return false;
 }
 
 /**

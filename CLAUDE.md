@@ -9,6 +9,8 @@ Exceptions, both optional and owner-approved: Supabase cloud sync, and payments 
 webhook through Supabase Edge Functions, web and Android, 2026-11-11; see `docs/payments-setup.md`),
 and the Android app's update check (GitHub Releases API, on every start, on return at most every 30 minutes,
 and when tapped; the APK downloads only after the user taps Update now; `src/lib/app-update.ts`).
+Also approved: turning a TikTok share link (vt.tiktok.com) into its full video link, one request to TikTok
+only when the user saves that link as an exercise video (`src/lib/tiktok-resolve.ts`).
 
 <!-- antislop:start -->
 ## antislop

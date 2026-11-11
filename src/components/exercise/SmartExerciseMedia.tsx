@@ -5,7 +5,8 @@ import { ExternalLink, Link2, Pause, Play, Trash2 } from "lucide-react";
 import type { Exercise } from "@/types/workout";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { Button } from "@/components/ui/Button";
-import { embedUrl, parseVideoUrl, searchLinks, type ParsedVideo } from "@/lib/videoUrl";
+import { embedUrl, isTikTokShortLink, parseVideoUrl, searchLinks, type ParsedVideo } from "@/lib/videoUrl";
+import { resolveTikTokShortLink } from "@/lib/tiktok-resolve";
 import { useExerciseStore } from "@/store/useExerciseStore";
 import { useT } from "@/i18n";
 import { useAppActive } from "@/lib/native/app-active";
@@ -219,8 +220,23 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
   const inputId = useId();
   const t = useT();
 
-  function save() {
+  const [resolving, setResolving] = useState(false);
+
+  async function save() {
     const parsed = parseVideoUrl(draft);
+    if (!parsed && isTikTokShortLink(draft)) {
+      // A share link holds no video id: TikTok is asked once, and the full link is what is kept.
+      if (!online) return setError(t("A TikTok share link needs a connection to open. Try again online."));
+      setResolving(true);
+      setError(null);
+      const full = await resolveTikTokShortLink(draft.trim());
+      setResolving(false);
+      if (!full) return setError(t("Could not open this TikTok link. Check the connection, or open it and copy the full link (tiktok.com/@…/video/…)."));
+      setDraft(full);
+      setCustomVideo(exercise.id, full);
+      setEditing(false);
+      return;
+    }
     if (!parsed) {
       setError(t("Paste a YouTube, YouTube Shorts or TikTok video link, or a direct .mp4, .webm or .gif file."));
       return;
@@ -272,7 +288,7 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            save();
+            void save();
           }}
           className="flex flex-col gap-2 px-1"
         >
@@ -299,8 +315,8 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
           )}
           <div className="grid grid-cols-2 gap-2">
             <Button onClick={() => setEditing(false)}>{t("Cancel")}</Button>
-            <Button type="submit" variant="primary">
-              {t("Save video")}
+            <Button type="submit" variant="primary" disabled={resolving} aria-busy={resolving}>
+              {resolving ? t("Opening the TikTok link…") : t("Save video")}
             </Button>
           </div>
         </form>

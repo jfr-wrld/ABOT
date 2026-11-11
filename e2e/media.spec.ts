@@ -74,6 +74,32 @@ test("video tab: search links, custom video validation, saved link, removal", as
   await expect(page.getByText("No tutorial video set for this exercise.")).toBeVisible();
 });
 
+test("a TikTok share link is opened once and saved as the full video link", async ({ page }) => {
+  await serveFrames(page);
+  let answer: { status: number; body: unknown } = { status: 200, body: { embed_product_id: "7301234567890123456", author_unique_id: "coach.ari" } };
+  await page.route(/www\.tiktok\.com\/oembed/, (route) => route.fulfill({ status: answer.status, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(answer.body) }));
+  await page.route("https://www.tiktok.com/player/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>player</p>" }));
+  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
+  const media = page.getByRole("region", { name: "Exercise media" });
+  await media.getByRole("tab", { name: "Video" }).click();
+  await media.getByRole("button", { name: "Set custom video" }).click();
+
+  // TikTok cannot say where the link goes: an error, and nothing saved.
+  answer = { status: 404, body: {} };
+  await media.getByLabel("Video link").fill("https://vt.tiktok.com/ZSpaKUad5/");
+  await media.getByRole("button", { name: "Save video" }).click();
+  await expect(media.getByRole("alert")).toContainText("Could not open this TikTok link");
+  await expect(media.locator("iframe")).toHaveCount(0);
+
+  answer = { status: 200, body: { embed_product_id: "7301234567890123456", author_unique_id: "coach.ari" } };
+  await media.getByRole("button", { name: "Save video" }).click();
+  await expect(media.locator("iframe")).toHaveAttribute("src", /tiktok\.com\/player\/v1\/7301234567890123456/);
+  await page.reload();
+  await page.getByRole("tab", { name: "How to" }).click();
+  await page.getByRole("region", { name: "Exercise media" }).getByRole("tab", { name: "Video" }).click();
+  await expect(page.locator("iframe")).toHaveAttribute("src", /7301234567890123456/);
+});
+
 test("video tab offline says so instead of loading a player", async ({ page, context }) => {
   await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   await context.setOffline(true);

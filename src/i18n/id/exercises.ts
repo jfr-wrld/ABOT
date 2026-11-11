@@ -322,4 +322,7 @@ export const exercises: Record<string, string> = {
   Catalog: "Katalog",
   "Folder by split": "Folder menurut split",
   "Routine overview": "Ringkasan rutinitas",
+  "A TikTok share link needs a connection to open. Try again online.": "Link share TikTok butuh koneksi untuk dibuka. Coba lagi saat online.",
+  "Could not open this TikTok link. Check the connection, or open it and copy the full link (tiktok.com/@…/video/…).": "Link TikTok ini gagal dibuka. Cek koneksi, atau buka link-nya lalu salin link lengkapnya (tiktok.com/@…/video/…).",
+  "Opening the TikTok link…": "Membuka link TikTok…",
 };

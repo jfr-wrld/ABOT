@@ -20,7 +20,7 @@ function contentSecurityPolicy(): string {
     // Exercise photos, Google profile pictures and lifters' own GIF links come from many hosts.
     "img-src 'self' data: blob: https:",
     "media-src 'self' blob: https:",
-    `connect-src 'self' ${supabase} ${supabase.replace(/^https:/, "wss:")} https://api.github.com https://raw.githubusercontent.com https://nominatim.openstreetmap.org https://overpass-api.de${dev ? " ws:" : ""}`.replace(/ +/g, " "),
+    `connect-src 'self' ${supabase} ${supabase.replace(/^https:/, "wss:")} https://api.github.com https://raw.githubusercontent.com https://nominatim.openstreetmap.org https://overpass-api.de https://www.tiktok.com${dev ? " ws:" : ""}`.replace(/ +/g, " "),
     "frame-src https://www.youtube-nocookie.com https://www.tiktok.com",
     "worker-src 'self' blob:",
     "object-src 'none'",

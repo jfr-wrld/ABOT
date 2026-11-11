@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { embedUrl, parseVideoUrl, searchLinks } from "./videoUrl";
+import { embedUrl, isTikTokShortLink, parseVideoUrl, searchLinks } from "./videoUrl";
 
 describe("parseVideoUrl", () => {
   it.each([
@@ -32,6 +32,21 @@ describe("parseVideoUrl", () => {
     "ftp://example.com/a.mp4",
   ])("rejects %s", (url) => {
     expect(parseVideoUrl(url)).toBeNull();
+  });
+});
+
+describe("isTikTokShortLink", () => {
+  it.each(["https://vt.tiktok.com/ZSpaKUad5/", "https://vm.tiktok.com/ZMabc123", "https://www.tiktok.com/t/ZTabc123/"])("accepts %s", (url) => {
+    expect(isTikTokShortLink(url)).toBe(true);
+  });
+  it.each([
+    "https://www.tiktok.com/@coach.ari/video/7301234567890123456",
+    "https://vt.tiktok.com/",
+    "https://vt.tiktok.com/abc/def",
+    "https://vt.tiktok.com.evil.com/ZSpaKUad5/",
+    "javascript:alert(1)",
+  ])("rejects %s", (url) => {
+    expect(isTikTokShortLink(url)).toBe(false);
   });
 });
 
