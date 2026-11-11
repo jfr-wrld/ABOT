@@ -15,8 +15,8 @@ import { PROFILE_LIMITS } from "@/types/workout";
 import { useT } from "@/i18n";
 
 const STATUS_LINE: Record<HealthStatus, { text: string; on: boolean }> = {
-  connected: { text: "Health Connect // Active", on: true },
-  partial: { text: "Health Connect // Partial access", on: true },
+  connected: { text: "Connected to Health Connect", on: true },
+  partial: { text: "Connected, with some permissions off", on: true },
   disconnected: { text: "Disconnected", on: false },
   unavailable: { text: "Health Connect not installed", on: false },
   needs_update: { text: "Health Connect needs an update", on: false },
@@ -156,22 +156,27 @@ export function HealthSyncCard() {
             {connectLabel}
           </Button>
         )}
-        <button
-          type="button"
-          onClick={() => setGuideOpen(true)}
-          className="min-h-11 self-start rounded-ctl px-1 text-left text-sm font-semibold text-accent underline-offset-4 hover:underline"
-        >
-          {t("How to link Huawei or Samsung Health")}
-        </button>
+        {/* The guide and auto-sync are about Health Connect, which only the Android app has. */}
+        {native && (
+          <button
+            type="button"
+            onClick={() => setGuideOpen(true)}
+            className="min-h-11 self-start rounded-ctl px-1 text-left text-sm font-semibold text-accent underline-offset-4 hover:underline"
+          >
+            {t("How to link Huawei or Samsung Health")}
+          </button>
+        )}
       </div>
 
-      <Toggle
-        id="health-auto-sync"
-        label={t("Auto-sync completed workouts")}
-        info={t("Each workout is sent to Health Connect when you tap Finish. Sending it again later updates it, it never adds a copy.")}
-        checked={autoSync}
-        onChange={(v) => update({ healthAutoSync: v })}
-      />
+      {native && (
+        <Toggle
+          id="health-auto-sync"
+          label={t("Auto-sync completed workouts")}
+          info={t("Each workout is sent to Health Connect when you tap Finish. Sending it again later updates it, it never adds a copy.")}
+          checked={autoSync}
+          onChange={(v) => update({ healthAutoSync: v })}
+        />
+      )}
 
       <div>
         <label htmlFor="health-weight" className="mb-1 block text-sm font-semibold">

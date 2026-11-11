@@ -132,7 +132,7 @@ export const settings: Record<string, string> = {
   Minute: "Menit",
   "Pack-your-bag call": "Pengingat siap-siap",
   "{m}m": "{m} mnt",
-  "NEXT // {day} {time} · {routine}": "BERIKUTNYA // {day} {time} · {routine}",
+  "Next: {day} {time} · {routine}": "Berikutnya: {day} {time} · {routine}",
   "No training day picked yet.": "Belum ada hari latihan yang dipilih.",
   "Notifications on": "Notifikasi aktif",
   "Send a test": "Kirim tes",
@@ -276,7 +276,7 @@ export const settings: Record<string, string> = {
   "{n} older versions were replaced by newer edits from another device and kept on this phone.":
     "{n} versi lama diganti oleh perubahan lebih baru dari perangkat lain dan disimpan di HP ini.",
   "Sync now": "Sinkronkan sekarang",
-  "Backup & Sync settings": "Pengaturan Backup & Sinkronisasi",
+  "Backup & sync settings": "Pengaturan backup & sinkronisasi",
   "Backing up this phone now.": "Sedang mem-backup HP ini.",
   Dismiss: "Tutup",
   Details: "Detail",
@@ -461,8 +461,8 @@ export const settings: Record<string, string> = {
   // Health apps (Health Connect)
   "Health apps": "Aplikasi kesehatan",
   "Auto-sync on": "Sinkron otomatis aktif",
-  "Health Connect // Active": "Health Connect // Aktif",
-  "Health Connect // Partial access": "Health Connect // Akses sebagian",
+  "Connected to Health Connect": "Terhubung ke Health Connect",
+  "Connected, with some permissions off": "Terhubung, sebagian izin nonaktif",
   Disconnected: "Tidak terhubung",
   "Health Connect not installed": "Health Connect belum terpasang",
   "Health Connect needs an update": "Health Connect perlu diperbarui",
@@ -603,4 +603,7 @@ export const settings: Record<string, string> = {
   "Your own image or one of ten designs": "Gambarmu sendiri atau salah satu dari sepuluh desain",
   "Your training": "Latihanmu",
   "{title} file": "File {title}",
+  "This file is too large for a workout export.": "File ini terlalu besar untuk sebuah ekspor latihan.",
+  "The workouts were imported, but ABOT could not reload them ({error}). Reload the page to see them.": "Latihan sudah diimpor, tapi ABOT gagal memuatnya ulang ({error}). Muat ulang halaman untuk melihatnya.",
+  "Export and body weight": "Ekspor dan berat badan",
 };

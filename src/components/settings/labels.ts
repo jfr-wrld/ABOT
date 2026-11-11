@@ -18,7 +18,7 @@ export const SECTION_TITLE: Record<SettingsSection, string> = {
 };
 
 /** Option labels stay as written in every language, except "Phone", which is translated. */
-export const LANGUAGE_LABEL: Record<AppLanguage, string> = { auto: "Phone", en: "English", id: "Indonesia" };
+export const LANGUAGE_LABEL: Record<AppLanguage, string> = { auto: "Phone", en: "English", id: "Bahasa Indonesia" };
 export const THEME_LABEL: Record<AppTheme, string> = { system: "System", dark: "Dark", light: "Light" };
 
 /** Questions people ask, answered in a line or two each. */

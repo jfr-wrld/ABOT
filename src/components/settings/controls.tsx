@@ -20,7 +20,6 @@ export function Toggle({
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
-  const t = useT();
   return (
     <div className="flex items-start justify-between gap-3">
       <InfoTip
@@ -33,29 +32,54 @@ export function Toggle({
       >
         {info}
       </InfoTip>
-      <button
-        id={id}
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => {
-          feedback.tick();
-          onChange(!checked);
-        }}
-        className={`relative flex h-8 w-14 shrink-0 items-center rounded-full border px-0.5 transition-colors ${
-          checked ? "justify-end border-accent bg-accent" : "justify-start border-line-strong bg-surface-2"
-        }`}
-      >
-        {/* The knob springs across with a slight overshoot, like a physical toggle. */}
-        <motion.span
-          layout
-          transition={{ type: "spring", stiffness: 700, damping: 30 }}
-          aria-hidden="true"
-          className={`size-6 rounded-full ${checked ? "bg-on-accent" : "bg-text"}`}
-        />
-        <span className="sr-only">{checked ? t("On") : t("Off")}</span>
-      </button>
+      <Switch id={id} checked={checked} onChange={onChange} />
     </div>
+  );
+}
+
+/**
+ * The one on/off switch of Settings: a tick, a knob that springs across, and its state for
+ * screen readers. Every switch uses it, so they all look and feel the same.
+ */
+export function Switch({
+  checked,
+  onChange,
+  id,
+  disabled,
+  "aria-label": ariaLabel,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  id?: string;
+  disabled?: boolean;
+  "aria-label"?: string;
+}) {
+  const t = useT();
+  return (
+    <button
+      id={id}
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={() => {
+        feedback.tick();
+        onChange(!checked);
+      }}
+      className={`relative flex h-8 w-14 shrink-0 items-center rounded-full border px-0.5 transition-colors disabled:opacity-40 ${
+        checked ? "justify-end border-accent bg-accent" : "justify-start border-line-strong bg-surface-2"
+      }`}
+    >
+      {/* The knob springs across with a slight overshoot, like a physical toggle. */}
+      <motion.span
+        layout
+        transition={{ type: "spring", stiffness: 700, damping: 30 }}
+        aria-hidden="true"
+        className={`size-6 rounded-full ${checked ? "bg-on-accent" : "bg-text"}`}
+      />
+      <span className="sr-only">{checked ? t("On") : t("Off")}</span>
+    </button>
   );
 }
 

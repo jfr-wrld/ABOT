@@ -116,7 +116,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
         {gym.isDefault ? (
           <span className="text-xs font-semibold text-accent">{t("Default")}</span>
         ) : (
-          <Button variant="ghost" onClick={onMakeDefault} className="min-h-9 px-2 text-xs">
+          <Button variant="ghost" onClick={onMakeDefault} className="min-h-11 px-2 text-xs">
             {t("Make default")}
           </Button>
         )}

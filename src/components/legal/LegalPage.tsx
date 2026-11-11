@@ -43,7 +43,7 @@ export function LegalPage({ which, docs }: { which: "privacy" | "terms"; docs: R
               onClick={() => setPicked(l)}
               className={`min-h-9 rounded-full px-3 ${lang === l ? "bg-ink/10 text-text" : "text-text-muted hover:text-text"}`}
             >
-              {l === "en" ? "English" : "Indonesia"}
+              {l === "en" ? "English" : "Bahasa Indonesia"}
             </button>
           ))}
         </div>

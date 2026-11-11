@@ -74,6 +74,10 @@ export function ProgressPanel() {
         </section>
       ) : null}
 
+      {/* With nothing logged, the range and the totals would only be a row of zeros under the
+          message above, so they wait for the first workout. */}
+      {d.completed.length > 0 && (
+        <>
       <motion.div custom={0} variants={section} initial="hidden" animate="show" className="flex items-center gap-2">
         <div className="flex-1">
           <RangeTabs id="range" label={t("Range")} options={RANGES.map((n) => ({ value: n, label: t("{n} wk", { n }) }))} value={d.weeks} onChange={setWeeks} />
@@ -90,6 +94,8 @@ export function ProgressPanel() {
       <motion.div custom={1} variants={section} initial="hidden" animate="show">
         <ProgressHero weeks={d.weeks} totals={d.totals} change={d.change} buckets={d.buckets} unit={d.unit} />
       </motion.div>
+        </>
+      )}
 
       <motion.nav custom={2} variants={section} initial="hidden" animate="show" aria-label={t("Progress details")} className="flex flex-col gap-2">
         <SummaryTile

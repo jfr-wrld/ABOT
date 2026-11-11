@@ -140,7 +140,7 @@ function GoogleSignIn({ from }: { from: string | null }) {
           {t("Done")}
         </Link>
         <Link href="/settings?section=data" className={SECONDARY_LINK}>
-          {t("Backup & Sync settings")}
+          {t("Backup & sync settings")}
         </Link>
       </>
     );

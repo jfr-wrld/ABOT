@@ -19,7 +19,7 @@ import { VARIATION_LABEL } from "@/data/variations";
  */
 export const DYNAMIC_KEYS: string[] = [
   // HealthSyncCard STATUS_LINE and HealthSyncService reasons
-  "Health Connect // Active", "Health Connect // Partial access", "Disconnected", "Health Connect not installed",
+  "Connected to Health Connect", "Connected, with some permissions off", "Disconnected", "Health Connect not installed",
   "Health Connect needs an update", "Android app only",
   "Health Connect is only in the Android app", "Only finished workouts are synced",
   // RecoveryMap REGION_NAMES and STAGE_LABELS

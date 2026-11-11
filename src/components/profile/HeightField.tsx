@@ -25,10 +25,15 @@ export function HeightField({
     ? t("{min} to {max}", { min: `${cmToFtIn(min).ft} ft ${cmToFtIn(min).inch} in`, max: `${cmToFtIn(max).ft} ft ${cmToFtIn(max).inch} in` })
     : t("{min} to {max}", { min, max: `${max} cm` });
   const errorProps = { "aria-invalid": off || undefined, "aria-describedby": off ? "profile-height-error" : undefined };
+  // Leaving the field with a height out of range brings it to the nearest one ABOT accepts, so
+  // nothing impossible is kept (a backup would drop it anyway).
+  const settle = () => {
+    if (off && heightCm !== null) onChange(Math.min(max, Math.max(min, heightCm)));
+  };
 
   if (!imperial) {
     return (
-      <div>
+      <div onBlur={settle}>
         <label htmlFor="profile-height" className="mb-1 block text-sm font-semibold">
           {t("Height")} <span className="font-normal text-text-muted">(cm)</span>
         </label>
@@ -51,7 +56,7 @@ export function HeightField({
   const set = (ft: number | null, inch: number | null) =>
     onChange(ft === null && inch === null ? null : ftInToCm(ft ?? 0, Math.min(11, inch ?? 0)));
   return (
-    <fieldset>
+    <fieldset onBlur={settle}>
       <legend className="mb-1 text-sm font-semibold">{t("Height")}</legend>
       <div className="grid grid-cols-2 gap-2">
         <div className="relative">

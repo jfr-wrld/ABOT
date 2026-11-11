@@ -54,7 +54,7 @@ export function DataPortabilityCard() {
     setPicked(null);
     if (!file) return;
     // A real ABOT file is a few MB; reading a huge one would freeze the phone.
-    if (file.size > IMPORT_MAX_BYTES) return setError(t("This file is too large to be an ABOT export."));
+    if (file.size > IMPORT_MAX_BYTES) return setError(t("This file is too large for a workout export."));
     let text: string;
     try {
       text = await file.text();
@@ -100,7 +100,7 @@ export function DataPortabilityCard() {
       setPicked(null);
       if (fileInput.current) fileInput.current.value = "";
     } catch (e) {
-      setError(t("The backup was imported, but ABOT could not reload it ({error}). Reload the page to see it.", { error: msg(e) }));
+      setError(t("The workouts were imported, but ABOT could not reload them ({error}). Reload the page to see them.", { error: msg(e) }));
     } finally {
       setBusy(false);
     }

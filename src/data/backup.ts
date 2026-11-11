@@ -105,7 +105,11 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
   if (!isObj(raw)) return null;
   return {
     weightUnit: raw.weightUnit === "lbs" ? "lbs" : "kg",
-    defaultRestSeconds: typeof raw.defaultRestSeconds === "number" ? raw.defaultRestSeconds : DEFAULT_SETTINGS.defaultRestSeconds,
+    // Rest the timer can run: whole seconds, up to ten minutes.
+    defaultRestSeconds:
+      typeof raw.defaultRestSeconds === "number" && Number.isInteger(raw.defaultRestSeconds) && raw.defaultRestSeconds >= 0 && raw.defaultRestSeconds <= 600
+        ? raw.defaultRestSeconds
+        : DEFAULT_SETTINGS.defaultRestSeconds,
     restTimerAlert: typeof raw.restTimerAlert === "boolean" ? raw.restTimerAlert : DEFAULT_SETTINGS.restTimerAlert,
     firstDayOfWeek: raw.firstDayOfWeek === 0 ? 0 : 1,
     activeLocationId: typeof raw.activeLocationId === "string" ? raw.activeLocationId : null,

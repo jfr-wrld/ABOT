@@ -13,6 +13,7 @@ import { InfoTip } from "@/components/ui/InfoTip";
 import { isNativeApp, saveFile } from "@/lib/native/files";
 import { useT } from "@/i18n";
 import { openNotificationSettings } from "@/lib/native/permissions";
+import { Switch } from "./controls";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
@@ -82,21 +83,7 @@ export function WorkoutReminderSettings() {
         >
           {t("Pick your training days and ABOT calls you to the session.")}
         </InfoTip>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={schedule.enabled}
-          aria-label={t("Workout reminders")}
-          onClick={() => update({ enabled: !schedule.enabled })}
-          className={`relative h-8 w-14 shrink-0 rounded-full border transition-colors ${
-            schedule.enabled ? "border-accent bg-accent" : "border-line-strong bg-surface-2"
-          }`}
-        >
-          <span
-            aria-hidden="true"
-            className={`absolute top-0.5 size-6 rounded-full transition-[left] ${schedule.enabled ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`}
-          />
-        </button>
+        <Switch checked={schedule.enabled} onChange={(enabled) => update({ enabled })} aria-label={t("Workout reminders")} />
       </div>
 
       {!schedule.enabled ? null : (
@@ -171,7 +158,7 @@ export function WorkoutReminderSettings() {
               <span id="lead-label" className="label-caps mb-1 block">
                 {t("Pack-your-bag call")}
               </span>
-              <div role="radiogroup" aria-labelledby="lead-label" className="grid h-12 grid-cols-3 gap-1 rounded-ctl border border-ink/[0.08] p-1">
+              <div role="radiogroup" aria-labelledby="lead-label" className="grid min-h-[3.25rem] grid-cols-3 gap-1 rounded-ctl border border-ink/[0.08] p-1">
                 {([0, 15, 30] as const).map((m) => (
                   <button
                     key={m}
@@ -179,7 +166,7 @@ export function WorkoutReminderSettings() {
                     role="radio"
                     aria-checked={schedule.leadMinutes === m}
                     onClick={() => update({ leadMinutes: m })}
-                    className={`num rounded-lg text-xs font-semibold transition-colors ${
+                    className={`num min-h-11 rounded-lg text-xs font-semibold transition-colors ${
                       schedule.leadMinutes === m ? "bg-ink/[0.1] text-text" : "text-text-muted hover:text-text"
                     }`}
                   >
@@ -192,7 +179,7 @@ export function WorkoutReminderSettings() {
 
           <p className="num text-xs text-text-muted" role="status">
             {next
-              ? t("NEXT // {day} {time} · {routine}", {
+              ? t("Next: {day} {time} · {routine}", {
                   day: new Date(next.at).toLocaleDateString(t.locale, { weekday: "short" }),
                   time: schedule.time,
                   routine: routineName(next.routineId),

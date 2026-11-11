@@ -11,6 +11,7 @@ import { useAppResumed } from "@/lib/native/useAppResumed";
 import { Button } from "@/components/ui/Button";
 import { LiveCapsuleSettings } from "./LiveCapsuleSettings";
 import { useT } from "@/i18n";
+import { Switch } from "./controls";
 
 /** Settings row: the workout status notification shown while ABOT is in the background. */
 export function LiveStatusSetting() {
@@ -82,23 +83,7 @@ export function LiveStatusSetting() {
                 : t("Notifications are blocked for ABOT; allow them in the browser or phone settings."))}
           {unsupported && " " + t("This browser cannot show notifications.")}
         </InfoTip>
-        <button
-          id="live-status"
-          type="button"
-          role="switch"
-          aria-checked={on}
-          disabled={unsupported || (blocked && !app)}
-          onClick={() => void toggle()}
-          className={`relative h-8 w-14 shrink-0 rounded-full border transition-colors disabled:opacity-40 ${
-            on ? "border-accent bg-accent" : "border-line-strong bg-surface-2"
-          }`}
-        >
-          <span
-            aria-hidden="true"
-            className={`absolute top-0.5 size-6 rounded-full transition-[left] ${on ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`}
-          />
-          <span className="sr-only">{on ? t("On") : t("Off")}</span>
-        </button>
+        <Switch id="live-status" checked={on} disabled={unsupported || (blocked && !app)} onChange={() => void toggle()} />
       </div>
       {app && on && <LiveCapsuleSettings />}
       {app && blocked && (

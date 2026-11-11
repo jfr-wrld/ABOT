@@ -110,7 +110,7 @@ function SignedIn({ now }: { now: number }) {
           <Button onClick={() => void s.syncNow()}>{status.tone === "error" ? t("Try again") : t("Back up now")}</Button>
         )}
         <Link href="/settings?section=data" className={LINK}>
-          {t("Backup & Sync settings")}
+          {t("Backup & sync settings")}
         </Link>
       </div>
     </>

@@ -30,7 +30,7 @@ test("the weekly schedule is saved on the device", async ({ page }) => {
   await choose(page, panel.getByRole("combobox", { name: "Hour" }), "18");
   await choose(page, panel.getByRole("combobox", { name: "Minute" }), "00");
   await panel.getByRole("radio", { name: "15m" }).click();
-  await expect(panel.getByRole("status").filter({ hasText: "NEXT //" })).toContainText("18:00 · Free session");
+  await expect(panel.getByRole("status").filter({ hasText: "Next:" })).toContainText("18:00 · Free session");
 
   await page.reload();
   const again = page.getByRole("region", { name: "Workout schedule" });

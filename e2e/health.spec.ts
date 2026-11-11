@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   await freshStart(page);
 });
 
-test("Settings, Health apps: browser status, the guide, and the body weight the estimate uses", async ({ page }) => {
+test("Settings, Health apps in a browser: status, the .tcx route, and the body weight the estimate uses", async ({ page }) => {
   await page.goto("/settings");
   await page.getByRole("link", { name: /Health apps/ }).click();
   await expect(page.getByRole("status").filter({ hasText: "Android app only" })).toBeVisible();
@@ -15,15 +15,9 @@ test("Settings, Health apps: browser status, the guide, and the body weight the 
   await expect(page.getByRole("button", { name: "Connect Google / Huawei / Samsung Health" })).toHaveCount(0);
   await expect(page.getByText(/share any workout as a \.tcx file/)).toBeVisible();
 
-  await page.getByRole("button", { name: "How to link Huawei or Samsung Health" }).click();
-  const guide = page.getByRole("dialog", { name: "Link other health apps" });
-  await expect(guide).toContainText("Me > Privacy management > Health Connect");
-  await guide.getByRole("button", { name: "Close" }).click();
-
-  const auto = page.getByRole("switch", { name: "Auto-sync completed workouts" });
-  await expect(auto).toHaveAttribute("aria-checked", "false");
-  await auto.click();
-  await expect(auto).toHaveAttribute("aria-checked", "true");
+  // Health Connect's guide and auto-sync belong to the Android app: a browser does not show them.
+  await expect(page.getByRole("button", { name: "How to link Huawei or Samsung Health" })).toHaveCount(0);
+  await expect(page.getByRole("switch", { name: "Auto-sync completed workouts" })).toHaveCount(0);
 
   const weight = page.getByLabel("Body weight (kg)");
   await weight.fill("82.5");

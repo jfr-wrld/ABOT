@@ -52,7 +52,7 @@ export function GeneralSection() {
         name="effects"
         label={t("Visual effects")}
         info={t(
-          "Full: the glass dock and every animation. Lite saves battery: solid surfaces and no decorative movement (the workout bar's wave, celebrations), only short fades. Exercise demos keep moving in both, as they show how to do the lift. Auto picks Lite on phones with 4 cores or less, under 4 GB of memory, Data Saver, or reduced motion or transparency.",
+          "Lite saves battery: no glass and no decorative animation. Exercise demos keep moving in both. Auto picks Lite on slower phones or with Data Saver on.",
         )}
         value={s.visualEffects}
         options={(["auto", "full", "lite"] as const).map((v) => ({

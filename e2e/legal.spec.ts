@@ -6,7 +6,7 @@ test("the privacy policy and terms are readable, in both languages, and link to 
   await expect(page.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeVisible();
   await expect(page.getByRole("link", { name: "aljasidik@gmail.com" }).first()).toHaveAttribute("href", "mailto:aljasidik@gmail.com");
   await expectNoHorizontalOverflow(page);
-  await page.getByRole("button", { name: "Indonesia" }).click();
+  await page.getByRole("button", { name: "Bahasa Indonesia" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Kebijakan Privasi" })).toBeVisible();
   await page.getByRole("link", { name: "Ketentuan Penggunaan" }).click();
   await page.waitForURL("**/terms");

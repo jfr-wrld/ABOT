@@ -16,6 +16,9 @@ import { useT } from "@/i18n";
 import { FounderPassCard } from "./FounderPassCard";
 import { BillingSection } from "./BillingSection";
 import { BuildTag } from "./BuildTag";
+import { useEntitlements } from "@/store/useEntitlements";
+import { isNativeApp } from "@/lib/native/files";
+import { DEV_TOOLS } from "@/lib/dev-tools";
 
 export { SECTION_TITLE, type SettingsSection };
 
@@ -34,11 +37,15 @@ export function SettingsHome() {
   const version = useAppVersion();
   const t = useT();
   const language = s.language === "auto" ? t(LANGUAGE_LABEL.auto) : LANGUAGE_LABEL[s.language];
+  const { isFounder } = useEntitlements();
+  const native = isNativeApp();
+  const social = SOCIAL_LINKS.filter((l) => l.url);
 
   return (
     <div className="flex flex-col gap-5 px-4 pb-8 pt-4">
-      <FounderPassCard />
-      <BillingSection />
+      {/* The founder plate is for founders (and the simulator in development builds): everyone
+          else starts at their account and settings, not at a card that says they have none. */}
+      {(isFounder || DEV_TOOLS) && <FounderPassCard />}
 
       <Group title={t("Account")}>
         <Row
@@ -48,6 +55,7 @@ export function SettingsHome() {
           value={signedIn ? (email ?? t("Google account")) : t("Optional")}
         />
       </Group>
+      <BillingSection />
 
       <Group title={t("Preferences")}>
         <Row to={href("general")} icon={SlidersHorizontal} title={t(SECTION_TITLE.general)} value={`${language} · ${t(THEME_LABEL[s.theme])} · ${s.weightUnit}`} />
@@ -58,7 +66,7 @@ export function SettingsHome() {
           title={t(SECTION_TITLE.notifications)}
           value={notify === "granted" ? t("On") : notify === "denied" ? t("Off") : t("Not set")}
         />
-        <Row to={href("health")} icon={HeartPulse} title={t(SECTION_TITLE.health)} value={s.healthAutoSync ? t("Auto-sync on") : "Health Connect"} />
+        <Row to={href("health")} icon={HeartPulse} title={t(SECTION_TITLE.health)} value={native ? (s.healthAutoSync ? t("Auto-sync on") : "Health Connect") : t("Export and body weight")} />
       </Group>
 
       <Group title={t("Support")}>
@@ -67,21 +75,14 @@ export function SettingsHome() {
         <Row to={href("about")} icon={Info} title={t(SECTION_TITLE.about)} />
       </Group>
 
-      <Group title={t("Follow ABOT")}>
-        {SOCIAL_LINKS.map((l) =>
-          l.url ? (
-            <Row key={l.id} to={l.url} icon={() => <SocialIcon id={l.id} />} title={l.name} external />
-          ) : (
-            <li key={l.id} className="flex min-h-14 items-center gap-3 px-3 text-text-muted">
-              <IconTile>
-                <SocialIcon id={l.id} />
-              </IconTile>
-              <span className="min-w-0 flex-1 text-sm font-semibold">{l.name}</span>
-              <span className="rounded-full border border-line px-2 py-0.5 text-xs">{t("Soon")}</span>
-            </li>
-          ),
-        )}
-      </Group>
+      {/* Only accounts that exist: rows marked "Soon" looked like links and led nowhere. */}
+      {social.length > 0 && (
+        <Group title={t("Follow ABOT")}>
+          {social.map((l) => (
+            <Row key={l.id} to={l.url!} icon={() => <SocialIcon id={l.id} />} title={l.name} external />
+          ))}
+        </Group>
+      )}
 
       {signedIn && <SignOutButton />}
       <BuildTag />
