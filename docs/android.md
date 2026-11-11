@@ -52,7 +52,9 @@ as burnt.
   the `release` environment until the owner approves it (Review deployments, also from GitHub's
   mobile notification). Approved, it signs the build and publishes `abot-<n>`; a newer push
   replaces a release still waiting. The environment must list the owner under Required
-  reviewers, or pushes would publish unchecked. `versionCode` is the run number, so each release
+  reviewers, or pushes would publish unchecked. Releases waiting for approval:
+  https://github.com/jfr-wrld/ABOT/actions?query=is%3Awaiting (GitHub may not email the owner
+  about runs their own pushes started). `versionCode` is the run number, so each release
   installs over the last and keeps the data.
 - **The move from the old key**: phones on the old key cannot update in place. The last
   old-key build (an `apk-<n>` release) sees `abot-<n>` releases and walks the lifter through

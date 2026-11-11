@@ -83,11 +83,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: release
-    # One release waits for approval at a time: a newer push replaces the older one still waiting,
-    # so approving always ships the latest main.
+    # One release waits for approval at a time: a newer push cancels the one still waiting, so
+    # approving always ships the latest main. (With cancel-in-progress false, a release left
+    # waiting held the group and every later release queued behind it.)
     concurrency:
       group: release
-      cancel-in-progress: false
+      cancel-in-progress: true
     permissions:
       contents: write
     steps:
