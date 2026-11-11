@@ -8,6 +8,7 @@ import { mergeLog, type WorkoutPhoto } from "./repo/types";
 import { WORKOUT_PHOTO_MAX_BYTES } from "@/lib/photo";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
+import { COVER_PRESET_IDS } from "@/lib/cover-presets";
 
 export interface AbotBackup {
   app: "ABOT";
@@ -122,6 +123,7 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     bodyweightKg: inRange(raw.bodyweightKg, PROFILE_LIMITS.bodyweightKg),
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
     profilePhoto: normalizePhoto(raw.profilePhoto),
+    profileCover: normalizeCover(raw.profileCover),
   };
 }
 
@@ -154,6 +156,13 @@ function normalizeSleep(v: unknown): StoredSettings["lastSleep"] {
 const PHOTO = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/;
 function normalizePhoto(v: unknown): string | null {
   return typeof v === "string" && v.length <= PROFILE_LIMITS.photoMax && PHOTO.test(v) ? v : null;
+}
+
+/** A known drawn cover, or an image data URL of cover size; anything else falls back to the skyline. */
+function normalizeCover(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  if (v.startsWith("preset:")) return COVER_PRESET_IDS.includes(v.slice(7)) ? v : null;
+  return v.length <= PROFILE_LIMITS.coverMax && PHOTO.test(v) ? v : null;
 }
 
 const DAY_ID = /^\d{4}-\d{2}-\d{2}$/;

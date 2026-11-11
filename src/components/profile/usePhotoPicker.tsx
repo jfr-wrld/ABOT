@@ -10,7 +10,10 @@ import { openPhotoInput } from "@/lib/native/photo-input";
 import { useT } from "@/i18n";
 
 /** The hidden file input behind the avatar. The photo is resized on the phone and never uploaded. */
-export function usePhotoPicker(onChange: (url: string | null) => void) {
+export function usePhotoPicker(
+  onChange: (url: string | null) => void,
+  opts: { encode?: (file: File) => Promise<string>; title?: string; facing?: "user" | "environment" } = {},
+) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +24,7 @@ export function usePhotoPicker(onChange: (url: string | null) => void) {
     setBusy(true);
     setError(null);
     try {
-      onChange(await squareJpeg(file));
+      onChange(await (opts.encode ?? squareJpeg)(file));
     } catch (e) {
       setError(e instanceof Error ? e.message : t("This photo could not be used."));
     } finally {
@@ -34,7 +37,7 @@ export function usePhotoPicker(onChange: (url: string | null) => void) {
   const [choosing, setChoosing] = useState(false);
   const choose = (source: "gallery" | "camera") => {
     setChoosing(false);
-    openPhotoInput(ref.current, source, "user");
+    openPhotoInput(ref.current, source, opts.facing ?? "user");
   };
   const input = (
     <>
@@ -42,12 +45,12 @@ export function usePhotoPicker(onChange: (url: string | null) => void) {
         ref={ref}
         type="file"
         accept="image/*"
-        aria-label={t("Profile photo file")}
+        aria-label={opts.title ? t("{title} file", { title: opts.title }) : t("Profile photo file")}
         className="sr-only"
         tabIndex={-1}
         onChange={(e) => pick(e.target.files?.[0])}
       />
-      <Sheet open={choosing} onClose={() => setChoosing(false)} title={t("Profile photo")}>
+      <Sheet open={choosing} onClose={() => setChoosing(false)} title={opts.title ?? t("Profile photo")}>
         <div className="grid grid-cols-2 gap-2 pb-2">
           <Button onClick={() => choose("camera")} className="min-h-14">
             <Camera aria-hidden="true" size={18} />

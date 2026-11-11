@@ -29,6 +29,43 @@ export async function squareJpeg(file: File, size = 256): Promise<string> {
   throw new Error("This photo is too detailed to store. Try another one.");
 }
 
+/**
+ * A picked photo as a wide 3:1 JPEG data URL for the Profile cover: centre crop, `width` x
+ * `height`, re-encoded on the device (which drops EXIF), quality stepped down until it fits.
+ */
+export async function wideJpeg(file: File, width = 960, height = 320): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new Error("Pick a photo (JPEG, PNG or WebP).");
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error("This photo could not be read. Try a JPEG or PNG.");
+  }
+  const crop = coverCrop(bitmap.width, bitmap.height, width / height);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("This browser cannot resize photos.");
+  ctx.drawImage(bitmap, crop.x, crop.y, crop.w, crop.h, 0, 0, width, height);
+  bitmap.close();
+  for (const q of [0.8, 0.65, 0.5]) {
+    const url = canvas.toDataURL("image/jpeg", q);
+    if (url.length <= PROFILE_LIMITS.coverMax) return url;
+  }
+  throw new Error("This photo is too detailed to store. Try another one.");
+}
+
+/** The centred part of a `w` x `h` image with the given aspect ratio (width / height). */
+export function coverCrop(w: number, h: number, ratio: number): { x: number; y: number; w: number; h: number } {
+  if (w / h > ratio) {
+    const cw = Math.round(h * ratio);
+    return { x: Math.round((w - cw) / 2), y: 0, w: cw, h };
+  }
+  const ch = Math.round(w / ratio);
+  return { x: 0, y: Math.round((h - ch) / 2), w, h: ch };
+}
+
 /** Largest workout photo kept, in bytes: a 1600px JPEG of a gym scene lands well under it. */
 export const WORKOUT_PHOTO_MAX_BYTES = 450_000;
 

@@ -260,6 +260,11 @@ export interface UserSettings {
   heightCm: number | null;
   /** Square JPEG data URL (256px), made on the device from a picked photo. */
   profilePhoto: string | null;
+  /**
+   * The Profile header behind the photo: null for the training skyline, "preset:<id>" for one of
+   * the drawn covers (components/profile/coverPresets), or a 960x320 JPEG data URL.
+   */
+  profileCover: string | null;
   /** "auto" follows the phone: Indonesian when its language is Indonesian, else English. */
   language: AppLanguage;
   /** "system" follows the phone's light or dark mode. */
@@ -319,6 +324,8 @@ export const PROFILE_LIMITS = {
   heightCm: [100, 250],
   /** Characters in the photo data URL; a 256px JPEG is about 20-40k. */
   photoMax: 300_000,
+  /** Characters in the cover data URL; a 960x320 JPEG is about 60-120k. */
+  coverMax: 200_000,
 } as const;
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -340,6 +347,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   bodyweightKg: null,
   heightCm: null,
   profilePhoto: null,
+  profileCover: null,
 };
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Camera } from "lucide-react";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
@@ -14,6 +14,7 @@ import { normalizeHandle } from "@/lib/profile";
 import { useNow } from "@/lib/useNow";
 import { PROFILE_LIMITS } from "@/types/workout";
 import { useT } from "@/i18n";
+import { CoverPickerSheet, CoverThumb } from "@/components/profile/ProfileCover";
 
 export default function EditProfilePage() {
   return (
@@ -35,6 +36,7 @@ function EditProfile() {
   const now = useNow(60_000);
   const t = useT();
   const photo = usePhotoPicker((profilePhoto) => s.update({ profilePhoto }));
+  const [coverOpen, setCoverOpen] = useState(false);
 
   useEffect(() => {
     // Arriving from the account chip: bring the account into view once it has rendered.
@@ -100,6 +102,21 @@ function EditProfile() {
               {t(photo.error)}
             </p>
           )}
+          <button
+            type="button"
+            onClick={() => setCoverOpen(true)}
+            aria-haspopup="dialog"
+            className="flex min-h-12 items-center gap-3 rounded-xl text-left transition-colors hover:bg-ink/[0.03]"
+          >
+            <span className="relative block h-10 w-24 shrink-0 overflow-hidden rounded-lg border border-line bg-surface">
+              <CoverThumb />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t("Profile cover")}</span>
+              <span className="block text-xs text-text-muted">{t("Your own image or one of ten designs")}</span>
+            </span>
+          </button>
+          <CoverPickerSheet open={coverOpen} onClose={() => setCoverOpen(false)} weeks={[]} />
           <div>
             <label htmlFor="profile-name" className="mb-1 block text-sm font-semibold">
               {t("Name")}

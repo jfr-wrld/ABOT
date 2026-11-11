@@ -106,6 +106,7 @@ describe.each([
         bodyweightKg: 72.5,
         heightCm: 170,
         profilePhoto: null,
+        profileCover: "preset:neon-grid",
         bodyPhase: null,
       },
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },

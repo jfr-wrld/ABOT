@@ -52,6 +52,7 @@ function pickSettings(s: SettingsState): StoredSettings {
     bodyweightKg: s.bodyweightKg,
     heightCm: s.heightCm,
     profilePhoto: s.profilePhoto,
+    profileCover: s.profileCover,
   };
 }
 

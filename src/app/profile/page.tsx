@@ -21,6 +21,7 @@ import { weeklyBuckets } from "@/lib/analytics";
 import { useNow } from "@/lib/useNow";
 import { formatVolume } from "@/lib/units";
 import { useT } from "@/i18n";
+import { ProfileCover } from "@/components/profile/ProfileCover";
 
 export default function ProfilePage() {
   return (
@@ -83,7 +84,7 @@ function ProfileScreen() {
       </header>
 
       <section aria-label={t("Identity")} className="px-4 pt-3">
-        <Cover weeks={covers.map((b) => b.volumeKg)} />
+        <ProfileCover weeks={covers.map((b) => b.volumeKg)} />
         <div className="relative -mt-12 flex items-end justify-between gap-3 pl-3">
           {photo.input}
           <button
@@ -174,35 +175,3 @@ function ProfileScreen() {
   );
 }
 
-/**
- * The cover is the lifter's last twelve weeks of volume as a skyline: real data in place of a
- * stock banner. With nothing logged it is a plain Carbon plate.
- */
-function Cover({ weeks }: { weeks: number[] }) {
-  const max = Math.max(...weeks, 0);
-  const t = useT();
-  return (
-    <div aria-hidden="true" className="relative h-32 overflow-hidden rounded-card border border-line bg-surface">
-      {max > 0 && (
-        <svg viewBox={`0 0 ${weeks.length * 10} 100`} preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-24 w-full">
-          {weeks.map((v, i) => {
-            const h = Math.max(2, (v / max) * 92);
-            return (
-              <rect
-                key={i}
-                x={i * 10 + 1.5}
-                y={100 - h}
-                width={7}
-                height={h}
-                rx={1.5}
-                fill="var(--color-accent)"
-                opacity={i === weeks.length - 1 ? 0.55 : 0.16}
-              />
-            );
-          })}
-        </svg>
-      )}
-      <span className="label-caps absolute top-3 right-3">{t("12 wk volume")}</span>
-    </div>
-  );
-}

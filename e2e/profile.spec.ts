@@ -170,3 +170,25 @@ test("account and settings links lead somewhere real", async ({ page }) => {
   await page.getByRole("link", { name: "Settings", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
 });
+
+test("the cover can be one of ten designs or the lifter's own image, and back to training", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await freshStart(page);
+  await page.goto("/profile");
+  await page.getByRole("button", { name: "Change cover" }).click();
+  const sheet = page.getByRole("dialog", { name: "Profile cover" });
+  await expect(sheet.getByRole("list", { name: "Covers" }).getByRole("button")).toHaveCount(11);
+  await expectNoHorizontalOverflow(page);
+  await sheet.getByRole("button", { name: "Neon Grid" }).click();
+  await waitForSavedSetting(page, "profileCover", "preset:neon-grid");
+  await page.reload();
+  await page.getByRole("button", { name: "Change cover" }).click();
+  await expect(page.getByRole("button", { name: "Neon Grid" })).toHaveAttribute("aria-pressed", "true");
+
+  // An upload is cropped to a wide JPEG on the phone and shown behind the photo.
+  await page.getByRole("dialog", { name: "Profile cover" }).getByLabel("Cover image file").setInputFiles(path.join(__dirname, "fixtures", "frame0.jpg"));
+  await expect(page.locator("main img[src^='data:image/jpeg']").first()).toBeVisible();
+  await page.getByRole("button", { name: "Change cover" }).click();
+  await page.getByRole("dialog", { name: "Profile cover" }).getByRole("button", { name: "Remove image" }).click();
+  await waitForSavedSetting(page, "profileCover", null);
+});
