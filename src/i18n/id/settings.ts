@@ -579,4 +579,6 @@ export const settings: Record<string, string> = {
   "Uninstall ABOT from the phone's settings.": "Uninstall ABOT dari pengaturan HP.",
   "Install the new version, then restore the backup in Settings > Data.": "Pasang versi baru, lalu pulihkan backup di Pengaturan > Data.",
   "Download ABOT {version}": "Unduh ABOT {version}",
+  "Food photos from Wikimedia Commons": "Foto makanan dari Wikimedia Commons",
+  "unknown author": "pembuat tidak diketahui",
 };

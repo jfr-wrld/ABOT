@@ -11,8 +11,10 @@ import { FAQ } from "./labels";
 import { useT } from "@/i18n";
 import { FOOD_PHOTOS } from "@/data/food-photos.generated";
 
-/** Everyone whose photo shows a food in the guide, named once each. */
-const PHOTO_AUTHORS = [...new Set(Object.values(FOOD_PHOTOS).map((c) => c.author).filter((a): a is string => !!a))].sort();
+/** Everyone whose Pexels photo shows a food in the guide, named once each. */
+const PHOTO_AUTHORS = [...new Set(Object.values(FOOD_PHOTOS).filter((c) => c.site !== "Wikimedia Commons").map((c) => c.author).filter((a): a is string => !!a))].sort();
+/** Commons photos are credited one by one: author, licence and a link to the file, as CC BY(-SA) asks. */
+const COMMONS = Object.entries(FOOD_PHOTOS).filter(([, c]) => c.site === "Wikimedia Commons");
 
 export { FAQ };
 
@@ -98,6 +100,23 @@ export function AboutSection() {
               <p className="mt-1 text-xs leading-relaxed">{PHOTO_AUTHORS.join(", ")}</p>
             </details>
           </li>
+          {COMMONS.length > 0 && (
+            <li>
+              <details>
+                <summary className="cursor-pointer">{t("Food photos from Wikimedia Commons")}</summary>
+                <ul className="mt-1 flex flex-col gap-1 text-xs leading-relaxed">
+                  {COMMONS.map(([id, c]) => (
+                    <li key={id}>
+                      <a href={c.page} target="_blank" rel="noopener noreferrer" className="underline">
+                        {id.replace(/-/g, " ")}
+                      </a>
+                      {` · ${c.author ?? t("unknown author")} · ${c.license}`}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
+          )}
         </ul>
       </section>
 

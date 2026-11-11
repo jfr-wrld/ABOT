@@ -2,8 +2,10 @@
 // with its photographer and source. Do not edit by hand.
 export interface FoodPhotoCredit {
   author: string | null;
-  site: "Unsplash" | "Pexels";
+  site: "Unsplash" | "Pexels" | "Wikimedia Commons";
   page: string;
+  /** Commons only: the licence the photo (and the app's cropped copy) is under. */
+  license?: string;
 }
 
 export const FOOD_PHOTOS: Record<string, FoodPhotoCredit> = {
