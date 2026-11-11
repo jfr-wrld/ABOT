@@ -9,6 +9,7 @@ import { isNativeApp } from "@/lib/native/files";
 import { BackupSection } from "./BackupSection";
 import { DataPortabilityCard } from "./DataPortabilityCard";
 import { StorageSection } from "./StorageSection";
+import { DeleteDataSection } from "./DeleteDataSection";
 import { SyncSection } from "./SyncSection";
 import { WorkoutReminderSettings } from "./WorkoutReminderSettings";
 import { LocationsSection } from "./LocationsSection";
@@ -176,7 +177,7 @@ export function NotificationsSection() {
   );
 }
 
-/** Cloud backup, the backup file, importing from other apps, and what the phone keeps. */
+/** Cloud backup, the backup file, importing from other apps, what the phone keeps, and deleting it. */
 export function DataSection() {
   return (
     <div className="flex flex-col gap-5">
@@ -191,6 +192,9 @@ export function DataSection() {
       </div>
       <div className="border-t border-line pt-5">
         <StorageSection />
+      </div>
+      <div className="border-t border-line pt-5">
+        <DeleteDataSection />
       </div>
     </div>
   );

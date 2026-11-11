@@ -103,7 +103,7 @@ export const PRIVACY: Record<LegalLang, LegalDoc> = {
         heading: "How long we keep it, and deleting it",
         blocks: [
           {
-            p: `Data on your phone stays until you delete it in the app, clear the app's data or uninstall. Cloud data stays while your account exists. To delete your account and everything stored with it, email ${CONTACT_EMAIL} from the address you signed in with; we delete it within 30 days. Payment records may be kept as long as Indonesian tax and accounting rules require.`,
+            p: `Data on your phone stays until you delete it in the app, clear the app's data or uninstall. Cloud data stays while your account exists. To delete your account and everything stored with it, use Settings, Data & backup, Delete my data, which deletes it at once. You can also email ${CONTACT_EMAIL} from the address you signed in with; we delete it within 30 days. Payment records may be kept as long as Indonesian tax and accounting rules require.`,
           },
         ],
       },
@@ -204,7 +204,7 @@ export const PRIVACY: Record<LegalLang, LegalDoc> = {
         heading: "Lama penyimpanan dan penghapusan",
         blocks: [
           {
-            p: `Data di HP tetap ada sampai kamu menghapusnya di aplikasi, menghapus data aplikasi, atau mencopot aplikasi. Data cloud disimpan selama akunmu ada. Untuk menghapus akun beserta semua datanya, kirim email ke ${CONTACT_EMAIL} dari alamat yang kamu pakai untuk masuk; kami menghapusnya dalam 30 hari. Catatan pembayaran dapat disimpan selama diwajibkan aturan pajak dan akuntansi di Indonesia.`,
+            p: `Data di HP tetap ada sampai kamu menghapusnya di aplikasi, menghapus data aplikasi, atau mencopot aplikasi. Data cloud disimpan selama akunmu ada. Untuk menghapus akun beserta semua datanya, buka Pengaturan, Data & backup, Hapus dataku; akun langsung terhapus. Kamu juga bisa kirim email ke ${CONTACT_EMAIL} dari alamat yang kamu pakai untuk masuk; kami menghapusnya dalam 30 hari. Catatan pembayaran dapat disimpan selama diwajibkan aturan pajak dan akuntansi di Indonesia.`,
           },
         ],
       },

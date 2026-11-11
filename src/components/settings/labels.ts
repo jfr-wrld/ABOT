@@ -53,6 +53,6 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How do I delete my data?",
-    a: "Uninstalling ABOT removes everything from the phone. To delete your cloud backup as well, email us from the account you signed in with.",
+    a: "In Settings, Data & backup, Delete my data. Choose this phone only, or this phone and your account, which also deletes the cloud copy.",
   },
 ];

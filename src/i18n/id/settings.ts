@@ -248,8 +248,8 @@ export const settings: Record<string, string> = {
   "Sign in with Google on both phones, or export a backup file in Settings, Data, and import it on the new phone.":
     "Masuk dengan Google di kedua HP, atau ekspor file backup di Pengaturan, Data, lalu impor di HP baru.",
   "How do I delete my data?": "Bagaimana menghapus dataku?",
-  "Uninstalling ABOT removes everything from the phone. To delete your cloud backup as well, email us from the account you signed in with.":
-    "Mencopot ABOT menghapus semuanya dari HP. Untuk menghapus backup di cloud juga, kirim email ke kami dari akun yang kamu pakai untuk masuk.",
+  "In Settings, Data & backup, Delete my data. Choose this phone only, or this phone and your account, which also deletes the cloud copy.":
+    "Di Pengaturan, Data & backup, Hapus dataku. Pilih HP ini saja, atau HP ini dan akunmu, yang juga menghapus salinan di cloud.",
   "A strength training log that works offline.": "Catatan latihan beban yang jalan tanpa internet.",
   "Version {version}": "Versi {version}",
   "Your data": "Datamu",
@@ -606,4 +606,19 @@ export const settings: Record<string, string> = {
   "This file is too large for a workout export.": "File ini terlalu besar untuk sebuah ekspor latihan.",
   "The workouts were imported, but ABOT could not reload them ({error}). Reload the page to see them.": "Latihan sudah diimpor, tapi ABOT gagal memuatnya ulang ({error}). Muat ulang halaman untuk melihatnya.",
   "Export and body weight": "Ekspor dan berat badan",
+  "Delete my data": "Hapus dataku",
+  "This phone only": "HP ini saja",
+  "Your account and its cloud copy stay. Sign in again to bring your training back.": "Akun dan salinan cloud-nya tetap ada. Masuk lagi untuk mengembalikan latihanmu.",
+  "Workouts, routines, photos and settings on this phone.": "Latihan, rutinitas, foto, dan pengaturan di HP ini.",
+  "This phone and my account": "HP ini dan akunku",
+  "Also deletes the cloud copy, the sign-in and any PRO bought on the account. It cannot be restored.": "Juga menghapus salinan cloud, akun masuk, dan PRO yang dibeli di akun itu. Tidak bisa dikembalikan.",
+  "Start over on this phone, or close your ABOT account. Export a backup first if you might want it back.": "Mulai dari nol di HP ini, atau tutup akun ABOT-mu. Ekspor backup dulu kalau mungkin masih butuh.",
+  "Deleting…": "Menghapus…",
+  "Delete everything": "Hapus semuanya",
+  "Delete from phone": "Hapus dari HP",
+  "What to delete": "Yang dihapus",
+  "Cloud accounts are not set up in this version of ABOT.": "Akun cloud belum tersedia di versi ABOT ini.",
+  "Sign in again first, so ABOT knows the account is yours.": "Masuk lagi dulu, supaya ABOT tahu akun ini milikmu.",
+  "Could not reach the server. Check the connection and try again. Nothing was deleted.": "Server tidak terjangkau. Cek koneksi lalu coba lagi. Belum ada yang dihapus.",
+  "The account could not be deleted. Try again later. Nothing on this phone was deleted.": "Akun gagal dihapus. Coba lagi nanti. Data di HP ini belum dihapus.",
 };

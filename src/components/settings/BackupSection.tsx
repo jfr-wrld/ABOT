@@ -7,6 +7,7 @@ import { IMPORT_MAX_BYTES, backupFileName, backupFromSnapshot, importBackup, par
 import { getActivePersistence, getActiveRepository, hydrateStores, snapshotFromStores } from "@/store/persistence";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { saveFile } from "@/lib/native/files";
+import { applyDevicePrefs, currentDevicePrefs } from "@/lib/device-prefs";
 import { useT } from "@/i18n";
 
 type Pending = { backup: AbotBackup; counts: BackupCounts; fileName: string };
@@ -40,7 +41,7 @@ export function BackupSection() {
     setError(null);
     try {
       const repo = getActiveRepository();
-      const base = backupFromSnapshot(snapshotFromStores());
+      const base = { ...backupFromSnapshot(snapshotFromStores()), devicePrefs: currentDevicePrefs() };
       const photos = withPhotos && repo && photoStats?.count ? await photosForBackup(await repo.photos.all()) : undefined;
       const backup: AbotBackup = photos ? { ...base, photos } : base;
       const saved = await saveFile(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }), backupFileName());
@@ -94,6 +95,8 @@ export function BackupSection() {
     }
     try {
       await persistence.runExclusive(() => hydrateStores(repo));
+      // Replace makes this phone the file's, notification choices included; merge keeps this phone's settings.
+      if (mode === "replace") applyDevicePrefs(pending.backup.devicePrefs);
       setStatus(
         t.n(pending.counts.sessions, "Imported {n} workout ({how}).", "Imported {n} workouts ({how}).", {
           how: mode === "merge" ? t("merged") : t("replaced all data"),

@@ -9,3 +9,7 @@ verify_jwt = true
 # Midtrans calls it with no Supabase token; it checks the SHA-512 signature instead.
 [functions.midtrans-notify]
 verify_jwt = false
+
+# A signed-in lifter deletes their own account: the gateway checks the token, the function too.
+[functions.delete-account]
+verify_jwt = true

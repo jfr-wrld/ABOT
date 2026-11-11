@@ -26,7 +26,7 @@ export interface KvValues {
   syncState: SyncState;
   /** Local versions that lost to a newer remote edit, newest first, at most 50 (Task 16). */
   conflicts: ConflictEntry[];
-  /** Workout reminders. Device-local (notifications belong to this phone): not synced or backed up. */
+  /** Workout reminders. Device-local (notifications belong to this phone): not synced; backup files carry them (devicePrefs). */
   reminders: WorkoutSchedule;
   /** What the reminder loop has already shown, so nothing fires twice. */
   reminderState: { lastCheck: number; fired: string[] };
@@ -121,6 +121,11 @@ export interface Repository {
   /** Replaces every table and the settings/active workout in one transaction; clears the rest timer. */
   replaceAll(data: RepoSnapshot): Promise<void>;
   snapshot(): Promise<RepoSnapshot>;
+  /**
+   * Deletes everything this device holds (Delete my data), the catalog and sync bookkeeping
+   * included. The repository is closed afterwards and must not be used again: reload the app.
+   */
+  wipe(): Promise<void>;
 }
 
 /** One photo on a workout: a JPEG re-encoded on the device (no EXIF, so no GPS). */

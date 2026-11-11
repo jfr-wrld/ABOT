@@ -46,3 +46,73 @@ test("an invalid file shows why it was refused", async ({ page }, info) => {
   await page.getByLabel("Import backup").setInputFiles(file);
   await expect(page.getByRole("alert").filter({ hasText: "This file is not valid JSON" })).toBeVisible();
 });
+
+test("Delete my data: this phone only clears everything and starts over", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await page.getByLabel("Workout name").fill("Gone Day");
+  await addExercise(page, "Squat (Barbell)");
+  await logSet(page, 1, "100", "5");
+  await finishWorkout(page);
+
+  await page.goto("/settings?section=data");
+  await page.getByRole("button", { name: "Delete my data" }).click();
+  const sheet = page.getByRole("dialog", { name: "Delete my data" });
+  // Signed out: the account option is not offered.
+  await expect(sheet.getByRole("radio", { name: /This phone only/ })).toBeChecked();
+  await expect(sheet.getByRole("radio", { name: /my account/ })).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+  // Cancel deletes nothing.
+  await sheet.getByRole("button", { name: "Cancel" }).click();
+  await page.goto("/");
+  await expect(page.getByText("Gone Day")).toBeVisible();
+
+  await page.goto("/settings?section=data");
+  await page.getByRole("button", { name: "Delete my data" }).click();
+  await page.getByRole("dialog", { name: "Delete my data" }).getByRole("button", { name: "Delete from phone" }).click();
+  // A fresh device: the intro again, and no workouts.
+  await page.waitForURL("**/onboarding");
+  // Only what the app writes again on start (the theme mirror) is back.
+  const left = await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("abot.")));
+  expect(left.filter((k) => k !== "abot.theme")).toEqual([]);
+  await page.evaluate(() => localStorage.setItem("abot.onboarded", "1"));
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
+  await expect(page.getByText("Gone Day")).toHaveCount(0);
+});
+
+test("a replace import brings back the reminder week and live notification choice", async ({ page }, info) => {
+  const file = info.outputPath("prefs.json");
+  const off = { on: false, routineId: null };
+  await writeFile(
+    file,
+    JSON.stringify({
+      app: "ABOT",
+      schemaVersion: 1,
+      exportedAt: "",
+      data: { sessions: [], routines: [], exercises: [], locations: [] },
+      devicePrefs: {
+        reminders: { enabled: true, time: "06:15", leadMinutes: 15, days: { 0: off, 1: { on: true, routineId: null }, 2: off, 3: off, 4: off, 5: off, 6: off } },
+        liveStatus: false,
+      },
+    }),
+  );
+  await page.goto("/settings?section=data");
+  await page.getByLabel("Import backup").setInputFiles(file);
+  await page.getByRole("button", { name: "Replace all my data" }).click();
+  await page.getByRole("button", { name: "Yes, replace everything" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Imported" })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("abot.liveStatus"))).toBe("0");
+  // Saved to the device, so it survives a reload.
+  await page.reload();
+  const saved = await page.evaluate(
+    () =>
+      new Promise<unknown>((resolve) => {
+        const open = indexedDB.open("abot");
+        open.onsuccess = () => {
+          const get = open.result.transaction("kv").objectStore("kv").get("reminders");
+          get.onsuccess = () => resolve(get.result?.value);
+        };
+      }),
+  );
+  expect(saved).toMatchObject({ enabled: true, time: "06:15", leadMinutes: 15 });
+});

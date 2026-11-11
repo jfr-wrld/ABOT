@@ -269,3 +269,26 @@ describe.each([
     expect((await repo.photos.list("a")).map((p) => p.id)).toEqual(["pa"]);
   });
 });
+
+describe("wipe (Delete my data)", () => {
+  it("memory: leaves nothing behind", async () => {
+    const repo = createMemoryRepository();
+    await repo.sessions.put(session("a"));
+    await repo.kv.set("bodyweightLog", [{ id: "w1", date: 1, weightKg: 80 }]);
+    await repo.wipe();
+    const snap = await repo.snapshot();
+    expect(snap.sessions).toEqual([]);
+    expect(snap.bodyweightLog).toEqual([]);
+    expect(await repo.sync.pending()).toEqual([]);
+  });
+
+  it("dexie: deletes the database, so opening it again starts empty", async () => {
+    const name = `t-${crypto.randomUUID()}`;
+    const repo = createDexieRepository(name);
+    await repo.sessions.put(session("a"));
+    await repo.wipe();
+    const again = createDexieRepository(name);
+    expect(await again.sessions.all()).toEqual([]);
+    expect(await again.sync.pending()).toEqual([]);
+  });
+});

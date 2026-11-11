@@ -23,7 +23,7 @@ interface CapsulePrefs {
   set(patch: Partial<Pick<CapsulePrefs, "mode" | "detail">>): void;
 }
 
-/** Per device, like the on/off switch: a display choice, not training data. */
+/** Per device, like the on/off switch: a display choice, not training data. Backup files carry it (devicePrefs). */
 const KEY = "abot.liveCapsule";
 
 function load(): Pick<CapsulePrefs, "mode" | "detail"> {

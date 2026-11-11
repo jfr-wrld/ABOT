@@ -315,6 +315,11 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         foodLog: ((await db.kv.get("foodLog"))?.value as KvValues["foodLog"] | undefined) ?? [],
       }));
     },
+    async wipe() {
+      // Closing first keeps a late write from opening (and so recreating) the database.
+      db.close();
+      await Dexie.delete(db.name);
+    },
   };
   return repo;
 }

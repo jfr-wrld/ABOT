@@ -329,3 +329,29 @@ describe("workout photos in backups", () => {
     expect((await dest.photos.list("a")).map((p) => p.id)).toEqual(["only"]);
   });
 });
+
+describe("devicePrefs (reminders and live notification)", () => {
+  const schedule = {
+    enabled: true,
+    time: "06:15",
+    leadMinutes: 15 as const,
+    days: { 0: { on: false, routineId: null }, 1: { on: true, routineId: "r1" }, 2: { on: false, routineId: null }, 3: { on: true, routineId: null }, 4: { on: false, routineId: null }, 5: { on: true, routineId: "r2" }, 6: { on: false, routineId: null } },
+  };
+  const file = (devicePrefs: unknown) => JSON.stringify({ app: "ABOT", schemaVersion: 1, exportedAt: "", data: {}, devicePrefs });
+
+  it("round-trips the reminder week, the live status switch and the capsule look", () => {
+    const prefs = { reminders: schedule, liveStatus: false, capsule: { mode: "rest", detail: "volume" } };
+    const parsed = parseBackup(file(prefs));
+    expect(parsed.ok && parsed.backup.devicePrefs).toEqual(prefs);
+  });
+
+  it("keeps the valid parts and drops an unreadable one", () => {
+    const parsed = parseBackup(file({ reminders: { ...schedule, time: "25:00" }, liveStatus: true, capsule: { mode: "loud", detail: "set" } }));
+    expect(parsed.ok && parsed.backup.devicePrefs).toEqual({ liveStatus: true });
+  });
+
+  it("an older file without them reads as before", () => {
+    const parsed = parseBackup(JSON.stringify({ app: "ABOT", schemaVersion: 1, exportedAt: "", data: {} }));
+    expect(parsed.ok && parsed.backup.devicePrefs).toBeUndefined();
+  });
+});

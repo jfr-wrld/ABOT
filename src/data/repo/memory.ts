@@ -249,6 +249,13 @@ export function createMemoryRepository(): Repository {
         foodLog: (await repo.kv.get("foodLog")) ?? [],
       };
     },
+    async wipe() {
+      for (const t of Object.values(tables)) t.clear();
+      kv.clear();
+      status.clear();
+      photos.clear();
+      catalog = [];
+    },
   };
   return repo;
 }

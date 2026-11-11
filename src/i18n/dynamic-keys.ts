@@ -10,6 +10,7 @@ import { FILTER_LABEL } from "@/lib/exercise-swapper";
 import { REDEEM_REASONS } from "@/lib/redeem-service";
 import { PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
 import { CHECKOUT_MESSAGE, PAYMENT_STATUS_MESSAGE } from "@/lib/checkout";
+import { DELETE_ACCOUNT_MESSAGE } from "@/lib/delete-data";
 import { AXIS_LABEL, DIAGNOSTIC_KEYS } from "@/lib/symmetry-analyzer";
 import { VARIATION_LABEL } from "@/data/variations";
 
@@ -121,6 +122,7 @@ export const DYNAMIC_KEYS: string[] = [
   ...PRO_MATRIX.flatMap((r) => [r.feature, ...[r.core, r.pro].filter((v): v is string => typeof v === "string")]),
   ...SIMULATOR.map((s) => s.label),
   ...Object.values(CHECKOUT_MESSAGE),
+  ...Object.values(DELETE_ACCOUNT_MESSAGE),
   ...Object.values(PAYMENT_STATUS_MESSAGE),
   // ProCelebration PERKS
   "Auto-overload coach", "72h recovery inspector", "Hands-free voice logger", "Story presets, no watermark",

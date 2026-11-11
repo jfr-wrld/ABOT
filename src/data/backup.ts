@@ -9,6 +9,7 @@ import { WORKOUT_PHOTO_MAX_BYTES } from "@/lib/photo";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
 import { COVER_PRESET_IDS } from "@/lib/cover-presets";
+import type { Weekday, WorkoutSchedule } from "@/lib/notifications/schedule";
 
 export interface AbotBackup {
   app: "ABOT";
@@ -20,6 +21,18 @@ export interface AbotBackup {
    * ABOT) still reads, and an older ABOT reading this file simply skips them.
    */
   photos?: BackupPhoto[];
+  /**
+   * This phone's notification choices: the reminder week, the live workout notification and
+   * how it looks. Never synced (each phone rings on its own), so only the file carries them to
+   * a new phone. Optional: older files have none.
+   */
+  devicePrefs?: DevicePrefs;
+}
+
+export interface DevicePrefs {
+  reminders?: WorkoutSchedule;
+  liveStatus?: boolean;
+  capsule?: { mode: "full" | "rest"; detail: "set" | "volume" };
 }
 
 export interface BackupPhoto {
@@ -174,6 +187,33 @@ const BODY_FAT_RANGE = [2, 70] as const;
 const WAIST_RANGE = [40, 250] as const;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const MEALS: FoodLogEntry["meal"][] = ["breakfast", "lunch", "pre", "post", "dinner", "snack"];
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** The reminder week, only when every part of it is valid. */
+function normalizeSchedule(raw: unknown): WorkoutSchedule | undefined {
+  if (!isObj(raw) || typeof raw.enabled !== "boolean" || typeof raw.time !== "string" || !TIME.test(raw.time)) return undefined;
+  if (raw.leadMinutes !== 0 && raw.leadMinutes !== 15 && raw.leadMinutes !== 30) return undefined;
+  if (!isObj(raw.days)) return undefined;
+  const days = {} as WorkoutSchedule["days"];
+  for (const wd of [0, 1, 2, 3, 4, 5, 6] as Weekday[]) {
+    const d = raw.days[wd];
+    if (!isObj(d) || typeof d.on !== "boolean") return undefined;
+    days[wd] = { on: d.on, routineId: typeof d.routineId === "string" && d.routineId.length <= 100 ? d.routineId : null };
+  }
+  return { enabled: raw.enabled, time: raw.time, leadMinutes: raw.leadMinutes, days };
+}
+
+/** Each notification choice on its own: an unreadable one is left out, the rest still apply. */
+export function normalizeDevicePrefs(raw: unknown): DevicePrefs | undefined {
+  if (!isObj(raw)) return undefined;
+  const out: DevicePrefs = {};
+  const reminders = normalizeSchedule(raw.reminders);
+  if (reminders) out.reminders = reminders;
+  if (typeof raw.liveStatus === "boolean") out.liveStatus = raw.liveStatus;
+  const c = raw.capsule;
+  if (isObj(c) && (c.mode === "full" || c.mode === "rest") && (c.detail === "set" || c.detail === "volume")) out.capsule = { mode: c.mode, detail: c.detail };
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** Food log rows that make sense; names are capped, numbers kept in human ranges. */
 function normalizeFoodLog(raw: unknown): FoodLogEntry[] {
   if (!Array.isArray(raw)) return [];
@@ -299,6 +339,8 @@ export function parseBackup(
     },
     ...(photos ? { photos: photos.rows } : {}),
   };
+  const prefs = normalizeDevicePrefs(raw.devicePrefs);
+  if (prefs) backup.devicePrefs = prefs;
   return {
     ok: true,
     backup,

@@ -47,6 +47,12 @@ You need the Supabase CLI logged in and linked to the project (`supabase link --
    supabase functions deploy midtrans-notify --no-verify-jwt
    ```
 
+   ```bash
+   supabase functions deploy delete-account
+   ```
+
+   `delete-account` backs Settings → Data & backup → Delete my data → "This phone and my account". It deletes the caller's own sign-in; every per-user table cascades with it. `payment_events` (Midtrans' notifications) carries no user id and stays as the payment record.
+
    `--no-verify-jwt` is required on `midtrans-notify` because Midtrans sends no Supabase token. The signature check protects it instead. `supabase/config.toml` pins the same settings, so a deploy that forgets the flag keeps them.
 
    After `20261113_security_hardening.sql`, redeploy both functions: checkout then reuses a pending order's payment page for 30 minutes and returns error codes only, and notify checks the signature before it looks up the order.
