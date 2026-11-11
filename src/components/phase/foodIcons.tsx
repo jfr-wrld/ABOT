@@ -1,4 +1,4 @@
-import { Banana, Bean, Beef, Coffee, Drumstick, Egg, EggFried, Fish, GlassWater, Milk, Nut, Salad, Soup, Sprout, Wheat, CupSoda, Cherry, type LucideIcon } from "lucide-react";
+import { Apple, Banana, Bean, Carrot, CookingPot, Beef, Coffee, Drumstick, Egg, EggFried, Fish, GlassWater, Milk, Nut, Salad, Soup, Sprout, Wheat, CupSoda, Cherry, type LucideIcon } from "lucide-react";
 import type { FoodCategory } from "@/lib/nutrition-guide";
 
 /** A drawn icon per food, so the guide reads by picture first. */
@@ -32,7 +32,10 @@ export const FOOD_ICON: Record<string, LucideIcon> = {
 export const CATEGORY_ICON: Record<FoodCategory, LucideIcon> = {
   PROTEIN: Beef,
   CARBS: Wheat,
+  VEGETABLES: Carrot,
+  FRUIT: Apple,
   FATS: Nut,
+  DISHES: CookingPot,
   PRE_POST_WORKOUT: Soup,
   DRINK_HYDRATION: GlassWater,
 };
