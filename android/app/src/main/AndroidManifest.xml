@@ -117,5 +117,10 @@
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
         <package android:name="com.huawei.health" />
+        <!-- "Take photo": since Android 11 the camera app is invisible to ABOT unless listed here,
+             and Capacitor then falls back to the gallery picker. -->
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
     </queries>
 </manifest>
