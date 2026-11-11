@@ -9,6 +9,10 @@ import { useAppVersion } from "./AppVersion";
 import { UpdateCheck } from "./UpdateCheck";
 import { FAQ } from "./labels";
 import { useT } from "@/i18n";
+import { FOOD_PHOTOS } from "@/data/food-photos.generated";
+
+/** Everyone whose photo shows a food in the guide, named once each. */
+const PHOTO_AUTHORS = [...new Set(Object.values(FOOD_PHOTOS).map((c) => c.author).filter((a): a is string => !!a))].sort();
 
 export { FAQ };
 
@@ -87,6 +91,13 @@ export function AboutSection() {
           <li>{t("Exercise data and photos: free-exercise-db (public domain).")}</li>
           <li>{t("Muscle map shapes: react-muscle-highlighter (MIT License).")}</li>
           <li>{t("Type: Plus Jakarta Sans and JetBrains Mono (SIL Open Font License).")}</li>
+          <li>{t("Food values: Tabel Komposisi Pangan Indonesia (Kemenkes RI) and USDA FoodData Central (public domain).")}</li>
+          <li>
+            <details>
+              <summary className="cursor-pointer">{t("Food photos: Pexels (free to use). Photographers")}</summary>
+              <p className="mt-1 text-xs leading-relaxed">{PHOTO_AUTHORS.join(", ")}</p>
+            </details>
+          </li>
         </ul>
       </section>
 

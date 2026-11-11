@@ -1,4 +1,4 @@
-import type { BodyweightEntry, Exercise, GymLocation, Routine, UserSettings, WorkoutSession } from "@/types/workout";
+import type { BodyweightEntry, FoodLogEntry, Exercise, GymLocation, Routine, UserSettings, WorkoutSession } from "@/types/workout";
 import type { WorkoutSchedule } from "@/lib/notifications/schedule";
 
 /** Settings as persisted: the domain settings plus UI preferences. */
@@ -21,6 +21,8 @@ export interface KvValues {
   exerciseMedia: ExerciseMediaOverrides;
   /** Daily weigh-ins, oldest first. Small (one row per day), so one value is enough. */
   bodyweightLog: BodyweightEntry[];
+  /** What was eaten, newest days last. In backups; not synced to the cloud yet. */
+  foodLog: FoodLogEntry[];
   syncState: SyncState;
   /** Local versions that lost to a newer remote edit, newest first, at most 50 (Task 16). */
   conflicts: ConflictEntry[];
@@ -49,6 +51,8 @@ export interface RepoSnapshot {
   activeWorkout: WorkoutSession | null;
   exerciseMedia: ExerciseMediaOverrides;
   bodyweightLog: BodyweightEntry[];
+  /** Optional: backups from before the food log have none. */
+  foodLog?: FoodLogEntry[];
 }
 
 /**

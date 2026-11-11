@@ -4,6 +4,7 @@ import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
 import { KIND_LABEL, PHASE_PILL_LABEL, WHY } from "@/lib/progressive-overload";
 import { ACTIVITY_LEVELS, PHASE_BLURB, PHASE_CALIBRATION, PHASE_LABEL, RISK_LABEL } from "@/lib/phase-engine";
 import { CATEGORY_LABEL, DIGEST_LABEL, FOODS, LEVEL_LABEL, SOURCE_LABEL } from "@/lib/nutrition-guide";
+import { AISLE_LABEL, DAY_TEMPLATES, RAW_LABELS, SLOT_LABEL } from "@/lib/meal-templates";
 import { FILTER_LABEL } from "@/lib/exercise-swapper";
 import { REDEEM_REASONS } from "@/lib/redeem-service";
 import { PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
@@ -135,6 +136,15 @@ export const DYNAMIC_KEYS: string[] = [
   ...Object.values(DIGEST_LABEL),
   ...FOODS.flatMap((f) => [f.name, f.servingVisual, f.tacticalNote, ...f.units.map((u) => u.label)]),
   ...Object.values(SOURCE_LABEL),
+  // Fuel: meal slots, day plans, shopping aisles and dry staples (lib/meal-templates), calculator nutrients
+  ...Object.values(SLOT_LABEL),
+  ...DAY_TEMPLATES.map((d) => d.name),
+  ...Object.values(AISLE_LABEL),
+  ...RAW_LABELS,
+  "protein",
+  "carbs",
+  "fat",
+  "calories",
   ...Object.values(REDEEM_REASONS),
   // Exercise variations (data/variations.ts)
   ...Object.values(VARIATION_LABEL),

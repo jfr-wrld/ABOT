@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Dumbbell, RefreshCw } from "lucide-react";
+import { Dumbbell, RefreshCw, Search } from "lucide-react";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Rise } from "@/components/motion/Entrance";
 import { usePhaseTelemetry, type PhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
 import { MacroBar } from "@/components/phase/visuals";
-import { CATEGORY_ICON, FoodIcon } from "@/components/phase/foodIcons";
-import { CATEGORY_LABEL, DIGEST_LABEL, FOOD_CATEGORIES, LEVEL_LABEL, foodsFor, mealCombos, type Food, type FoodCategory, type MealCombo } from "@/lib/nutrition-guide";
+import { CATEGORY_ICON } from "@/components/phase/foodIcons";
+import { FoodPhoto } from "@/components/fuel/FoodPhoto";
+import { FoodDetailSheet } from "@/components/fuel/FoodDetailSheet";
+import { TodayLog } from "@/components/fuel/TodayLog";
+import { DayPlan } from "@/components/fuel/DayPlan";
+import { CATEGORY_LABEL, FOODS, FOOD_CATEGORIES, foodsFor, mealCombos, type Food, type FoodCategory, type MealCombo } from "@/lib/nutrition-guide";
 import { PHASE_LABEL } from "@/lib/phase-engine";
 import { feedback } from "@/lib/feedback";
 import { useNow } from "@/lib/useNow";
@@ -24,37 +28,71 @@ export default function FuelPage() {
   );
 }
 
+type Tab = "today" | "plan" | "foods";
+
+/**
+ * Food for the body phase, in three tabs: Today (what was eaten against the day's target),
+ * Plan (a day of meals sized to the target, meal prep and its shopping list) and Foods (every
+ * food with a photo, its nutrients and a portion calculator). Logging and the food guide work
+ * without a phase; the plan needs one, since it is sized to the phase's target.
+ */
 function FuelScreen() {
   const t = useT();
   const now = useNow(60_000);
   const m = usePhaseTelemetry(now);
-  if (!m) {
-    return (
-      <main className="flex flex-1 flex-col">
-        <PageHeader title={t("Meals and foods")} back={{ href: "/phase", label: t("Body phase") }} />
-        <section className="mx-4 mt-6 flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center">
-          <p className="text-sm text-text-muted">{t("Meal sizes follow your phase's daily target. Choose a phase first.")}</p>
-          <Link href="/phase/setup" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-5 text-sm font-bold text-on-accent hover:brightness-110">
-            {t("Choose a body phase")}
-          </Link>
-        </section>
-      </main>
-    );
-  }
+  const [tab, setTab] = useState<Tab>("today");
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "today", label: t("Today") },
+    { id: "plan", label: t("Plan") },
+    { id: "foods", label: t("Foods") },
+  ];
   return (
-    <main className="flex flex-1 flex-col gap-5 pb-8">
+    <main className="flex flex-1 flex-col gap-4 pb-8">
       <PageHeader
         title={t("Meals and foods")}
         back={{ href: "/phase", label: t("Body phase") }}
-        subtitle={<span className="num">{t("{kcal} kcal today · {phase}", { kcal: m.fuel.kcal.toLocaleString(t.locale), phase: t(PHASE_LABEL[m.phase.phaseType]) })}</span>}
+        subtitle={
+          m ? <span className="num">{t("{kcal} kcal today · {phase}", { kcal: m.fuel.kcal.toLocaleString(t.locale), phase: t(PHASE_LABEL[m.phase.phaseType]) })}</span> : undefined
+        }
       />
-      <Rise order={0} className="px-4">
-        <Meals m={m} />
-      </Rise>
-      <Rise order={1} className="px-4">
-        <Foods m={m} />
-      </Rise>
-      <p className="px-4 text-center text-[11px] text-text-muted">{t("Typical values from USDA FoodData Central. Brands and cooking change them.")}</p>
+      <div role="tablist" aria-label={t("Meals and foods")} className="mx-4 grid grid-cols-3 gap-1 rounded-ctl bg-surface-2 p-1">
+        {tabs.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === x.id}
+            onClick={() => {
+              if (tab !== x.id) feedback.tick();
+              setTab(x.id);
+            }}
+            className={`min-h-11 rounded-[10px] text-sm font-semibold ${tab === x.id ? "bg-surface text-text shadow-sm" : "text-text-muted hover:text-text"}`}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" aria-label={tabs.find((x) => x.id === tab)!.label} className="px-4">
+        {tab === "today" && <TodayLog fuel={m?.fuel ?? null} now={now} onAddFood={() => setTab("foods")} />}
+        {tab === "plan" &&
+          (m ? (
+            <Rise order={0} className="flex flex-col gap-5">
+              <DayPlan phase={m.phase.phaseType} fuel={m.fuel} />
+              <Meals m={m} />
+            </Rise>
+          ) : (
+            <section className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center">
+              <p className="text-sm text-text-muted">{t("Meal sizes follow your phase's daily target. Choose a phase first.")}</p>
+              <Link href="/phase/setup" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-5 text-sm font-bold text-on-accent hover:brightness-110">
+                {t("Choose a body phase")}
+              </Link>
+            </section>
+          ))}
+        {tab === "foods" && <Foods phase={m?.phase.phaseType ?? null} />}
+      </div>
+      <p className="px-4 text-center text-[11px] text-text-muted">
+        {t("Values from TKPI (Kemenkes RI) and USDA FoodData Central; mixed dishes are estimates. Brands and cooking change them.")}
+      </p>
     </main>
   );
 }
@@ -122,9 +160,7 @@ function MealStop({ combo, label, when, pick, last = false }: { combo: MealCombo
             {combo.items.map((i) => {
               return (
                 <li key={i.food.id} className="flex items-center gap-2 rounded-ctl bg-surface-2 py-1.5 pl-1.5 pr-3">
-                  <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-accent-tint text-accent">
-                    <FoodIcon id={i.food.id} size={15} />
-                  </span>
+                  <FoodPhoto id={i.food.id} size={28} className="rounded-full" />
                   <span className="text-xs font-semibold">{t(i.food.name)}</span>
                   <span className="num text-xs font-bold">{i.grams} g</span>
                 </li>
@@ -141,91 +177,96 @@ function MealStop({ combo, label, when, pick, last = false }: { combo: MealCombo
   );
 }
 
-/** The food matrix: a picture, the calories, the macro split; tap for the portion and why. */
-function Foods({ m }: { m: PhaseTelemetry }) {
+/** Every food with its photo: search, filter by type, tap for nutrients, portions and the calculator. */
+function Foods({ phase }: { phase: import("@/lib/phase-engine").BodyPhaseType | null }) {
   const t = useT();
   const [category, setCategory] = useState<FoodCategory>("PROTEIN");
-  const [open, setOpen] = useState<string | null>(null);
-  const phase = m.phase.phaseType;
-  const foods = foodsFor(phase, category);
+  const [query, setQuery] = useState("");
+  const q = useDeferredValue(query).trim().toLowerCase();
+  const [open, setOpen] = useState<Food | null>(null);
+  const foods = q
+    ? FOODS.filter((f) => f.name.toLowerCase().includes(q) || t(f.name).toLowerCase().includes(q))
+    : phase
+      ? foodsFor(phase, category)
+      : FOODS.filter((f) => f.category === category);
   return (
     <section aria-labelledby="foods-heading" className="flex flex-col gap-3">
-      <h2 id="foods-heading" className="label-caps">
+      <h2 id="foods-heading" className="sr-only">
         {t("Foods")}
       </h2>
-      <div role="tablist" aria-label={t("Food type")} className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
-        {FOOD_CATEGORIES.map((c) => {
-          const Icon = CATEGORY_ICON[c];
-          const on = category === c;
-          return (
-            <button
-              key={c}
-              type="button"
-              role="tab"
-              aria-selected={on}
-              onClick={() => {
-                if (!on) feedback.tick();
-                setCategory(c);
-                setOpen(null);
-              }}
-              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-ctl border px-3 text-xs font-semibold ${on ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"}`}
-            >
-              <Icon aria-hidden="true" size={15} />
-              {t(CATEGORY_LABEL[c])}
-            </button>
-          );
-        })}
-      </div>
-      <ul role="tabpanel" aria-label={t(CATEGORY_LABEL[category])} className="grid grid-cols-2 gap-2.5">
-        {foods.map((f) => (
-          <FoodTile key={f.id} food={f} suits={f.bestForPhases.includes(phase)} open={open === f.id} onToggle={() => setOpen((o) => (o === f.id ? null : f.id))} />
-        ))}
-      </ul>
+      <label className="relative block">
+        <span className="sr-only">{t("Search foods")}</span>
+        <Search aria-hidden="true" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("Search: tempe, nasi, pisang…")}
+          autoComplete="off"
+          className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 pl-9 pr-3 text-base placeholder:text-text-muted"
+        />
+      </label>
+      {!q && (
+        <div role="tablist" aria-label={t("Food type")} className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
+          {FOOD_CATEGORIES.map((c) => {
+            const Icon = CATEGORY_ICON[c];
+            const on = category === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                onClick={() => {
+                  if (!on) feedback.tick();
+                  setCategory(c);
+                }}
+                className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-ctl border px-3 text-xs font-semibold ${on ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"}`}
+              >
+                <Icon aria-hidden="true" size={15} />
+                {t(CATEGORY_LABEL[c])}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {foods.length === 0 ? (
+        <p className="rounded-card border border-line bg-surface p-5 text-center text-sm text-text-muted">{t("No food matches. Use Quick add on the Today tab for anything not listed.")}</p>
+      ) : (
+        <ul aria-label={q ? t("Search results") : t(CATEGORY_LABEL[category])} className="grid grid-cols-2 gap-2.5">
+          {foods.map((f) => (
+            <FoodTile key={f.id} food={f} suits={!!phase && f.bestForPhases.includes(phase)} onOpen={() => setOpen(f)} />
+          ))}
+        </ul>
+      )}
+      <FoodDetailSheet food={open} onClose={() => setOpen(null)} />
     </section>
   );
 }
 
-function FoodTile({ food: f, suits, open, onToggle }: { food: Food; suits: boolean; open: boolean; onToggle: () => void }) {
+function FoodTile({ food: f, suits, onOpen }: { food: Food; suits: boolean; onOpen: () => void }) {
   const t = useT();
+  const unit = f.units[0] ?? { label: f.servingVisual, grams: f.servingG };
+  const kcal = Math.round((f.macrosPer100g.calories * unit.grams) / 100);
   const m = f.macrosPer100g;
-  const drink = f.category === "DRINK_HYDRATION";
   return (
-    <li className={open ? "col-span-2" : ""}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className={`relative flex w-full flex-col gap-2 rounded-card border p-3 text-left transition-colors ${open ? "border-accent/60 bg-surface" : "border-line bg-surface hover:border-line-hover"}`}
-      >
-        {suits && (
-          <span className="absolute right-3 top-3 size-2 rounded-full bg-accent">
-            <span className="sr-only">{t("Suits your phase")}</span>
-          </span>
-        )}
-        <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-full bg-surface-2 text-text">
-          <FoodIcon id={f.id} size={20} />
-        </span>
-        <span className="text-sm font-bold leading-tight">{t(f.name)}</span>
-        <span className="num text-lg font-bold leading-none">
-          {m.calories}
-          <span className="ml-1 text-[11px] font-semibold text-text-muted">kcal / 100 {drink ? "ml" : "g"}</span>
-        </span>
-        <MacroBar protein={m.protein} carbs={m.carbs} fat={m.fat} className="h-1.5" />
-        <span className="num grid grid-cols-3 text-[11px] text-text-muted">
-          <span>P {m.protein}</span>
-          <span>C {m.carbs}</span>
-          <span>F {m.fat}</span>
-        </span>
-        {open && (
-          <span className="flex flex-col gap-1.5 border-t border-line pt-2">
-            <span className="text-sm font-semibold">{t(f.servingVisual)}</span>
-            <span className="text-xs text-text-muted">{t(f.tacticalNote)}</span>
-            <span className="flex flex-wrap gap-1.5 text-[11px] font-semibold">
-              <span className="rounded-ctl bg-surface-2 px-2 py-1">{t("Fullness: {level}", { level: t(LEVEL_LABEL[f.satietyIndex]) })}</span>
-              <span className="rounded-ctl bg-surface-2 px-2 py-1">{t("Digests: {speed}", { speed: t(DIGEST_LABEL[f.digestSpeed]) })}</span>
+    <li>
+      <button type="button" onClick={onOpen} className="flex w-full flex-col overflow-hidden rounded-card border border-line bg-surface text-left transition-colors hover:border-line-hover">
+        <span className="relative block">
+          <FoodPhoto id={f.id} size={200} className="aspect-[4/3] !h-auto !w-full" />
+          {suits && (
+            <span className="absolute right-2 top-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-on-accent">
+              {t("Fits your phase")}
             </span>
+          )}
+        </span>
+        <span className="flex flex-col gap-1.5 p-2.5">
+          <span className="line-clamp-2 text-sm font-bold leading-tight">{t(f.name)}</span>
+          <span className="num text-xs text-text-muted">
+            <span className="text-base font-bold text-text">{kcal}</span> kcal · {t(unit.label)}
           </span>
-        )}
+          <MacroBar protein={m.protein} carbs={m.carbs} fat={m.fat} className="h-1.5" />
+        </span>
       </button>
     </li>
   );

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { dayKey } from "@/lib/bodyweight";
+import { useFoodLog } from "./useFoodLog";
 
 /**
  * Today's protein and water, ticked off with one tap from the phase card. Per device and per
@@ -51,8 +52,13 @@ export const useFuelPacer = create<FuelPacer>((set, get) => ({
   },
 }));
 
-/** Today's tally, read so a value kept from yesterday shows as zero. */
+/**
+ * Today's tally, read so a value kept from yesterday shows as zero. Protein also counts what the
+ * food log holds for today, so a logged meal and a +25 g tap add up in one place.
+ */
 export function useTodayFuel(now: number): { proteinG: number; waterMl: number } {
   const { day, proteinG, waterMl } = useFuelPacer();
-  return day === dayKey(now) ? { proteinG, waterMl } : { proteinG: 0, waterMl: 0 };
+  const today = dayKey(now);
+  const logged = useFoodLog((s) => Math.round(s.entries.reduce((n, e) => (e.day === today ? n + e.protein : n), 0)));
+  return day === today ? { proteinG: proteinG + logged, waterMl } : { proteinG: logged, waterMl: 0 };
 }

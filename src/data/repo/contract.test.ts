@@ -111,6 +111,7 @@ describe.each([
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },
       exerciseMedia: { "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" } },
       bodyweightLog: [{ id: "2026-11-01", date: 1, weightKg: 80 }],
+      foodLog: [{ id: "f1", day: "2026-11-01", at: 1, meal: "lunch", foodId: "tempeh", name: "Tempeh", grams: 100, kcal: 201, protein: 20.8, carbs: 13.5, fat: 8.8 }],
     };
     await repo.replaceAll(data);
     const snap = await repo.snapshot();

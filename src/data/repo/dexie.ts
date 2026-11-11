@@ -282,6 +282,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         await db.kv.put({ key: "restTimer", value: null });
         await setKv("exerciseMedia", data.exerciseMedia, true);
         await setKv("bodyweightLog", data.bodyweightLog, true);
+        await db.kv.put({ key: "foodLog", value: data.foodLog ?? [] });
       });
       await repo.photos.prune();
     },
@@ -311,6 +312,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         activeWorkout: ((await db.kv.get("activeWorkout"))?.value as KvValues["activeWorkout"] | undefined) ?? null,
         exerciseMedia: ((await db.kv.get("exerciseMedia"))?.value as KvValues["exerciseMedia"] | undefined) ?? {},
         bodyweightLog: ((await db.kv.get("bodyweightLog"))?.value as KvValues["bodyweightLog"] | undefined) ?? [],
+        foodLog: ((await db.kv.get("foodLog"))?.value as KvValues["foodLog"] | undefined) ?? [],
       }));
     },
   };

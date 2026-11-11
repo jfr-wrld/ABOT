@@ -223,6 +223,7 @@ export function createMemoryRepository(): Repository {
       kv.set("restTimer", null);
       setKv("exerciseMedia", data.exerciseMedia, true);
       setKv("bodyweightLog", data.bodyweightLog, true);
+      kv.set("foodLog", clone(data.foodLog ?? []));
       await repo.photos.prune();
     },
     async commitFinishedWorkout(session) {
@@ -245,6 +246,7 @@ export function createMemoryRepository(): Repository {
         activeWorkout: (await repo.kv.get("activeWorkout")) ?? null,
         exerciseMedia: (await repo.kv.get("exerciseMedia")) ?? {},
         bodyweightLog: (await repo.kv.get("bodyweightLog")) ?? [],
+        foodLog: (await repo.kv.get("foodLog")) ?? [],
       };
     },
   };

@@ -292,6 +292,26 @@ export interface BodyweightEntry {
   waistCm?: number;
 }
 
+/**
+ * One thing eaten: a food from the guide at a weight, or a quick entry of calories and macros
+ * (foodId null). Values are stored, not recomputed, so a later change to the guide does not
+ * rewrite what was logged.
+ */
+export interface FoodLogEntry {
+  id: string;
+  /** Local day, "YYYY-MM-DD". */
+  day: string;
+  at: number;
+  meal: "breakfast" | "lunch" | "pre" | "post" | "dinner" | "snack";
+  foodId: string | null;
+  name: string;
+  grams: number;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export const PROFILE_LIMITS = {
   nameMax: 40,
   handleMax: 30,

@@ -1,7 +1,7 @@
 import { normalizePhase } from "@/lib/phase-engine";
 import { normalizeHandle } from "@/lib/profile";
 import type { GymLocation } from "@/types/workout";
-import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry } from "@/types/workout";
+import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry, FoodLogEntry } from "@/types/workout";
 import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./normalize";
 import type { Repository, RepoSnapshot, StoredSettings } from "./repo";
 import { mergeLog, type WorkoutPhoto } from "./repo/types";
@@ -159,6 +159,38 @@ function normalizePhoto(v: unknown): string | null {
 const DAY_ID = /^\d{4}-\d{2}-\d{2}$/;
 const BODY_FAT_RANGE = [2, 70] as const;
 const WAIST_RANGE = [40, 250] as const;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const MEALS: FoodLogEntry["meal"][] = ["breakfast", "lunch", "pre", "post", "dinner", "snack"];
+/** Food log rows that make sense; names are capped, numbers kept in human ranges. */
+function normalizeFoodLog(raw: unknown): FoodLogEntry[] {
+  if (!Array.isArray(raw)) return [];
+  const out: FoodLogEntry[] = [];
+  const num = (v: unknown, max: number) => (typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= max ? v : null);
+  for (const e of raw.slice(0, 20_000)) {
+    if (!isObj(e) || typeof e.id !== "string" || !e.id || typeof e.day !== "string" || !DAY.test(e.day)) continue;
+    const grams = num(e.grams, 5000);
+    const kcal = num(e.kcal, 20_000);
+    const protein = num(e.protein, 1000);
+    const carbs = num(e.carbs, 2000);
+    const fat = num(e.fat, 1000);
+    if (grams === null || kcal === null || protein === null || carbs === null || fat === null) continue;
+    out.push({
+      id: e.id.slice(0, 64),
+      day: e.day,
+      at: typeof e.at === "number" ? e.at : 0,
+      meal: MEALS.includes(e.meal as FoodLogEntry["meal"]) ? (e.meal as FoodLogEntry["meal"]) : "snack",
+      foodId: typeof e.foodId === "string" ? e.foodId.slice(0, 64) : null,
+      name: typeof e.name === "string" ? e.name.slice(0, 80) : "",
+      grams,
+      kcal,
+      protein,
+      carbs,
+      fat,
+    });
+  }
+  return out;
+}
+
 function normalizeBodyweightLog(raw: unknown): BodyweightEntry[] {
   if (!Array.isArray(raw)) return [];
   const out: BodyweightEntry[] = [];
@@ -250,6 +282,7 @@ export function parseBackup(
       activeWorkout: active ? { ...active, status: "active" } : null,
       exerciseMedia: normalizeExerciseMedia(data.exerciseMedia),
       bodyweightLog: normalizeBodyweightLog(data.bodyweightLog),
+      foodLog: normalizeFoodLog(data.foodLog),
     },
     ...(photos ? { photos: photos.rows } : {}),
   };
@@ -312,6 +345,12 @@ async function mergeData(repo: Repository, backup: AbotBackup): Promise<void> {
     ...local.filter((l) => !incomingIds.has(l.id) && l.isDefault !== (l.id === defaultId)).map((l) => ({ ...l, isDefault: l.id === defaultId })),
   ];
   await repo.mergeAll({ sessions, routines, exercises, locations: merged, exerciseMedia, bodyweightLog });
+  // Food log: rows from the file that this phone does not have yet.
+  if (backup.data.foodLog?.length) {
+    const local = (await repo.kv.get("foodLog")) ?? [];
+    const have = new Set(local.map((e) => e.id));
+    await repo.kv.set("foodLog", [...local, ...backup.data.foodLog.filter((e) => !have.has(e.id))]);
+  }
 }
 
 /** Largest file the import screens read: a real export with photos is a few MB. */
