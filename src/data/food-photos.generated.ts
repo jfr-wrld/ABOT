@@ -79,6 +79,12 @@ export const FOOD_PHOTOS: Record<string, FoodPhotoCredit> = {
     "site": "Pexels",
     "page": "https://www.pexels.com/photo/close-up-of-liver-bacon-and-onions-8878358/"
   },
+  "chicken-satay": {
+    "author": "Bapak Alex",
+    "site": "Wikimedia Commons",
+    "page": "https://commons.wikimedia.org/wiki/File:Sate_ayam_sama_bumbu_kacang.jpg",
+    "license": "CC BY 4.0"
+  },
   "chicken-thigh": {
     "author": null,
     "site": "Pexels",
@@ -179,6 +185,12 @@ export const FOOD_PHOTOS: Record<string, FoodPhotoCredit> = {
     "site": "Pexels",
     "page": "https://www.pexels.com/photo/photo-of-uncooked-noodles-on-white-background-4518665/"
   },
+  "ketoprak": {
+    "author": "Bajinra",
+    "site": "Wikimedia Commons",
+    "page": "https://commons.wikimedia.org/wiki/File:Bogor_Ketoprak_Indonesian_Traditional_Food.jpg",
+    "license": "CC0"
+  },
   "mango": {
     "author": "Ruth Currie",
     "site": "Pexels",
@@ -273,6 +285,12 @@ export const FOOD_PHOTOS: Record<string, FoodPhotoCredit> = {
     "author": "Engin Akyurt",
     "site": "Pexels",
     "page": "https://www.pexels.com/photo/a-glass-of-milk-on-a-white-surface-4324359/"
+  },
+  "soto-ayam": {
+    "author": "Gunawan Kartapranata",
+    "site": "Wikimedia Commons",
+    "page": "https://commons.wikimedia.org/wiki/File:Soto_Ayam_home-made.JPG",
+    "license": "CC BY-SA 3.0"
   },
   "soy-milk": {
     "author": "Polina Tankilevitch",

@@ -22,11 +22,18 @@ let bytes = 0;
 for (const p of list) {
   if (!/^https:\/\/(images\.(pexels|unsplash)\.com|upload\.wikimedia\.org)\//.test(p.url)) throw new Error(`Not a Pexels, Unsplash or Commons image: ${p.id}`);
   if (p.site === "Wikimedia Commons" && !p.license) throw new Error(`${p.id}: a Commons photo needs its licence`);
+  const file = path.join(out, `${p.id}.webp`);
+  // Already here: keep it (add --force to fetch everything again).
+  if (fs.existsSync(file) && !process.argv.includes("--force")) {
+    bytes += fs.statSync(file).size;
+    credits[p.id] = { author: p.author ?? null, site: p.site, page: p.page, ...(p.license ? { license: p.license } : {}) };
+    continue;
+  }
   const res = await fetch(p.url, { headers: { "User-Agent": "ABOT-food-photos/1.0 (offline gym app)" } });
   if (!res.ok) throw new Error(`${p.id}: HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
   const webp = await sharp(buf).resize(320, 320, { fit: "cover", position: "attention" }).webp({ quality: 72 }).toBuffer();
-  fs.writeFileSync(path.join(out, `${p.id}.webp`), webp);
+  fs.writeFileSync(file, webp);
   bytes += webp.length;
   credits[p.id] = { author: p.author ?? null, site: p.site, page: p.page, ...(p.license ? { license: p.license } : {}) };
   process.stdout.write(".");

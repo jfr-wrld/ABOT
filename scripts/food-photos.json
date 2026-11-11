@@ -98,6 +98,14 @@
     "site": "Pexels"
   },
   {
+    "id": "chicken-satay",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Sate_ayam_sama_bumbu_kacang.jpg/960px-Sate_ayam_sama_bumbu_kacang.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Sate_ayam_sama_bumbu_kacang.jpg",
+    "author": "Bapak Alex",
+    "site": "Wikimedia Commons",
+    "license": "CC BY 4.0"
+  },
+  {
     "id": "chicken-thigh",
     "url": "https://images.pexels.com/photos/27831791/pexels-photo-27831791.jpeg?auto=compress&cs=tinysrgb&w=640&h=640&fit=crop",
     "page": "https://www.pexels.com/photo/fried-chicken-in-a-frying-pan-on-a-stove-27831791/",
@@ -238,6 +246,14 @@
     "site": "Pexels"
   },
   {
+    "id": "ketoprak",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Bogor_Ketoprak_Indonesian_Traditional_Food.jpg/960px-Bogor_Ketoprak_Indonesian_Traditional_Food.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Bogor_Ketoprak_Indonesian_Traditional_Food.jpg",
+    "author": "Bajinra",
+    "site": "Wikimedia Commons",
+    "license": "CC0"
+  },
+  {
     "id": "mango",
     "url": "https://images.pexels.com/photos/918643/pexels-photo-918643.jpeg?auto=compress&cs=tinysrgb&w=640&h=640&fit=crop",
     "page": "https://www.pexels.com/photo/photo-of-ripe-mangoes-918643/",
@@ -369,6 +385,14 @@
     "page": "https://www.pexels.com/photo/a-glass-of-milk-on-a-white-surface-4324359/",
     "author": "Engin Akyurt",
     "site": "Pexels"
+  },
+  {
+    "id": "soto-ayam",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Soto_Ayam_home-made.JPG/960px-Soto_Ayam_home-made.JPG",
+    "page": "https://commons.wikimedia.org/wiki/File:Soto_Ayam_home-made.JPG",
+    "author": "Gunawan Kartapranata",
+    "site": "Wikimedia Commons",
+    "license": "CC BY-SA 3.0"
   },
   {
     "id": "soy-milk",
