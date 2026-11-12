@@ -40,8 +40,10 @@ test("Save to My Routines makes an editable copy", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Saved, edit" })).toBeVisible();
   await page.getByRole("tab", { name: "My Routines" }).click();
   await expect(page.getByRole("heading", { name: "Push / Pull / Legs" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Push A: Strength" })).toBeVisible();
+  // The routine card itself; the same name also heads the "today" card above the tabs.
+  const mine = page.getByRole("tabpanel", { name: "My Routines" });
+  await expect(mine.getByRole("heading", { name: "Push A: Strength" })).toBeVisible();
   await page.reload();
   await page.getByRole("tab", { name: "My Routines" }).click();
-  await expect(page.getByRole("heading", { name: "Push A: Strength" })).toBeVisible();
+  await expect(mine.getByRole("heading", { name: "Push A: Strength" })).toBeVisible();
 });

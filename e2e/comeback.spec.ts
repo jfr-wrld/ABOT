@@ -25,8 +25,8 @@ test("after twelve days away Home offers the last workout and the Coach starts i
   // Under the test clock the client-side push to the logger can stall; open it directly.
   await page.goto("/workout");
   // The Coach Pill starts the comeback 10% lighter: 60 kg becomes 52.5 kg (rounded down to a plate step).
-  await expect(page.getByText("Welcome back")).toBeVisible();
-  await expect(page.getByText("-10%")).toBeVisible();
+  // One locator for both: under the test clock the card's entrance can leave a child mid-fade.
+  await expect(page.getByRole("group", { name: "Coach: Welcome back" })).toContainText("-10%", { timeout: 15_000 });
   // The summary's "First workout in N days" line is covered by returnAfter's unit test: logging
   // under a clock moved 12 days ahead stalls the logger's animations in the test browser.
 });

@@ -19,6 +19,7 @@ import { useFavorites } from "@/components/exercise/FavoriteButton";
 import { filterExercises } from "@/lib/exercise-search";
 import { exerciseUsage, recentExercises } from "@/lib/exercise-usage";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useIncremental } from "@/lib/useIncremental";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -102,6 +103,7 @@ export function ExercisePicker({
     [list, search, muscle, equipment, favorites, usage],
   );
   const filtering = query.trim() !== "" || muscle !== null || equipment !== null;
+  const [limit, more, setSentinel] = useIncremental(filtered.length, `${open}|${search}|${muscle}|${equipment}|${view}`);
   const favs = useMemo(() => list.filter((e) => favorites.has(e.id)), [list, favorites]);
   const recent = useMemo(() => recentExercises(sessions, RECENT).map((id) => byId[id]).filter((e): e is Exercise => !!e), [sessions, byId]);
   const rowProps = (e: Exercise) => ({
@@ -203,11 +205,12 @@ export function ExercisePicker({
         </div>
       ) : (
         <ul className={view === "grid" ? "mt-2 grid grid-cols-2 gap-2" : "mt-2 flex flex-col"}>
-          {filtered.map((e) => (
+          {filtered.slice(0, limit).map((e) => (
             <li key={e.id}>
               <PickRow {...rowProps(e)} view={view} note={inWorkout.has(e.id) ? t("In workout") : undefined} />
             </li>
           ))}
+          {more && <li ref={setSentinel} aria-hidden="true" className="h-px" />}
         </ul>
       )}
 
