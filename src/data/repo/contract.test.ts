@@ -108,6 +108,8 @@ describe.each([
         profilePhoto: null,
         profileCover: "preset:neon-grid",
         favoriteExercises: ["squat-barbell"],
+        birthYear: 1995,
+        biologicalSex: "male",
         bodyPhase: null,
       },
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },

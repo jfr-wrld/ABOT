@@ -274,6 +274,9 @@ export interface UserSettings {
   profileCover: string | null;
   /** Starred exercises (ids), listed first in the library and the picker. At most 200. */
   favoriteExercises: string[];
+  /** For the calorie formula in a body phase; asked once, then filled in. */
+  birthYear: number | null;
+  biologicalSex: "male" | "female" | null;
   /** "auto" follows the phone: Indonesian when its language is Indonesian, else English. */
   language: AppLanguage;
   /** "system" follows the phone's light or dark mode. */
@@ -324,6 +327,8 @@ export interface FoodLogEntry {
   protein: number;
   carbs: number;
   fat: number;
+  /** Set on a glass of water: the log is where water is counted too (0 kcal, no grams). */
+  waterMl?: number;
 }
 
 export const PROFILE_LIMITS = {
@@ -358,6 +363,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   profilePhoto: null,
   profileCover: null,
   favoriteExercises: [],
+  birthYear: null,
+  biologicalSex: null,
 };
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {

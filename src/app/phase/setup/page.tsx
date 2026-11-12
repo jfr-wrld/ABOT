@@ -12,6 +12,8 @@ import { BlockPlate, MacroDonut, MacroLegend, PhaseCurve, Stepper } from "@/comp
 import { CountFromZero } from "@/components/motion/Entrance";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useEntitlements } from "@/store/useEntitlements";
+import { useBodyStore } from "@/store/useBodyStore";
+import { Crown } from "lucide-react";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { dayKey } from "@/lib/bodyweight";
 import { newId } from "@/lib/id";
@@ -25,6 +27,7 @@ import {
   PHASE_BLURB,
   PHASE_CALIBRATION,
   PHASE_DURATIONS,
+  PHASE_GOAL,
   PHASE_LABEL,
   PHASE_TYPES,
   fuelTarget,
@@ -71,11 +74,18 @@ function Wizard() {
 
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
-  const [type, setType] = useState<BodyPhaseType>(current?.phaseType ?? "BULKING");
-  const [weightKg, setWeightKg] = useState<number>(current?.startWeightKg ?? settings.bodyweightKg ?? 70);
-  const [heightCm, setHeightCm] = useState<number>(current?.heightCm ?? settings.heightCm ?? 170);
-  const [age, setAge] = useState<number>(current?.age ?? 25);
-  const [sex, setSex] = useState<BiologicalSex>(current?.biologicalSex ?? "male");
+  // Nothing is picked for a new phase: the first step asks the goal, so "Next" waits for an answer.
+  const [picked, setPicked] = useState<BodyPhaseType | null>(current?.phaseType ?? null);
+  const type: BodyPhaseType = picked ?? "BULKING";
+  // What ABOT already knows fills itself in: the latest weigh-in, the profile's height, the age
+  // and sex given last time.
+  const latestKg = useBodyStore((s) => s.entries.at(-1)?.weightKg ?? null);
+  const knownAge = settings.birthYear ? new Date(now).getFullYear() - settings.birthYear : null;
+  const [weightKg, setWeightKg] = useState<number>(latestKg ?? settings.bodyweightKg ?? current?.startWeightKg ?? 70);
+  const [heightCm, setHeightCm] = useState<number>(settings.heightCm ?? current?.heightCm ?? 170);
+  const [age, setAge] = useState<number>(knownAge ?? current?.age ?? 25);
+  const [sex, setSex] = useState<BiologicalSex>(settings.biologicalSex ?? current?.biologicalSex ?? "male");
+  const pro = canAccessPro("body_phase_protocols");
   const [activity, setActivity] = useState<number>(current?.activityMultiplier ?? 1.375);
   const [weeks, setWeeks] = useState<number>(current?.durationWeeks ?? 8);
   const [targetKg, setTargetKg] = useState<number | null>(current?.targetWeightKg ?? null);
@@ -107,13 +117,16 @@ function Wizard() {
     setStep(to);
   };
   function save() {
-    if (!canAccessPro("body_phase_protocols")) return openPaywall("body_phase_protocols");
+    if (!pro) return openPaywall("body_phase_protocols");
     feedback.setComplete();
-    settings.update({ bodyPhase: draft, ...(settings.heightCm === null ? { heightCm } : {}) });
+    // The answers become the profile's, so the next phase (and Body) start from them.
+    settings.update({ bodyPhase: draft, heightCm, birthYear: new Date(now).getFullYear() - age, biologicalSex: sex });
+    const logged = latestKg ?? settings.bodyweightKg;
+    if (logged === null || Math.abs(logged - weightKg) >= 0.05) useBodyStore.getState().logWeight(weightKg);
     router.push("/phase");
   }
 
-  const titles = [t("Pick a phase"), t("About you"), t("Your goal"), t("Your plan")];
+  const titles = [t("What is your goal?"), t("About you"), t("How long, and where to"), t("Your plan")];
   const slide = reduce ? {} : { initial: { x: dir * 48, opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: dir * -48, opacity: 0 } };
 
   return (
@@ -130,11 +143,17 @@ function Wizard() {
       <div className="relative flex-1 overflow-hidden px-4 pt-5">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={step} {...slide} transition={{ type: "spring", stiffness: 380, damping: 34 }}>
+            {step === 0 && !pro && (
+              <p className="mb-3 flex items-start gap-2 rounded-ctl border border-line bg-surface p-3 text-xs text-text-muted">
+                <Crown aria-hidden="true" size={16} className="mt-px shrink-0 text-accent" />
+                {t("Body phase is part of PRO. Plan it here and see your daily numbers for free; starting it needs PRO.")}
+              </p>
+            )}
             {step === 0 && (
-              <div role="radiogroup" aria-label={t("Phase")} className="grid grid-cols-2 gap-3">
+              <div role="radiogroup" aria-label={t("Goal")} className="grid grid-cols-2 gap-3">
                 {PHASE_TYPES.map((p) => {
                   const Icon = PHASE_ICON[p];
-                  const on = p === type;
+                  const on = p === picked;
                   return (
                     <button
                       key={p}
@@ -143,15 +162,16 @@ function Wizard() {
                       aria-checked={on}
                       onClick={() => {
                         feedback.tick();
-                        setType(p);
+                        setPicked(p);
                         setTargetKg(null);
                       }}
                       className={`flex flex-col gap-2 rounded-card border p-3 text-left transition-colors ${on ? "border-accent bg-accent-tint" : "border-line bg-surface hover:border-line-hover"}`}
                     >
-                      <span className="flex items-center gap-2">
-                        <Icon aria-hidden="true" size={18} className={on ? "text-accent" : "text-text-muted"} />
-                        <span className="text-sm font-bold">{t(PHASE_LABEL[p])}</span>
+                      <span className="flex items-start gap-2">
+                        <Icon aria-hidden="true" size={18} className={`mt-px shrink-0 ${on ? "text-accent" : "text-text-muted"}`} />
+                        <span className="text-sm font-bold leading-snug">{t(PHASE_GOAL[p])}</span>
                       </span>
+                      <span className="label-caps">{t(PHASE_LABEL[p])}</span>
                       <PhaseCurve phase={p} active={on} width={140} height={48} />
                       <span className="text-xs leading-snug text-text-muted">{t(PHASE_BLURB[p])}</span>
                     </button>
@@ -274,7 +294,7 @@ function Wizard() {
                     {t("Deload every {n} weeks", { n: tunables().phase.deloadEvery })}
                   </li>
                 </ul>
-                <p className="text-center text-[11px] text-text-muted">{t("Estimate before training calories, which are added each day. Not medical advice.")}</p>
+                <p className="text-center text-[11px] text-text-muted">{t("Your training adds to this: the average of your workouts over the last 4 weeks. An estimate, not medical advice.")}</p>
               </div>
             )}
           </motion.div>
@@ -288,12 +308,13 @@ function Wizard() {
           </Button>
         )}
         {step < STEPS - 1 ? (
-          <Button variant="primary" onClick={() => go(step + 1)} className="flex-1">
-            {t("Next")}
+          <Button variant="primary" onClick={() => go(step + 1)} disabled={step === 0 && picked === null} className="flex-1">
+            {step === 0 && picked === null ? t("Pick a goal") : t("Next")}
           </Button>
         ) : (
           <Button variant="primary" onClick={save} className="flex-1">
-            {current ? t("Save phase") : t("Start phase")}
+            {!pro && <Crown aria-hidden="true" size={16} />}
+            {!pro ? t("Unlock PRO to start") : current ? t("Save phase") : t("Start phase")}
           </Button>
         )}
       </div>

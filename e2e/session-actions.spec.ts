@@ -42,7 +42,7 @@ test("a finished workout is renamed and saved as a routine, which then suggests 
   const picker = page.getByRole("dialog", { name: "Add exercise" });
   const next = picker.getByRole("region", { name: "Still to train today · Chest and Arms" });
   await expect(next).toBeVisible();
-  await expect(next.getByRole("button", { name: /Triceps Pushdown \(Cable\)/ })).toBeVisible();
+  await expect(next.getByRole("button", { name: /^Triceps Pushdown \(Cable\)/ })).toBeVisible();
   await expect(next.getByText("For Triceps, not trained yet today").first()).toBeVisible();
   // Searching hides the suggestions.
   await picker.getByLabel("Search exercises").fill("curl");

@@ -45,6 +45,13 @@ export const PHASE_LABEL: Record<BodyPhaseType, string> = {
   RECOMP: "Recomp",
   STRENGTH_PEAK: "Strength peak",
 };
+/** The question the setup asks first, in the lifter's words; the phase is the answer. */
+export const PHASE_GOAL: Record<BodyPhaseType, string> = {
+  CUTTING: "Lose fat",
+  BULKING: "Build muscle",
+  RECOMP: "Lose fat and build muscle, slowly",
+  STRENGTH_PEAK: "Lift my heaviest, for a test or meet",
+};
 export const PHASE_BLURB: Record<BodyPhaseType, string> = {
   CUTTING: "Lose fat at a steady pace and keep your strength.",
   BULKING: "Gain muscle with a small surplus and keep adding weight to the bar.",
@@ -133,6 +140,8 @@ export interface FuelTarget {
   tdee: number;
   /** Difference from maintenance, kcal. */
   delta: number;
+  /** The part of maintenance that is training: the daily average of the last 4 weeks, kcal. */
+  trainingKcal: number;
 }
 
 /**
@@ -179,7 +188,7 @@ export function fuelTarget(p: ActivePhaseConfig, weightKg: number, trainingKcalP
   const proteinG = Math.round(protein * weightKg);
   const fatG = Math.round(fat * weightKg);
   const carbsG = Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4));
-  return { kcal, proteinG, carbsG, fatG, tdee: Math.round(tdee), delta: Math.round(delta) };
+  return { kcal, proteinG, carbsG, fatG, tdee: Math.round(tdee), delta: Math.round(delta), trainingKcal: Math.round(trainingKcalPerDay) };
 }
 
 /** How much the phase stretches recovery: a deficit slows it, a surplus speeds it up. */

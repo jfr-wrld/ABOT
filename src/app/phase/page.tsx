@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { CountFromZero, Rise } from "@/components/motion/Entrance";
 import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme";
 import { PHASE_ICON, Pacer } from "@/components/phase/PhaseCommandCard";
+import { TargetBreakdown } from "@/components/phase/TargetBreakdown";
 import { usePhaseTelemetry, type PhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
 import { BlockPlate, ChangeMeter, MacroDonut, MacroLegend, Stepper } from "@/components/phase/visuals";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -159,6 +160,9 @@ function Fuel({ m }: { m: PhaseTelemetry }) {
         <div className="min-w-0 flex-1">
           <MacroLegend protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} labels={[t("Protein"), t("Carbs"), t("Fat")]} />
         </div>
+      </div>
+      <div className="mt-2">
+        <TargetBreakdown fuel={fuel} phase={m.phase.phaseType} trainingDay={m.trainingDay} />
       </div>
       <Link href="/phase/fuel" className="mt-3 flex min-h-11 items-center gap-2 rounded-ctl bg-surface-2 px-3 text-sm font-semibold hover:bg-press">
         <Soup aria-hidden="true" size={18} className="text-accent" />

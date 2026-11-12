@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { motion, useReducedMotionConfig } from "framer-motion";
 
 /**
@@ -274,16 +274,38 @@ export function Stepper({
   decimals?: number;
 }) {
   const set = (n: number) => onChange(Math.min(max, Math.max(min, Math.round(n / step) * step)));
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => {
+    if (draft !== null) {
+      const n = Number(draft.replace(",", "."));
+      if (Number.isFinite(n) && draft.trim() !== "") set(n);
+    }
+    setDraft(null);
+  };
   const btn = "flex size-11 shrink-0 items-center justify-center rounded-ctl border border-ink/[0.12] bg-surface-2 text-text hover:border-ink/25 active:bg-press disabled:cursor-not-allowed disabled:opacity-40";
   return (
     <div role="group" aria-label={label} className="flex items-center gap-2">
       <button type="button" className={btn} onClick={() => set(value - step)} disabled={value <= min} aria-label={`${label}: −${step}`}>
         <span aria-hidden="true" className="text-lg font-bold">−</span>
       </button>
-      <output aria-live="polite" className="num min-w-0 flex-1 text-center text-2xl font-bold">
-        {value.toFixed(decimals)}
+      {/* The number can be typed too: a target 10 kg away is not 20 taps. */}
+      <label className="flex min-w-0 flex-1 items-baseline justify-center">
+        <span className="sr-only">{label}</span>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={draft ?? value.toFixed(decimals)}
+          onFocus={(e) => {
+            setDraft(value.toFixed(decimals));
+            e.currentTarget.select();
+          }}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+          className="num w-24 min-w-0 rounded-ctl bg-transparent text-center text-2xl font-bold focus:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-accent/40"
+        />
         {unit && <span className="ml-1 text-sm font-semibold text-text-muted">{unit}</span>}
-      </output>
+      </label>
       <button type="button" className={btn} onClick={() => set(value + step)} disabled={value >= max} aria-label={`${label}: +${step}`}>
         <span aria-hidden="true" className="text-lg font-bold">+</span>
       </button>

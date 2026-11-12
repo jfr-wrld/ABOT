@@ -23,6 +23,18 @@ export function entryFor(food: Food, grams: number, meal: Meal, at = Date.now())
   return { id: newId(), day: dayOf(at), at, meal, foodId: food.id, name: food.name, grams, kcal: n.kcal, protein: n.protein, carbs: n.carbs, fat: n.fat };
 }
 
+/** A quick protein entry, as the protein tap logs it: 4 kcal a gram, nothing else. */
+export function proteinEntry(grams: number, at = Date.now()): FoodLogEntry {
+  return { id: newId(), day: dayOf(at), at, meal: mealAt(at), foodId: null, name: "Protein", grams, kcal: grams * 4, protein: grams, carbs: 0, fat: 0 };
+}
+
+/** A glass (or bottle) of water: counted in the log so it is backed up with the rest of the day. */
+export function waterEntry(ml: number, at = Date.now()): FoodLogEntry {
+  return { id: newId(), day: dayOf(at), at, meal: mealAt(at), foodId: null, name: "Water", grams: 0, kcal: 0, protein: 0, carbs: 0, fat: 0, waterMl: ml };
+}
+
+export const isWater = (e: FoodLogEntry) => (e.waterMl ?? 0) > 0;
+
 interface FoodLogState {
   entries: FoodLogEntry[];
   add: (entries: FoodLogEntry[]) => void;
@@ -61,7 +73,8 @@ export const useFoodLog = create<FoodLogState>()((set, get) => ({
   remove: (id) => set({ entries: get().entries.filter((e) => e.id !== id) }),
   copyDay: (from, to, at = Date.now()) => {
     const copies = get()
-      .entries.filter((e) => e.day === from)
+      // Water is drunk again on its own; copying a day copies the food.
+      .entries.filter((e) => e.day === from && !isWater(e))
       .map((e, i) => ({ ...e, id: newId(), day: to, at: at + i }));
     if (copies.length) get().add(copies);
     return copies.length;

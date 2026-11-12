@@ -153,6 +153,8 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     profilePhoto: normalizePhoto(raw.profilePhoto),
     profileCover: normalizeCover(raw.profileCover),
     favoriteExercises: normalizeFavorites(raw.favoriteExercises),
+    birthYear: typeof raw.birthYear === "number" && Number.isInteger(raw.birthYear) && raw.birthYear >= 1900 && raw.birthYear <= new Date().getFullYear() - 10 ? raw.birthYear : null,
+    biologicalSex: raw.biologicalSex === "male" || raw.biologicalSex === "female" ? raw.biologicalSex : null,
   };
 }
 
@@ -258,6 +260,7 @@ function normalizeFoodLog(raw: unknown): FoodLogEntry[] {
       protein,
       carbs,
       fat,
+      ...(num(e.waterMl, 5000) ? { waterMl: num(e.waterMl, 5000)! } : {}),
     });
   }
   return out;

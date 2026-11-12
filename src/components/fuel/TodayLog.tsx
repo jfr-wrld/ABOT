@@ -1,5 +1,7 @@
 "use client";
 
+import { TargetBreakdown } from "@/components/phase/TargetBreakdown";
+import type { BodyPhaseType } from "@/lib/phase-engine";
 import { useMemo, useState } from "react";
 import { Copy, Plus, Trash2, Zap } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
@@ -10,7 +12,7 @@ import { MACRO_COLOR, Ring } from "@/components/phase/visuals";
 import { FoodPhoto } from "./FoodPhoto";
 import { FOODS } from "@/lib/nutrition-guide";
 import { SLOT_LABEL, type MealSlot } from "@/lib/meal-templates";
-import { dayOf, dayTotals, mealAt, useFoodLog } from "@/store/useFoodLog";
+import { dayOf, dayTotals, isWater, mealAt, useFoodLog } from "@/store/useFoodLog";
 import type { FuelTarget } from "@/lib/phase-engine";
 import type { FoodLogEntry } from "@/types/workout";
 import { newId } from "@/lib/id";
@@ -24,13 +26,27 @@ const BY_ID = Object.fromEntries(FOODS.map((f) => [f.id, f]));
  * Today's food log: calories and macros against the phase's target (or just the totals with no
  * phase), entries by meal, and the quick ways to add: a food, a quick entry, or yesterday again.
  */
-export function TodayLog({ fuel, now, onAddFood }: { fuel: FuelTarget | null; now: number; onAddFood: () => void }) {
+export function TodayLog({
+  fuel,
+  now,
+  onAddFood,
+  phase,
+  trainingDay = false,
+}: {
+  fuel: FuelTarget | null;
+  now: number;
+  onAddFood: () => void;
+  /** With a phase, the target can say how it is worked out. */
+  phase?: BodyPhaseType;
+  trainingDay?: boolean;
+}) {
   const t = useT();
   const all = useFoodLog((s) => s.entries);
   const today = dayOf(now);
   const yesterday = dayOf(now - 86_400_000);
-  const entries = useMemo(() => all.filter((e) => e.day === today), [all, today]);
-  const hadYesterday = useMemo(() => all.some((e) => e.day === yesterday), [all, yesterday]);
+  // Water taps live in the log too, but count on the water ring, not as food here.
+  const entries = useMemo(() => all.filter((e) => e.day === today && !isWater(e)), [all, today]);
+  const hadYesterday = useMemo(() => all.some((e) => e.day === yesterday && !isWater(e)), [all, yesterday]);
   const totals = dayTotals(entries);
   const [quick, setQuick] = useState(false);
   const [editing, setEditing] = useState<FoodLogEntry | null>(null);
@@ -73,6 +89,7 @@ export function TodayLog({ fuel, now, onAddFood }: { fuel: FuelTarget | null; no
         </p>
       )}
 
+      {fuel && phase && <TargetBreakdown fuel={fuel} phase={phase} trainingDay={trainingDay} />}
       <div className="grid grid-cols-3 gap-2">
         <Button variant="primary" onClick={onAddFood}>
           <Plus aria-hidden="true" size={16} />

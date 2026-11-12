@@ -1,64 +1,40 @@
-import { create } from "zustand";
-import { dayKey } from "@/lib/bodyweight";
-import { useFoodLog } from "./useFoodLog";
+import { dayOf, isWater, proteinEntry, useFoodLog, waterEntry } from "./useFoodLog";
 
 /**
- * Today's protein and water, ticked off with one tap from the phase card. Per device and per
- * day, like a paper tally: it starts again at zero the next day and is not training data.
- */
-interface FuelPacer {
-  day: string;
-  proteinG: number;
-  waterMl: number;
-  add(patch: { proteinG?: number; waterMl?: number }): void;
-  reset(): void;
-}
-
-const KEY = "abot.fuelPacer";
-const empty = (day: string) => ({ day, proteinG: 0, waterMl: 0 });
-
-function load(): Pick<FuelPacer, "day" | "proteinG" | "waterMl"> {
-  const today = dayKey(Date.now());
-  try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? "null") as Partial<FuelPacer> | null;
-    if (v && v.day === today) return { day: today, proteinG: Math.max(0, Number(v.proteinG) || 0), waterMl: Math.max(0, Number(v.waterMl) || 0) };
-  } catch {
-    // Unreadable: start from zero.
-  }
-  return empty(today);
-}
-
-function save(s: Pick<FuelPacer, "day" | "proteinG" | "waterMl">) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(s));
-  } catch {
-    // Without storage the tally lasts until the app closes.
-  }
-}
-
-export const useFuelPacer = create<FuelPacer>((set, get) => ({
-  ...(typeof window === "undefined" ? empty("") : load()),
-  add({ proteinG = 0, waterMl = 0 }) {
-    const today = dayKey(Date.now());
-    const base = get().day === today ? get() : empty(today);
-    const next = { day: today, proteinG: Math.max(0, base.proteinG + proteinG), waterMl: Math.max(0, base.waterMl + waterMl) };
-    set(next);
-    save(next);
-  },
-  reset() {
-    const next = empty(dayKey(Date.now()));
-    set(next);
-    save(next);
-  },
-}));
-
-/**
- * Today's tally, read so a value kept from yesterday shows as zero. Protein also counts what the
- * food log holds for today, so a logged meal and a +25 g tap add up in one place.
+ * Today's protein and water. Both come from the food log, the one place food is counted: the
+ * +25 g and +0.5 L taps on the phase card add entries to it, so a logged meal and a tap never
+ * count twice, and water is backed up with the rest of the day.
  */
 export function useTodayFuel(now: number): { proteinG: number; waterMl: number } {
-  const { day, proteinG, waterMl } = useFuelPacer();
-  const today = dayKey(now);
-  const logged = useFoodLog((s) => Math.round(s.entries.reduce((n, e) => (e.day === today ? n + e.protein : n), 0)));
-  return day === today ? { proteinG: proteinG + logged, waterMl } : { proteinG: logged, waterMl: 0 };
+  const today = dayOf(now);
+  const proteinG = useFoodLog((s) => Math.round(s.entries.reduce((n, e) => (e.day === today ? n + e.protein : n), 0)));
+  const waterMl = useFoodLog((s) => s.entries.reduce((n, e) => (e.day === today && isWater(e) ? n + (e.waterMl ?? 0) : n), 0));
+  return { proteinG, waterMl };
+}
+
+export const addProtein = (grams: number) => useFoodLog.getState().add([proteinEntry(grams)]);
+export const addWater = (ml: number) => useFoodLog.getState().add([waterEntry(ml)]);
+
+/** Where the taps used to be kept, per device, before they went into the food log. */
+const OLD_KEY = "abot.fuelPacer";
+
+/**
+ * Moves today's taps from the old per-device tally into the food log, once. Older days are
+ * dropped, as the tally itself dropped them each morning.
+ */
+export function migrateFuelTally(storage: Pick<Storage, "getItem" | "removeItem"> | undefined = typeof localStorage === "undefined" ? undefined : localStorage): void {
+  if (!storage) return;
+  try {
+    const raw = storage.getItem(OLD_KEY);
+    if (!raw) return;
+    storage.removeItem(OLD_KEY);
+    const v = JSON.parse(raw) as { day?: unknown; proteinG?: unknown; waterMl?: unknown };
+    if (v.day !== dayOf(Date.now())) return;
+    const protein = Math.max(0, Math.round(Number(v.proteinG) || 0));
+    const water = Math.max(0, Math.round(Number(v.waterMl) || 0));
+    const add = [...(protein > 0 ? [proteinEntry(protein)] : []), ...(water > 0 ? [waterEntry(water)] : [])];
+    if (add.length) useFoodLog.getState().add(add);
+  } catch {
+    // An unreadable tally is simply left behind.
+  }
 }

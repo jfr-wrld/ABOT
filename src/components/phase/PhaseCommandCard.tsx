@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Beef, ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "lucide-react";
-import { useFuelPacer, useTodayFuel } from "@/store/useFuelPacer";
+import { addProtein, addWater, useTodayFuel } from "@/store/useFuelPacer";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useEntitlements } from "@/store/useEntitlements";
 import { PHASE_LABEL, type BodyPhaseType } from "@/lib/phase-engine";
 import { toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
@@ -24,6 +25,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
   const t = useT();
   const m = usePhaseTelemetry(now);
   const unit = useSettingsStore((s) => s.weightUnit);
+  const pro = useEntitlements().canAccessPro("body_phase_protocols");
 
   if (!m) {
     return (
@@ -39,8 +41,12 @@ export function PhaseCommandCard({ now }: { now: number }) {
           })}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="label-caps block">{t("Body phase")}</span>
-          <span className="block text-sm font-semibold">{t("Cut, bulk, recomp or peak")}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="label-caps">{t("Body phase")}</span>
+            {/* Said before the four setup steps, not after them. */}
+            {!pro && <span className="rounded-full border border-accent/50 px-1.5 text-[11px] font-bold text-accent">PRO</span>}
+          </span>
+          <span className="block text-sm font-semibold">{t("Lose fat or build muscle, with daily targets")}</span>
         </span>
         <ChevronRight aria-hidden="true" size={18} className="text-text-muted" />
       </Link>
@@ -111,7 +117,6 @@ export function PhaseCommandCard({ now }: { now: number }) {
 function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number; waterTarget: number; now: number }) {
   const t = useT();
   const { proteinG, waterMl } = useTodayFuel(now);
-  const add = useFuelPacer((s) => s.add);
   const litres = (n: number) => (n / 1000).toLocaleString(t.locale, { maximumFractionDigits: 1 });
   return (
     <div role="group" aria-label={t("Today's protein and water")} className="flex gap-1 border-t border-line px-1 py-0.5">
@@ -123,7 +128,7 @@ function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number
         figure={`${proteinG}/${proteinTarget} g`}
         stepText="25 g"
         aria={t("Add 25 g protein")}
-        onAdd={() => add({ proteinG: 25 })}
+        onAdd={() => addProtein(25)}
         Icon={Beef}
       />
       <PacerChip
@@ -134,7 +139,7 @@ function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number
         figure={`${litres(waterMl)}/${litres(waterTarget)} L`}
         stepText="0.5 L"
         aria={t("Add 500 ml water")}
-        onAdd={() => add({ waterMl: 500 })}
+        onAdd={() => addWater(500)}
         Icon={Droplets}
       />
     </div>
@@ -263,7 +268,6 @@ export function Pacer({
 }) {
   const t = useT();
   const { proteinG, waterMl } = useTodayFuel(now);
-  const add = useFuelPacer((s) => s.add);
   // Water reads in litres ("1.5/2.5 L"): four-digit millilitres do not fit beside the ring at 360px.
   const show = (n: number, litres: boolean) => (litres ? (n / 1000).toLocaleString(t.locale, { maximumFractionDigits: 1 }) : n.toLocaleString(t.locale));
   return (
@@ -277,7 +281,7 @@ export function Pacer({
         targetText={`/${show(proteinTarget, false)} g`}
         stepText="25 g"
         aria={t("Add 25 g protein")}
-        onAdd={() => add({ proteinG: 25 })}
+        onAdd={() => addProtein(25)}
         Icon={Beef}
         size={size}
       />
@@ -290,7 +294,7 @@ export function Pacer({
         targetText={`/${show(waterTarget, true)} L`}
         stepText="0.5 L"
         aria={t("Add 500 ml water")}
-        onAdd={() => add({ waterMl: 500 })}
+        onAdd={() => addWater(500)}
         Icon={Droplets}
         size={size}
       />

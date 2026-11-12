@@ -73,7 +73,7 @@ function FuelScreen() {
         ))}
       </div>
       <div role="tabpanel" aria-label={tabs.find((x) => x.id === tab)!.label} className="px-4">
-        {tab === "today" && <TodayLog fuel={m?.fuel ?? null} now={now} onAddFood={() => setTab("foods")} />}
+        {tab === "today" && <TodayLog fuel={m?.fuel ?? null} now={now} onAddFood={() => setTab("foods")} phase={m?.phase.phaseType} trainingDay={m?.trainingDay} />}
         {tab === "plan" &&
           (m ? (
             <Rise order={0} className="flex flex-col gap-5">

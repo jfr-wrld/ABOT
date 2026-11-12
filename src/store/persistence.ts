@@ -11,6 +11,7 @@ import { useLocationStore } from "./useLocationStore";
 import { useHydration } from "./hydration";
 import { useBodyStore } from "./useBodyStore";
 import { useFoodLog } from "./useFoodLog";
+import { migrateFuelTally } from "./useFuelPacer";
 
 export interface PersistenceHandle {
   /** Resolves when every queued write (including ones queued meanwhile) has settled. */
@@ -54,6 +55,8 @@ function pickSettings(s: SettingsState): StoredSettings {
     profilePhoto: s.profilePhoto,
     profileCover: s.profileCover,
     favoriteExercises: s.favoriteExercises,
+    birthYear: s.birthYear,
+    biologicalSex: s.biologicalSex,
   };
 }
 
@@ -88,6 +91,8 @@ export async function hydrateStores(repo: Repository): Promise<void> {
   } finally {
     loadingFromRepo = false;
   }
+  // Today's protein and water taps, kept per device before they went into the food log.
+  migrateFuelTally();
   // The extended library loads beside the saved data, in its own chunk, once per page.
   void useExerciseStore.getState().loadExtended();
 }
