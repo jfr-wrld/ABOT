@@ -90,7 +90,7 @@ export function ActiveWorkoutHeader({
         <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
           <dt className="label-caps flex items-center gap-1.5">
             {t("Duration")}
-            {paused && <span className="rounded bg-accent px-1 text-[9px] font-bold text-on-accent">{t("Paused")}</span>}
+            {paused && <span className="rounded bg-accent px-1.5 text-[11px] font-bold normal-case tracking-normal text-on-accent">{t("Paused")}</span>}
           </dt>
           <dd>
             <DurationButton session={session} paused={paused} onOpen={() => setStartOpen(true)} />

@@ -39,9 +39,10 @@ test("tapping the exercise name opens the how-to sheet without leaving the worko
   await expect(page.getByRole("button", { name: /Set 1 done\. Mark as not done/ })).toBeVisible();
 });
 
-test("the info icon opens the same sheet", async ({ page }) => {
+test("How to in the card menu opens the same sheet", async ({ page }) => {
   await startEmptyWorkout(page);
   await addExercise(page, "Squat (Barbell)");
+  await page.getByRole("button", { name: "Options for Squat (Barbell)" }).click();
   await page.getByRole("button", { name: "How to do Squat (Barbell)" }).click();
   const sheet = page.getByRole("dialog", { name: "Squat (Barbell)" });
   await expect(sheet.getByText("Brace the core before each rep")).toBeVisible();

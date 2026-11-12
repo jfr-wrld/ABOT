@@ -334,3 +334,19 @@ describe("setSessionLocation", () => {
     expect(useWorkoutStore.getState().sessions[0]).toBe(before);
   });
 });
+
+describe("restoreSet", () => {
+  it("puts a removed set back in its place, once", () => {
+    const { exId, setIds } = setup();
+    const s = useWorkoutStore.getState();
+    s.updateSet(exId, setIds[1]!, { weightKg: 70, reps: 5 });
+    const removed = useWorkoutStore.getState().active!.exercises[0]!.sets[1]!;
+    s.removeSet(exId, removed.id);
+    expect(useWorkoutStore.getState().active!.exercises[0]!.sets.map((x) => x.id)).toEqual([setIds[0], setIds[2]]);
+    s.restoreSet(exId, removed, 1);
+    s.restoreSet(exId, removed, 1);
+    const sets = useWorkoutStore.getState().active!.exercises[0]!.sets;
+    expect(sets.map((x) => x.id)).toEqual(setIds);
+    expect(sets[1]!.weightKg).toBe(70);
+  });
+});

@@ -82,6 +82,8 @@ interface WorkoutState {
   setAssisted: (sessionExerciseId: string, assisted: boolean) => void;
   addSet: (sessionExerciseId: string) => void;
   removeSet: (sessionExerciseId: string, setId: string) => void;
+  /** Puts a removed set back where it was (the undo after a swipe delete). */
+  restoreSet: (sessionExerciseId: string, set: WorkoutSet, index: number) => void;
   updateSet: (sessionExerciseId: string, setId: string, patch: Partial<WorkoutSet>) => void;
   /** Puts warm-up sets (lightest first) ahead of the exercise's sets. */
   addWarmups: (sessionExerciseId: string, sets: { weightKg: number; reps: number }[]) => void;
@@ -328,6 +330,17 @@ export const useWorkoutStore = create<WorkoutState>()(
         set((s) =>
           patchActive(s, (a) =>
             patchExercise(a, id, (ex) => ({ ...ex, sets: ex.sets.filter((st) => st.id !== setId) })),
+          ),
+        ),
+
+      restoreSet: (id, restored, index) =>
+        set((s) =>
+          patchActive(s, (a) =>
+            patchExercise(a, id, (ex) =>
+              ex.sets.some((st) => st.id === restored.id)
+                ? ex
+                : { ...ex, sets: [...ex.sets.slice(0, index), restored, ...ex.sets.slice(index)] },
+            ),
           ),
         ),
 

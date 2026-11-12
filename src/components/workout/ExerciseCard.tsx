@@ -5,7 +5,7 @@ import { Select } from "@/components/ui/Select";
 import { memo, useEffect, useRef, useState, type ComponentProps } from "react";
 import { setGridColumns } from "./setGrid";
 import { distanceUnit } from "@/lib/set-metrics";
-import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, Flame, Info, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, BookOpen, Check, ChevronDown, ChevronUp, Flame, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
 import { useLocationStore } from "@/store/useLocationStore";
 import { gymSetup } from "@/lib/gym-equipment";
 import { warmupSets } from "@/lib/warmup";
@@ -43,6 +43,8 @@ import { fromDisplay, toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
+/** How long Undo stays after a set is swiped away. */
+const UNDO_MS = 5000;
 
 function ExerciseCardView({
   item,
@@ -53,10 +55,13 @@ function ExerciseCardView({
   prBySet,
   canMoveUp,
   canMoveDown,
+  movedOn = false,
   superset,
   joinedAbove,
   joinedBelow,
 }: {
+  /** A later exercise has a set done: this one, once every set is done, folds to one line. */
+  movedOn?: boolean;
   /** Letter, colour and A1/A2 place when this exercise is in a superset (see lib/superset). */
   superset?: SupersetLabel;
   /** The card above is in the same superset: the bracket runs up through the gap to it. */
@@ -84,6 +89,14 @@ function ExerciseCardView({
   const [reorderOpen, setReorderOpen] = useState(false);
   const [supersetOpen, setSupersetOpen] = useState(false);
   const [platesOpen, setPlatesOpen] = useState(false);
+  // A finished card the lifter opened again stays open.
+  const [reopened, setReopened] = useState(false);
+  const [removed, setRemoved] = useState<{ set: WorkoutSet; index: number } | null>(null);
+  useEffect(() => {
+    if (!removed) return;
+    const id = setTimeout(() => setRemoved(null), UNDO_MS);
+    return () => clearTimeout(id);
+  }, [removed]);
   // A set that turns into a record while you log plays the PR sound once; records already
   // there when the card appears stay quiet. A lift logged for the first time is a baseline,
   // not a record (the summary's rule), so it stays quiet too.
@@ -131,6 +144,43 @@ function ExerciseCardView({
   // The routine's range: reach its top on every set and the Coach adds weight next time.
   const range = item.repRange ? t("{lo}-{hi} reps", { lo: item.repRange[0], hi: item.repRange[1] }) : null;
 
+  const allDone = item.sets.length > 0 && item.sets.every((x) => x.completed);
+  const foldable = allDone && movedOn;
+  if (foldable && !reopened) {
+    // Working sets only: warm-ups would inflate the total.
+    const volumeKg = item.sets.reduce((sum, x) => (x.type === "warmup" ? sum : sum + (x.weightKg ?? 0) * (x.reps ?? 0)), 0);
+    const parts = [t("{n} sets", { n: item.sets.length })];
+    if (logType === "weight_reps" && volumeKg > 0) parts.push(`${Math.round(toDisplay(volumeKg, unit)).toLocaleString(t.locale)} ${unit}`);
+    return (
+      <section
+        id={`card-${item.id}`}
+        aria-labelledby={`ex-${item.id}`}
+        style={ssColor ? { borderLeftColor: ssColor } : undefined}
+        className={`relative scroll-mt-[calc(env(safe-area-inset-top)+12px)] rounded-card border border-ink/[0.08] bg-surface px-2 py-1 ${ssColor ? "border-l-[3px]" : ""}`}
+      >
+        <button
+          type="button"
+          aria-expanded={false}
+          onClick={() => {
+            feedback.tick();
+            setReopened(true);
+          }}
+          className="flex min-h-12 w-full items-center gap-2.5 rounded-ctl px-1 text-left hover:bg-surface-2"
+        >
+          {exercise && <ExerciseThumb exercise={exercise} size={32} />}
+          <span className="min-w-0 flex-1">
+            <span id={`ex-${item.id}`} className="block truncate text-sm font-semibold">
+              {name}
+            </span>
+            <span className="num block text-xs text-text-muted">{parts.join(" · ")}</span>
+          </span>
+          <Check aria-label={t("Done")} size={18} className="shrink-0 text-accent" />
+          <ChevronDown aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
+        </button>
+      </section>
+    );
+  }
+
   return (
     <section
       id={`card-${item.id}`}
@@ -172,15 +222,15 @@ function ExerciseCardView({
           </p>
           {range && <p className="num text-xs font-semibold text-accent">{range}</p>}
         </div>
-        {exercise && (
+        {foldable && (
           <button
             type="button"
-            onClick={() => setHowToOpen(true)}
-            aria-label={t("How to do {name}", { name })}
-            aria-haspopup="dialog"
+            aria-expanded={true}
+            onClick={() => setReopened(false)}
+            aria-label={t("Fold {name}", { name })}
             className="-mt-1 ml-auto flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
           >
-            <Info aria-hidden="true" size={20} />
+            <ChevronUp aria-hidden="true" size={20} />
           </button>
         )}
         <button
@@ -203,25 +253,13 @@ function ExerciseCardView({
         <span>
           {t("Rest")} <span className="num">{item.restSeconds === 0 ? t("off") : formatClock(item.restSeconds)}</span>
         </span>
-        {loadsPlates && (
-          <button
-            type="button"
-            onClick={() => setPlatesOpen(true)}
-            aria-haspopup="dialog"
-            aria-label={t("Plate calculator for {name}", { name })}
-            className="-mr-1 ml-auto flex min-h-11 items-center gap-1.5 rounded-ctl px-2 font-semibold text-text-muted hover:bg-surface-2 hover:text-text"
-          >
-            <PlateIcon />
-            {t("Plates")}
-          </button>
-        )}
         {exercise && (
           <button
             type="button"
             onClick={() => setSwapOpen(true)}
             aria-haspopup="dialog"
             aria-label={t("Swap {name} for another exercise", { name })}
-            className={`-mr-1 flex min-h-11 items-center gap-1.5 rounded-ctl px-2 font-semibold text-text-muted hover:bg-surface-2 hover:text-text ${loadsPlates ? "" : "ml-auto"}`}
+            className={`-mr-1 flex min-h-11 items-center gap-1.5 rounded-ctl px-2 font-semibold text-text-muted hover:bg-surface-2 hover:text-text ml-auto`}
           >
             <ArrowLeftRight aria-hidden="true" size={14} />
             {t("Swap")}
@@ -280,11 +318,31 @@ function ExerciseCardView({
             prKinds={prBySet[set.id] ?? []}
             onUpdate={(patch) => store.updateSet(item.id, set.id, patch)}
             onSetType={(type) => store.setSetType(item.id, set.id, type)}
-            onRemove={() => store.removeSet(item.id, set.id)}
+            onRemove={() => {
+              store.removeSet(item.id, set.id);
+              setRemoved({ set, index: i });
+            }}
             onComplete={(c) => store.completeSet(item.id, set.id, c)}
           />
         ))}
       </ol>
+      <div role="status" aria-live="polite">
+        {removed && (
+          <div className="mt-1 flex items-center justify-between gap-3 rounded-ctl bg-surface-2 py-1 pl-3 pr-1 text-sm">
+            <span>{t("Set removed")}</span>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                store.restoreSet(item.id, removed.set, removed.index);
+                setRemoved(null);
+              }}
+              className="text-accent"
+            >
+              {t("Undo")}
+            </Button>
+          </div>
+        )}
+      </div>
 
       <div className={`mt-2 grid gap-2 ${warmups.length ? "grid-cols-[minmax(0,1fr)_auto]" : ""}`}>
         <button
@@ -391,6 +449,31 @@ function ExerciseCardView({
               <ArrowUpDown aria-hidden="true" size={18} /> {t("Reorder exercises")}
             </Button>
           </div>
+          {/* Looked up now and then, so they wait here instead of on every card. */}
+          {exercise && (
+            <div className={`grid gap-2 ${loadsPlates ? "grid-cols-2" : ""}`}>
+              <Button
+                aria-label={t("How to do {name}", { name })}
+                onClick={() => {
+                  setMenuOpen(false);
+                  setHowToOpen(true);
+                }}
+              >
+                <BookOpen aria-hidden="true" size={18} /> {t("How to")}
+              </Button>
+              {loadsPlates && (
+                <Button
+                  aria-label={t("Plate calculator for {name}", { name })}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setPlatesOpen(true);
+                  }}
+                >
+                  <PlateIcon /> {t("Plates")}
+                </Button>
+              )}
+            </div>
+          )}
           {item.supersetId ? (
             <Button
               onClick={() => {

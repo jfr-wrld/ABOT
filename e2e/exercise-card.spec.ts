@@ -69,6 +69,28 @@ test("a set is removed by swiping it left; a short swipe springs back", async ({
   // Three sets became two (the last one is now Set 2).
   await expect(page.getByRole("button", { name: "Mark Set 3 done" })).toBeHidden();
   await expect(page.getByRole("button", { name: /^Mark Set \d done$/ })).toHaveCount(2);
+  // Undo puts it back.
+  await expect(page.getByRole("status").filter({ hasText: "Set removed" })).toBeVisible();
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByRole("button", { name: /^Mark Set \d done$/ })).toHaveCount(3);
+});
+
+test("a finished exercise folds to one line once the next one starts, and opens again", async ({ page }) => {
+  for (const n of [1, 2, 3]) {
+    await logSet(page, n, null, "8");
+    await page.getByRole("button", { name: "Skip rest" }).click();
+  }
+  // Still open while it is the latest exercise.
+  await expect(page.getByRole("heading", { name: "Pull Up", exact: true })).toBeVisible();
+  await addExercise(page, "Squat (Barbell)");
+  await logSet(page, 1, "60", "5", "Squat (Barbell)");
+  const folded = page.getByRole("button", { name: /^Pull Up 3 sets/ });
+  await expect(folded).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("heading", { name: "Pull Up", exact: true })).toHaveCount(0);
+  await folded.click();
+  await expect(page.getByRole("heading", { name: "Pull Up", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Fold Pull Up" }).click();
+  await expect(page.getByRole("button", { name: /^Pull Up 3 sets/ })).toBeVisible();
 });
 
 test("the exercise picker switches to a grid of photos and filters with muscle icons", async ({ page }) => {

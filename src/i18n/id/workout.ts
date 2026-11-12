@@ -548,4 +548,6 @@ export const workout: Record<string, string> = {
   "Next after {name}": "Berikutnya setelah {name}",
   "Your routine": "Rutinitasmu",
   "Start today: {name}": "Mulai hari ini: {name}",
+  "Fold {name}": "Ciutkan {name}",
+  "Set removed": "Set dihapus",
 };

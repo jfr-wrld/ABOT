@@ -13,6 +13,7 @@ test("the plate calculator loads the bar, follows the gym's plates, and fills th
   await weight.fill("100");
   await weight.press("Tab");
 
+  await page.getByRole("button", { name: "Options for Bench Press (Barbell)" }).click();
   await page.getByRole("button", { name: "Plate calculator for Bench Press (Barbell)" }).click();
   const sheet = page.getByRole("dialog", { name: "Plate calculator" });
   await expect(sheet.getByLabel("Target weight in kg")).toHaveValue("100");
@@ -41,5 +42,8 @@ test("the plate calculator loads the bar, follows the gym's plates, and fills th
 test("only barbell exercises offer the calculator", async ({ page }) => {
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Dumbbell)");
-  await expect(page.getByRole("button", { name: /Plate calculator/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Options for Bench Press (Dumbbell)" }).click();
+  const menu = page.getByRole("dialog", { name: "Bench Press (Dumbbell)" });
+  await expect(menu.getByRole("button", { name: "How to do Bench Press (Dumbbell)" })).toBeVisible();
+  await expect(menu.getByRole("button", { name: /Plate calculator/ })).toHaveCount(0);
 });

@@ -90,8 +90,12 @@ function WorkoutScreen() {
   const activeCount = active?.exercises.length ?? -1;
   useEffect(() => {
     if (addParam !== "1") return;
-    if (activeCount === 0) setPickerOpen(true);
-    router.replace("/workout");
+    // Next tick: the picker opens once the empty workout is on screen.
+    const id = setTimeout(() => {
+      if (activeCount === 0) setPickerOpen(true);
+      router.replace("/workout");
+    }, 0);
+    return () => clearTimeout(id);
   }, [addParam, activeCount, router]);
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -143,6 +147,8 @@ function WorkoutScreen() {
 
   const inWorkout = new Set(active.exercises.map((e) => e.exerciseId));
   const supersets = supersetLabels(active.exercises);
+  // The furthest card with a set done: finished cards above it fold to one line.
+  const furthest = active.exercises.findLastIndex((e) => e.sets.some((x) => x.completed));
 
   return (
     <main className="flex flex-1 flex-col">
@@ -169,6 +175,7 @@ function WorkoutScreen() {
             showRpe={showRpe}
             prBySet={prByCard[item.id] ?? NO_PRS}
             canMoveUp={i > 0}
+            movedOn={i < furthest}
             canMoveDown={i < active.exercises.length - 1}
             superset={supersets[item.id]}
             joinedAbove={!!item.supersetId && active.exercises[i - 1]?.supersetId === item.supersetId}

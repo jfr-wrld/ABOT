@@ -93,6 +93,7 @@ test("a gym keeps a name, can be marked in pounds, and caps plates by the pairs 
   await startEmptyWorkout(page);
   await addExercise(page, "Squat (Barbell)");
   await page.getByLabel("Set 1 weight in lbs").fill("225");
+  await page.getByRole("button", { name: "Options for Squat (Barbell)" }).click();
   await page.getByRole("button", { name: "Plate calculator for Squat (Barbell)" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("1 × 45 lbs");
