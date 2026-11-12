@@ -11,7 +11,7 @@ import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
 import { motion } from "framer-motion";
-import { MapPin, Pause, Play } from "lucide-react";
+import { MapPin, MoreHorizontal, Pause, Play, Timer, Trash2 } from "lucide-react";
 import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { useT } from "@/i18n";
@@ -21,10 +21,13 @@ export function ActiveWorkoutHeader({
   session,
   unit,
   onFinish,
+  onDiscard,
 }: {
   session: WorkoutSession;
   unit: WeightUnit;
   onFinish: () => void;
+  /** Opens the page's discard confirmation. */
+  onDiscard: () => void;
 }) {
   const t = useT();
   const rename = useWorkoutStore((s) => s.renameActive);
@@ -32,6 +35,10 @@ export function ActiveWorkoutHeader({
   const volume = sessionVolume(session, byId);
   const { total, completed } = countSets(session);
   const [startOpen, setStartOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // One loud action at a time: while sets wait, Done set (on the island and each row) leads;
+  // Finish takes the accent once every set is ticked.
+  const ready = total > 0 && completed === total;
   const paused = session.pausedAt !== undefined;
   const locations = useLocationStore((s) => s.locations);
   const setLocation = useWorkoutStore((s) => s.setLocation);
@@ -50,12 +57,22 @@ export function ActiveWorkoutHeader({
             className="h-11 w-full rounded-ctl bg-transparent px-1 text-xl font-bold tracking-tight text-text hover:bg-surface focus:bg-surface"
           />
         </div>
-        {/* The screen's single glow: Finish is the one action that ends the session. */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label={t("Workout options")}
+          aria-haspopup="dialog"
+          className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
+        >
+          <MoreHorizontal aria-hidden="true" size={20} />
+        </button>
         <motion.button
           type="button"
           onClick={onFinish}
           {...press}
-          className="min-h-11 shrink-0 rounded-xl bg-accent px-5 text-sm font-extrabold text-on-accent shadow-volt transition-[filter] duration-150 hover:brightness-110"
+          className={`min-h-11 shrink-0 rounded-xl px-5 text-sm font-extrabold transition-[filter,background-color] duration-150 ${
+            ready ? "bg-accent text-on-accent shadow-volt hover:brightness-110" : "border border-line-strong bg-surface text-text hover:bg-surface-2"
+          }`}
         >
           {t("Finish")}
         </motion.button>
@@ -100,6 +117,27 @@ export function ActiveWorkoutHeader({
         <Stat label={t("Sets")} value={String(completed)} small={`/${total}`} />
         <WorkoutMuscles session={session} byId={byId} />
       </dl>
+      <Sheet open={menuOpen} onClose={() => setMenuOpen(false)} title={t("Workout options")}>
+        <div className="flex flex-col gap-2">
+          <Button
+            onClick={() => {
+              setMenuOpen(false);
+              setStartOpen(true);
+            }}
+          >
+            <Timer aria-hidden="true" size={18} /> {t("Workout timer")}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              setMenuOpen(false);
+              onDiscard();
+            }}
+          >
+            <Trash2 aria-hidden="true" size={18} /> {t("Discard workout")}
+          </Button>
+        </div>
+      </Sheet>
       {startOpen && <StartTimeSheet startedAt={session.startedAt} paused={paused} onClose={() => setStartOpen(false)} />}
     </header>
   );

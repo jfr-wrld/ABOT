@@ -17,6 +17,9 @@ test("after twelve days away Home offers the last workout and the Coach starts i
   // Twelve days later.
   await page.clock.setSystemTime(new Date(2026, 9, 13, 18, 0, 0));
   await page.goto("/");
+  // The splash's fade runs on the test clock; move it on so it stops covering the page.
+  await page.clock.runFor(2000);
+  await expect(page.getByRole("status", { name: "Loading ABOT" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Pick up where you left off" })).toBeVisible();
   await expect(page.getByText(/days ago\. Today's Coach targets start about 10% lighter\./)).toBeVisible();
 
@@ -40,6 +43,9 @@ test("Not now hides the welcome until the next workout", async ({ page }) => {
   await finishWorkout(page);
   await page.clock.setSystemTime(new Date(2026, 9, 20, 18, 0, 0));
   await page.goto("/");
+  // The splash's fade runs on the test clock; move it on so it stops covering the page.
+  await page.clock.runFor(2000);
+  await expect(page.getByRole("status", { name: "Loading ABOT" })).toHaveCount(0);
   await page.getByRole("button", { name: "Not now" }).click();
   await expect(page.getByRole("heading", { name: "Pick up where you left off" })).toHaveCount(0);
   await page.reload();

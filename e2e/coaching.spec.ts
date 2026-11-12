@@ -43,7 +43,7 @@ test("Swap: the dumbbell profile offers the dumbbell press at about 41% per hand
   await sheet.getByRole("button", { name: "Dumbbell / Home" }).click();
   const row = sheet.getByRole("button", { name: /^Bench Press \(Dumbbell\)/ });
   await expect(row).toContainText(/\d+% match/i);
-  await expect(row).toContainText("32.5 kg");
+  await expect(row).toContainText("32.5 kg / hand");
   await row.click();
   await expect(page.getByRole("heading", { name: "Bench Press (Dumbbell)" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Bench Press (Barbell)" })).toHaveCount(0);

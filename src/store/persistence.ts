@@ -61,7 +61,7 @@ function pickSettings(s: SettingsState): StoredSettings {
   };
 }
 
-const DEFAULT_STORED_SETTINGS: StoredSettings = { ...DEFAULT_SETTINGS, showRpe: true };
+const DEFAULT_STORED_SETTINGS: StoredSettings = { ...DEFAULT_SETTINGS, showRpe: false };
 
 /** True while stores are being filled from the repository, so subscribers do not echo it back. */
 let loadingFromRepo = false;

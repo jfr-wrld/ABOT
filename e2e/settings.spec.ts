@@ -18,15 +18,17 @@ test("switching to lbs changes the logger label and header unit", async ({ page 
   await expect(page.getByLabel("Set 1 weight in lbs")).toBeVisible();
 });
 
-test("RPE toggle hides the RPE column", async ({ page }) => {
-  await page.goto("/settings?section=workout");
-  const toggle = page.getByRole("switch", { name: "RPE column" });
-  await expect(toggle).toHaveAttribute("aria-checked", "true");
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-checked", "false");
+test("RPE is off for a new lifter and the toggle shows the column", async ({ page }) => {
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");
   await expect(page.getByLabel(/RPE, 6 to 10/)).toHaveCount(0);
+  await page.goto("/settings?section=workout");
+  const toggle = page.getByRole("switch", { name: "RPE column" });
+  await expect(toggle).toHaveAttribute("aria-checked", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-checked", "true");
+  await page.goto("/workout");
+  await expect(page.getByLabel("Set 1 RPE, 6 to 10")).toBeVisible();
 });
 
 test("storage protection status is shown", async ({ page }) => {

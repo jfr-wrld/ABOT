@@ -333,10 +333,10 @@ describe("import through the queue (final review #4)", () => {
   });
 
   it("hydrating a repository without settings resets settings to defaults", async () => {
-    useSettingsStore.getState().update({ weightUnit: "lbs", showRpe: false });
+    useSettingsStore.getState().update({ weightUnit: "lbs", showRpe: true });
     await hydrateStores(mem());
     expect(useSettingsStore.getState().weightUnit).toBe("kg");
-    expect(useSettingsStore.getState().showRpe).toBe(true);
+    expect(useSettingsStore.getState().showRpe).toBe(false);
   });
 });
 

@@ -299,3 +299,44 @@ Owner brief 2026-11-09: less text, tidier layout, full pages with illustration a
   "Other foods" cycles the pairs.
 - Pacer (`store/useFuelPacer`): `+25 g` protein and `+500 ml` water against today's targets
   (water ≈ 35 ml per kg), per device, reset each day.
+
+---
+
+## PRIORITY 14: Gym Floor UX: One-Thumb Set Logger and Rush Hour Swap
+
+**Objective:** log a set and get around a taken station without opening the keyboard or
+leaving the workout. Builds on Priority 10 (the swap engine and drawer already ship).
+
+### 14.1 One-thumb set logger (`SetRow`, `src/lib/set-steps.ts`)
+- The set waiting to be done (the first unticked set of each exercise) gets a stepper strip
+  under its fields: `−2.5 kg +2.5` beside the weight, `−1 REPS +1` beside the reps. One row of
+  a 360 px screen holds Set, Last time, weight, reps and the tick; four more 40 px buttons do
+  not fit beside the fields, so they sit directly under them, on that one row only.
+- **Weight step** (`weightStep`): 5 lb in pounds; 1.25 kg on dumbbells and isolation
+  exercises; 2.5 kg on everything else. `stepped` adds without float dust and stops at zero.
+- An empty field steps from last time's number (the placeholder), else from zero. Bodyweight
+  exercises step the added load or the assistance, keeping its sign.
+- Buttons: `min-h-[40px]`, `min-w-[52px]`, `font-mono tabular-nums`, `active:scale-95`, and
+  `feedback.tick()` (the light Capacitor haptic plus the tick sound) on each tap.
+- Tapping the number itself still opens the keyboard for typing. Timed and distance sets keep
+  their time fields; reps-only exercises get the reps stepper only.
+
+### 14.2 Rush hour swap (`ExerciseSwapModal`, `src/lib/exercise-swapper.ts`)
+- The drawer lists the **three** closest alternatives for the chosen equipment profile, each
+  with its match and starting weight. Per-hand dumbbell loads read `32.5 kg / hand`.
+- Load conversion stays `convertLoad` (Priority 10): the lifter's own last top weight on the new
+  exercise first, else the barbell-equivalent ratio, rounded to what can be loaded (2.5 kg,
+  1 kg on dumbbells under 20 kg, 5 lb).
+- **Today only or Update routine.** In a workout started from a routine that holds the
+  exercise, a tap selects the alternative and the footer offers `Today only` and
+  `Update routine`. Update routine also swaps the exercise in the routine (`swapInRoutine`):
+  its first place in the routine, working sets take the converted weight, warm-up targets and
+  the variation are cleared. Outside a routine a tap swaps at once, for today.
+- ABOT cannot know which station is free; the lifter picks from the three by eye.
+
+### 14.3 Verification
+- Unit: `set-steps.test.ts` (steps, float dust, floor at zero); `exercise-swapper.test.ts`
+  (`swapInRoutine` swaps, fills, clears, and returns null when absent).
+- e2e: `gym-floor.spec.ts` (steppers move and hand over to the next set, typing still works,
+  dumbbell step; routine swap with Update routine changes the routine); `coaching.spec.ts`
+  checks the `/ hand` label.

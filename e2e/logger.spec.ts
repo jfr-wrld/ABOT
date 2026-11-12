@@ -135,3 +135,30 @@ test("adjust start time", async ({ page }) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^Duration/ })).toContainText(/4[45]m/);
 });
+
+test("the header menu discards the workout after asking", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await page.getByRole("button", { name: "Workout options" }).click();
+  await page.getByRole("dialog", { name: "Workout options" }).getByRole("button", { name: "Discard workout" }).click();
+  const confirm = page.getByRole("dialog", { name: "Discard this workout?" });
+  await confirm.getByRole("button", { name: "Keep it" }).click();
+  await expect(page.getByRole("button", { name: "Finish", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Workout options" }).click();
+  await page.getByRole("dialog", { name: "Workout options" }).getByRole("button", { name: "Discard workout" }).click();
+  await page.getByRole("button", { name: "Discard", exact: true }).click();
+  await page.waitForURL((u) => u.pathname === "/");
+});
+
+test("Finish takes the accent once every set is done, and the workout is named after its muscles", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  const finish = page.getByRole("button", { name: "Finish", exact: true });
+  await expect(finish).not.toHaveClass(/bg-accent/);
+  for (const n of [1, 2, 3]) {
+    await logSet(page, n, "60", "8");
+    await page.getByRole("button", { name: "Skip rest" }).click();
+  }
+  await expect(finish).toHaveClass(/bg-accent/);
+  await finishWorkout(page);
+  await expect(page.getByRole("region", { name: "Recent workouts" })).toContainText("Chest");
+});

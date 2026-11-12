@@ -10,7 +10,8 @@ export interface SettingsState extends UserSettings {
 export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       ...DEFAULT_SETTINGS,
-      showRpe: true,
+      // Off for new lifters: most never rate sets, and the column costs width on a phone.
+      showRpe: false,
       update: (patch) => set(patch),
     }),
 );

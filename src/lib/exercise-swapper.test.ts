@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { SEED_EXERCISES } from "@/data/exercises";
 import type { Exercise, WorkoutSession } from "@/types/workout";
-import { convertLoad, movementPattern, swapCandidates } from "./exercise-swapper";
+import { convertLoad, movementPattern, swapCandidates, swapInRoutine } from "./exercise-swapper";
 import { lbsToKg } from "./calc";
 
 const byId: Record<string, Exercise> = Object.fromEntries(SEED_EXERCISES.map((e) => [e.id, e]));
@@ -79,5 +79,25 @@ describe("convertLoad", () => {
     expect(convertLoad(80, bench, byId["push-up"]!, { sessions: none, unit: "kg" })).toEqual({ weightKg: null, source: "none" });
     const lb = convertLoad(lbsToKg(185), bench, byId["bench-press-dumbbell"]!, { sessions: none, unit: "lbs" });
     expect(lb.weightKg).toBeCloseTo(lbsToKg(75), 5);
+  });
+});
+
+describe("swapInRoutine", () => {
+  const routine = [
+    { id: "a", exerciseId: "bench", restSeconds: 90, variation: "wide", sets: [
+      { id: "w", type: "warmup" as const, targetWeightKg: 40, targetReps: 8 },
+      { id: "s", type: "normal" as const, targetWeightKg: 80, targetReps: 8 },
+    ] },
+    { id: "b", exerciseId: "row", restSeconds: 90, sets: [] },
+  ];
+  it("swaps the exercise, fills the new weight and clears the warm-up and variation", () => {
+    const next = swapInRoutine(routine, "bench", "db-bench", 30)!;
+    expect(next[0]).toMatchObject({ id: "a", exerciseId: "db-bench" });
+    expect(next[0]!.variation).toBeUndefined();
+    expect(next[0]!.sets.map((s) => s.targetWeightKg)).toEqual([null, 30]);
+    expect(next[1]).toBe(routine[1]);
+  });
+  it("is null when the routine does not have it", () => {
+    expect(swapInRoutine(routine, "squat", "leg-press", 100)).toBeNull();
   });
 });

@@ -18,7 +18,7 @@ test("a heavier workout from a routine offers to update the routine", async ({ p
   await page.getByRole("link", { name: "Back to Home" }).click();
 
   // Started from the routine, lifted heavier.
-  await page.getByRole("button", { name: /^Start Evening Workout|^Start .*Workout/ }).first().click();
+  await page.getByRole("button", { name: /^Start Chest/ }).first().click();
   await page.waitForURL("**/workout");
   await logSet(page, 1, "62.5", "8");
   await page.getByRole("button", { name: "Finish", exact: true }).click();

@@ -6,12 +6,17 @@ import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
-import { FILTER_LABEL, convertLoad, lastTopWeight, swapCandidates, type EquipmentFilter } from "@/lib/exercise-swapper";
+import { FILTER_LABEL, convertLoad, lastTopWeight, swapCandidates, swapInRoutine, type EquipmentFilter } from "@/lib/exercise-swapper";
+import { useRoutineStore } from "@/store/useRoutineStore";
+import { Button } from "@/components/ui/Button";
 import { formatWeight } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 import { MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { muscleText } from "@/lib/home";
 import { useT } from "@/i18n";
+
+/** A crowded gym needs a quick yes, not a long list: the three closest. */
+const SHOWN = 3;
 
 const FILTERS = (Object.keys(FILTER_LABEL) as EquipmentFilter[]).map((value) => ({ value, label: FILTER_LABEL[value] }));
 
@@ -39,6 +44,24 @@ export function ExerciseSwapModal({
   const sessions = useWorkoutStore((s) => s.sessions);
   const activeId = useWorkoutStore((s) => s.active?.id);
   const swap = useWorkoutStore((s) => s.swapExercise);
+  const routineId = useWorkoutStore((s) => s.active?.routineId);
+  const routine = useRoutineStore((s) => (routineId ? s.routines.find((r) => r.id === routineId) : undefined));
+  const inRoutine = !!routine?.exercises.some((e) => e.exerciseId === exercise.id);
+  // From a routine, a pick asks whether the routine changes too; otherwise it swaps at once.
+  const [chosen, setChosen] = useState<{ exercise: Exercise; weightKg: number | null } | null>(null);
+  const close = () => {
+    setChosen(null);
+    onClose();
+  };
+  const commit = (to: Exercise, weightKg: number | null, alsoRoutine: boolean) => {
+    feedback.tick();
+    swap(item.id, to.id, weightKg);
+    if (alsoRoutine && routine) {
+      const next = swapInRoutine(routine.exercises, exercise.id, to.id, weightKg);
+      if (next) useRoutineStore.getState().setExercises(routine.id, next);
+    }
+    close();
+  };
 
   // The weight being worked with now: the next set's, else the last one ticked, else last time's.
   const base =
@@ -49,7 +72,7 @@ export function ExerciseSwapModal({
   const rows = useMemo(
     () =>
       open
-        ? swapCandidates(exercise, list, filter).map((c) => ({
+        ? swapCandidates(exercise, list, filter, SHOWN).map((c) => ({
             ...c,
             load: convertLoad(base, exercise, c.exercise, { sessions, unit, excludeSessionId: activeId }),
           }))
@@ -60,7 +83,26 @@ export function ExerciseSwapModal({
   const muscle = (m?: string) => (m ? muscleText(MUSCLE_GROUP_LABELS[m as keyof typeof MUSCLE_GROUP_LABELS], t) : "");
 
   return (
-    <Sheet open={open} onClose={onClose} title={t("Swap {name}", { name: exercise.name })}>
+    <Sheet
+      open={open}
+      onClose={close}
+      title={t("Swap {name}", { name: exercise.name })}
+      footer={
+        chosen ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm">
+              {t("Swap to {name}", { name: chosen.exercise.name })}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={() => commit(chosen.exercise, chosen.weightKg, false)}>{t("Today only")}</Button>
+              <Button variant="primary" onClick={() => commit(chosen.exercise, chosen.weightKg, true)}>
+                {t("Update routine")}
+              </Button>
+            </div>
+          </div>
+        ) : undefined
+      }
+    >
       <div className="flex flex-col gap-3">
         <div role="group" aria-label={t("Equipment")} className="grid grid-cols-2 gap-1.5">
           {FILTERS.map((f) => (
@@ -88,12 +130,16 @@ export function ExerciseSwapModal({
               <li key={e.id}>
                 <button
                   type="button"
+                  aria-pressed={inRoutine ? chosen?.exercise.id === e.id : undefined}
                   onClick={() => {
-                    feedback.tick();
-                    swap(item.id, e.id, load.weightKg);
-                    onClose();
+                    if (inRoutine) {
+                      feedback.tick();
+                      setChosen({ exercise: e, weightKg: load.weightKg });
+                    } else commit(e, load.weightKg, false);
                   }}
-                  className="flex min-h-14 w-full items-center gap-3 rounded-ctl border border-line bg-surface p-2 text-left transition-colors hover:border-line-hover active:bg-surface-2"
+                  className={`flex min-h-14 w-full items-center gap-3 rounded-ctl border p-2 text-left transition-colors hover:border-line-hover active:bg-surface-2 ${
+                    chosen?.exercise.id === e.id ? "border-accent bg-accent-tint" : "border-line bg-surface"
+                  }`}
                 >
                   <ExerciseThumb exercise={e} size={44} />
                   <span className="min-w-0 flex-1">
@@ -111,7 +157,9 @@ export function ExerciseSwapModal({
                   <span className="shrink-0 text-right font-mono text-xs tabular-nums">
                     {load.weightKg !== null ? (
                       <>
-                        <span className="block font-semibold">{formatWeight(load.weightKg, unit)}</span>
+                        <span className="block font-semibold">
+                          {e.loadMode === "per_hand" ? t("{weight} / hand", { weight: formatWeight(load.weightKg, unit) }) : formatWeight(load.weightKg, unit)}
+                        </span>
                         <span className="block text-[10px] uppercase text-text-muted">{load.source === "history" ? t("your last") : t("estimate")}</span>
                       </>
                     ) : (

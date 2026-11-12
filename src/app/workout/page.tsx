@@ -27,6 +27,7 @@ import { useT } from "@/i18n";
 import { useReminderStore } from "@/store/useReminderStore";
 import { suggestNext, todaysTargets } from "@/lib/exercise-suggest";
 import { muscleText } from "@/lib/home";
+import { isTimeOfDayName, muscleWorkoutName } from "@/lib/workout-name";
 import { MUSCLE_GROUP_LABELS } from "@/types/workout";
 
 const NO_PRS: Record<string, PRKind[]> = {};
@@ -152,7 +153,7 @@ function WorkoutScreen() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <ActiveWorkoutHeader session={active} unit={weightUnit} onFinish={() => setFinishOpen(true)} />
+      <ActiveWorkoutHeader session={active} unit={weightUnit} onFinish={() => setFinishOpen(true)} onDiscard={() => setDiscardOpen(true)} />
 
       <h1 className="sr-only">{t("Active workout: {name}", { name: active.name })}</h1>
 
@@ -229,6 +230,9 @@ function WorkoutScreen() {
         onClose={() => setFinishOpen(false)}
         onMarkRemaining={() => completeAllRemaining()}
         onConfirm={() => {
+          // A workout still called "Evening Workout" is named after what it trained.
+          const named = isTimeOfDayName(active.name, t) ? muscleWorkoutName(active, byId, t) : null;
+          if (named) useWorkoutStore.getState().renameActive(named);
           const done = finishActive();
           if (done) autoSyncFinished(done, byId);
           setFinishOpen(false);

@@ -14,6 +14,7 @@ import { SetTypeMenu } from "./SetTypeMenu";
 import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
 import { useT } from "@/i18n";
 import { feedback } from "@/lib/feedback";
+import { stepped } from "@/lib/set-steps";
 
 const PR_LABEL: Record<PRKind, string> = {
   heaviest_weight: "heaviest weight",
@@ -38,7 +39,13 @@ export function SetRow({
   onSetType,
   onRemove,
   onComplete,
+  weightStep,
 }: {
+  /**
+   * Given on the set waiting to be done: tap buttons under the fields move the weight by this
+   * much (in the lifter's unit) and the reps by one, so the keyboard never has to open.
+   */
+  weightStep?: number;
   set: WorkoutSet;
   number: number | null;
   previous: WorkoutSet | undefined;
@@ -353,6 +360,57 @@ export function SetRow({
       )}
       </motion.div>
 
+      {weightStep !== undefined && !timed && !set.completed && (
+        <div className="flex items-center justify-between gap-2 px-1 pb-1 pt-1.5">
+          {logType === "weight_reps" ? (
+            <div role="group" aria-label={t("{set} weight", { set: a11yName })} className="flex items-center gap-1">
+              <StepButton
+                label={t("{set} weight minus {n} {unit}", { set: a11yName, n: weightStep, unit })}
+                onClick={() => {
+                  const cur = set.weightKg !== null ? shown(set.weightKg) : previous?.weightKg != null ? shown(previous.weightKg) : 0;
+                  onUpdate({ weightKg: sign * fromDisplay(stepped(cur, -weightStep), unit) });
+                }}
+              >
+                −{weightStep}
+              </StepButton>
+              <span aria-hidden="true" className="label-caps w-8 text-center normal-case">{unit}</span>
+              <StepButton
+                label={t("{set} weight plus {n} {unit}", { set: a11yName, n: weightStep, unit })}
+                onClick={() => {
+                  const cur = set.weightKg !== null ? shown(set.weightKg) : previous?.weightKg != null ? shown(previous.weightKg) : 0;
+                  onUpdate({ weightKg: sign * fromDisplay(stepped(cur, weightStep), unit) });
+                }}
+              >
+                +{weightStep}
+              </StepButton>
+            </div>
+          ) : (
+            <span />
+          )}
+          <div role="group" aria-label={t("{set} reps", { set: a11yName })} className="flex items-center gap-1">
+            <StepButton
+              label={t("{set} reps minus 1", { set: a11yName })}
+              onClick={() => {
+                setError(null);
+                onUpdate({ reps: stepped(set.reps ?? previous?.reps ?? 0, -1) });
+              }}
+            >
+              −1
+            </StepButton>
+            <span aria-hidden="true" className="label-caps w-10 text-center">{t("Reps")}</span>
+            <StepButton
+              label={t("{set} reps plus 1", { set: a11yName })}
+              onClick={() => {
+                setError(null);
+                onUpdate({ reps: stepped(set.reps ?? previous?.reps ?? 0, 1) });
+              }}
+            >
+              +1
+            </StepButton>
+          </div>
+        </div>
+      )}
+
       <SetTypeMenu
         open={menuOpen}
         current={set.type}
@@ -361,5 +419,22 @@ export function SetRow({
         onClose={() => setMenuOpen(false)}
       />
     </li>
+  );
+}
+
+/** One tap on the set stepper: a light tick and a short press-in. */
+function StepButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={() => {
+        feedback.tick();
+        onClick();
+      }}
+      className="min-h-[40px] min-w-[52px] rounded-ctl border border-line-strong bg-surface-2 px-2 font-mono text-sm font-bold tabular-nums text-text transition-transform duration-100 hover:bg-press active:scale-95 motion-reduce:active:scale-100"
+    >
+      {children}
+    </button>
   );
 }

@@ -9,6 +9,7 @@ import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, BookOpen, Check, Chevr
 import { useLocationStore } from "@/store/useLocationStore";
 import { gymSetup } from "@/lib/gym-equipment";
 import { warmupSets } from "@/lib/warmup";
+import { weightStep } from "@/lib/set-steps";
 import { formatWeight } from "@/lib/units";
 import type {
   Exercise,
@@ -285,7 +286,7 @@ function ExerciseCardView({
         aria-hidden="true"
       >
         <span className="text-center">{t("Set")}</span>
-        <span className="truncate">{t("Prev")}</span>
+        <span className="truncate">{t("Last time")}</span>
         {logType === "duration" ? (
           <span className="text-center">{t("Time")}</span>
         ) : logType === "distance_duration" ? (
@@ -300,7 +301,8 @@ function ExerciseCardView({
           </>
         )}
         {showRpe && <span className="text-center">RPE</span>}
-        <span className="text-center">{t("Done")}</span>
+        {/* A tick, not a word: "Selesai" did not fit the 44 px column. */}
+        <Check size={14} strokeWidth={3} className="mx-auto" />
       </div>
 
       <ol className="mt-1 flex flex-col gap-1" aria-label={t("Sets for {name}", { name })}>
@@ -323,6 +325,7 @@ function ExerciseCardView({
               setRemoved({ set, index: i });
             }}
             onComplete={(c) => store.completeSet(item.id, set.id, c)}
+            weightStep={i === nextIndex ? weightStep(exercise, unit) : undefined}
           />
         ))}
       </ol>

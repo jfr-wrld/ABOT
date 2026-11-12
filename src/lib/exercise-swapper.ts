@@ -1,4 +1,4 @@
-import type { Equipment, Exercise, MuscleGroup, WeightUnit, WorkoutSession } from "@/types/workout";
+import type { Equipment, Exercise, MuscleGroup, WeightUnit, RoutineExercise, WorkoutSession } from "@/types/workout";
 import { isWorkingSet, kgToLbs, lbsToKg } from "./calc";
 
 /**
@@ -160,4 +160,20 @@ export function convertLoad(
     return { weightKg: null, source: "none" };
   }
   return { weightKg: loadable((weightKg / fromFactor) * toFactor, to.equipment, opts.unit), source: "ratio" };
+}
+
+/**
+ * The routine with `fromId` swapped for `toId` (its first place in the routine), for "Update
+ * routine" after a swap. Working sets take the converted weight; warm-ups lose theirs, since
+ * the old exercise's ramp does not fit the new one. Null when the routine does not have it.
+ */
+export function swapInRoutine(exercises: RoutineExercise[], fromId: string, toId: string, weightKg: number | null): RoutineExercise[] | null {
+  const i = exercises.findIndex((e) => e.exerciseId === fromId);
+  if (i < 0) return null;
+  return exercises.map((e, j) => {
+    if (j !== i) return e;
+    const { variation: _variation, ...rest } = e;
+    void _variation;
+    return { ...rest, exerciseId: toId, sets: e.sets.map((x) => ({ ...x, targetWeightKg: x.type === "warmup" ? null : weightKg })) };
+  });
 }
