@@ -13,18 +13,25 @@ function remotePhotoOf(exercise: ThumbExercise): string | undefined {
   return url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? url : undefined;
 }
 
+/** The 128 px picture that ships with the app: seed exercises in /thumbs, the extended library in /atlas. */
+function bundledThumb(id: string): string | undefined {
+  if (BUNDLED_THUMBS.has(id)) return `/thumbs/${id}.webp`;
+  return id.startsWith("atlas-") ? `/atlas/${id.slice(6)}.webp` : undefined;
+}
+
 /** The best photo of an exercise for a larger picture: bundled first (works offline), else online. */
 export function exercisePhoto(exercise: ThumbExercise): string | undefined {
-  if (BUNDLED_THUMBS.has(exercise.id)) return `/thumbs/${exercise.id}.webp`;
+  const bundled = bundledThumb(exercise.id);
+  if (bundled) return bundled;
   const online = typeof navigator === "undefined" || navigator.onLine !== false;
   return online ? remotePhotoOf(exercise) : undefined;
 }
 
 /**
  * A picture of the movement, in order of preference:
- * 1. a 128 px photo bundled with the app (seed exercises; scripts/make-exercise-thumbs.py), so the
- *    library shows pictures offline;
- * 2. the exercise's free-exercise-db photo, loaded lazily, when online;
+ * 1. a 128 px photo bundled with the app (seed exercises, scripts/make-exercise-thumbs.py; the
+ *    extended library, scripts/build-atlas-catalog.mjs), so the library shows pictures offline;
+ * 2. the exercise's own photo (free-exercise-db or Open Exercise Atlas), loaded lazily, when online;
  * 3. a still from the app's own figure, mid-rep, worked muscles in Volt (no download; also the
  *    offline and failed-photo fallback);
  * 4. the equipment icon.
@@ -35,7 +42,7 @@ export function exercisePhoto(exercise: ThumbExercise): string | undefined {
 export const ExerciseThumb = memo(function ExerciseThumb({ exercise, size = 48 }: { exercise: ThumbExercise; size?: number }) {
   const [failed, setFailed] = useState(false);
   const online = typeof navigator === "undefined" || navigator.onLine !== false;
-  const bundled = BUNDLED_THUMBS.has(exercise.id) ? `/thumbs/${exercise.id}.webp` : undefined;
+  const bundled = bundledThumb(exercise.id);
   const remote = online ? remotePhotoOf(exercise) : undefined;
   const src = failed ? undefined : (bundled ?? remote);
 

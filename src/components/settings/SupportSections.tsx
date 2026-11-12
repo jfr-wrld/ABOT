@@ -91,6 +91,9 @@ export function AboutSection() {
         </h2>
         <ul className="mt-1 flex flex-col gap-1 text-sm text-text-muted">
           <li>{t("Exercise data and photos: free-exercise-db (public domain).")}</li>
+          <li>
+            {t("Extended exercise library: Open Exercise Atlas (data CC0 1.0). Illustrations CC0 1.0, or MIT License: Monk Mode, Copyright (c) 2026 Yağız Eren Tunay.")}
+          </li>
           <li>{t("Muscle map shapes: react-muscle-highlighter (MIT License).")}</li>
           <li>{t("Type: Plus Jakarta Sans and JetBrains Mono (SIL Open Font License).")}</li>
           <li>{t("Food values: Tabel Komposisi Pangan Indonesia (Kemenkes RI) and USDA FoodData Central (public domain).")}</li>

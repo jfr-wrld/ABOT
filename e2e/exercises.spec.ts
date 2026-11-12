@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("filters by muscle and equipment", async ({ page }) => {
   await page.goto("/exercises");
-  await expect(page.getByText("138 in your library")).toBeVisible();
+  await expect(page.getByText("540 in your library")).toBeVisible();
   await choose(page, page.getByLabel("Muscle group"), "Chest");
   await choose(page, page.getByLabel("Equipment"), "Cable");
   await expect(page.getByRole("link", { name: /^Cable Fly/ })).toBeVisible();
@@ -24,13 +24,13 @@ test("creates a custom exercise and opens its detail", async ({ page }) => {
   await page.getByRole("button", { name: "New", exact: true }).click();
   await page.getByRole("button", { name: "Add to library" }).click();
   await expect(page.getByText("Enter a name of at least two characters")).toBeVisible();
-  await page.getByLabel("Name").fill("Pendlay Row");
+  await page.getByLabel("Name").fill("Kroc Row Variation");
   await choose(page, page.getByLabel("Primary muscle"), "Back");
   await choose(page, page.getByLabel("Equipment", { exact: true }).last(), "Barbell");
   await page.getByRole("button", { name: "Add to library" }).click();
-  await expect(page.getByText("139 in your library")).toBeVisible();
-  await page.getByRole("link", { name: /Pendlay Row/ }).click();
-  await expect(page.getByRole("heading", { name: "Pendlay Row" })).toBeVisible();
+  await expect(page.getByText("541 in your library")).toBeVisible();
+  await page.getByRole("link", { name: /Kroc Row Variation/ }).click();
+  await expect(page.getByRole("heading", { name: "Kroc Row Variation" })).toBeVisible();
   await expect(page.getByText("No completed working sets yet.")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
@@ -89,4 +89,20 @@ test("the library switches between list and grid and remembers it", async ({ pag
   await expectNoHorizontalOverflow(page);
   await page.reload();
   await expect(page.getByRole("button", { name: "Grid view" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("the extended library ships with the app: machines and cardio, with pictures, offline", async ({ page, context }) => {
+  await page.goto("/exercises");
+  // The extended library loads in its own chunk after start; then it needs no network.
+  await expect(page.getByText("540 in your library")).toBeVisible();
+  await context.setOffline(true);
+  const search = page.getByLabel("Search exercises");
+  await search.fill("Bayesian");
+  const row = page.getByRole("link", { name: /Bayesian Curl \(Cable\)/ });
+  await expect(row).toBeVisible();
+  await expect(row.locator('[data-thumb="photo"]')).toBeVisible();
+  await expect(row).not.toContainText("catalog");
+  await search.fill("Treadmill Running");
+  await expect(page.getByRole("link", { name: /Treadmill Running/ })).toBeVisible();
+  await context.setOffline(false);
 });

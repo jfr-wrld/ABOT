@@ -19,6 +19,7 @@ import { ExerciseForm } from "@/components/exercises/ExerciseForm";
 import { CatalogSection } from "@/components/exercises/CatalogSection";
 import { buildPRTable } from "@/lib/calc";
 import { exercisePath } from "@/lib/routes";
+import { isAtlas } from "@/data/atlas";
 import { useT } from "@/i18n";
 import { muscleLabel, muscleNames } from "@/components/exercise/MuscleTags";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
@@ -36,7 +37,8 @@ export default function ExercisesPage() {
 
 function LibraryScreen() {
   const { list, byId } = useAllExercises();
-  const catalogCount = list.filter((e) => e.isCatalog).length;
+  // The extended library is part of ABOT; only the optional download counts as "catalog".
+  const catalogCount = list.filter((e) => e.isCatalog && !isAtlas(e)).length;
   const addCustom = useExerciseStore((s) => s.addCustom);
   const sessions = useWorkoutStore((s) => s.sessions);
   const [query, setQuery] = useState("");
@@ -190,7 +192,7 @@ function LibraryScreen() {
                           <span className="block truncate text-sm font-semibold">
                             {e.name}
                             {e.isCustom && <span className="ml-2 text-xs font-normal text-text-muted">{t("custom")}</span>}
-                            {e.isCatalog && <span className="ml-2 text-xs font-normal text-text-muted">{t("catalog")}</span>}
+                            {e.isCatalog && !isAtlas(e) && <span className="ml-2 text-xs font-normal text-text-muted">{t("catalog")}</span>}
                           </span>
                           <span className="block text-xs text-text-muted">
                             {muscleNames(e.primaryMuscles, t)} · {t(EQUIPMENT_LABELS[e.equipment])}

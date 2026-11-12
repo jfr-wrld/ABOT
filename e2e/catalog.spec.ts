@@ -18,22 +18,23 @@ test.beforeEach(async ({ page }) => {
 test("loads the catalog on demand, logs a catalog exercise, keeps it after removing the catalog", async ({ page }) => {
   await serveCatalog(page);
   await page.goto("/exercises");
-  await expect(page.getByText("138 in your library")).toBeVisible();
+  await expect(page.getByText("540 in your library")).toBeVisible();
   await page.getByRole("button", { name: "Catalog", exact: true }).click();
   await page.getByRole("button", { name: "Load full exercise catalog" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Added 4 exercises from the catalog" })).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
-  await expect(page.getByText("138 in your library, 4 from the catalog")).toBeVisible();
+  // One of the four is already in the extended library, so it is not listed twice.
+  await expect(page.getByText("540 in your library, 3 from the catalog")).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await page.getByLabel("Search exercises").fill("zercher");
-  await expect(page.getByRole("link", { name: /Zercher Squats/ })).toContainText("catalog");
+  await page.getByLabel("Search exercises").fill("medicine ball chest");
+  await expect(page.getByRole("link", { name: /^Medicine Ball Chest Pass/ })).toContainText("catalog");
 
   // Catalog survives a reload (stored in IndexedDB).
   await page.reload();
-  await expect(page.getByText("138 in your library, 4 from the catalog")).toBeVisible();
+  await expect(page.getByText("540 in your library, 3 from the catalog")).toBeVisible();
 
   await startEmptyWorkout(page);
-  await addExercise(page, "Zercher Squats");
+  await addExercise(page, "Medicine Ball Chest Pass");
   await logSet(page, 1, "60", "5");
   await finishWorkout(page);
 
@@ -42,13 +43,13 @@ test("loads the catalog on demand, logs a catalog exercise, keeps it after remov
   await page.getByRole("button", { name: "Remove catalog" }).click();
   await page.getByRole("button", { name: "Remove", exact: true }).click();
   await page.getByRole("button", { name: "Close" }).click();
-  await expect(page.getByText("138 in your library, 1 from the catalog")).toBeVisible();
+  await expect(page.getByText("540 in your library, 1 from the catalog")).toBeVisible();
   // The exercise that was logged is kept, so history still has its name.
-  await page.getByLabel("Search exercises").fill("zercher");
-  await expect(page.getByRole("link", { name: /Zercher Squats/ })).toBeVisible();
+  await page.getByLabel("Search exercises").fill("medicine ball chest");
+  await expect(page.getByRole("link", { name: /^Medicine Ball Chest Pass/ })).toBeVisible();
   await page.goto("/");
   await page.getByRole("link", { name: /300 kg/ }).click();
-  await expect(page.getByRole("link", { name: "Zercher Squats" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Medicine Ball Chest Pass" })).toBeVisible();
 });
 
 test("a failed download explains what to do and changes nothing", async ({ page }) => {
@@ -59,6 +60,6 @@ test("a failed download explains what to do and changes nothing", async ({ page 
   await expect(
     page.getByRole("alert").filter({ hasText: "Could not download the catalog. Check your connection and try again." }),
   ).toBeVisible();
-  await expect(page.getByText("138 in your library", { exact: true })).toBeVisible();
+  await expect(page.getByText("540 in your library", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Load full exercise catalog" })).toBeEnabled();
 });

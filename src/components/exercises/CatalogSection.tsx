@@ -99,7 +99,7 @@ export function CatalogSection() {
             <p className="text-sm text-text-muted">
               {catalogCount === 0
                 ? t(
-                    "About 800 more exercises with images and steps from the public domain free-exercise-db. Downloads about 1 MB once and then works offline.",
+                    "Hundreds more exercises from the public domain free-exercise-db, on top of the library ABOT ships with. Downloads about 1 MB once and then works offline; ones ABOT already has are skipped.",
                   )
                 : t("{n} catalog exercises stored on this device.", { n: catalogCount })}
             </p>

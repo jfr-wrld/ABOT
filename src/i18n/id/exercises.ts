@@ -42,8 +42,6 @@ export const exercises: Record<string, string> = {
   "Saved data is not loaded yet. Reload ABOT and try again.": "Data tersimpan belum termuat. Muat ulang ABOT lalu coba lagi.",
   "Could not remove the catalog ({error}).": "Katalog gagal dihapus ({error}).",
   "Full exercise catalog": "Katalog gerakan lengkap",
-  "About 800 more exercises with images and steps from the public domain free-exercise-db. Downloads about 1 MB once and then works offline.":
-    "Sekitar 800 gerakan lagi, lengkap dengan gambar dan langkah dari free-exercise-db (domain publik). Unduh sekitar 1 MB sekali, setelah itu bisa dipakai offline.",
   "Downloading catalog": "Mengunduh katalog",
   "Load full exercise catalog": "Muat katalog gerakan lengkap",
   "{n} catalog exercises stored on this device.": "{n} gerakan katalog tersimpan di perangkat ini.",
@@ -325,4 +323,5 @@ export const exercises: Record<string, string> = {
   "A TikTok share link needs a connection to open. Try again online.": "Link share TikTok butuh koneksi untuk dibuka. Coba lagi saat online.",
   "Could not open this TikTok link. Check the connection, or open it and copy the full link (tiktok.com/@…/video/…).": "Link TikTok ini gagal dibuka. Cek koneksi, atau buka link-nya lalu salin link lengkapnya (tiktok.com/@…/video/…).",
   "Opening the TikTok link…": "Membuka link TikTok…",
+  "Hundreds more exercises from the public domain free-exercise-db, on top of the library ABOT ships with. Downloads about 1 MB once and then works offline; ones ABOT already has are skipped.": "Ratusan gerakan lagi dari free-exercise-db (domain publik), di luar library bawaan ABOT. Unduh sekitar 1 MB sekali, setelah itu bisa dipakai offline; gerakan yang sudah ada di ABOT dilewati.",
 };

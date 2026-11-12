@@ -14,7 +14,7 @@ import { Note, Panel, cls, errText } from "./ui";
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
 const MUSCLES = (Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[]).filter((m) => m !== "cardio");
 
-const source = (e: Exercise) => (e.isCustom ? "custom" : e.isCatalog ? "catalog" : "seed");
+const source = (e: Exercise) => (e.isCustom ? "custom" : e.id.startsWith("atlas-") ? "atlas" : e.isCatalog ? "catalog" : "seed");
 
 /* --------------------------------------------------------------- exercises */
 
