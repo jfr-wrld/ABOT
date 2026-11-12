@@ -50,7 +50,7 @@ test("filters by equipment, clears filters, and creates what is missing", async 
 
   await dialog.getByLabel("Search exercises").fill("Kroc Row Special");
   await dialog.getByRole("button", { name: "Create “Kroc Row Special”" }).click();
-  await expect(page.getByLabel("Name")).toHaveValue("Kroc Row Special");
+  await expect(page.getByLabel("Name", { exact: true })).toHaveValue("Kroc Row Special");
   await page.getByRole("button", { name: "Add to library" }).click();
   await expect(page.getByRole("heading", { name: "Kroc Row Special", exact: true })).toBeVisible();
 });

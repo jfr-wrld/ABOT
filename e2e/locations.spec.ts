@@ -58,8 +58,8 @@ test("custom exercise form sets the load mode", async ({ page }) => {
   await page.getByRole("button", { name: "New", exact: true }).click();
   await page.getByLabel("Name").fill("Zorro Curl");
   await choose(page, page.getByLabel("Equipment", { exact: true }).last(), "Dumbbell");
-  await expect(page.getByLabel("Load")).toHaveText("Per hand (volume counts both)");
-  await choose(page, page.getByLabel("Load"), "One side at a time (volume counts both sides)");
+  await expect(page.getByLabel("Load", { exact: true })).toHaveText("Per hand (volume counts both)");
+  await choose(page, page.getByLabel("Load", { exact: true }), "One side at a time (volume counts both sides)");
   await page.getByRole("button", { name: "Add to library" }).click();
   await startEmptyWorkout(page);
   await addExercise(page, "Zorro Curl");

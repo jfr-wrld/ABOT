@@ -21,10 +21,11 @@ test("the built-in library: free-exercise-db photos offline, Atlas machines with
   await search.fill("pendulum squat");
   const pendulum = page.getByRole("link", { name: /^Pendulum Squat \(Machine\)/ });
   await expect(pendulum.locator('[data-thumb="icon"]')).toBeVisible();
+  // Offline in the browser also cuts the dev server off, so open the page online.
+  await context.setOffline(false);
   await pendulum.click();
   await expect(page.getByRole("img", { name: /^Primary: / }).first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await context.setOffline(false);
 });
 
 test("a logged library exercise stays in history under its name", async ({ page }) => {

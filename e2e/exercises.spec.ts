@@ -91,22 +91,6 @@ test("the library switches between list and grid and remembers it", async ({ pag
   await expect(page.getByRole("button", { name: "Grid view" })).toHaveAttribute("aria-pressed", "true");
 });
 
-test("the extended library ships with the app: machines and cardio, with pictures, offline", async ({ page, context }) => {
-  await page.goto("/exercises");
-  // The extended library loads in its own chunk after start; then it needs no network.
-  await expect(page.getByText("1172 exercises")).toBeVisible();
-  await context.setOffline(true);
-  const search = page.getByLabel("Search exercises");
-  await search.fill("Bayesian");
-  const row = page.getByRole("link", { name: /Bayesian Curl \(Cable\)/ });
-  await expect(row).toBeVisible();
-  await expect(row.locator('[data-thumb="photo"]')).toBeVisible();
-  await expect(row).not.toContainText("Downloaded");
-  await search.fill("Treadmill Running");
-  await expect(page.getByRole("link", { name: /Treadmill Running/ })).toBeVisible();
-  await context.setOffline(false);
-});
-
 test("library: records in the lifter's unit, favourites first, other orders, clear filters", async ({ page }) => {
   await page.goto("/settings?section=general");
   await page.getByText("lbs", { exact: true }).click();
