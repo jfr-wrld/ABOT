@@ -29,10 +29,15 @@ export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   expect(sw, "page scrolls sideways").toBeLessThanOrEqual(cw);
 }
 
+/** Starts an empty workout from Home; the picker it opens on is closed, ready for the test's steps. */
 export async function startEmptyWorkout(page: Page): Promise<void> {
   await page.goto("/");
   await page.getByRole("button", { name: "Start an empty workout" }).click();
   await page.waitForURL("**/workout");
+  const picker = page.getByRole("dialog", { name: "Add exercise" });
+  await expect(picker).toBeVisible();
+  await picker.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(picker).toBeHidden();
 }
 
 export async function addExercise(page: Page, name: string): Promise<void> {

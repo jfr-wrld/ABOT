@@ -122,3 +122,24 @@ test("removing one of a two-exercise superset in the editor dissolves it", async
   await page.getByRole("button", { name: "Remove Triceps Pushdown (Cable) from superset" }).click();
   await expect(page.getByText(/^Superset \/\/ A[12]$/)).toHaveCount(0);
 });
+
+test("the Workout tab leads with today's routine and says when each was last done", async ({ page }) => {
+  await page.goto("/workout");
+  await page.getByRole("tab", { name: "Template Vault" }).click();
+  await page.getByRole("button", { name: /^Save to My Routines: Push A/ }).first().click();
+  await page.getByRole("button", { name: /^Save to My Routines: Pull A/ }).first().click();
+  await page.goto("/workout");
+  await page.getByRole("tab", { name: "My Routines" }).click();
+  const today = page.getByRole("region", { name: /Push A|Pull A/ }).first();
+  await expect(today).toContainText("Not done yet");
+  await today.getByRole("button", { name: /^Start today: / }).click();
+  await page.waitForURL("**/workout");
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: /Mark \d+ remaining sets? done/ }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.waitForURL("**/workout/summary**");
+  await page.goto("/workout");
+  // Done today: the card moves on to the next routine, and the done one says so.
+  await expect(page.getByText("Last done today").first()).toBeVisible();
+  await expect(page.getByText(/^Next after /)).toBeVisible();
+});

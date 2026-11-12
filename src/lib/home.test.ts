@@ -80,13 +80,13 @@ describe("nextProtocol", () => {
 
   it("follows the last routine trained", () => {
     const sessions = [session("s", now - DAY, [["bench-press-barbell", [set(60, 5)]]], "Push")];
-    expect(nextProtocol(routines, sessions, DEFAULT_SCHEDULE, now)).toEqual({ routine: routines[1], reason: "After Push" });
+    expect(nextProtocol(routines, sessions, DEFAULT_SCHEDULE, now)).toMatchObject({ routine: routines[1], reason: "After Push" });
   });
 
   it("prefers the schedule when it names a routine", () => {
     const wd = new Date(now).getDay() as 3;
     const schedule: WorkoutSchedule = { ...DEFAULT_SCHEDULE, enabled: true, days: { ...DEFAULT_SCHEDULE.days, [wd]: { on: true, routineId: "Legs" } } };
-    expect(nextProtocol(routines, [], schedule, now)).toEqual({ routine: routines[2], reason: "Scheduled today" });
+    expect(nextProtocol(routines, [], schedule, now)).toMatchObject({ routine: routines[2], reason: "Scheduled today" });
   });
 
   it("is empty without a routine that has exercises", () => {

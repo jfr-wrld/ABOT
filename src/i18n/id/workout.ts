@@ -540,4 +540,12 @@ export const workout: Record<string, string> = {
   "Your phone's position is saved with the name, on this device only. No map service is asked.": "Posisi HP disimpan bersama namanya, hanya di perangkat ini. Tidak ada layanan peta yang dihubungi.",
   "Save gym at my position": "Simpan gym di posisiku",
   "Lite saves battery: no glass and no decorative animation. Exercise demos keep moving in both. Auto picks Lite on slower phones or with Data Saver on.": "Lite menghemat baterai: tanpa efek kaca dan animasi dekoratif. Demo gerakan tetap bergerak di kedua mode. Auto memilih Lite di HP yang lebih lambat atau saat Penghemat Data aktif.",
+  "Not done yet": "Belum pernah dilakukan",
+  "Last done {when}": "Terakhir {when}",
+  "Scheduled today": "Terjadwal hari ini",
+  "Scheduled tomorrow": "Terjadwal besok",
+  "Scheduled {day}": "Terjadwal {day}",
+  "Next after {name}": "Berikutnya setelah {name}",
+  "Your routine": "Rutinitasmu",
+  "Start today: {name}": "Mulai hari ini: {name}",
 };

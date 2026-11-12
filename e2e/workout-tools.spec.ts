@@ -71,8 +71,8 @@ test("the library is grouped by muscle, each exercise with a bundled photo", asy
   );
 
   await page.goto("/workout");
+  // An empty start opens straight on the picker.
   await page.getByRole("button", { name: "Start an empty workout" }).click();
-  await page.getByRole("button", { name: "Add exercise" }).click();
   await expect(page.getByRole("dialog").locator("[data-thumb] img").first()).toBeVisible();
 });
 

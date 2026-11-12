@@ -26,7 +26,10 @@ export function RoutineCard({
   onStart,
   onDuplicate,
   onDelete,
+  lastDone,
 }: {
+  /** When it was last trained, for "Last done 3 days ago". */
+  lastDone?: string;
   routine: Routine;
   byId: Record<string, Exercise>;
   onStart: () => void;
@@ -55,6 +58,7 @@ export function RoutineCard({
                   ...(ssCount ? [t.n(ssCount, "{n} superset", "{n} supersets")] : []),
                 ].join(" · ")}
           </p>
+          {lastDone && !empty && <p className="mt-0.5 text-xs font-semibold text-text-muted">{lastDone}</p>}
         </div>
         <MusclesWorked sum={sum} />
       </header>

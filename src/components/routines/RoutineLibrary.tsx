@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Play, Plus } from "lucide-react";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -15,7 +15,11 @@ import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
 import { TemplateVault } from "@/components/routines/TemplateVault";
 import { RoutineCard } from "@/components/routines/RoutineCard";
 import { routineEditPath } from "@/lib/routes";
-import { useT } from "@/i18n";
+import { useT, type T } from "@/i18n";
+import { useReminderStore } from "@/store/useReminderStore";
+import { useNow } from "@/lib/useNow";
+import { nextProtocol, type NextProtocol } from "@/lib/home";
+import { lastDoneByRoutine, lastDoneText } from "@/lib/routine-history";
 import { AnimatePresence, motion } from "framer-motion";
 import { LIST_ITEM } from "@/components/motion/listItem";
 import { useShake } from "@/lib/useShake";
@@ -33,7 +37,13 @@ export function RoutineLibrary() {
   const startEmpty = useWorkoutStore((s) => s.startEmpty);
   const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
   const { byId } = useAllExercises();
+  const sessions = useWorkoutStore((s) => s.sessions);
+  const schedule = useReminderStore((s) => s.schedule);
+  const now = useNow(60_000);
   const t = useT();
+  const lastDone = useMemo(() => lastDoneByRoutine(sessions), [sessions]);
+  // What to train today: the schedule's routine, else the one after the last trained.
+  const next = useMemo(() => nextProtocol(routines, sessions, schedule, now), [routines, sessions, schedule, now]);
 
   const [newOpen, setNewOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -88,11 +98,27 @@ export function RoutineLibrary() {
       />
 
       <div className="flex flex-col gap-4 px-4 pt-3">
+        {next && (
+          <section aria-labelledby="today-routine" className="rounded-card border border-accent/40 bg-accent-tint p-4">
+            <p className="label-caps">{whyText(next.why, t)}</p>
+            <h2 id="today-routine" className="mt-1 truncate text-xl font-bold tracking-tight">
+              {next.routine.name}
+            </h2>
+            <p className="mt-0.5 text-xs text-text-muted">
+              {[t.n(next.routine.exercises.length, "{n} exercise", "{n} exercises"), lastDoneText(lastDone[next.routine.id], now, t)].join(" · ")}
+            </p>
+            <Button variant="primary" onClick={() => start(next.routine)} aria-label={t("Start today: {name}", { name: next.routine.name })} className="mt-3 min-h-12 w-full text-base">
+              <Play aria-hidden="true" size={18} />
+              {t("Start")}
+            </Button>
+          </section>
+        )}
         <Button
-          variant="primary"
+          variant={next ? "secondary" : "primary"}
           onClick={() => {
             startEmpty(defaultRest);
-            router.push("/workout");
+            // Straight to picking what to do: an empty workout has nothing else to show.
+            router.push("/workout?add=1");
           }}
           className="min-h-12 w-full text-base"
         >
@@ -127,7 +153,7 @@ export function RoutineLibrary() {
                 <AnimatePresence initial={false}>
                   {folders.get(folder)!.map((r) => (
                     <motion.li key={r.id} {...LIST_ITEM} className="overflow-hidden">
-                      <RoutineCard routine={r} byId={byId} onStart={() => start(r)} onDuplicate={() => duplicate(r.id)} onDelete={() => setToDelete(r)} />
+                      <RoutineCard routine={r} byId={byId} lastDone={lastDoneText(lastDone[r.id], now, t)} onStart={() => start(r)} onDuplicate={() => duplicate(r.id)} onDelete={() => setToDelete(r)} />
                     </motion.li>
                   ))}
                 </AnimatePresence>
@@ -255,4 +281,13 @@ export function RoutineLibrary() {
       </Sheet>
     </main>
   );
+}
+
+/** Why this routine is today's: the schedule's day, or the routine it follows. */
+function whyText(why: NextProtocol["why"], t: T): string {
+  if (why.kind === "today") return t("Scheduled today");
+  if (why.kind === "tomorrow") return t("Scheduled tomorrow");
+  if (why.kind === "weekday") return t("Scheduled {day}", { day: new Date(2026, 0, 4 + why.weekday).toLocaleDateString(t.locale, { weekday: "long" }) });
+  if (why.kind === "after") return t("Next after {name}", { name: why.after });
+  return t("Your routine");
 }

@@ -85,6 +85,14 @@ function WorkoutScreen() {
     return { routine: targets.routine, list };
   }, [pickerOpen, active, routines, sessions, schedule, byId, library, t]);
 
+  // /workout?add=1, from "Start an empty workout": an empty session opens on the picker.
+  const addParam = useSearchParams().get("add");
+  const activeCount = active?.exercises.length ?? -1;
+  useEffect(() => {
+    if (addParam !== "1") return;
+    if (activeCount === 0) setPickerOpen(true);
+    router.replace("/workout");
+  }, [addParam, activeCount, router]);
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
 

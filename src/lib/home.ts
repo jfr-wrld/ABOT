@@ -94,6 +94,8 @@ export interface NextProtocol {
   routine: Routine;
   /** Why this one: "Scheduled today", "Scheduled Thu", "After Pull Day", "Your routine". */
   reason: string;
+  /** The same, as data, for a translated line: the schedule's day, or the routine it follows. */
+  why: { kind: "today" | "tomorrow" | "weekday"; weekday: Weekday } | { kind: "after"; after: string } | { kind: "yours" };
 }
 
 const WEEKDAY_SHORT = (wd: Weekday) =>
@@ -120,7 +122,12 @@ export function nextProtocol(
       const day = schedule.days[wd];
       if (!day?.on || !day.routineId) continue;
       const routine = byId.get(day.routineId);
-      if (routine) return { routine, reason: i === 0 ? "Scheduled today" : i === 1 ? "Scheduled tomorrow" : `Scheduled ${WEEKDAY_SHORT(wd)}` };
+      if (routine)
+        return {
+          routine,
+          reason: i === 0 ? "Scheduled today" : i === 1 ? "Scheduled tomorrow" : `Scheduled ${WEEKDAY_SHORT(wd)}`,
+          why: { kind: i === 0 ? "today" : i === 1 ? "tomorrow" : "weekday", weekday: wd },
+        };
     }
   }
 
@@ -130,9 +137,11 @@ export function nextProtocol(
   if (last) {
     const i = startable.findIndex((r) => r.id === last.routineId);
     const routine = startable[(i + 1) % startable.length];
-    return { routine, reason: routine.id === last.routineId ? "Your routine" : `After ${startable[i].name}` };
+    return routine.id === last.routineId
+      ? { routine, reason: "Your routine", why: { kind: "yours" } }
+      : { routine, reason: `After ${startable[i]!.name}`, why: { kind: "after", after: startable[i]!.name } };
   }
-  return { routine: startable[0], reason: "Your routine" };
+  return { routine: startable[0]!, reason: "Your routine", why: { kind: "yours" } };
 }
 
 /* ---------------------------------------------------------------- recent cards */

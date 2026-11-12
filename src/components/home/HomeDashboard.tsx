@@ -297,7 +297,8 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
 
   const empty = () => {
     startEmpty(defaultRest);
-    router.push("/workout");
+    // Straight to picking what to do: an empty workout has nothing else to show.
+    router.push("/workout?add=1");
   };
 
   if (!next) {
