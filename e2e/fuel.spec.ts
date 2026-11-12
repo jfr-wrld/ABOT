@@ -51,3 +51,32 @@ test("foods have photos, portions and a calculator, and log to today without a p
   // Everything above ran on the phone: no request left the app (photos included).
   expect(outside).toEqual([]);
 });
+
+test("Indonesian plates come with what they are made of; a quick add can be saved and picked again", async ({ page }) => {
+  await page.goto("/phase/fuel");
+  await page.getByRole("tab", { name: "Foods" }).click();
+  await page.getByLabel("Search foods").fill("geprek");
+  await page.getByRole("button", { name: /Smashed fried chicken with rice/ }).click();
+  const sheet = page.getByRole("dialog", { name: /ayam geprek/ });
+  await expect(sheet.getByText("Worked out from one 1 plate of:")).toBeVisible();
+  await expect(sheet.getByText(/Wheat flour, 20 g/)).toBeVisible();
+  await sheet.getByRole("button", { name: "Close" }).click();
+
+  await page.getByRole("tab", { name: "Today" }).click();
+  await page.getByRole("button", { name: "Quick add" }).click();
+  const quick = page.getByRole("dialog", { name: "Quick add" });
+  await expect(quick.getByText("Give it a name to save it to my foods")).toBeVisible();
+  await quick.getByLabel("Name (optional)").fill("Nasi padang dekat kantor");
+  await quick.getByLabel("kcal").fill("750");
+  await quick.getByLabel("kcal").blur();
+  await quick.getByLabel(/Save to my foods/).check();
+  await quick.getByRole("button", { name: "Add 750 kcal" }).click();
+
+  await page.getByRole("tab", { name: "Foods" }).click();
+  await page.getByRole("tab", { name: "My foods" }).click();
+  await page.getByRole("button", { name: /Nasi padang dekat kantor/ }).click();
+  const mine = page.getByRole("dialog", { name: "Nasi padang dekat kantor" });
+  await expect(mine).toContainText("750");
+  await mine.getByRole("button", { name: "Remove from my foods" }).click();
+  await expect(page.getByRole("tab", { name: "My foods" })).toHaveCount(0);
+});

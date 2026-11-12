@@ -1,7 +1,7 @@
 import { normalizePhase } from "@/lib/phase-engine";
 import { normalizeHandle } from "@/lib/profile";
 import type { GymLocation } from "@/types/workout";
-import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry, FoodLogEntry } from "@/types/workout";
+import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry, FoodLogEntry, type MyFood } from "@/types/workout";
 import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./normalize";
 import type { Repository, RepoSnapshot, StoredSettings } from "./repo";
 import { mergeLog, type WorkoutPhoto } from "./repo/types";
@@ -155,7 +155,26 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     favoriteExercises: normalizeFavorites(raw.favoriteExercises),
     birthYear: typeof raw.birthYear === "number" && Number.isInteger(raw.birthYear) && raw.birthYear >= 1900 && raw.birthYear <= new Date().getFullYear() - 10 ? raw.birthYear : null,
     biologicalSex: raw.biologicalSex === "male" || raw.biologicalSex === "female" ? raw.biologicalSex : null,
+    myFoods: normalizeMyFoods(raw.myFoods),
   };
+}
+
+/** Saved foods with a name and numbers in human ranges, at most 100. */
+function normalizeMyFoods(raw: unknown): MyFood[] {
+  if (!Array.isArray(raw)) return [];
+  const n = (v: unknown, max: number) => (typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= max ? Math.round(v * 10) / 10 : null);
+  const out: MyFood[] = [];
+  for (const f of raw) {
+    if (!isObj(f) || typeof f.id !== "string" || !f.id || typeof f.name !== "string" || !f.name.trim()) continue;
+    const kcal = n(f.kcal, 5000);
+    const protein = n(f.protein, 500);
+    const carbs = n(f.carbs, 1000);
+    const fat = n(f.fat, 500);
+    if (kcal === null || protein === null || carbs === null || fat === null) continue;
+    out.push({ id: f.id.slice(0, 64), name: f.name.trim().slice(0, 80), kcal, protein, carbs, fat });
+    if (out.length >= 100) break;
+  }
+  return out;
 }
 
 /** Exercise ids, each once, at most 200; anything else is dropped. */

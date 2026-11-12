@@ -57,6 +57,7 @@ function pickSettings(s: SettingsState): StoredSettings {
     favoriteExercises: s.favoriteExercises,
     birthYear: s.birthYear,
     biologicalSex: s.biologicalSex,
+    myFoods: s.myFoods,
   };
 }
 

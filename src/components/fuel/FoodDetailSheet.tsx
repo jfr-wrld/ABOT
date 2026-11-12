@@ -8,12 +8,16 @@ import { Select } from "@/components/ui/Select";
 import { NumberField } from "@/components/ui/NumberField";
 import { MACRO_COLOR } from "@/components/phase/visuals";
 import { FoodPhoto } from "./FoodPhoto";
-import { DIGEST_LABEL, LEVEL_LABEL, SOURCE_LABEL, type Food } from "@/lib/nutrition-guide";
+import { DIGEST_LABEL, FOODS, LEVEL_LABEL, SOURCE_LABEL, type Food } from "@/lib/nutrition-guide";
+
+const FOOD_BY_ID: Record<string, Food> = Object.fromEntries(FOODS.map((x) => [x.id, x]));
 import { gramsFor, nutrientsFor, portionsOf, type Macro } from "@/lib/nutrition-calc";
 import { SLOT_LABEL, type MealSlot } from "@/lib/meal-templates";
 import { entryFor, mealAt, useFoodLog } from "@/store/useFoodLog";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { isMyFood, myFoodId } from "@/lib/my-foods";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 const MEALS: MealSlot[] = ["breakfast", "lunch", "pre", "post", "dinner", "snack"];
 export const CALC: { macro: Macro; label: string; unit: string }[] = [
@@ -168,7 +172,31 @@ function Detail({ food, onDone }: { food: Food; onDone: () => void }) {
           <span className="rounded-ctl bg-surface-2 px-2 py-1">{t("Fullness: {level}", { level: t(LEVEL_LABEL[food.satietyIndex]) })}</span>
           <span className="rounded-ctl bg-surface-2 px-2 py-1">{t("Digests: {speed}", { speed: t(DIGEST_LABEL[food.digestSpeed]) })}</span>
         </p>
+        {food.parts && (
+          <div className="text-xs text-text-muted">
+            <p className="font-semibold text-text">{t("Worked out from one {unit} of:", { unit: t(food.units[0]?.label ?? food.servingVisual) })}</p>
+            <ul className="mt-0.5 list-inside list-disc">
+              {food.parts.map((p) => (
+                <li key={p.foodId} className="num">
+                  {t(FOOD_BY_ID[p.foodId]?.name ?? p.foodId)}, {p.grams} g
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <p className="text-[11px] text-text-muted">{t("Source: {source}", { source: t(SOURCE_LABEL[food.source]) })}</p>
+        {isMyFood(food) && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              const st = useSettingsStore.getState();
+              st.update({ myFoods: st.myFoods.filter((m) => myFoodId(m) !== food.id) });
+              onDone();
+            }}
+          >
+            {t("Remove from my foods")}
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] gap-2 border-t border-line pt-3">

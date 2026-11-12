@@ -1,5 +1,7 @@
 "use client";
 
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { withMyFood } from "@/lib/my-foods";
 import { TargetBreakdown } from "@/components/phase/TargetBreakdown";
 import type { BodyPhaseType } from "@/lib/phase-engine";
 import { useMemo, useState } from "react";
@@ -164,6 +166,8 @@ function QuickAddSheet({ open, onClose, now }: { open: boolean; onClose: () => v
   const [name, setName] = useState("");
   const [vals, setVals] = useState<{ kcal: number | null; protein: number | null; carbs: number | null; fat: number | null }>({ kcal: null, protein: null, carbs: null, fat: null });
   const [meal, setMeal] = useState<MealSlot>(() => mealAt(now));
+  // A meal eaten often (the warung near work) is typed once and then picked from Foods.
+  const [keep, setKeep] = useState(false);
   const kcal = vals.kcal ?? Math.round((vals.protein ?? 0) * 4 + (vals.carbs ?? 0) * 4 + (vals.fat ?? 0) * 9);
   const field = (key: keyof typeof vals, label: string, max: number) => (
     <label className="flex flex-col gap-1 text-xs font-semibold">
@@ -180,9 +184,14 @@ function QuickAddSheet({ open, onClose, now }: { open: boolean; onClose: () => v
           useFoodLog.getState().add([
             { id: newId(), day: dayOf(now), at: Date.now(), meal, foodId: null, name: name.trim().slice(0, 80), grams: 100, kcal, protein: vals.protein ?? 0, carbs: vals.carbs ?? 0, fat: vals.fat ?? 0 },
           ]);
+          if (keep && name.trim()) {
+            const s = useSettingsStore.getState();
+            s.update({ myFoods: withMyFood(s.myFoods, { name, kcal, protein: vals.protein ?? 0, carbs: vals.carbs ?? 0, fat: vals.fat ?? 0 }) });
+          }
           feedback.setComplete();
           setName("");
           setVals({ kcal: null, protein: null, carbs: null, fat: null });
+          setKeep(false);
           onClose();
         }}
         className="flex flex-col gap-3"
@@ -205,6 +214,10 @@ function QuickAddSheet({ open, onClose, now }: { open: boolean; onClose: () => v
         </div>
         <p className="text-xs text-text-muted">{t("Leave kcal empty to count it from the macros.")}</p>
         <Select aria-label={t("Meal")} value={meal} onChange={(v: MealSlot) => setMeal(v)} options={MEALS.map((m) => ({ value: m, label: t(SLOT_LABEL[m]) }))} className="w-full" />
+        <label className={`flex min-h-11 items-center gap-2 text-sm ${name.trim() ? "" : "text-text-muted"}`}>
+          <input type="checkbox" checked={keep && !!name.trim()} disabled={!name.trim()} onChange={(e) => setKeep(e.target.checked)} className="size-5 accent-[var(--color-accent)]" />
+          {name.trim() ? t("Save to my foods, to pick it next time") : t("Give it a name to save it to my foods")}
+        </label>
         <Button variant="primary" type="submit" disabled={kcal <= 0}>
           {t("Add {kcal} kcal", { kcal })}
         </Button>

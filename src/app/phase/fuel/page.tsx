@@ -1,20 +1,21 @@
 "use client";
 
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Dumbbell, RefreshCw, Search } from "lucide-react";
+import { Bookmark, Search } from "lucide-react";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Rise } from "@/components/motion/Entrance";
-import { usePhaseTelemetry, type PhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
+import { usePhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
 import { MacroBar } from "@/components/phase/visuals";
 import { CATEGORY_ICON } from "@/components/phase/foodIcons";
 import { FoodPhoto } from "@/components/fuel/FoodPhoto";
 import { FoodDetailSheet } from "@/components/fuel/FoodDetailSheet";
 import { TodayLog } from "@/components/fuel/TodayLog";
 import { DayPlan } from "@/components/fuel/DayPlan";
-import { CATEGORY_LABEL, FOODS, FOOD_CATEGORIES, foodsFor, mealCombos, type Food, type FoodCategory, type MealCombo } from "@/lib/nutrition-guide";
+import { CATEGORY_LABEL, FOODS, FOOD_CATEGORIES, foodsFor, type Food, type FoodCategory } from "@/lib/nutrition-guide";
+import { isMyFood, myFoodAsFood } from "@/lib/my-foods";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { PHASE_LABEL } from "@/lib/phase-engine";
 import { feedback } from "@/lib/feedback";
 import { useNow } from "@/lib/useNow";
@@ -78,7 +79,6 @@ function FuelScreen() {
           (m ? (
             <Rise order={0} className="flex flex-col gap-5">
               <DayPlan phase={m.phase.phaseType} fuel={m.fuel} />
-              <Meals m={m} />
             </Rise>
           ) : (
             <section className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center">
@@ -97,98 +97,26 @@ function FuelScreen() {
   );
 }
 
-/** Before and after the session as a short timeline around a dumbbell. */
-function Meals({ m }: { m: PhaseTelemetry }) {
-  const t = useT();
-  const [pick, setPick] = useState(0);
-  const [pre, post] = mealCombos(m.phase.phaseType, m.fuel, pick);
-  return (
-    <section aria-labelledby="meals-heading">
-      <div className="flex items-center justify-between gap-2">
-        <h2 id="meals-heading" className="label-caps">
-          {t("Around training")}
-        </h2>
-        <button
-          type="button"
-          onClick={() => {
-            feedback.tick();
-            setPick((p) => p + 1);
-          }}
-          className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-ctl px-2 text-xs font-semibold text-text-muted hover:bg-ink/[0.05] hover:text-text"
-        >
-          <RefreshCw aria-hidden="true" size={14} />
-          {t("Swap foods")}
-        </button>
-      </div>
-      <ol className="mt-2 flex flex-col">
-        <MealStop combo={pre!} label={t("Before")} when={t("60 to 90 min")} pick={pick} />
-        <li aria-hidden="true" className="flex items-center gap-3 py-1 pl-3">
-          <span className="flex size-8 items-center justify-center rounded-full bg-accent text-on-accent">
-            <Dumbbell size={16} />
-          </span>
-          <span className="text-xs font-semibold text-text-muted">{t("Training")}</span>
-        </li>
-        <MealStop combo={post!} label={t("After")} when={t("within 2 hours")} pick={pick} last />
-      </ol>
-    </section>
-  );
-}
-
-function MealStop({ combo, label, when, pick, last = false }: { combo: MealCombo; label: string; when: string; pick: number; last?: boolean }) {
-  const t = useT();
-  const reduce = useReducedMotionConfig();
-  return (
-    <li className="relative flex gap-3">
-      <span aria-hidden="true" className="flex w-8 shrink-0 justify-center">
-        <span className={`w-px bg-line-strong ${last ? "h-4" : "h-full"}`} />
-      </span>
-      <div className="mb-1 min-w-0 flex-1 rounded-card border border-line bg-surface p-3">
-        <p className="flex items-baseline gap-2">
-          <span className="text-sm font-bold">{label}</span>
-          <span className="text-xs text-text-muted">{when}</span>
-          <span className="num ml-auto text-sm font-bold">{combo.kcal} kcal</span>
-        </p>
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.ul
-            key={pick}
-            initial={reduce ? false : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduce ? undefined : { opacity: 0, y: -6 }}
-            transition={{ duration: 0.18 }}
-            className="mt-2 flex flex-wrap gap-2"
-          >
-            {combo.items.map((i) => {
-              return (
-                <li key={i.food.id} className="flex items-center gap-2 rounded-ctl bg-surface-2 py-1.5 pl-1.5 pr-3">
-                  <FoodPhoto id={i.food.id} size={28} className="rounded-full" />
-                  <span className="text-xs font-semibold">{t(i.food.name)}</span>
-                  <span className="num text-xs font-bold">{i.grams} g</span>
-                </li>
-              );
-            })}
-          </motion.ul>
-        </AnimatePresence>
-        <MacroBar protein={combo.protein} carbs={combo.carbs} fat={combo.fat} className="mt-2.5 h-1.5" />
-        <p className="num mt-1 text-[11px] text-text-muted">
-          P {combo.protein} · C {combo.carbs} · F {combo.fat} g
-        </p>
-      </div>
-    </li>
-  );
-}
-
 /** Every food with its photo: search, filter by type, tap for nutrients, portions and the calculator. */
 function Foods({ phase }: { phase: import("@/lib/phase-engine").BodyPhaseType | null }) {
   const t = useT();
-  const [category, setCategory] = useState<FoodCategory>("PROTEIN");
+  const saved = useSettingsStore((s) => s.myFoods);
+  const mine = useMemo(() => saved.map(myFoodAsFood), [saved]);
+  // Saved foods lead when there are any: they are what this lifter eats.
+  const [category, setCategory] = useState<FoodCategory | "MINE">(() => (useSettingsStore.getState().myFoods.length ? "MINE" : "PROTEIN"));
   const [query, setQuery] = useState("");
   const q = useDeferredValue(query).trim().toLowerCase();
   const [open, setOpen] = useState<Food | null>(null);
+  const categories: (FoodCategory | "MINE")[] = mine.length ? ["MINE", ...FOOD_CATEGORIES] : FOOD_CATEGORIES;
+  const shown = category === "MINE" && !mine.length ? "PROTEIN" : category;
   const foods = q
-    ? FOODS.filter((f) => f.name.toLowerCase().includes(q) || t(f.name).toLowerCase().includes(q))
-    : phase
-      ? foodsFor(phase, category)
-      : FOODS.filter((f) => f.category === category);
+    ? [...mine, ...FOODS].filter((f) => f.name.toLowerCase().includes(q) || t(f.name).toLowerCase().includes(q))
+    : shown === "MINE"
+      ? mine
+      : phase
+        ? foodsFor(phase, shown)
+        : FOODS.filter((f) => f.category === shown);
+  const label = (c: FoodCategory | "MINE") => (c === "MINE" ? t("My foods") : t(CATEGORY_LABEL[c]));
   return (
     <section aria-labelledby="foods-heading" className="flex flex-col gap-3">
       <h2 id="foods-heading" className="sr-only">
@@ -208,9 +136,9 @@ function Foods({ phase }: { phase: import("@/lib/phase-engine").BodyPhaseType | 
       </label>
       {!q && (
         <div role="tablist" aria-label={t("Food type")} className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
-          {FOOD_CATEGORIES.map((c) => {
-            const Icon = CATEGORY_ICON[c];
-            const on = category === c;
+          {categories.map((c) => {
+            const Icon = c === "MINE" ? Bookmark : CATEGORY_ICON[c];
+            const on = shown === c;
             return (
               <button
                 key={c}
@@ -224,7 +152,7 @@ function Foods({ phase }: { phase: import("@/lib/phase-engine").BodyPhaseType | 
                 className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-ctl border px-3 text-xs font-semibold ${on ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"}`}
               >
                 <Icon aria-hidden="true" size={15} />
-                {t(CATEGORY_LABEL[c])}
+                {label(c)}
               </button>
             );
           })}
@@ -233,7 +161,7 @@ function Foods({ phase }: { phase: import("@/lib/phase-engine").BodyPhaseType | 
       {foods.length === 0 ? (
         <p className="rounded-card border border-line bg-surface p-5 text-center text-sm text-text-muted">{t("No food matches. Use Quick add on the Today tab for anything not listed.")}</p>
       ) : (
-        <ul aria-label={q ? t("Search results") : t(CATEGORY_LABEL[category])} className="grid grid-cols-2 gap-2.5">
+        <ul aria-label={q ? t("Search results") : label(shown)} className="grid grid-cols-2 gap-2.5">
           {foods.map((f) => (
             <FoodTile key={f.id} food={f} suits={!!phase && f.bestForPhases.includes(phase)} onOpen={() => setOpen(f)} />
           ))}
@@ -261,7 +189,7 @@ function FoodTile({ food: f, suits, onOpen }: { food: Food; suits: boolean; onOp
           )}
         </span>
         <span className="flex flex-col gap-1.5 p-2.5">
-          <span className="line-clamp-2 text-sm font-bold leading-tight">{t(f.name)}</span>
+          <span className="line-clamp-2 text-sm font-bold leading-tight">{isMyFood(f) ? f.name : t(f.name)}</span>
           <span className="num text-xs text-text-muted">
             <span className="text-base font-bold text-text">{kcal}</span> kcal · {t(unit.label)}
           </span>

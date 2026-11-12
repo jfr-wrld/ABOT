@@ -81,6 +81,7 @@ export async function migrateFromLocalStorage(
       favoriteExercises: DEFAULT_SETTINGS.favoriteExercises,
       birthYear: null,
       biologicalSex: null,
+      myFoods: [],
       showRpe: typeof s.showRpe === "boolean" ? s.showRpe : true,
     });
   }

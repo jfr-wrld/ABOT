@@ -110,6 +110,7 @@ describe.each([
         favoriteExercises: ["squat-barbell"],
         birthYear: 1995,
         biologicalSex: "male",
+        myFoods: [{ id: "m1", name: "Nasi padang dekat kantor", kcal: 750, protein: 30, carbs: 90, fat: 28 }],
         bodyPhase: null,
       },
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },

@@ -1,4 +1,4 @@
-import type { BodyPhaseType, FuelTarget } from "./phase-engine";
+import type { BodyPhaseType } from "./phase-engine";
 
 /**
  * Everyday foods and drinks, most easy to find in Indonesia, with what 100 g (or 100 ml) holds,
@@ -13,7 +13,7 @@ import type { BodyPhaseType, FuelTarget } from "./phase-engine";
  */
 
 export type FoodCategory = "PROTEIN" | "CARBS" | "VEGETABLES" | "FRUIT" | "FATS" | "DISHES" | "DRINK_HYDRATION" | "PRE_POST_WORKOUT";
-export type FoodSource = "TKPI" | "USDA" | "ESTIMATE";
+export type FoodSource = "TKPI" | "USDA" | "ESTIMATE" | "MINE";
 
 /** A household portion: "1 rice scoop" is about 100 g of cooked rice. */
 export interface FoodUnit {
@@ -44,6 +44,8 @@ export interface Food {
   /** Fibre per 100 g, when known. */
   fiber?: number;
   source: FoodSource;
+  /** A dish worked out from its parts: what one portion is made of. */
+  parts?: { foodId: string; grams: number }[];
 }
 
 const ALL: BodyPhaseType[] = ["CUTTING", "BULKING", "RECOMP", "STRENGTH_PEAK"];
@@ -93,7 +95,7 @@ const u = (
 const CUT_RECOMP: BodyPhaseType[] = ["CUTTING", "RECOMP"];
 const BULK_SIDE: BodyPhaseType[] = ["BULKING", "RECOMP", "STRENGTH_PEAK"];
 
-export const FOODS: Food[] = [
+const BASE: Food[] = [
   // Protein
   f("chicken-breast", "Chicken breast, skinless", "PROTEIN", [165, 31, 0, 3.6], "1 palm-sized piece (~120 g)", 120, ALL, "HIGH", "MODERATE", "The most protein per calorie among everyday meats.", { units: [["1 palm-sized piece", 120], ["1 breast", 170]] }),
   f("chicken-thigh", "Chicken thigh, skinless", "PROTEIN", [209, 26, 0, 10.9], "1 large thigh (~120 g)", 120, ["BULKING", "RECOMP", "STRENGTH_PEAK"], "HIGH", "MODERATE", "More fat and flavour than breast: easier calories when bulking.", { units: [["1 thigh", 120]] }),
@@ -181,7 +183,69 @@ export const FOODS: Food[] = [
   u("sweet-tea", "Sweet iced tea (es teh manis)", "DRINK_HYDRATION", [40, 0, 10, 0], [["1 glass", 300]], ["BULKING"], "LOW", "FAST", "About 120 kcal of sugar a glass: ask for less sugar on a cut.", { source: "ESTIMATE" }),
   u("orange-juice", "Orange juice", "DRINK_HYDRATION", [45, 0.7, 10.4, 0.2], [["1 glass", 250]], BULK_SIDE, "LOW", "FAST", "Fast sugar and vitamin C; the whole fruit fills you more."),
   u("sports-drink", "Isotonic sports drink", "PRE_POST_WORKOUT", [26, 0, 6.4, 0], [["1 bottle", 500]], ALL, "LOW", "FAST", "Sugar and salts for long, sweaty sessions; water is enough for most."),
+  // Base ingredients for the dishes below.
+  u("wheat-flour", "Wheat flour", "CARBS", [364, 10.3, 76.3, 1], [["1 tablespoon", 8], ["1/2 cup", 60]], BULK_SIDE, "LOW", "FAST", "Mostly in batters and fried snacks: the coating soaks up oil.", { fiber: 2.7 }),
+  u("sugar", "Sugar", "PRE_POST_WORKOUT", [387, 0, 100, 0], [["1 teaspoon", 4], ["1 tablespoon", 12]], ["BULKING"], "LOW", "FAST", "Hidden in drinks: a sweet iced tea holds 3 to 4 spoons."),
 ];
+
+/**
+ * Everyday Indonesian plates, each worked out from the foods above in a typical portion, so the
+ * numbers stay tied to sourced values: [id, name, parts, portion label, phases, satiety, digest, note].
+ * Cooking oil stands in for frying; real plates vary with the cook.
+ */
+type DishRow = [string, string, [string, number][], string, BodyPhaseType[], Level, DigestSpeed, string, FoodCategory?];
+const DISH_ROWS: DishRow[] = [
+  ["nasi-ayam-bakar", "Rice with grilled chicken (nasi ayam bakar)", [["white-rice", 200], ["grilled-chicken", 120], ["cucumber", 30]], "1 plate", ALL, "HIGH", "MODERATE", "A balanced plate: protein, rice and no frying."],
+  ["nasi-ayam-goreng", "Rice with fried chicken (nasi ayam goreng)", [["white-rice", 200], ["chicken-thigh", 120], ["cooking-oil", 10]], "1 plate", BULK_SIDE, "MEDIUM", "MODERATE", "Frying adds about 90 kcal of oil; take the skin off on a cut."],
+  ["ayam-geprek", "Smashed fried chicken with rice (ayam geprek)", [["white-rice", 200], ["chicken-thigh", 120], ["wheat-flour", 20], ["cooking-oil", 15]], "1 plate", ["BULKING"], "MEDIUM", "MODERATE", "The batter soaks up oil: one of the heaviest everyday plates."],
+  ["nasi-telur-dadar", "Rice with omelette (nasi telur dadar)", [["white-rice", 200], ["egg", 100], ["cooking-oil", 7]], "1 plate", ALL, "MEDIUM", "MODERATE", "Cheap and quick; add a vegetable side for fibre."],
+  ["nasi-warteg", "Warteg plate: rice, tempe, tofu, kangkung", [["white-rice", 200], ["tempeh", 50], ["fried-tofu", 40], ["water-spinach", 100], ["cooking-oil", 8]], "1 plate", ALL, "HIGH", "MODERATE", "Tempe and tofu give plant protein; ask for less oil on the vegetables."],
+  ["nasi-rendang", "Rice with beef rendang (nasi rendang)", [["white-rice", 200], ["beef-lean", 100], ["coconut-milk", 40], ["cooking-oil", 5], ["spinach", 50]], "1 plate", BULK_SIDE, "HIGH", "SLOW", "Coconut milk makes it rich: good on a bulk, half the rice on a cut."],
+  ["nasi-uduk", "Coconut rice plate (nasi uduk)", [["white-rice", 200], ["coconut-milk", 30], ["egg", 50], ["fried-tofu", 40]], "1 plate", BULK_SIDE, "MEDIUM", "MODERATE", "Rice cooked in coconut milk: more fat than plain rice."],
+  ["pecel-nila", "Fried tilapia with rice (pecel ikan nila)", [["white-rice", 200], ["tilapia", 150], ["cooking-oil", 15], ["cabbage", 30]], "1 plate", ALL, "HIGH", "MODERATE", "Lots of protein; grilled instead of fried saves about 100 kcal."],
+  ["ikan-bakar", "Grilled tilapia (ikan nila bakar)", [["tilapia", 150], ["cooking-oil", 5]], "1 fish", ALL, "HIGH", "MODERATE", "Lean protein; add rice by the scoop to fit the day."],
+  ["bakso", "Meatball soup (bakso)", [["beef-lean", 80], ["wheat-flour", 20], ["rice-vermicelli", 75], ["cabbage", 30]], "1 bowl", ALL, "MEDIUM", "MODERATE", "Meatballs are part flour; the broth itself is light."],
+  ["mie-goreng-telur", "Instant fried noodles with egg", [["instant-noodles", 80], ["egg", 50], ["cooking-oil", 5]], "1 plate", ["BULKING"], "LOW", "FAST", "Fast calories, little protein: the egg helps."],
+  ["mie-rebus-telur", "Instant noodle soup with egg", [["instant-noodles", 80], ["egg", 50]], "1 bowl", ["BULKING"], "LOW", "FAST", "Lighter than fried; still mostly starch and salt."],
+  ["bubur-ayam", "Chicken rice porridge (bubur ayam)", [["white-rice", 150], ["chicken-breast", 50], ["peanuts", 10]], "1 bowl", ALL, "MEDIUM", "FAST", "Easy to digest: a good breakfast before morning training."],
+  ["lontong-sayur", "Rice cake in coconut vegetable soup (lontong sayur)", [["white-rice", 150], ["coconut-milk", 60], ["green-beans", 50], ["egg", 50]], "1 plate", BULK_SIDE, "MEDIUM", "MODERATE", "The coconut broth carries the fat."],
+  ["sate-lontong", "Chicken satay with rice cake (sate lontong)", [["chicken-satay", 150], ["white-rice", 150]], "1 plate", BULK_SIDE, "MEDIUM", "MODERATE", "Ten skewers with rice cake; the peanut sauce is most of the fat."],
+  ["nasi-goreng-telur", "Fried rice with fried egg", [["nasi-goreng", 300], ["egg", 50], ["cooking-oil", 5]], "1 plate", ["BULKING"], "MEDIUM", "MODERATE", "A filling plate; the egg adds protein the rice lacks."],
+  ["capcay", "Stir-fried vegetables with shrimp (capcay)", [["cabbage", 100], ["carrot", 50], ["broccoli", 50], ["shrimp", 50], ["cooking-oil", 7]], "1 plate", ALL, "HIGH", "MODERATE", "Lots of vegetables for few calories; pair with rice to fit the day."],
+  ["tumis-kangkung", "Stir-fried water spinach (tumis kangkung)", [["water-spinach", 100], ["cooking-oil", 7]], "1 bowl", ALL, "HIGH", "MODERATE", "A side; the oil is most of its calories."],
+  ["sayur-asem", "Sour vegetable soup (sayur asem)", [["long-beans", 50], ["corn", 50], ["peanuts", 10]], "1 bowl", ALL, "HIGH", "MODERATE", "Light and filling: a good side on a cut."],
+  ["telur-balado", "Eggs in chilli sauce (telur balado)", [["egg", 100], ["cooking-oil", 7], ["tomato", 30]], "2 eggs", ALL, "MEDIUM", "MODERATE", "Two eggs with a spicy sauce: protein for one meal."],
+  ["tempe-goreng", "Fried tempe (tempe goreng)", [["tempeh", 50], ["cooking-oil", 5]], "1 slice", ALL, "MEDIUM", "MODERATE", "Plant protein; frying adds about 45 kcal a slice."],
+  ["pisang-goreng", "Fried banana (pisang goreng)", [["banana", 100], ["wheat-flour", 20], ["cooking-oil", 10]], "1 piece", ["BULKING"], "LOW", "FAST", "A snack that is mostly batter and oil."],
+  ["roti-selai-kacang", "Toast with peanut butter", [["white-bread", 60], ["peanut-butter", 16]], "2 slices", BULK_SIDE, "MEDIUM", "MODERATE", "A quick pre-training snack 1 to 2 hours before."],
+  ["kopi-susu-gula-aren", "Iced coffee with milk and palm sugar (kopi susu)", [["black-coffee", 150], ["whole-milk", 100], ["sugar", 15]], "1 glass", ["BULKING"], "LOW", "FAST", "The sugar and milk add up: about a small meal's worth on a cut.", "DRINK_HYDRATION"],
+  ["jus-alpukat", "Avocado juice (jus alpukat)", [["avocado", 100], ["whole-milk", 100], ["sugar", 15]], "1 glass", ["BULKING"], "MEDIUM", "SLOW", "Easy calories for a bulk; skip the sugar and chocolate on a cut.", "DRINK_HYDRATION"],
+  ["smoothie-pisang-whey", "Banana whey smoothie", [["banana", 120], ["skim-milk", 250], ["whey", 30]], "1 glass", ALL, "MEDIUM", "FAST", "Protein and carbs together: a good after-training drink.", "PRE_POST_WORKOUT"],
+  ["overnight-oats", "Overnight oats with banana", [["oats", 50], ["skim-milk", 150], ["banana", 60]], "1 jar", ALL, "HIGH", "SLOW", "Made the night before; keeps you full through the morning.", "CARBS"],
+];
+
+const BASE_BY_ID = Object.fromEntries(BASE.map((x) => [x.id, x]));
+
+function dish([id, name, parts, unit, phases, satiety, digest, note, category = "DISHES"]: DishRow): Food {
+  const total = parts.reduce((n, [, g]) => n + g, 0);
+  const sum = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+  for (const [foodId, g] of parts) {
+    const base = BASE_BY_ID[foodId];
+    if (!base) throw new Error(`Dish ${id} names an unknown food: ${foodId}`);
+    for (const k of ["calories", "protein", "carbs", "fat"] as const) sum[k] += (base.macrosPer100g[k] * g) / 100;
+    sum.fiber += ((base.fiber ?? 0) * g) / 100;
+  }
+  const per100 = (v: number) => Math.round((v / total) * 1000) / 10;
+  return {
+    ...u(id, name, category, [Math.round((sum.calories / total) * 100), per100(sum.protein), per100(sum.carbs), per100(sum.fat)], [[unit, total]], phases, satiety, digest, note, {
+      source: "ESTIMATE",
+      ...(sum.fiber > 0 ? { fiber: per100(sum.fiber) } : {}),
+    }),
+    parts: parts.map(([foodId, grams]) => ({ foodId, grams })),
+  };
+}
+
+export const FOODS: Food[] = [...BASE, ...DISH_ROWS.map(dish)];
 
 export const FOOD_CATEGORIES: FoodCategory[] = ["PROTEIN", "CARBS", "VEGETABLES", "FRUIT", "FATS", "DISHES", "PRE_POST_WORKOUT", "DRINK_HYDRATION"];
 export const CATEGORY_LABEL: Record<FoodCategory, string> = {
@@ -199,6 +263,7 @@ export const SOURCE_LABEL: Record<FoodSource, string> = {
   TKPI: "Tabel Komposisi Pangan Indonesia (Kemenkes RI)",
   USDA: "USDA FoodData Central",
   ESTIMATE: "Estimate from a typical recipe",
+  MINE: "Your own numbers",
 };
 export const DIGEST_LABEL: Record<DigestSpeed, string> = { FAST: "Fast", MODERATE: "Moderate", SLOW: "Slow" };
 
@@ -213,52 +278,6 @@ export function foodsFor(phase: BodyPhaseType, category?: FoodCategory): Food[] 
 }
 
 /* ---------------------------------------------------------------- meal combos */
-
-export interface ComboItem {
-  food: Food;
-  grams: number;
-}
-export interface MealCombo {
-  when: "pre" | "post";
-  items: ComboItem[];
-  kcal: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
-
-const round10 = (g: number) => Math.round(g / 10) * 10;
-const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
-const per = (food: Food, grams: number, key: keyof Food["macrosPer100g"]) => (food.macrosPer100g[key] * grams) / 100;
-
-/**
- * A meal before and after training, sized from the day's target: before, a fifth of the
- * calories with a fifth of the protein from a lean, quick protein and fast carbs; after, a
- * quarter of the calories with 30% of the protein. Portions are rounded to 10 g.
- */
-export function mealCombos(phase: BodyPhaseType, fuel: FuelTarget, pick = 0): MealCombo[] {
-  const lean = (x: Food) => x.macrosPer100g.fat <= 5 && x.macrosPer100g.protein >= 10;
-  const proteins = foodsFor(phase).filter((x) => (x.category === "PROTEIN" || x.id === "whey") && lean(x));
-  const carbs = foodsFor(phase).filter((x) => (x.category === "CARBS" || x.id === "banana") && x.macrosPer100g.carbs >= 15);
-  const make = (when: "pre" | "post", share: number, proteinShare: number, fast: boolean): MealCombo => {
-    // Before: a quick protein and fast carbs. After: the next pair down, so the meals differ.
-    const pList = fast ? proteins.filter((x) => x.digestSpeed !== "SLOW") : proteins;
-    const cList = fast ? carbs.filter((x) => x.digestSpeed === "FAST") : carbs;
-    const at = pick + (fast ? 0 : 1);
-    const p = pList[at % pList.length]!;
-    const c = cList[at % cList.length]!;
-    const pMax = p.id === "whey" ? 60 : 300;
-    const pG = clamp(round10((fuel.proteinG * proteinShare * 100) / p.macrosPer100g.protein), 20, pMax);
-    const left = fuel.kcal * share - per(p, pG, "calories");
-    const cG = clamp(round10((left * 100) / c.macrosPer100g.calories), 0, 400);
-    const items = [{ food: p, grams: pG }, ...(cG > 0 ? [{ food: c, grams: cG }] : [])];
-    const sum = (key: keyof Food["macrosPer100g"]) => Math.round(items.reduce((n, i) => n + per(i.food, i.grams, key), 0));
-    return { when, items, kcal: sum("calories"), protein: sum("protein"), carbs: sum("carbs"), fat: sum("fat") };
-  };
-  return [make("pre", 0.2, 0.2, true), make("post", 0.25, 0.3, false)];
-}
-
-/* ---------------------------------------------------------------- hydration */
 
 /** Daily water target: about 35 ml per kg of body weight, rounded to 250 ml. */
 export function waterTargetMl(weightKg: number): number {

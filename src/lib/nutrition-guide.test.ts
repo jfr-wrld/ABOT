@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FOODS, foodsFor, mealCombos, waterTargetMl } from "./nutrition-guide";
+import { FOODS, foodsFor, waterTargetMl } from "./nutrition-guide";
 
-const fuel = { kcal: 2600, proteinG: 150, carbsG: 320, fatG: 75, tdee: 2350, delta: 250, trainingKcal: 200, adjust: 0 };
 
 describe("food matrix", () => {
   it("has unique ids and macros whose calories add up (4/4/9) within reason", () => {
@@ -25,24 +24,6 @@ describe("food matrix", () => {
     // Last: a low-satiety carb that does not suit a cut.
     expect(carbs.at(-1)!.satietyIndex).toBe("LOW");
     expect(carbs.at(-1)!.bestForPhases).not.toContain("CUTTING");
-  });
-});
-
-describe("mealCombos", () => {
-  it("sizes a pre and post meal from the day's target, with fast carbs before training", () => {
-    const [pre, post] = mealCombos("BULKING", fuel);
-    expect(pre!.when).toBe("pre");
-    expect(pre!.items.every((i) => i.grams % 10 === 0)).toBe(true);
-    expect(pre!.items[1]!.food.digestSpeed).toBe("FAST");
-    expect(pre!.kcal).toBeGreaterThan(fuel.kcal * 0.2 - 60);
-    expect(pre!.kcal).toBeLessThan(fuel.kcal * 0.2 + 60);
-    expect(post!.protein).toBeGreaterThanOrEqual(Math.round(fuel.proteinG * 0.3) - 6);
-  });
-
-  it("offers other pairs on request", () => {
-    const a = mealCombos("CUTTING", fuel, 0)[1]!.items.map((i) => i.food.id);
-    const b = mealCombos("CUTTING", fuel, 1)[1]!.items.map((i) => i.food.id);
-    expect(a).not.toEqual(b);
   });
 });
 

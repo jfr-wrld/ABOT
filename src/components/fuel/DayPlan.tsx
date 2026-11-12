@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Check, ListChecks, Minus, Plus, ShoppingBasket } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
+import { Check, Dumbbell, ListChecks, Minus, Plus, ShoppingBasket } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { MacroBar } from "@/components/phase/visuals";
 import { FoodPhoto } from "./FoodPhoto";
@@ -67,10 +67,23 @@ export function DayPlan({ phase, fuel }: { phase: BodyPhaseType; fuel: FuelTarge
         <ol className="flex flex-col gap-2">
           {day.meals.map((m, i) => {
             const key = `${template.id}:${i}`;
+            // The session sits between the meals around it, so the day reads in order.
+            const trainingHere = m.slot === "post" && day.meals[i - 1]?.slot !== "post";
+            const when = m.slot === "pre" ? t("60 to 90 min before training") : m.slot === "post" ? t("within 2 hours after") : null;
             return (
-              <li key={key} className="rounded-card border border-line bg-surface p-3">
+              <Fragment key={key}>
+              {trainingHere && (
+                <li aria-hidden="true" className="flex items-center gap-2 py-0.5 pl-1">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-accent text-on-accent">
+                    <Dumbbell size={14} />
+                  </span>
+                  <span className="text-xs font-semibold text-text-muted">{t("Training")}</span>
+                </li>
+              )}
+              <li className="rounded-card border border-line bg-surface p-3">
                 <p className="flex items-baseline gap-2">
                   <span className="text-sm font-bold">{t(SLOT_LABEL[m.slot])}</span>
+                  {when && <span className="text-xs text-text-muted">{when}</span>}
                   <span className="num ml-auto text-sm font-bold">{m.totals.kcal} kcal</span>
                 </p>
                 <ul className="mt-2 flex flex-col gap-1.5">
@@ -100,6 +113,7 @@ export function DayPlan({ phase, fuel }: { phase: BodyPhaseType; fuel: FuelTarge
                   </button>
                 </div>
               </li>
+              </Fragment>
             );
           })}
         </ol>

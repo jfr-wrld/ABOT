@@ -54,9 +54,9 @@ test("the setup wizard starts a cut, and the phase page logs weight, protein and
 
   await page.getByRole("link", { name: "Meals and foods" }).click();
   await page.waitForURL("**/phase/fuel");
-  // Plan: a day sized to the cut's target, logged whole; the around-training meals stay.
+  // Plan: one day sized to the cut's target, its training meals timed in place, logged whole.
   await page.getByRole("tab", { name: "Plan" }).click();
-  await expect(page.getByText("Before", { exact: true })).toBeVisible();
+  await expect(page.getByText("within 2 hours after").first()).toBeVisible();
   await page.getByRole("button", { name: "Log the whole day" }).click();
   await expect(page.getByRole("button", { name: "Day logged" })).toBeDisabled();
   await expect(page.getByRole("heading", { name: "Shopping list" })).toBeVisible();
@@ -107,7 +107,7 @@ async function seedCut(page: import("@playwright/test").Page, daysAgo: number, p
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       };
       const start = Date.now() - daysAgo * DAY;
-      const log = [];
+      const log: { id: string; date: number; weightKg: number }[] = [];
       for (let i = 0; i <= daysAgo; i += 2) log.push({ id: key(start + i * DAY), date: start + i * DAY, weightKg: 80 + (perWeek * i) / 7 });
       const bodyPhase = {
         id: "p1", phaseType: "CUTTING", title: "CUT", startDate: key(start), durationWeeks: weeks, startWeightKg: 80, targetWeightKg: 76,

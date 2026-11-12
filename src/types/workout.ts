@@ -277,6 +277,8 @@ export interface UserSettings {
   /** For the calorie formula in a body phase; asked once, then filled in. */
   birthYear: number | null;
   biologicalSex: "male" | "female" | null;
+  /** Foods the lifter saved from Quick add, numbers for one portion. At most 100. */
+  myFoods: MyFood[];
   /** "auto" follows the phone: Indonesian when its language is Indonesian, else English. */
   language: AppLanguage;
   /** "system" follows the phone's light or dark mode. */
@@ -331,6 +333,16 @@ export interface FoodLogEntry {
   waterMl?: number;
 }
 
+/** A food the lifter entered once and keeps: one portion's calories and macros. */
+export interface MyFood {
+  id: string;
+  name: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export const PROFILE_LIMITS = {
   nameMax: 40,
   handleMax: 30,
@@ -365,6 +377,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   favoriteExercises: [],
   birthYear: null,
   biologicalSex: null,
+  myFoods: [],
 };
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
