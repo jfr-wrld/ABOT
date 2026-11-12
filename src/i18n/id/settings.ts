@@ -653,5 +653,5 @@ export const settings: Record<string, string> = {
   "Rest, RPE, sounds": "Istirahat, RPE, suara",
   "None yet": "Belum ada",
   "Health Connect": "Health Connect",
-  "Extended exercise library: Open Exercise Atlas (data CC0 1.0). Illustrations CC0 1.0, or MIT License: Monk Mode, Copyright (c) 2026 Yağız Eren Tunay.": "Library gerakan tambahan: Open Exercise Atlas (data CC0 1.0). Ilustrasi CC0 1.0, atau Lisensi MIT: Monk Mode, Copyright (c) 2026 Yağız Eren Tunay.",
+  "More exercises, mostly newer machines: Open Exercise Atlas (CC0 1.0).": "Gerakan tambahan, kebanyakan mesin baru: Open Exercise Atlas (CC0 1.0).",
 };

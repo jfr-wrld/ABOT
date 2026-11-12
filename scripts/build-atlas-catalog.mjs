@@ -1,18 +1,17 @@
-// Builds ABOT's extended exercise library from Open Exercise Atlas
-// (https://github.com/yagizerentunay/open-exercise-atlas): exercise data CC0 1.0, illustrations
-// CC0 1.0 (Atlas originals) or MIT (Monk Mode, (c) 2026 Yagiz Eren Tunay), recorded per image.
+// Adds the exercises free-exercise-db does not have (modern machines, cable variations, assisted
+// and plate-loaded machines, sled work) from Open Exercise Atlas
+// (https://github.com/yagizerentunay/open-exercise-atlas, data CC0 1.0).
 //
-//   node scripts/build-atlas-catalog.mjs            fetch, map, write (keeps images already made)
-//   node scripts/build-atlas-catalog.mjs --report   also print near-duplicates of seed exercises
-//   node scripts/build-atlas-catalog.mjs --force    fetch every image again
+//   node scripts/build-atlas-catalog.mjs            fetch, map, write
+//   node scripts/build-atlas-catalog.mjs --report   also print what was left out and why
 //
-// Writes src/data/atlas-catalog.generated.ts and a 128 px thumbnail per exercise (the size of the seed thumbs) in
-// public/atlas/<id>.webp, which ship with the app, so lists show pictures offline (about 1.5 MB).
-// The full illustration loads from the pinned Atlas commit on the detail page, when online, as the
-// free-exercise-db photos do. Needs the network proxy for Node when behind one (NODE_USE_ENV_PROXY=1).
+// Run after scripts/build-fedb-library.mjs. An Atlas exercise is left out when the seed library or
+// free-exercise-db already has it (same tool and name words, or every word of its name in one of
+// theirs), so the photo library stays the one people see. Atlas illustrations are not used: their
+// still, drawn style does not sit with the photo pairs, so these rows show the tool icon and the
+// muscle map instead. Writes src/data/atlas-catalog.generated.ts.
 import fs from "node:fs";
 import path from "node:path";
-import sharp from "sharp";
 import { cleanSteps } from "../src/data/cleanSteps.mjs";
 import { exerciseKey, nameWords } from "../src/data/exerciseKey.mjs";
 
@@ -21,10 +20,7 @@ const COMMIT = "d46835681c450c1fb76d77e5e0cd74e799076e5e";
 const RAW = `https://raw.githubusercontent.com/yagizerentunay/open-exercise-atlas/${COMMIT}/`;
 
 const root = path.resolve(import.meta.dirname, "..");
-const imgDir = path.join(root, "public/atlas");
-fs.mkdirSync(imgDir, { recursive: true });
 const report = process.argv.includes("--report");
-const force = process.argv.includes("--force");
 
 /**
  * Atlas exercises that are the same movement as a seed exercise under another name. Found with
@@ -152,9 +148,21 @@ const seedText = fs.readFileSync(path.join(root, "src/data/seed-exercises.genera
 const seed = JSON.parse(seedText.slice(seedText.indexOf("= [") + 2, seedText.lastIndexOf("]") + 1));
 const seedKeys = new Map(seed.map((s) => [exerciseKey(s.name, s.equipment), s.name]));
 
+// free-exercise-db as the app has it (scripts/build-fedb-library.mjs), by the same tool mapping.
+const fedbText = fs.readFileSync(path.join(root, "src/data/fedb-library.generated.ts"), "utf8");
+const fedb = JSON.parse(fedbText.slice(fedbText.indexOf("= [") + 2, fedbText.lastIndexOf("]") + 1));
+const FEDB_EQUIPMENT = { barbell: "barbell", "e-z curl bar": "barbell", dumbbell: "dumbbell", cable: "cable", machine: "machine", kettlebells: "kettlebell", bands: "band", "body only": "bodyweight" };
+const fedbEq = (f) => (f.equipment === null ? "bodyweight" : (FEDB_EQUIPMENT[f.equipment] ?? "other"));
+const fedbKeys = new Set(fedb.map((f) => exerciseKey(f.name, fedbEq(f))));
+const fedbWords = fedb.map((f) => ({ eq: fedbEq(f), words: new Set(nameWords(f.name)) }));
+const inFedb = (name, equipment) => {
+  if (fedbKeys.has(exerciseKey(name, equipment))) return true;
+  const w = nameWords(name);
+  return fedbWords.some((f) => f.eq === equipment && w.every((x) => f.words.has(x)));
+};
+
 const atlas = await (await get(`${RAW}dist/exercises.en.json`)).json();
 const rows = [];
-const credits = { cc0: 0, mit: 0 };
 const skipped = [];
 for (const e of atlas) {
   if (!/^[a-z0-9-]+$/.test(e.id)) continue;
@@ -167,6 +175,10 @@ for (const e of atlas) {
     skipped.push(`${e.name} = ${seedKeys.get(key) ?? "(listed)"}`);
     continue;
   }
+  if (inFedb(name, equipment)) {
+    skipped.push(`${e.name} = free-exercise-db`);
+    continue;
+  }
   if (report) {
     const words = new Set(nameWords(name));
     for (const s of seed) {
@@ -175,19 +187,6 @@ for (const e of atlas) {
       const shared = [...words].filter((w) => sw.has(w)).length;
       if (shared / Math.max(words.size, sw.size) >= 0.6) console.log(`near: ${e.id} "${name}" ~ "${s.name}"`);
     }
-  }
-  const media = (e.media ?? []).find((m) => m.role === "reference" || m.role === "start");
-  let image = null;
-  if (media && /^media\/exercises\/[a-z0-9-]+\.webp$/.test(media.path)) {
-    const file = path.join(imgDir, `${e.id}.webp`);
-    if (force || !fs.existsSync(file)) {
-      const buf = Buffer.from(await (await get(RAW + media.path)).arrayBuffer());
-      fs.writeFileSync(file, await sharp(buf).resize(128, 128, { fit: "cover", position: "attention" }).webp({ quality: 60, effort: 6 }).toBuffer());
-      process.stdout.write(".");
-    }
-    image = RAW + media.path;
-    if (media.license === "MIT") credits.mit++;
-    else credits.cc0++;
   }
   const secondary = muscles(e.secondaryMuscles).filter((m) => !primary.includes(m));
   rows.push({
@@ -200,7 +199,7 @@ for (const e of atlas) {
     ...(equipment === "bodyweight" ? { isBodyweight: true } : {}),
     instructions: cleanSteps(e.instructions ?? []),
     formCues: [],
-    media: image ? { motionUrls: [image] } : {},
+    media: {},
   });
 }
 
@@ -214,8 +213,7 @@ const unique = rows.filter((r) => {
 });
 
 const ts = `// Generated by scripts/build-atlas-catalog.mjs from Open Exercise Atlas at ${COMMIT.slice(0, 7)}
-// (data CC0 1.0; illustrations CC0 1.0 or MIT, Monk Mode (c) 2026 Yagiz Eren Tunay). Do not edit
-// by hand: change the script and run it again.
+// (data CC0 1.0). Do not edit by hand: change the script and run it again.
 import type { ExerciseInput } from "./normalize";
 
 export const ATLAS_COMMIT = "${COMMIT}";
@@ -223,5 +221,5 @@ export const ATLAS_COMMIT = "${COMMIT}";
 export const ATLAS_INPUTS: ExerciseInput[] = ${JSON.stringify(unique)};
 `;
 fs.writeFileSync(path.join(root, "src/data/atlas-catalog.generated.ts"), ts);
-console.log(`\n${unique.length} exercises (${skipped.length} already in the seed library), images: ${credits.cc0} CC0, ${credits.mit} MIT`);
+console.log(`${unique.length} exercises (${skipped.length} already in the seed library or free-exercise-db)`);
 if (report) console.log(skipped.join("\n"));

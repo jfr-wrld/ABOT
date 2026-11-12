@@ -13,10 +13,10 @@ function remotePhotoOf(exercise: ThumbExercise): string | undefined {
   return url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? url : undefined;
 }
 
-/** The 128 px picture that ships with the app: seed exercises in /thumbs, the extended library in /atlas. */
-function bundledThumb(id: string): string | undefined {
+/** The 128 px photo that ships with the app: seed exercises in /thumbs, free-exercise-db ones in /thumbs/fedb. */
+export function bundledThumb(id: string): string | undefined {
   if (BUNDLED_THUMBS.has(id)) return `/thumbs/${id}.webp`;
-  return id.startsWith("atlas-") ? `/atlas/${id.slice(6)}.webp` : undefined;
+  return id.startsWith("fedb-") ? `/thumbs/fedb/${id.slice(5)}.webp` : undefined;
 }
 
 /** The best photo of an exercise for a larger picture: bundled first (works offline), else online. */
@@ -30,8 +30,8 @@ export function exercisePhoto(exercise: ThumbExercise): string | undefined {
 /**
  * A picture of the movement, in order of preference:
  * 1. a 128 px photo bundled with the app (seed exercises, scripts/make-exercise-thumbs.py; the
- *    extended library, scripts/build-atlas-catalog.mjs), so the library shows pictures offline;
- * 2. the exercise's own photo (free-exercise-db or Open Exercise Atlas), loaded lazily, when online;
+ *    free-exercise-db library, scripts/build-fedb-library.mjs), so the library shows photos offline;
+ * 2. the exercise's own free-exercise-db photo, loaded lazily, when online;
  * 3. a still from the app's own figure, mid-rep, worked muscles in Volt (no download; also the
  *    offline and failed-photo fallback);
  * 4. the equipment icon.

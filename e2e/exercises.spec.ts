@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("filters by muscle and equipment", async ({ page }) => {
   await page.goto("/exercises");
-  await expect(page.getByText("540 exercises")).toBeVisible();
+  await expect(page.getByText("1172 exercises")).toBeVisible();
   await choose(page, page.getByLabel("Muscle group"), "Chest");
   await choose(page, page.getByLabel("Equipment"), "Cable");
   await expect(page.getByRole("link", { name: /^Cable Fly/ })).toBeVisible();
@@ -28,7 +28,7 @@ test("creates a custom exercise and opens its detail", async ({ page }) => {
   await choose(page, page.getByLabel("Primary muscle"), "Back");
   await choose(page, page.getByLabel("Equipment", { exact: true }).last(), "Barbell");
   await page.getByRole("button", { name: "Add to library" }).click();
-  await expect(page.getByText("541 exercises")).toBeVisible();
+  await expect(page.getByText("1173 exercises")).toBeVisible();
   await page.getByRole("link", { name: /Kroc Row Variation/ }).click();
   await expect(page.getByRole("heading", { name: "Kroc Row Variation" })).toBeVisible();
   await expect(page.getByText("No completed working sets yet.")).toBeVisible();
@@ -94,7 +94,7 @@ test("the library switches between list and grid and remembers it", async ({ pag
 test("the extended library ships with the app: machines and cardio, with pictures, offline", async ({ page, context }) => {
   await page.goto("/exercises");
   // The extended library loads in its own chunk after start; then it needs no network.
-  await expect(page.getByText("540 exercises")).toBeVisible();
+  await expect(page.getByText("1172 exercises")).toBeVisible();
   await context.setOffline(true);
   const search = page.getByLabel("Search exercises");
   await search.fill("Bayesian");

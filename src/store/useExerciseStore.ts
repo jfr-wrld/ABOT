@@ -4,7 +4,7 @@ import type { Exercise, ExerciseDraft } from "@/types/workout";
 import { normalizeExercise } from "@/data/normalize";
 import { buildExerciseIndex } from "@/lib/sets";
 import { newId } from "@/lib/id";
-import { loadAtlas, mergeCatalogs } from "@/data/atlas";
+import { loadExtendedLibrary, withoutBuiltIn } from "@/data/extended-library";
 
 interface ExerciseState {
   /** Custom exercises plus catalog exercises the user has logged (persisted, backed up). */
@@ -12,9 +12,9 @@ interface ExerciseState {
   /** The optional downloaded catalog (stored separately, not backed up). */
   catalog: Exercise[];
   setCatalog: (rows: Exercise[]) => void;
-  /** The extended library that ships with the app (data/atlas); empty until its chunk loads. */
-  atlas: Exercise[];
-  loadAtlas: () => Promise<void>;
+  /** The extended library that ships with the app (data/extended-library); empty until it loads. */
+  extended: Exercise[];
+  loadExtended: () => Promise<void>;
   /** Videos the user pasted per exercise; works for seed exercises too. */
   mediaOverrides: Record<string, { customVideoUrl: string }>;
   setCustomVideo: (exerciseId: string, url: string | null) => void;
@@ -30,11 +30,11 @@ export const useExerciseStore = create<ExerciseState>()(
       custom: [],
       catalog: [],
       setCatalog: (catalog) => set({ catalog }),
-      atlas: [],
-      loadAtlas: async () => {
-        if (useExerciseStore.getState().atlas.length > 0) return;
+      extended: [],
+      loadExtended: async () => {
+        if (useExerciseStore.getState().extended.length > 0) return;
         try {
-          set({ atlas: await loadAtlas() });
+          set({ extended: await loadExtendedLibrary() });
         } catch {
           // A chunk that fails to load (an old cached page after an update) leaves the seed
           // library and any downloaded catalog; the next start tries again.
@@ -68,10 +68,10 @@ export const useExerciseStore = create<ExerciseState>()(
  * One index for the whole app, rebuilt only when the custom or catalog lists change. Built per
  * component before, so a workout with eight cards sorted about 1,000 exercises eight times.
  */
-let cached: { custom: unknown; catalog: unknown; atlas: unknown; index: ReturnType<typeof buildExerciseIndex> } | null = null;
-function sharedIndex(custom: Exercise[], catalog: Exercise[], atlas: Exercise[]) {
-  if (!cached || cached.custom !== custom || cached.catalog !== catalog || cached.atlas !== atlas) {
-    cached = { custom, catalog, atlas, index: buildExerciseIndex(custom, mergeCatalogs(atlas, catalog)) };
+let cached: { custom: unknown; catalog: unknown; extended: unknown; index: ReturnType<typeof buildExerciseIndex> } | null = null;
+function sharedIndex(custom: Exercise[], catalog: Exercise[], extended: Exercise[]) {
+  if (!cached || cached.custom !== custom || cached.catalog !== catalog || cached.extended !== extended) {
+    cached = { custom, catalog, extended, index: buildExerciseIndex(custom, withoutBuiltIn(extended, catalog)) };
   }
   return cached.index;
 }
@@ -79,12 +79,12 @@ function sharedIndex(custom: Exercise[], catalog: Exercise[], atlas: Exercise[])
 export function useAllExercises() {
   const custom = useExerciseStore((s) => s.custom);
   const catalog = useExerciseStore((s) => s.catalog);
-  const atlas = useExerciseStore((s) => s.atlas);
-  return useMemo(() => sharedIndex(custom, catalog, atlas), [custom, catalog, atlas]);
+  const extended = useExerciseStore((s) => s.extended);
+  return useMemo(() => sharedIndex(custom, catalog, extended), [custom, catalog, extended]);
 }
 
-/** One exercise by id, outside React (seed, Atlas, catalog or custom); undefined when unknown. */
+/** One exercise by id, outside React (seed, extended library or custom); undefined when unknown. */
 export function exerciseById(id: string): Exercise | undefined {
-  const { custom, catalog, atlas } = useExerciseStore.getState();
-  return sharedIndex(custom, catalog, atlas).byId[id];
+  const { custom, catalog, extended } = useExerciseStore.getState();
+  return sharedIndex(custom, catalog, extended).byId[id];
 }

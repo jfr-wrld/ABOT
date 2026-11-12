@@ -2,7 +2,7 @@ import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
 import Dexie from "dexie";
 import sample from "../../e2e/fixtures/catalog-sample.json";
-import { CATALOG_URL, loadCatalog, mapCatalogEntry } from "./catalog";
+import { FEDB_IMAGE_BASE, mapCatalogEntry } from "./catalog";
 import { SEED_EXERCISES } from "./exercises";
 import { createDexieRepository, createMemoryRepository, type Repository } from "./repo";
 import { AbotDB } from "./repo/dexie";
@@ -20,10 +20,9 @@ describe("mapCatalogEntry", () => {
     expect(e.category).toBe("compound");
     expect(e.isCatalog).toBe(true);
     expect(e.isCustom).toBeUndefined();
-    expect(e.media.motionUrls).toEqual([
-      "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Zercher_Squats/0.jpg",
-      "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Zercher_Squats/1.jpg",
-    ]);
+    // Photos come from the same pinned commit as the rows that ship with the app.
+    expect(FEDB_IMAGE_BASE).toMatch(/^https:\/\/raw\.githubusercontent\.com\/yuhonas\/free-exercise-db\/[0-9a-f]{40}\/exercises\/$/);
+    expect(e.media.motionUrls).toEqual([`${FEDB_IMAGE_BASE}Zercher_Squats/0.jpg`, `${FEDB_IMAGE_BASE}Zercher_Squats/1.jpg`]);
     expect(e.instructions.length).toBeGreaterThan(0);
     expect(e.instructions.join(" ")).not.toMatch(/—/);
   });
@@ -39,42 +38,14 @@ describe("mapCatalogEntry", () => {
     expect(mapCatalogEntry(raw("Barbell_Bench_Press_-_Medium_Grip"), seedSources)).toBeNull();
     expect(mapCatalogEntry(raw("EZ-Bar_Curl"), seedSources)).toBeNull();
   });
+  it("names the lift first and its tool in brackets", () => {
+    const e = mapCatalogEntry({ ...raw("Zercher_Squats"), id: "X", name: "Barbell Rear Delt Row - Wide Grip" }, seedSources)!;
+    expect(e.name).toBe("Rear Delt Row, Wide Grip (Barbell)");
+  });
   it("rejects entries without a usable muscle or name", () => {
     expect(mapCatalogEntry({ ...raw("Zercher_Squats"), primaryMuscles: ["wings"] }, seedSources)).toBeNull();
     expect(mapCatalogEntry({ ...raw("Zercher_Squats"), name: "" }, seedSources)).toBeNull();
     expect(mapCatalogEntry("junk", seedSources)).toBeNull();
-  });
-});
-
-describe("loadCatalog", () => {
-  const ok = (body: unknown) => async (url: string) => {
-    expect(url).toBe(CATALOG_URL);
-    return new Response(JSON.stringify(body), { status: 200 });
-  };
-  it("stores the mapped entries and returns how many", async () => {
-    const repo = createMemoryRepository();
-    const rows = await loadCatalog(ok(sample), repo);
-    expect(rows.map((r) => r.id).sort()).toEqual([
-      "fedb-Bicycling",
-      "fedb-Kneeling_Hip_Flexor",
-      "fedb-Medicine_Ball_Chest_Pass",
-      "fedb-Zercher_Squats",
-    ]);
-    expect(await repo.catalog.all()).toHaveLength(4);
-  });
-  it("explains a failed download and leaves the stored catalog alone", async () => {
-    const repo = createMemoryRepository();
-    await loadCatalog(ok(sample), repo);
-    await expect(loadCatalog(async () => new Response("", { status: 503 }), repo)).rejects.toThrow(
-      "Could not download the catalog (HTTP 503). Check your connection and try again.",
-    );
-    await expect(
-      loadCatalog(async () => {
-        throw new TypeError("Failed to fetch");
-      }, repo),
-    ).rejects.toThrow("Could not download the catalog. Check your connection and try again.");
-    await expect(loadCatalog(ok({ not: "a list" }), repo)).rejects.toThrow("The catalog file was not in the expected format.");
-    expect(await repo.catalog.all()).toHaveLength(4);
   });
 });
 

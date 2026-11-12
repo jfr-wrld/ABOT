@@ -89,7 +89,7 @@ export async function hydrateStores(repo: Repository): Promise<void> {
     loadingFromRepo = false;
   }
   // The extended library loads beside the saved data, in its own chunk, once per page.
-  void useExerciseStore.getState().loadAtlas();
+  void useExerciseStore.getState().loadExtended();
 }
 
 /** Everything the app holds in memory, which includes changes that could not be saved yet. */

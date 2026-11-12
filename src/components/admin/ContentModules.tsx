@@ -5,57 +5,32 @@ import { Plus, Trash2 } from "lucide-react";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useLocationStore } from "@/store/useLocationStore";
-import { getActiveRepository } from "@/store/persistence";
-import { loadCatalog } from "@/data/catalog";
 import { ROUTINE_TEMPLATES, SPLITS, templateToRoutine } from "@/lib/seed-routines";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS, type Equipment, type Exercise, type MuscleGroup } from "@/types/workout";
-import { Note, Panel, cls, errText } from "./ui";
+import { Note, Panel, cls } from "./ui";
 
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
 const MUSCLES = (Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[]).filter((m) => m !== "cardio");
 
-const source = (e: Exercise) => (e.isCustom ? "custom" : e.id.startsWith("atlas-") ? "atlas" : e.isCatalog ? "catalog" : "seed");
+/** seed: the core list; library: the built-in free-exercise-db and Atlas rows; custom: the lifter's own. */
+const source = (e: Exercise) => (e.isCustom ? "custom" : e.isCatalog ? "library" : "seed");
 
 /* --------------------------------------------------------------- exercises */
 
 export function ExercisesModule() {
   const { list } = useAllExercises();
   const custom = useExerciseStore((s) => s.custom);
-  const catalog = useExerciseStore((s) => s.catalog);
-  const { addCustom, updateCustom, removeCustom, setCatalog } = useExerciseStore.getState();
+  const { addCustom, updateCustom, removeCustom } = useExerciseStore.getState();
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<"all" | "seed" | "custom" | "catalog">("all");
+  const [filter, setFilter] = useState<"all" | "seed" | "custom" | "library">("all");
   const [editing, setEditing] = useState<Exercise | "new" | null>(null);
   const [note, setNote] = useState<{ text: string; error?: boolean } | null>(null);
-  const [busy, setBusy] = useState(false);
 
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return list.filter((e) => (filter === "all" || source(e) === filter) && (!needle || e.name.toLowerCase().includes(needle)));
   }, [list, q, filter]);
-  const counts = { seed: list.filter((e) => source(e) === "seed").length, custom: custom.length, catalog: catalog.length };
-
-  async function catalogAction(kind: "load" | "clear") {
-    const repo = getActiveRepository();
-    if (!repo) return setNote({ text: "Saved data is not loaded yet.", error: true });
-    setBusy(true);
-    setNote(null);
-    try {
-      if (kind === "load") {
-        const loaded = await loadCatalog((u) => fetch(u), repo);
-        setCatalog(loaded);
-        setNote({ text: `${loaded.length} catalog exercises on this device.` });
-      } else {
-        await repo.catalog.clear();
-        setCatalog([]);
-        setNote({ text: "Catalog removed from this device." });
-      }
-    } catch (e) {
-      setNote({ text: errText(e), error: true });
-    } finally {
-      setBusy(false);
-    }
-  }
+  const counts = { seed: list.filter((e) => source(e) === "seed").length, custom: custom.length, library: list.filter((e) => source(e) === "library").length };
 
   return (
     <>
@@ -73,7 +48,7 @@ export function ExercisesModule() {
         <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name" aria-label="Search exercises" className={cls.input} />
           <div role="radiogroup" aria-label="Source" className="grid grid-cols-4 gap-1">
-            {(["all", "seed", "custom", "catalog"] as const).map((f) => (
+            {(["all", "seed", "custom", "library"] as const).map((f) => (
               <button
                 key={f}
                 type="button"
@@ -121,6 +96,7 @@ export function ExercisesModule() {
             </tbody>
           </table>
           {rows.length > 300 && <Note>Showing 300 of {rows.length}. Narrow the search.</Note>}
+          {note && <Note tone={note.error ? undefined : "ok"}>{note.text}</Note>}
         </div>
       </Panel>
 
@@ -141,21 +117,6 @@ export function ExercisesModule() {
           }}
         />
       )}
-
-      <Panel id="x-cat" title="Full catalog (free-exercise-db)" scope="device">
-        <p className="font-mono text-xs tabular-nums text-zinc-400">{catalog.length ? `${catalog.length} exercises downloaded` : "Not downloaded on this device"}</p>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" disabled={busy} onClick={() => void catalogAction("load")} className={cls.volt}>
-            {catalog.length ? "Download again" : "Download catalog"}
-          </button>
-          {catalog.length > 0 && (
-            <button type="button" disabled={busy} onClick={() => void catalogAction("clear")} className={cls.ghost}>
-              Remove catalog
-            </button>
-          )}
-        </div>
-        {note && <Note tone={note.error ? "error" : "ok"}>{note.text}</Note>}
-      </Panel>
     </>
   );
 }

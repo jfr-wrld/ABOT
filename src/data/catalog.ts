@@ -1,16 +1,15 @@
 import type { Equipment, Exercise, ExerciseCategory, MuscleGroup } from "@/types/workout";
 import { normalizeExercise } from "./normalize";
 import { cleanSteps } from "./cleanSteps.mjs";
-import type { Repository } from "./repo";
-import { SEED_EXERCISES } from "./exercises";
+import { FEDB_COMMIT } from "./fedb-commit";
+import { tidyName } from "./exerciseName.mjs";
 
-/** free-exercise-db (public domain, Unlicense): about 870 exercises, roughly 1 MB of JSON. */
-// Pinned to a commit: a later change to that repository reaches the app only when ABOT moves the pin.
-const CATALOG_COMMIT = "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5";
-export const CATALOG_URL = `https://raw.githubusercontent.com/yuhonas/free-exercise-db/${CATALOG_COMMIT}/dist/exercises.json`;
-/** The catalog is about 1 MB; anything far larger is not it. */
-const CATALOG_MAX_BYTES = 10 * 1024 * 1024;
-const IMAGE_BASE = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/";
+/**
+ * free-exercise-db (public domain, Unlicense) rows as an ABOT exercise. The rows ship with the
+ * app (scripts/build-fedb-library.mjs); their photos load from the same pinned commit, so a later
+ * change to that repository reaches the app only when ABOT moves the pin.
+ */
+export const FEDB_IMAGE_BASE = `https://raw.githubusercontent.com/yuhonas/free-exercise-db/${FEDB_COMMIT}/exercises/`;
 
 const EQUIPMENT: Record<string, Equipment> = {
   barbell: "barbell",
@@ -72,7 +71,8 @@ export function mapCatalogEntry(raw: unknown, seedSourceIds: Set<string>): Exerc
   return {
     ...normalizeExercise({
       id: `fedb-${sourceId}`,
-      name,
+      // The dataset says "Barbell Bench Press - Medium Grip"; the library reads "Bench Press, Medium Grip (Barbell)".
+      name: tidyName(name, equipment, category),
       equipment,
       primaryMuscles,
       secondaryMuscles: toMuscles(raw.secondaryMuscles).filter((m) => !primaryMuscles.includes(m)),
@@ -80,40 +80,9 @@ export function mapCatalogEntry(raw: unknown, seedSourceIds: Set<string>): Exerc
       category,
       instructions: cleanSteps(raw.instructions),
       formCues: [],
-      media: images.length ? { motionUrls: images.slice(0, 2).map((i) => IMAGE_BASE + i) } : {},
+      media: images.length ? { motionUrls: images.slice(0, 2).map((i) => FEDB_IMAGE_BASE + i) } : {},
       sourceId,
     }),
     isCatalog: true,
   };
-}
-
-/**
- * Downloads the catalog, maps it, and replaces the stored catalog in one transaction. On any
- * failure the stored catalog is left as it was and the error says what to do.
- */
-export async function loadCatalog(
-  fetchFn: (url: string) => Promise<Response>,
-  repo: Repository,
-  seedSourceIds: Set<string> = new Set(SEED_EXERCISES.map((e) => e.sourceId).filter((x): x is string => !!x)),
-): Promise<Exercise[]> {
-  let res: Response;
-  try {
-    res = await fetchFn(CATALOG_URL);
-  } catch {
-    throw new Error("Could not download the catalog. Check your connection and try again.");
-  }
-  if (!res.ok) throw new Error(`Could not download the catalog (HTTP ${res.status}). Check your connection and try again.`);
-  if (Number(res.headers?.get("content-length") ?? 0) > CATALOG_MAX_BYTES) throw new Error("The catalog file was not in the expected format.");
-  let data: unknown;
-  try {
-    const text = await res.text();
-    if (text.length > CATALOG_MAX_BYTES) throw new Error("too large");
-    data = JSON.parse(text);
-  } catch {
-    throw new Error("The catalog file was not in the expected format.");
-  }
-  if (!Array.isArray(data)) throw new Error("The catalog file was not in the expected format.");
-  const rows = data.map((d) => mapCatalogEntry(d, seedSourceIds)).filter((x): x is Exercise => x !== null);
-  await repo.catalog.replaceAll(rows);
-  return rows;
 }

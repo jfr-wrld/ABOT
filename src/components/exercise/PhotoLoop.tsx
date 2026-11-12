@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
 import type { Exercise } from "@/types/workout";
-import { BUNDLED_THUMBS } from "@/data/exercise-thumbs.generated";
+import { bundledThumb } from "./ExerciseThumb";
+import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { useT } from "@/i18n";
 import { useAppActive } from "@/lib/native/app-active";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
@@ -49,7 +50,7 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
     return () => clearInterval(timer);
   }, [moving, appActive]);
 
-  const bundled = BUNDLED_THUMBS.has(exercise.id) ? `/thumbs/${exercise.id}.webp` : null;
+  const bundled = bundledThumb(exercise.id) ?? null;
 
   return (
     <div className={`force-dark relative overflow-hidden bg-black ${className}`}>
@@ -72,8 +73,15 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
         // eslint-disable-next-line @next/next/no-img-element -- bundled 128 px photo
         <img src={bundled} alt={t("{name}, start position", { name: exercise.name })} className="absolute inset-0 size-full object-cover" />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-ink/40">
-          <EquipmentIcon equipment={exercise.equipment} size={56} />
+        // No photo of this one (the newer machines from Open Exercise Atlas): the muscles it works,
+        // with its tool in the corner, the same picture every exercise has under Anatomy.
+        <div className="absolute inset-0 flex items-center justify-center p-4">
+          <div className="h-full max-h-full" style={{ aspectRatio: "1448 / 1360" }}>
+            <MuscleMap primary={exercise.primaryMuscles} secondary={exercise.secondaryMuscles} width={420} />
+          </div>
+          <span className="absolute bottom-3 right-3 flex size-10 items-center justify-center rounded-lg bg-black/70 text-accent">
+            <EquipmentIcon equipment={exercise.equipment} size={22} />
+          </span>
         </div>
       )}
 

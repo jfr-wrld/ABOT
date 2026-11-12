@@ -21,10 +21,8 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { ExerciseForm } from "@/components/exercises/ExerciseForm";
-import { CatalogSection } from "@/components/exercises/CatalogSection";
 import { buildPRTable } from "@/lib/calc";
 import { exercisePath } from "@/lib/routes";
-import { isAtlas } from "@/data/atlas";
 import { useT } from "@/i18n";
 import { muscleLabel, muscleNames } from "@/components/exercise/MuscleTags";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
@@ -42,8 +40,6 @@ export default function ExercisesPage() {
 
 function LibraryScreen() {
   const { list, byId } = useAllExercises();
-  // The extended library is part of ABOT; only the optional download counts separately.
-  const downloaded = list.filter((e) => e.isCatalog && !isAtlas(e)).length;
   const addCustom = useExerciseStore((s) => s.addCustom);
   const sessions = useWorkoutStore((s) => s.sessions);
   const unit = useSettingsStore((s) => s.weightUnit);
@@ -99,14 +95,11 @@ function LibraryScreen() {
     <main className="flex flex-1 flex-col">
       <PageHeader
         title={t("Exercises")}
-        subtitle={downloaded > 0 ? t("{n} exercises, {k} downloaded", { n: list.length, k: downloaded }) : t("{n} exercises", { n: list.length })}
+        subtitle={t("{n} exercises", { n: list.length })}
         action={
-          <div className="flex shrink-0 gap-2">
-            <CatalogSection />
-            <Button variant="primary" onClick={() => setFormOpen(true)}>
-              <Plus aria-hidden="true" size={18} /> {t("New")}
-            </Button>
-          </div>
+          <Button variant="primary" onClick={() => setFormOpen(true)}>
+            <Plus aria-hidden="true" size={18} /> {t("New")}
+          </Button>
         }
       />
 
@@ -277,12 +270,11 @@ function LibraryScreen() {
   );
 }
 
-/** "Custom" for the lifter's own, "Downloaded" for the optional catalog: bordered, so they read. */
+/** "Custom" on the lifter's own exercises: bordered, so it reads at a glance. */
 function Badges({ exercise: e }: { exercise: Exercise }) {
   const t = useT();
-  const label = e.isCustom ? t("Custom") : e.isCatalog && !isAtlas(e) ? t("Downloaded") : null;
-  if (!label) return null;
-  return <span className="shrink-0 rounded-full border border-line-strong px-1.5 py-px text-[11px] font-semibold text-text-muted">{label}</span>;
+  if (!e.isCustom) return null;
+  return <span className="shrink-0 rounded-full border border-line-strong px-1.5 py-px text-[11px] font-semibold text-text-muted">{t("Custom")}</span>;
 }
 
 const SORTS: LibrarySort[] = ["muscle", "az", "used", "recent"];
