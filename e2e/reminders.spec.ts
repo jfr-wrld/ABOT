@@ -4,7 +4,7 @@ import { choose, freshStart } from "./helpers";
 
 // The default headless shell denies notifications whatever the test grants; full Chromium in
 // its new headless mode behaves like the real browser.
-test.use({ channel: "chromium" });
+test.use({ channel: "chromium", serviceWorkers: "allow" });
 
 async function shownNotifications(page: Page) {
   return page.evaluate(async () => {

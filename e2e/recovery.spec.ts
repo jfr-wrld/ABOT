@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { addExercise, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { finishedSession, seedDb } from "./seed-db";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -43,4 +44,14 @@ test("the recovery map colours trained muscles and explains each one on tap", as
   await page.keyboard.press("Enter");
   await expect(status).toContainText("Not trained in the last 6 days");
   await expect(status).toContainText("Ready now");
+});
+
+test("forty hours after a chest day the map shows the chest ready again", async ({ page }) => {
+  await page.clock.install();
+  await seedDb(page, { sessions: [finishedSession({ "bench-press-barbell": [[60, 8], [60, 8], [60, 8], [60, 8], [60, 8]] }, { daysAgo: 0.04 })] });
+  const tile = page.getByRole("button", { name: /^Muscle recovery:/ });
+  await expect(tile).toHaveAccessibleName("Muscle recovery: 14 of 17 muscles ready. Open the map.");
+  // No waiting: the test clock jumps forty hours and the tile's own timer catches up.
+  await page.clock.fastForward("40:00:00");
+  await expect(tile).toHaveAccessibleName("Muscle recovery: 17 of 17 muscles ready. Open the map.");
 });

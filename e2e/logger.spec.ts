@@ -41,6 +41,20 @@ test("completing a set starts the rest timer and updates the header", async ({ p
   await expect(timer).toHaveCount(0);
 });
 
+test("the rest timer runs out on the test clock, with no real wait", async ({ page }) => {
+  await page.clock.install();
+  await freshStart(page);
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  const timer = page.getByRole("timer");
+  await expect(timer).toHaveAttribute("aria-label", /Rest, 1:(29|30) left/);
+  await page.clock.fastForward("01:00");
+  await expect(timer).toHaveAttribute("aria-label", /Rest, 0:(29|30) left/);
+  await page.clock.fastForward("00:31");
+  await expect(timer).toHaveAttribute("aria-label", "Rest finished");
+});
+
 test("active workout survives reload", async ({ page }) => {
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");

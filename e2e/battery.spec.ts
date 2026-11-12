@@ -18,6 +18,11 @@ async function endlessAnimations(page: Page): Promise<string[]> {
 }
 
 test.describe("battery", () => {
+  // These tests are about animation, so motion stays on; the test clock skips the waiting.
+  test.use({ reducedMotion: "no-preference" });
+  test.beforeEach(async ({ page }) => {
+    await page.clock.install();
+  });
   test("the workout screen comes to rest between sets", async ({ page }) => {
     await freshStart(page);
     await startEmptyWorkout(page);
@@ -25,10 +30,10 @@ test.describe("battery", () => {
     await logSet(page, 1, "60", "8");
     // The rest bar runs as one timed animation, not an endless one.
     await expect(page.getByRole("timer")).toBeVisible();
-    await page.waitForTimeout(5000);
+    await page.clock.fastForward(5000);
     expect(await endlessAnimations(page)).toEqual([]);
     await page.getByRole("button", { name: "Skip rest" }).click();
-    await page.waitForTimeout(5000);
+    await page.clock.fastForward(5000);
     expect(await endlessAnimations(page)).toEqual([]);
   });
 
@@ -38,7 +43,7 @@ test.describe("battery", () => {
     await addExercise(page, "Bench Press (Barbell)");
     await page.goto("/");
     await expect(page.getByRole("link", { name: /^Workout in progress/ })).toBeVisible();
-    await page.waitForTimeout(8000);
+    await page.clock.fastForward(8000);
     expect(await endlessAnimations(page)).toEqual([]);
   });
 });

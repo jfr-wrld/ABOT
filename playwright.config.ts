@@ -1,22 +1,36 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const PORT = 3100;
+// E2E_DEV=1 runs against `next dev` (hot reload, slow first visit to each page) for debugging a
+// test while editing. The default is a production build: every page is compiled once, up front.
+const dev = process.env.E2E_DEV === "1";
+
 export default defineConfig({
   testDir: "e2e",
-  fullyParallel: false,
-  workers: 1,
+  // Every test opens its own browser context, so its IndexedDB and storage start empty and no
+  // two tests share state: they can run side by side.
+  fullyParallel: true,
+  workers: dev ? 1 : "100%",
   retries: 0,
   reporter: [["list"]],
   use: {
+    // A phone first: the app is built for one.
     ...devices["Pixel 7"],
-    baseURL: "http://localhost:3100",
+    baseURL: `http://localhost:${PORT}`,
     trace: "off",
+    // Entrances and sheet slides finish at once; tests about motion opt back in (battery).
+    reducedMotion: "reduce",
+    // The reminder worker is the only service worker; its tests allow it (reminders.spec).
+    serviceWorkers: "block",
   },
   webServer: {
-    command: "npm run dev -- -p 3100",
-    url: "http://localhost:3100",
+    // `next start`, not a static export of `out/`: the web build keeps its server headers
+    // (the CSP the security tests check). The static export is the Android build.
+    command: dev ? `npm run dev -- -p ${PORT}` : `npm run build && npm run start -- -p ${PORT}`,
+    url: `http://localhost:${PORT}`,
     // A server left running from an earlier build silently tests old code; reuse only on request
-    // (E2E_REUSE_SERVER=1, e.g. to run the suite against `next start`).
+    // (E2E_REUSE_SERVER=1, e.g. after building once and running a few specs repeatedly).
     reuseExistingServer: process.env.E2E_REUSE_SERVER === "1",
-    timeout: 120_000,
+    timeout: 600_000,
   },
 });
