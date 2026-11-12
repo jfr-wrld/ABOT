@@ -1,9 +1,11 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { Select } from "@/components/ui/Select";
 import Link from "next/link";
-import { Plus, Star, X } from "lucide-react";
+import { LayoutGrid, List, Plus, Search, SlidersHorizontal, Star, X } from "lucide-react";
+import { Sheet } from "@/components/ui/Sheet";
+import { feedback } from "@/lib/feedback";
+import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
@@ -26,7 +28,7 @@ import { buildPRTable } from "@/lib/calc";
 import { exercisePath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { muscleLabel, muscleNames } from "@/components/exercise/MuscleTags";
-import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
+import { useViewMode, type ViewMode } from "@/components/ui/ViewToggle";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -49,26 +51,33 @@ function LibraryScreen() {
   // The field follows every key; the list of about 1,000 rows filters a beat behind it.
   const search = useDeferredValue(query);
   const [muscle, setMuscle] = useState<MuscleGroup | "">("");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [equipment, setEquipment] = useState<Equipment | "">("");
   const [formOpen, setFormOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [sort, setSort] = useLibrarySort();
   const [view, setView] = useViewMode("exercises");
   const t = useT();
+  // The workout capsule, when one is running, rises above the floating button instead of covering it.
+  useActionBarSpace(60);
 
   const prTable = useMemo(() => buildPRTable(sessions, byId, { allGyms: true }), [sessions, byId]);
   const usage = useMemo(() => exerciseUsage(sessions), [sessions]);
   // Browsing lists exercises with a real photo; favourites and anything already done stay listed.
   const keep = useMemo(() => new Set([...favorites, ...Object.keys(usage.uses)]), [favorites, usage]);
-  const filtered = useMemo(
-    () => filterExercises(list, { query: search, muscle, equipment, photos: { keep } }, { favorites, uses: usage.uses }),
-    [list, search, muscle, equipment, favorites, usage, keep],
-  );
+  const filtered = useMemo(() => {
+    const rows = filterExercises(list, { query: search, muscle, equipment, photos: { keep } }, { favorites, uses: usage.uses });
+    return favoritesOnly ? rows.filter((e) => favorites.has(e.id)) : rows;
+  }, [list, search, muscle, equipment, favorites, usage, keep, favoritesOnly]);
   const browsable = useMemo(() => list.filter((e) => shownWithoutSearch(e, keep)).length, [list, keep]);
   const searching = search.trim().length > 0;
-  const filtering = searching || muscle !== "" || equipment !== "";
+  const filtering = searching || muscle !== "" || equipment !== "" || favoritesOnly;
+  // What the floating button counts: the choices that live in the sheet.
+  const sheetChoices = (equipment !== "" ? 1 : 0) + (sort !== "muscle" ? 1 : 0);
   const clear = () => {
     setQuery("");
     setMuscle("");
+    setFavoritesOnly(false);
     setEquipment("");
   };
 
@@ -77,6 +86,12 @@ function LibraryScreen() {
     if (searching) return [{ key: "results", title: t("Results"), items: filtered }];
     const favs = filtered.filter((e) => favorites.has(e.id));
     const out: { key: string; title: string; muscle?: MuscleGroup; items: Exercise[] }[] = favs.length ? [{ key: "favorites", title: t("Favorites"), items: favs }] : [];
+    // The Favorites pill: that one list, in the chosen order.
+    if (favoritesOnly) {
+      if (sort === "used") favs.sort((a, b) => (usage.uses[b.id] ?? 0) - (usage.uses[a.id] ?? 0) || a.name.localeCompare(b.name));
+      else if (sort === "recent") favs.sort((a, b) => (usage.lastDone[b.id] ?? 0) - (usage.lastDone[a.id] ?? 0) || a.name.localeCompare(b.name));
+      return out;
+    }
     if (sort === "muscle") {
       const by = new Map<MuscleGroup, Exercise[]>();
       for (const e of filtered) {
@@ -91,7 +106,7 @@ function LibraryScreen() {
     else if (sort === "recent") sorted.sort((a, b) => (usage.lastDone[b.id] ?? 0) - (usage.lastDone[a.id] ?? 0) || a.name.localeCompare(b.name));
     out.push({ key: "all", title: t("All exercises"), items: sorted });
     return out;
-  }, [filtered, favorites, searching, sort, usage, t]);
+  }, [filtered, favorites, favoritesOnly, searching, sort, usage, t]);
 
   const best = (e: Exercise) => prTable[e.id]?.heaviest_weight;
 
@@ -111,7 +126,8 @@ function LibraryScreen() {
         <label htmlFor="lib-search" className="sr-only">
           {t("Search exercises")}
         </label>
-        <div className="flex items-center gap-2">
+        <div className="relative">
+          <Search aria-hidden="true" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             id="lib-search"
             type="search"
@@ -119,63 +135,78 @@ function LibraryScreen() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("Name, muscle or equipment")}
             autoComplete="off"
-            className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
+            className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 pl-9 pr-3 text-base placeholder:text-text-muted"
           />
-          <ViewToggle value={view} onChange={setView} />
-        </div>
-        <div className="mt-2 flex gap-2">
-          <label htmlFor="lib-muscle" className="sr-only">
-            {t("Muscle group")}
-          </label>
-          <Select
-            id="lib-muscle"
-            value={muscle}
-            onChange={setMuscle}
-            options={[
-              { value: "", label: t("All muscles"), icon: <MuscleIcon /> },
-              ...MUSCLES.map((m) => ({ value: m, label: muscleLabel(m, t), icon: <MuscleIcon muscle={m} /> })),
-            ]}
-            className="flex-1"
-          />
-          <label htmlFor="lib-equipment" className="sr-only">
-            {t("Equipment")}
-          </label>
-          <Select
-            id="lib-equipment"
-            value={equipment}
-            onChange={setEquipment}
-            options={[
-              { value: "", label: t("All equipment"), icon: <EquipmentIcon /> },
-              ...EQUIPMENT.map((eq) => ({ value: eq, label: t(EQUIPMENT_LABELS[eq]), icon: <EquipmentIcon equipment={eq} /> })),
-            ]}
-            className="flex-1"
-          />
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          {!searching ? (
-            <div className="flex items-center gap-2">
-              <label htmlFor="lib-sort" className="text-xs text-text-muted">
-                {t("Order")}
-              </label>
-              <Select id="lib-sort" value={sort} onChange={setSort} options={SORTS.map((v) => ({ value: v, label: t(SORT_LABEL[v]) }))} />
-            </div>
-          ) : (
-            <p className="text-xs text-text-muted" role="status">
-              {t.n(filtered.length, "{n} match", "{n} matches")}
-            </p>
-          )}
-          {filtering && (
-            <Button variant="ghost" onClick={clear} className="shrink-0">
-              <X aria-hidden="true" size={16} />
-              {t("Clear filters")}
-            </Button>
-          )}
         </div>
       </div>
 
+      {/* What to show, one tap each: everything, the favourites, or one muscle. */}
+      <div role="group" aria-label={t("Show")} className="mt-3 flex gap-1.5 overflow-x-auto px-4 pb-1">
+        <Pill pressed={!favoritesOnly && muscle === ""} onClick={() => { setFavoritesOnly(false); setMuscle(""); }}>
+          {t("All")}
+        </Pill>
+        <Pill pressed={favoritesOnly} onClick={() => { setFavoritesOnly(!favoritesOnly); setMuscle(""); }}>
+          <Star aria-hidden="true" size={15} className="text-accent" fill={favoritesOnly ? "currentColor" : "none"} />
+          {t("My favorites")}
+        </Pill>
+        {MUSCLES.map((m) => (
+          <Pill key={m} pressed={muscle === m} onClick={() => { setMuscle(muscle === m ? "" : m); setFavoritesOnly(false); }}>
+            <MuscleIcon muscle={m} size={20} />
+            {muscleLabel(m, t)}
+          </Pill>
+        ))}
+      </div>
+
+      {(searching || filtering) && (
+        <div className="flex min-h-11 items-center justify-between gap-2 px-4">
+          <p className="text-xs text-text-muted" role="status">
+            {t.n(filtered.length, "{n} match", "{n} matches")}
+          </p>
+          <Button variant="ghost" onClick={clear} className="shrink-0">
+            <X aria-hidden="true" size={16} />
+            {t("Clear filters")}
+          </Button>
+        </div>
+      )}
+
+      {/* Floats above the dock, so it is in reach wherever the list has scrolled to. */}
+      <button
+        type="button"
+        onClick={() => setSheetOpen(true)}
+        aria-haspopup="dialog"
+        aria-label={sheetChoices ? t("Sort and filter, {n} set", { n: sheetChoices }) : t("Sort and filter")}
+        className="fixed left-1/2 z-20 flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-text px-4 text-sm font-semibold text-bg shadow-lg transition-transform active:scale-95"
+        style={{ bottom: "calc(var(--dock-h, 96px) - 4px + env(safe-area-inset-bottom))" }}
+      >
+        <SlidersHorizontal aria-hidden="true" size={16} />
+        {t("Sort & filter")}
+        {sheetChoices > 0 && (
+          <span aria-hidden="true" className="num flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-on-accent">
+            {sheetChoices}
+          </span>
+        )}
+      </button>
+      <FilterSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        equipment={equipment}
+        setEquipment={setEquipment}
+        sort={sort}
+        setSort={setSort}
+        view={view}
+        setView={setView}
+        count={filtered.length}
+        onReset={() => {
+          setEquipment("");
+          setSort("muscle");
+        }}
+      />
+
       {filtered.length === 0 ? (
         <div className="mx-4 mt-4 panel flex flex-col items-center gap-3 px-4 py-8 text-center">
-          <p className="text-sm text-text-muted">{t("No exercise matches these filters.")}</p>
+          <p className="text-sm text-text-muted">
+            {favoritesOnly && favorites.size === 0 ? t("No favorites yet. Tap the star on an exercise to keep it here.") : t("No exercise matches these filters.")}
+          </p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button onClick={clear}>{t("Clear filters")}</Button>
             <Button variant="primary" onClick={() => setFormOpen(true)}>
@@ -259,6 +290,8 @@ function LibraryScreen() {
           ))}
         </div>
       )}
+      {/* Room for the floating Sort & filter button, so the last row scrolls clear of it. */}
+      <div aria-hidden="true" className="h-20" />
 
       {formOpen && (
         <ExerciseForm
@@ -272,6 +305,113 @@ function LibraryScreen() {
         />
       )}
     </main>
+  );
+}
+
+/** One choice in the Show row: All, My favorites, or a muscle. */
+function Pill({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={() => {
+        if (!pressed) feedback.tick();
+        onClick();
+      }}
+      className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors ${
+        pressed ? "border-text bg-text text-bg" : "border-line-strong bg-surface text-text-muted hover:text-text"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * The choices made now and then, kept out of the way: equipment, order and list or grid. The
+ * footer shows how many exercises the choices leave.
+ */
+function FilterSheet({
+  open,
+  onClose,
+  equipment,
+  setEquipment,
+  sort,
+  setSort,
+  view,
+  setView,
+  count,
+  onReset,
+}: {
+  open: boolean;
+  onClose: () => void;
+  equipment: Equipment | "";
+  setEquipment: (e: Equipment | "") => void;
+  sort: LibrarySort;
+  setSort: (s: LibrarySort) => void;
+  view: ViewMode;
+  setView: (v: ViewMode) => void;
+  count: number;
+  onReset: () => void;
+}) {
+  const t = useT();
+  const chip = (on: boolean) =>
+    `flex min-h-11 items-center gap-2 rounded-ctl border px-3 text-sm font-semibold transition-colors ${
+      on ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted hover:text-text"
+    }`;
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={t("Sort & filter")}
+      footer={
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+          <Button variant="ghost" onClick={onReset}>
+            {t("Reset")}
+          </Button>
+          <Button variant="primary" onClick={onClose}>
+            {t.n(count, "Show {n} exercise", "Show {n} exercises")}
+          </Button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-5">
+        <section role="radiogroup" aria-label={t("Order")}>
+          <h3 className="label-caps mb-2">{t("Order")}</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {SORTS.map((v) => (
+              <button key={v} type="button" role="radio" aria-checked={sort === v} onClick={() => setSort(v)} className={chip(sort === v)}>
+                {t(SORT_LABEL[v])}
+              </button>
+            ))}
+          </div>
+        </section>
+        <section role="radiogroup" aria-label={t("Equipment")}>
+          <h3 className="label-caps mb-2">{t("Equipment")}</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {(["", ...EQUIPMENT] as (Equipment | "")[]).map((eq) => (
+              <button key={eq || "all"} type="button" role="radio" aria-checked={equipment === eq} onClick={() => setEquipment(eq)} className={chip(equipment === eq)}>
+                <EquipmentIcon equipment={eq || undefined} size={20} />
+                {eq ? t(EQUIPMENT_LABELS[eq]) : t("All equipment")}
+              </button>
+            ))}
+          </div>
+        </section>
+        <section role="radiogroup" aria-label={t("View")}>
+          <h3 className="label-caps mb-2">{t("View")}</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" role="radio" aria-checked={view === "list"} onClick={() => setView("list")} className={chip(view === "list")}>
+              <List aria-hidden="true" size={18} />
+              {t("List")}
+            </button>
+            <button type="button" role="radio" aria-checked={view === "grid"} onClick={() => setView("grid")} className={chip(view === "grid")}>
+              <LayoutGrid aria-hidden="true" size={18} />
+              {t("Grid")}
+            </button>
+          </div>
+        </section>
+      </div>
+    </Sheet>
   );
 }
 

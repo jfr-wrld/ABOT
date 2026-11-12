@@ -126,3 +126,17 @@ export async function setBodyWeight(page: Page, kg: string): Promise<void> {
   await page.getByRole("button", { name: /^(Log weight|Update)$/ }).click();
   await waitForSavedSetting(page, "bodyweightKg", Number(kg));
 }
+
+/** The Exercises library: a pill in the Show row (All, My favorites, a muscle). */
+export async function showPill(page: Page, name: string): Promise<void> {
+  await page.getByRole("group", { name: "Show" }).getByRole("button", { name, exact: true }).click();
+}
+
+/** The Exercises library: opens Sort & filter, picks each option by its label, and shows the results. */
+export async function sortAndFilter(page: Page, ...options: string[]): Promise<void> {
+  await page.getByRole("button", { name: /^Sort and filter/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Sort & filter" });
+  for (const o of options) await sheet.getByRole("radio", { name: o, exact: true }).click();
+  await sheet.getByRole("button", { name: /^Show \d+ exercises?$/ }).click();
+  await expect(sheet).toHaveCount(0);
+}

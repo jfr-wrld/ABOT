@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { freshStart, expectNoHorizontalOverflow } from "./helpers";
+import { freshStart, expectNoHorizontalOverflow, sortAndFilter } from "./helpers";
 import { finishedSession, seedDb } from "./seed-db";
 
 test.beforeEach(async ({ page }) => {
@@ -12,7 +12,7 @@ test("the library grid shows real photos only, with a small equipment badge; cus
   await page.getByRole("button", { name: "New", exact: true }).click();
   await page.getByLabel("Name").fill("Band Pull Apart Mine");
   await page.getByRole("button", { name: "Add to library" }).click();
-  await page.getByRole("button", { name: "Grid view" }).click();
+  await sortAndFilter(page, "Grid");
 
   const thumbs = page.locator("main [data-thumb]");
   await expect(thumbs.first()).toBeVisible();

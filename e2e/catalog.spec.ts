@@ -26,6 +26,8 @@ test("the built-in library: free-exercise-db photos offline, Atlas machines with
   // Offline in the browser also cuts the dev server off, so open the page online.
   await context.setOffline(false);
   await pendulum.click();
+  await page.waitForURL(/\/exercises\/detail/);
+  await expect(page.getByRole("heading", { level: 1, name: /Pendulum Squat/ })).toBeVisible();
   await expect(page.getByRole("img", { name: /^Primary: / }).first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
