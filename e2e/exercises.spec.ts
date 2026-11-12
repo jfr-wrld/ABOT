@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, choose } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, choose, waitForSavedSetting } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
@@ -94,6 +94,8 @@ test("the library switches between list and grid and remembers it", async ({ pag
 test("library: records in the lifter's unit, favourites first, other orders, clear filters", async ({ page }) => {
   await page.goto("/settings?section=general");
   await page.getByText("lbs", { exact: true }).click();
+  // Saved before the next page load reads it.
+  await waitForSavedSetting(page, "weightUnit", "lbs");
   await startEmptyWorkout(page);
   await addExercise(page, "Squat (Barbell)");
   await logSet(page, 1, "225", "5");

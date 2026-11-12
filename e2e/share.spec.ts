@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, reachSummary, waitForSavedSetting } from "./helpers";
 
 const LAYOUTS = [
   "Obsidian Raw",
@@ -216,6 +216,7 @@ test("the story carries the username from the profile", async ({ page }) => {
   await page.goto("/profile/edit");
   await page.getByLabel(/^Username/).fill("@Jafar Lifts!");
   await expect(page.getByLabel(/^Username/)).toHaveValue("JafarLifts");
+  await waitForSavedSetting(page, "profileHandle", "JafarLifts");
   await finishOneSet(page);
   const dialog = await openStudio(page);
   await expect(dialog.getByRole("img", { name: /@JafarLifts\.$/ })).toBeVisible();

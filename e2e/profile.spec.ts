@@ -48,6 +48,8 @@ test("name and height are saved on the device", async ({ page }) => {
   await page.goto("/profile/edit");
   await page.getByLabel("Name", { exact: true }).fill("Jafar Shodiq");
   await page.getByLabel("Height in cm").fill("170");
+  // Committed on blur, as when the lifter taps away.
+  await page.getByLabel("Height in cm").press("Tab");
   await expect(page.getByRole("img", { name: "JS" })).toBeVisible();
   await page.goto("/profile");
   await expect(page.getByRole("heading", { level: 2, name: "Jafar Shodiq" })).toBeVisible();
@@ -62,6 +64,8 @@ test("height switches to feet and inches with lbs, and back", async ({ page }) =
   await freshStart(page);
   await page.goto("/profile/edit");
   await page.getByLabel("Height in cm").fill("170");
+  // Committed on blur, as when the lifter taps away.
+  await page.getByLabel("Height in cm").press("Tab");
   await waitForSavedSetting(page, "heightCm", 170);
   await page.goto("/settings?section=general");
   await page.getByText("lbs", { exact: true }).click();

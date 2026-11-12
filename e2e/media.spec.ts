@@ -3,6 +3,9 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { freshStart } from "./helpers";
 
+// The photos alternate start and end: motion stays on here (the suite default is reduced).
+test.use({ reducedMotion: "no-preference" });
+
 const FRAMES = "**/yuhonas/free-exercise-db/main/exercises/**";
 
 /** Media lives on the How to tab of the exercise detail page. */

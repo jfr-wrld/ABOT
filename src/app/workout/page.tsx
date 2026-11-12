@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { Plus } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { getActivePersistence } from "@/store/persistence";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { HydrationGate } from "@/components/ui/Loading";
@@ -99,6 +100,7 @@ function WorkoutScreen() {
     return () => clearTimeout(id);
   }, [addParam, activeCount, router]);
   const [finishOpen, setFinishOpen] = useState(false);
+  const finishing = useRef(false);
   const [discardOpen, setDiscardOpen] = useState(false);
 
   // The summary route is fetched while the workout runs, so Finish still lands there with no signal.
@@ -229,14 +231,23 @@ function WorkoutScreen() {
         unit={weightUnit}
         onClose={() => setFinishOpen(false)}
         onMarkRemaining={() => completeAllRemaining()}
-        onConfirm={() => {
+        onConfirm={async () => {
+          // A second tap while the save is awaited would find no workout and go Home instead.
+          if (finishing.current) return;
+          finishing.current = true;
           // A workout still called "Evening Workout" is named after what it trained.
           const named = isTimeOfDayName(active.name, t) ? muscleWorkoutName(active, byId, t) : null;
           if (named) useWorkoutStore.getState().renameActive(named);
           const done = finishActive();
           if (done) autoSyncFinished(done, byId);
+          // The finished workout reaches storage before the screen moves on: closing the app
+          // right after Finish brought it back as a workout in progress. Capped, so a stuck
+          // write never holds the lifter on this screen.
+          await Promise.race([getActivePersistence()?.flush(), new Promise((r) => setTimeout(r, 1500))]);
           setFinishOpen(false);
           router.push(done ? summaryPath(done.id) : "/");
+          // The page stays mounted (it shows the routines next), so the next workout can finish.
+          finishing.current = false;
         }}
       />
 

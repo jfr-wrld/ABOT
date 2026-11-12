@@ -10,26 +10,26 @@ test("the next set moves weight and reps by tap, and typing still works", async 
   await addExercise(page, "Bench Press (Barbell)");
   const weight = page.getByLabel("Set 1 weight in kg");
   const reps = page.getByLabel("Set 1 reps");
-  await page.getByRole("button", { name: "Set 1 weight plus 2.5 kg" }).click();
-  await page.getByRole("button", { name: "Set 1 weight plus 2.5 kg" }).click();
+  await page.getByRole("button", { name: "2.5 kg more on Set 1" }).click();
+  await page.getByRole("button", { name: "2.5 kg more on Set 1" }).click();
   await expect(weight).toHaveValue("5");
-  await page.getByRole("button", { name: "Set 1 weight minus 2.5 kg" }).click();
+  await page.getByRole("button", { name: "2.5 kg less on Set 1" }).click();
   await expect(weight).toHaveValue("2.5");
-  for (let i = 0; i < 3; i++) await page.getByRole("button", { name: "Set 1 reps plus 1" }).click();
-  await page.getByRole("button", { name: "Set 1 reps minus 1" }).click();
+  for (let i = 0; i < 3; i++) await page.getByRole("button", { name: "One rep more on Set 1" }).click();
+  await page.getByRole("button", { name: "One rep fewer on Set 1" }).click();
   await expect(reps).toHaveValue("2");
   await weight.fill("60");
   await weight.press("Tab");
-  await page.getByRole("button", { name: "Set 1 weight plus 2.5 kg" }).click();
+  await page.getByRole("button", { name: "2.5 kg more on Set 1" }).click();
   await expect(weight).toHaveValue("62.5");
   // Only the set waiting to be done carries the steppers; ticking it hands them to set 2.
-  await expect(page.getByRole("button", { name: /^Set 2 weight plus/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /more on Set 2$/ })).toHaveCount(0);
   await page.getByRole("button", { name: "Mark Set 1 done" }).click();
-  await expect(page.getByRole("button", { name: "Set 2 weight plus 2.5 kg" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "2.5 kg more on Set 2" })).toBeVisible();
 
   // Dumbbells step by 1.25 kg.
   await addExercise(page, "Bench Press (Dumbbell)");
-  await expect(page.getByRole("button", { name: "Set 1 weight plus 1.25 kg" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "1.25 kg more on Set 1" })).toBeVisible();
 });
 
 test("a swap in a routine workout asks: today only, or update the routine", async ({ page }) => {
@@ -53,6 +53,6 @@ test("a swap in a routine workout asks: today only, or update the routine", asyn
   await page.goto("/routines");
   await page.getByRole("tab", { name: "My Routines" }).click();
   await mine.getByRole("link", { name: "Edit Push A: Strength" }).click();
-  await expect(page.getByText("Bench Press (Dumbbell)").first()).toBeVisible();
-  await expect(page.getByText("Bench Press (Barbell)")).toHaveCount(0);
+  await expect(page.getByText("Bench Press (Dumbbell)", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Bench Press (Barbell)", { exact: true })).toHaveCount(0);
 });

@@ -162,7 +162,7 @@ export function SetRow({
       <motion.span
         aria-hidden="true"
         style={{ opacity: removeOpacity }}
-        className="absolute inset-px flex items-center justify-end rounded-xl bg-failure pr-5 text-white"
+        className="pointer-events-none absolute inset-px flex items-center justify-end rounded-xl bg-failure pr-5 text-white"
       >
         {/* The bin alone: a word would be cut while the strip is still narrow. */}
         <Trash2 size={20} />
@@ -361,11 +361,12 @@ export function SetRow({
       </motion.div>
 
       {weightStep !== undefined && !timed && !set.completed && (
-        <div className="flex items-center justify-between gap-2 px-1 pb-1 pt-1.5">
+        // Above the swipe backing, which spans the whole row: taps here must reach the buttons.
+        <div className="relative z-[1] flex items-center justify-between gap-2 bg-surface px-1 pb-1 pt-1.5">
           {logType === "weight_reps" ? (
-            <div role="group" aria-label={t("{set} weight", { set: a11yName })} className="flex items-center gap-1">
+            <div role="group" aria-label={t("Weight steppers, {set}", { set: a11yName })} className="flex items-center gap-1">
               <StepButton
-                label={t("{set} weight minus {n} {unit}", { set: a11yName, n: weightStep, unit })}
+                label={t("{n} {unit} less on {set}", { set: a11yName, n: weightStep, unit })}
                 onClick={() => {
                   const cur = set.weightKg !== null ? shown(set.weightKg) : previous?.weightKg != null ? shown(previous.weightKg) : 0;
                   onUpdate({ weightKg: sign * fromDisplay(stepped(cur, -weightStep), unit) });
@@ -375,7 +376,7 @@ export function SetRow({
               </StepButton>
               <span aria-hidden="true" className="label-caps w-8 text-center normal-case">{unit}</span>
               <StepButton
-                label={t("{set} weight plus {n} {unit}", { set: a11yName, n: weightStep, unit })}
+                label={t("{n} {unit} more on {set}", { set: a11yName, n: weightStep, unit })}
                 onClick={() => {
                   const cur = set.weightKg !== null ? shown(set.weightKg) : previous?.weightKg != null ? shown(previous.weightKg) : 0;
                   onUpdate({ weightKg: sign * fromDisplay(stepped(cur, weightStep), unit) });
@@ -387,9 +388,9 @@ export function SetRow({
           ) : (
             <span />
           )}
-          <div role="group" aria-label={t("{set} reps", { set: a11yName })} className="flex items-center gap-1">
+          <div role="group" aria-label={t("Reps steppers, {set}", { set: a11yName })} className="flex items-center gap-1">
             <StepButton
-              label={t("{set} reps minus 1", { set: a11yName })}
+              label={t("One rep fewer on {set}", { set: a11yName })}
               onClick={() => {
                 setError(null);
                 onUpdate({ reps: stepped(set.reps ?? previous?.reps ?? 0, -1) });
@@ -399,7 +400,7 @@ export function SetRow({
             </StepButton>
             <span aria-hidden="true" className="label-caps w-10 text-center">{t("Reps")}</span>
             <StepButton
-              label={t("{set} reps plus 1", { set: a11yName })}
+              label={t("One rep more on {set}", { set: a11yName })}
               onClick={() => {
                 setError(null);
                 onUpdate({ reps: stepped(set.reps ?? previous?.reps ?? 0, 1) });

@@ -3,6 +3,9 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { addExercise, freshStart, logSet, startEmptyWorkout } from "./helpers";
 
+// The photos alternate start and end: motion stays on here (the suite default is reduced).
+test.use({ reducedMotion: "no-preference" });
+
 test.beforeEach(async ({ page }) => {
   await freshStart(page);
 });

@@ -171,9 +171,12 @@ async function writeKey(repo: Repository, key: WriteKey): Promise<void> {
   return row ? t.put(row) : t.remove(id);
 }
 
-/** What a keystroke cannot change: the exercises, their sets, and which sets are done. */
-function shape(session: { exercises: { id: string; sets: { id: string; completed: boolean }[] }[]; pausedAt?: number }): string {
-  return `${session.pausedAt ?? ""}|${session.exercises.map((e) => `${e.id}:${e.sets.map((x) => `${x.id}${x.completed ? "+" : ""}`).join(",")}`).join(";")}`;
+/**
+ * What a keystroke cannot change: the exercises (and which movement each is: a swap keeps the
+ * item and its sets), their sets, and which sets are done.
+ */
+function shape(session: { exercises: { id: string; exerciseId: string; sets: { id: string; completed: boolean }[] }[]; pausedAt?: number }): string {
+  return `${session.pausedAt ?? ""}|${session.exercises.map((e) => `${e.id}=${e.exerciseId}:${e.sets.map((x) => `${x.id}${x.completed ? "+" : ""}`).join(",")}`).join(";")}`;
 }
 
 function changedIds<T extends { id: string }>(prev: T[], next: T[]): string[] {

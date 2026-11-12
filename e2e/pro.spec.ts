@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, reachSummary, waitForSavedSetting } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
@@ -11,6 +11,9 @@ async function simulate(page: Page, mode: "Beta mode" | "Free locked" | "Pro act
   const card = page.getByRole("region", { name: /FOUNDER UNIT/ });
   await card.getByRole("radio", { name: mode }).click();
   await expect(card.getByRole("radio", { name: mode })).toHaveAttribute("aria-checked", "true");
+  // Saved before the test opens another page.
+  const stored = { "Beta mode": "AUTO", "Free locked": "FORCE_FREE", "Pro active": "FORCE_PRO" }[mode];
+  await waitForSavedSetting(page, "entitlement.devOverrideMode", stored);
 }
 
 test("every beta install gets a founder unit, and the paywall shows plans and the beta pass", async ({ page }) => {

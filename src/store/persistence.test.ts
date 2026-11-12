@@ -102,6 +102,18 @@ describe("attachPersistence", () => {
     expect((await repo.kv.get("restTimer"))?.totalSec).toBe(90);
   });
 
+  it("a swap is saved at once, not held back like typing", async () => {
+    const repo = createMemoryRepository();
+    const p = await attach(repo);
+    const { exId } = startWithExercise();
+    await p.flush();
+    useWorkoutStore.getState().swapExercise(exId, "bench-press-dumbbell", 30);
+    // No flush: the write is queued now, not 750 ms later.
+    await new Promise((r) => setTimeout(r, 20));
+    expect((await repo.kv.get("activeWorkout"))?.exercises[0]!.exerciseId).toBe("bench-press-dumbbell");
+    await p.flush();
+  });
+
   it("rapid updates leave the repository equal to the final state", async () => {
     const repo = createMemoryRepository();
     const p = await attach(repo);

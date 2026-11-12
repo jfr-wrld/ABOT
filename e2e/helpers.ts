@@ -87,7 +87,10 @@ function escape(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Waits until a settings change has reached IndexedDB, before a test reloads the page. */
+/**
+ * Waits until a settings change has reached IndexedDB, before a test reloads the page.
+ * `field` may be a path into the settings ("entitlement.devOverrideMode").
+ */
 export async function waitForSavedSetting(page: Page, field: string, value: unknown): Promise<void> {
   await expect
     .poll(() =>
@@ -98,7 +101,7 @@ export async function waitForSavedSetting(page: Page, field: string, value: unkn
             open.onsuccess = () => {
               const req = open.result.transaction("kv").objectStore("kv").get("settings");
               req.onsuccess = () => {
-                resolve((req.result?.value as Record<string, unknown> | undefined)?.[f]);
+                resolve(f.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], req.result?.value));
                 open.result.close();
               };
             };

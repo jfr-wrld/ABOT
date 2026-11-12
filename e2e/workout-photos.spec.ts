@@ -74,7 +74,8 @@ test("a finished workout can be tagged with a gym, and the gym shows on Home", a
   await expectNoHorizontalOverflow(page);
 
   await page.goto("/");
-  await expect(page.getByRole("link", { name: /Squat|Workout/ }).first()).toContainText("Iron Temple");
+  // Named after what it trained (Squat works the quads).
+  await expect(page.getByRole("link", { name: /^Quads/ }).first()).toContainText("Iron Temple");
 
   // And back to no gym.
   await page.goto(detailUrl);
