@@ -38,6 +38,7 @@ import { estimate1RM, isWorkingSet } from "@/lib/calc";
 import type { WeightUnit, WorkoutSession } from "@/types/workout";
 import { historyPath } from "@/lib/routes";
 import { useT } from "@/i18n";
+import { FavoriteButton } from "@/components/exercise/FavoriteButton";
 import { muscleNames } from "@/components/exercise/MuscleTags";
 
 type DetailTab = "summary" | "history" | "howto";
@@ -96,8 +97,11 @@ function Detail() {
       <Hero
         exercise={exercise}
         actions={
-          exercise.isCustom ? (
-            <div className="-mr-2 flex gap-1">
+          <div className="-mr-2 flex gap-1">
+            {/* Over the photo, so the star sits on the same dark disc as the other actions. */}
+            <FavoriteButton id={exercise.id} name={exercise.name} tone="overlay" />
+            {exercise.isCustom && (
+              <>
               <button
                 type="button"
                 onClick={() => setEditOpen(true)}
@@ -114,8 +118,9 @@ function Detail() {
               >
                 <Trash2 aria-hidden="true" size={18} />
               </button>
-            </div>
-          ) : undefined
+              </>
+            )}
+          </div>
         }
       />
 

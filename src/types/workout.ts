@@ -272,6 +272,8 @@ export interface UserSettings {
    * the drawn covers (components/profile/coverPresets), or a 960x320 JPEG data URL.
    */
   profileCover: string | null;
+  /** Starred exercises (ids), listed first in the library and the picker. At most 200. */
+  favoriteExercises: string[];
   /** "auto" follows the phone: Indonesian when its language is Indonesian, else English. */
   language: AppLanguage;
   /** "system" follows the phone's light or dark mode. */
@@ -355,6 +357,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   heightCm: null,
   profilePhoto: null,
   profileCover: null,
+  favoriteExercises: [],
 };
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {

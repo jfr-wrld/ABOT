@@ -337,6 +337,10 @@ function Editor() {
           setExercises(routine.id, [...routine.exercises, newRoutineExercise(e.id, defaultRestSeconds)]);
           setPickerOpen(false);
         }}
+        onPickMany={(list) => {
+          setExercises(routine.id, [...routine.exercises, ...list.map((e) => newRoutineExercise(e.id, defaultRestSeconds))]);
+          setPickerOpen(false);
+        }}
       />
 
       {supersetFor && (() => {

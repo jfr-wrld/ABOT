@@ -53,6 +53,7 @@ function pickSettings(s: SettingsState): StoredSettings {
     heightCm: s.heightCm,
     profilePhoto: s.profilePhoto,
     profileCover: s.profileCover,
+    favoriteExercises: s.favoriteExercises,
   };
 }
 

@@ -152,7 +152,15 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     heightCm: inRange(raw.heightCm, PROFILE_LIMITS.heightCm),
     profilePhoto: normalizePhoto(raw.profilePhoto),
     profileCover: normalizeCover(raw.profileCover),
+    favoriteExercises: normalizeFavorites(raw.favoriteExercises),
   };
+}
+
+/** Exercise ids, each once, at most 200; anything else is dropped. */
+function normalizeFavorites(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const ids = raw.filter((v): v is string => typeof v === "string" && v.length > 0 && v.length <= 120);
+  return [...new Set(ids)].slice(0, 200);
 }
 
 const FOUNDER_CODE = /^FOUNDER \/\/ #\d{4}$/;

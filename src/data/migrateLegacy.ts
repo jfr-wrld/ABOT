@@ -78,6 +78,7 @@ export async function migrateFromLocalStorage(
       heightCm: DEFAULT_SETTINGS.heightCm,
       profilePhoto: DEFAULT_SETTINGS.profilePhoto,
       profileCover: DEFAULT_SETTINGS.profileCover,
+      favoriteExercises: DEFAULT_SETTINGS.favoriteExercises,
       showRpe: typeof s.showRpe === "boolean" ? s.showRpe : true,
     });
   }

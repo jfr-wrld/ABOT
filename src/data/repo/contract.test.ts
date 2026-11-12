@@ -107,6 +107,7 @@ describe.each([
         heightCm: 170,
         profilePhoto: null,
         profileCover: "preset:neon-grid",
+        favoriteExercises: ["squat-barbell"],
         bodyPhase: null,
       },
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },

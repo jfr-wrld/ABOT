@@ -12,6 +12,7 @@ import { PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitleme
 import { CHECKOUT_MESSAGE, PAYMENT_STATUS_MESSAGE } from "@/lib/checkout";
 import { DELETE_ACCOUNT_MESSAGE } from "@/lib/delete-data";
 import { SETTINGS_INDEX } from "@/components/settings/search-index";
+import { SORT_LABEL } from "@/components/exercises/labels";
 import { AXIS_LABEL, DIAGNOSTIC_KEYS } from "@/lib/symmetry-analyzer";
 import { VARIATION_LABEL } from "@/data/variations";
 
@@ -125,6 +126,7 @@ export const DYNAMIC_KEYS: string[] = [
   ...Object.values(CHECKOUT_MESSAGE),
   ...Object.values(DELETE_ACCOUNT_MESSAGE),
   ...SETTINGS_INDEX.map((e) => e.title),
+  ...Object.values(SORT_LABEL),
   ...Object.values(PAYMENT_STATUS_MESSAGE),
   // ProCelebration PERKS
   "Auto-overload coach", "72h recovery inspector", "Hands-free voice logger", "Story presets, no watermark",

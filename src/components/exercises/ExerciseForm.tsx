@@ -16,15 +16,18 @@ const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
 export function ExerciseForm({
   open,
   initial,
+  initialName,
   onClose,
   onSave,
 }: {
   open: boolean;
   initial?: Exercise;
+  /** A new exercise's name, prefilled from what was searched. */
+  initialName?: string;
   onClose: () => void;
   onSave: (data: ExerciseDraft) => void;
 }) {
-  const [name, setName] = useState(initial?.name ?? "");
+  const [name, setName] = useState(initial?.name ?? initialName ?? "");
   const [primary, setPrimary] = useState<MuscleGroup>(initial?.primaryMuscles[0] ?? "chest");
   const [equipment, setEquipment] = useState<Equipment>(initial?.equipment ?? "barbell");
   const [error, setError] = useState<string | null>(null);

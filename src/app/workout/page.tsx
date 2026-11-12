@@ -199,6 +199,10 @@ function WorkoutScreen() {
           addExercise(ex.id, defaultRestSeconds);
           setPickerOpen(false);
         }}
+        onPickMany={(list) => {
+          for (const ex of list) addExercise(ex.id, defaultRestSeconds);
+          setPickerOpen(false);
+        }}
       />
 
       <FinishDialog

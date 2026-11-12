@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("filters by muscle and equipment", async ({ page }) => {
   await page.goto("/exercises");
-  await expect(page.getByText("540 in your library")).toBeVisible();
+  await expect(page.getByText("540 exercises")).toBeVisible();
   await choose(page, page.getByLabel("Muscle group"), "Chest");
   await choose(page, page.getByLabel("Equipment"), "Cable");
   await expect(page.getByRole("link", { name: /^Cable Fly/ })).toBeVisible();
@@ -28,7 +28,7 @@ test("creates a custom exercise and opens its detail", async ({ page }) => {
   await choose(page, page.getByLabel("Primary muscle"), "Back");
   await choose(page, page.getByLabel("Equipment", { exact: true }).last(), "Barbell");
   await page.getByRole("button", { name: "Add to library" }).click();
-  await expect(page.getByText("541 in your library")).toBeVisible();
+  await expect(page.getByText("541 exercises")).toBeVisible();
   await page.getByRole("link", { name: /Kroc Row Variation/ }).click();
   await expect(page.getByRole("heading", { name: "Kroc Row Variation" })).toBeVisible();
   await expect(page.getByText("No completed working sets yet.")).toBeVisible();
@@ -94,15 +94,41 @@ test("the library switches between list and grid and remembers it", async ({ pag
 test("the extended library ships with the app: machines and cardio, with pictures, offline", async ({ page, context }) => {
   await page.goto("/exercises");
   // The extended library loads in its own chunk after start; then it needs no network.
-  await expect(page.getByText("540 in your library")).toBeVisible();
+  await expect(page.getByText("540 exercises")).toBeVisible();
   await context.setOffline(true);
   const search = page.getByLabel("Search exercises");
   await search.fill("Bayesian");
   const row = page.getByRole("link", { name: /Bayesian Curl \(Cable\)/ });
   await expect(row).toBeVisible();
   await expect(row.locator('[data-thumb="photo"]')).toBeVisible();
-  await expect(row).not.toContainText("catalog");
+  await expect(row).not.toContainText("Downloaded");
   await search.fill("Treadmill Running");
   await expect(page.getByRole("link", { name: /Treadmill Running/ })).toBeVisible();
   await context.setOffline(false);
+});
+
+test("library: records in the lifter's unit, favourites first, other orders, clear filters", async ({ page }) => {
+  await page.goto("/settings?section=general");
+  await page.getByText("lbs", { exact: true }).click();
+  await startEmptyWorkout(page);
+  await addExercise(page, "Squat (Barbell)");
+  await logSet(page, 1, "225", "5");
+  await finishWorkout(page);
+
+  await page.goto("/exercises");
+  const search = page.getByLabel("Search exercises");
+  await search.fill("squat barbell");
+  const squat = page.getByRole("link", { name: /^Squat \(Barbell\)/ });
+  await expect(squat).toContainText("best 225 lbs × 5");
+  await page.getByRole("button", { name: "Favorite Squat (Barbell)" }).click();
+  await page.getByRole("button", { name: "Clear filters" }).first().click();
+  await expect(search).toHaveValue("");
+
+  await page.reload();
+  const favs = page.getByRole("region", { name: "Favorites" });
+  await expect(favs.getByRole("link", { name: /^Squat \(Barbell\)/ })).toBeVisible();
+
+  await choose(page, page.getByLabel("Order"), "Last done");
+  await expect(page.getByRole("region", { name: "All exercises" }).getByRole("link").first()).toContainText("Squat (Barbell)");
+  await expectNoHorizontalOverflow(page);
 });

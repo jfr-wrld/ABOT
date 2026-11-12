@@ -63,9 +63,9 @@ test("exercise detail shows full instructions and form cues", async ({ page }) =
 test("a custom exercise without steps says so honestly", async ({ page }) => {
   await page.goto("/exercises");
   await page.getByRole("button", { name: "New", exact: true }).click();
-  await page.getByLabel("Name").fill("Bayesian Curl");
+  await page.getByLabel("Name").fill("Zorro Curl");
   await page.getByRole("button", { name: "Add to library" }).click();
-  await page.getByRole("link", { name: /Bayesian Curl/ }).click();
+  await page.getByRole("link", { name: /Zorro Curl/ }).click();
   await page.getByRole("tab", { name: "How to" }).click();
   await expect(page.getByText("No step-by-step instructions for this exercise.")).toBeVisible();
   await expect(page.getByText("No form cues for this exercise yet.")).toBeVisible();
