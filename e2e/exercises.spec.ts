@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("filters by muscle and equipment", async ({ page }) => {
   await page.goto("/exercises");
-  await expect(page.getByText("1172 exercises")).toBeVisible();
+  await expect(page.getByText("873 exercises")).toBeVisible();
   await choose(page, page.getByLabel("Muscle group"), "Chest");
   await choose(page, page.getByLabel("Equipment"), "Cable");
   await expect(page.getByRole("link", { name: /^Cable Fly/ })).toBeVisible();
@@ -28,7 +28,8 @@ test("creates a custom exercise and opens its detail", async ({ page }) => {
   await choose(page, page.getByLabel("Primary muscle"), "Back");
   await choose(page, page.getByLabel("Equipment", { exact: true }).last(), "Barbell");
   await page.getByRole("button", { name: "Add to library" }).click();
-  await expect(page.getByText("1173 exercises")).toBeVisible();
+  // 873 with photos, plus the lifter's own.
+  await expect(page.getByText("874 exercises")).toBeVisible();
   await page.getByRole("link", { name: /Kroc Row Variation/ }).click();
   await expect(page.getByRole("heading", { name: "Kroc Row Variation" })).toBeVisible();
   await expect(page.getByText("No completed working sets yet.")).toBeVisible();

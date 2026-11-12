@@ -1,17 +1,25 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { freshStart } from "./helpers";
+import { addExercise, freshStart, startEmptyWorkout } from "./helpers";
 
 // The photos alternate start and end: motion stays on here (the suite default is reduced).
 test.use({ reducedMotion: "no-preference" });
 
 const FRAMES = "**/yuhonas/free-exercise-db/main/exercises/**";
 
-/** Media lives on the How to tab of the exercise detail page. */
+/** The video lives on the How to tab of the exercise detail page. */
 async function openHowTo(page: Page, path: string) {
   await page.goto(path);
   await page.getByRole("tab", { name: "How to" }).click();
+}
+
+/** Motion, video and anatomy together: the how-to sheet opened from a workout. */
+async function openSheet(page: Page) {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await page.getByRole("heading", { name: "Bench Press (Barbell)", exact: true }).getByRole("button").click();
+  return page.getByRole("dialog", { name: "Bench Press (Barbell)" }).getByRole("region", { name: "Exercise media" });
 }
 
 async function serveFrames(page: Page) {
@@ -32,8 +40,7 @@ test.beforeEach(async ({ page }) => {
 
 test("the motion tab plays the exercise's own photos, with no animated figure", async ({ page }) => {
   await serveFrames(page);
-  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
-  const media = page.getByRole("region", { name: "Exercise media" });
+  const media = await openSheet(page);
   await expect(media.getByRole("tab", { name: "Motion" })).toHaveAttribute("aria-selected", "true");
   await expect(media.getByRole("button", { name: "Animation" })).toHaveCount(0);
   const phase = media.getByTestId("motion-phase");
@@ -41,17 +48,24 @@ test("the motion tab plays the exercise's own photos, with no animated figure", 
   await expect(phase).toHaveText("End position", { timeout: 3000 });
 });
 
-test("missing images show a text fallback instead of a broken box", async ({ page }) => {
+test("without a connection the motion shows the photo that ships with the app", async ({ page }) => {
   await page.route(FRAMES, (route) => route.abort("internetdisconnected"));
+  const media = await openSheet(page);
+  await expect(media.getByRole("img", { name: "Bench Press (Barbell), start position" })).toBeVisible();
+  await expect(media.getByText("Images need a connection.")).toHaveCount(0);
+});
+
+test("the exercise page shows only the video: the motion plays in its hero, the muscles in Summary", async ({ page }) => {
   await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
-  await expect(page.getByText("Images need a connection.")).toBeVisible();
+  const media = page.getByRole("region", { name: "Exercise media" });
+  await expect(media.getByRole("tab")).toHaveCount(0);
+  await expect(media.getByText("No tutorial video set for this exercise.")).toBeVisible();
 });
 
 test("video tab: search links, custom video validation, saved link, removal", async ({ page }) => {
   await serveFrames(page);
   await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
-  await media.getByRole("tab", { name: "Video" }).click();
   await expect(media.getByText("No tutorial video set for this exercise.")).toBeVisible();
   await expect(media.getByRole("link", { name: "Search YouTube" })).toHaveAttribute(
     "href",
@@ -71,7 +85,6 @@ test("video tab: search links, custom video validation, saved link, removal", as
 
   await page.reload();
   await page.getByRole("tab", { name: "How to" }).click();
-  await page.getByRole("region", { name: "Exercise media" }).getByRole("tab", { name: "Video" }).click();
   await expect(page.locator("iframe")).toHaveAttribute("src", /abcDEF12345/);
   await page.getByRole("button", { name: "Remove custom video" }).click();
   await expect(page.getByText("No tutorial video set for this exercise.")).toBeVisible();
@@ -84,7 +97,6 @@ test("a TikTok share link is opened once and saved as the full video link", asyn
   await page.route("https://www.tiktok.com/player/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>player</p>" }));
   await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   const media = page.getByRole("region", { name: "Exercise media" });
-  await media.getByRole("tab", { name: "Video" }).click();
   await media.getByRole("button", { name: "Set custom video" }).click();
 
   // TikTok cannot say where the link goes: an error, and nothing saved.
@@ -99,14 +111,12 @@ test("a TikTok share link is opened once and saved as the full video link", asyn
   await expect(media.locator("iframe")).toHaveAttribute("src", /tiktok\.com\/player\/v1\/7301234567890123456/);
   await page.reload();
   await page.getByRole("tab", { name: "How to" }).click();
-  await page.getByRole("region", { name: "Exercise media" }).getByRole("tab", { name: "Video" }).click();
   await expect(page.locator("iframe")).toHaveAttribute("src", /7301234567890123456/);
 });
 
 test("video tab offline says so instead of loading a player", async ({ page, context }) => {
   await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
   await context.setOffline(true);
-  await page.getByRole("region", { name: "Exercise media" }).getByRole("tab", { name: "Video" }).click();
   await page.getByRole("button", { name: "Set custom video" }).click();
   await page.getByLabel("Video link").fill("https://youtu.be/dQw4w9WgXcQ");
   await page.getByRole("button", { name: "Save video" }).click();
@@ -116,8 +126,7 @@ test("video tab offline says so instead of loading a player", async ({ page, con
 });
 
 test("anatomy tab highlights primary and secondary muscles; tabs work with arrow keys", async ({ page }) => {
-  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
-  const media = page.getByRole("region", { name: "Exercise media" });
+  const media = await openSheet(page);
   await media.getByRole("tab", { name: "Motion" }).focus();
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
@@ -133,8 +142,7 @@ test("the exercise demo keeps looping with Lite effects, as it teaches the movem
   await page.goto("/settings?section=general");
   await page.getByRole("radiogroup", { name: "Visual effects" }).getByText("Lite", { exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-effects", "lite");
-  await openHowTo(page, "/exercises/detail?id=bench-press-barbell");
-  const phase = page.getByRole("region", { name: "Exercise media" }).getByTestId("motion-phase");
+  const phase = (await openSheet(page)).getByTestId("motion-phase");
   await expect(phase).toHaveText("Start position");
   await expect(phase).toHaveText("End position", { timeout: 3000 });
 });

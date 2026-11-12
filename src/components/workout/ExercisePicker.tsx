@@ -17,6 +17,7 @@ import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { ExerciseForm } from "@/components/exercises/ExerciseForm";
 import { useFavorites } from "@/components/exercise/FavoriteButton";
 import { filterExercises } from "@/lib/exercise-search";
+import { hasPhoto } from "@/lib/exercise-photo";
 import { exerciseUsage, recentExercises } from "@/lib/exercise-usage";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useIncremental } from "@/lib/useIncremental";
@@ -98,9 +99,11 @@ export function ExercisePicker({
   }, [open]);
 
   const usage = useMemo(() => exerciseUsage(sessions), [sessions]);
+  // As in the library: browsing lists exercises with a real photo, plus favourites and ones done.
+  const keep = useMemo(() => new Set([...favorites, ...Object.keys(usage.uses)]), [favorites, usage]);
   const filtered = useMemo(
-    () => filterExercises(list, { query: search, muscle, equipment }, { favorites, uses: usage.uses }),
-    [list, search, muscle, equipment, favorites, usage],
+    () => filterExercises(list, { query: search, muscle, equipment, photos: { keep } }, { favorites, uses: usage.uses }),
+    [list, search, muscle, equipment, favorites, usage, keep],
   );
   const filtering = query.trim() !== "" || muscle !== null || equipment !== null;
   const [limit, more, setSentinel] = useIncremental(filtered.length, `${open}|${search}|${muscle}|${equipment}|${view}`);
@@ -297,10 +300,11 @@ function PickRow({
           className={`tap flex h-full w-full flex-col gap-1.5 rounded-card border bg-surface p-1.5 text-left hover:border-line-hover active:bg-surface-2 ${checked ? "border-accent" : "border-line"}`}
         >
           <span className="block aspect-square overflow-hidden rounded-lg [&>span]:!size-full [&>span]:!rounded-none [&>span]:!border-0">
-            <ExerciseThumb exercise={e} size={128} />
+            <ExerciseThumb exercise={e} size={128} badge={26} />
           </span>
           <span className="line-clamp-2 px-0.5 text-sm font-semibold leading-snug">{e.name}</span>
           {note && <span className="px-0.5 text-xs text-text-muted">{note}</span>}
+          {!note && !hasPhoto(e) && !e.isCustom && <span className="px-0.5 text-xs text-text-muted">{t("No photo")}</span>}
         </button>
         {check}
       </div>
@@ -319,6 +323,7 @@ function PickRow({
           {accent && note ? <span className="block truncate text-xs text-accent">{note}</span> : <MuscleTags exercise={e} />}
         </span>
         {!accent && note && <span className="shrink-0 text-xs text-text-muted">{note}</span>}
+        {!note && !hasPhoto(e) && !e.isCustom && <span className="shrink-0 text-xs text-text-muted">{t("No photo")}</span>}
       </button>
       {check}
     </div>

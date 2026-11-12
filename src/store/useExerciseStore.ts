@@ -14,6 +14,8 @@ interface ExerciseState {
   setCatalog: (rows: Exercise[]) => void;
   /** The extended library that ships with the app (data/extended-library); empty until it loads. */
   extended: Exercise[];
+  /** True once loading the extended library has finished, loaded or not. */
+  extendedTried: boolean;
   loadExtended: () => Promise<void>;
   /** Videos the user pasted per exercise; works for seed exercises too. */
   mediaOverrides: Record<string, { customVideoUrl: string }>;
@@ -31,6 +33,7 @@ export const useExerciseStore = create<ExerciseState>()(
       catalog: [],
       setCatalog: (catalog) => set({ catalog }),
       extended: [],
+      extendedTried: false,
       loadExtended: async () => {
         if (useExerciseStore.getState().extended.length > 0) return;
         try {
@@ -38,6 +41,8 @@ export const useExerciseStore = create<ExerciseState>()(
         } catch {
           // A chunk that fails to load (an old cached page after an update) leaves the seed
           // library and any downloaded catalog; the next start tries again.
+        } finally {
+          set({ extendedTried: true });
         }
       },
       mediaOverrides: {},

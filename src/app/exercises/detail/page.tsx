@@ -35,8 +35,8 @@ import { relativeDay } from "@/lib/home";
 import { useNow } from "@/lib/useNow";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { estimate1RM, isWorkingSet } from "@/lib/calc";
-import type { WeightUnit, WorkoutSession } from "@/types/workout";
-import { historyPath } from "@/lib/routes";
+import type { WeightUnit, WorkoutSession, WorkoutSet } from "@/types/workout";
+import { exercisePath, historyPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { FavoriteButton } from "@/components/exercise/FavoriteButton";
 import { muscleNames } from "@/components/exercise/MuscleTags";
@@ -56,23 +56,45 @@ export default function ExerciseDetailPage() {
   );
 }
 
+/** Workouts listed on the History tab; older ones are in the main history. */
+const HISTORY_SHOWN = 10;
+
 function Detail() {
-  const id = useSearchParams().get("id") ?? "";
+  const params = useSearchParams();
+  const id = params.get("id") ?? "";
   const router = useRouter();
   const { byId } = useAllExercises();
   const { updateCustom, removeCustom } = useExerciseStore();
+  const extendedTried = useExerciseStore((s) => s.extendedTried);
   const sessions = useWorkoutStore((s) => s.sessions);
   const { weightUnit } = useSettingsStore();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [tab, setTab] = useState<DetailTab>("summary");
+  // The open tab lives in the address, so Back from a past workout returns to History.
+  const asked = params.get("tab");
+  const tab: DetailTab = DETAIL_TABS.some((d) => d.value === asked) ? (asked as DetailTab) : "summary";
+  const setTab = (next: DetailTab) => router.replace(next === "summary" ? exercisePath(id) : `${exercisePath(id)}&tab=${next}`, { scroll: false });
   const reduce = useReducedMotionConfig();
   const t = useT();
 
   const exercise = byId[id];
   const history = useMemo(() => exerciseHistory(id, sessions, { byId, allGyms: true }), [id, sessions, byId]);
+  const done = useMemo(
+    () => sessions.filter((s) => s.status === "completed" && s.exercises.some((e) => e.exerciseId === id)).sort((a, b) => b.startedAt - a.startedAt),
+    [sessions, id],
+  );
 
   if (!exercise) {
+    // The larger library loads a moment after the page: a link to one of its exercises waits for it.
+    if (!extendedTried && /^(fedb|atlas)-/.test(id)) {
+      return (
+        <main>
+          <p role="status" className="px-4 pt-8 text-center text-sm text-text-muted">
+            {t("Loading the exercise library")}
+          </p>
+        </main>
+      );
+    }
     return (
       <main>
         <PageHeader title={t("Exercise not found")} back={{ href: "/exercises", label: t("Exercises") }} />
@@ -81,13 +103,12 @@ function Detail() {
     );
   }
 
-  const recent = [...sessions]
-    .filter((s) => s.status === "completed" && s.exercises.some((e) => e.exerciseId === id))
-    .sort((a, b) => b.startedAt - a.startedAt)
-    .slice(0, 10);
+  const recent = done.slice(0, HISTORY_SHOWN);
 
+  // The year joins the date once the line spans more than one.
+  const years = new Set(history.map((h) => new Date(h.date).getFullYear()));
   const chartData = history.map((h) => ({
-    date: new Date(h.date).toLocaleDateString(t.locale, { day: "numeric", month: "short" }),
+    date: new Date(h.date).toLocaleDateString(t.locale, years.size > 1 ? { day: "numeric", month: "short", year: "2-digit" } : { day: "numeric", month: "short" }),
     e1rm: Math.round(toDisplay(h.estimated1RM, weightUnit) * 10) / 10,
     best: `${formatWeight(h.bestSetWeightKg, weightUnit, false)} × ${h.bestSetReps}`,
   }));
@@ -126,7 +147,7 @@ function Detail() {
 
       <div className="px-4 pt-4">
         <Rise order={1}>
-          <QuickStats exercise={exercise} recent={recent} unit={weightUnit} />
+          <QuickStats exercise={exercise} done={done} unit={weightUnit} />
         </Rise>
       </div>
 
@@ -161,7 +182,7 @@ function Detail() {
                           cursor={{ stroke: CHART.axis }}
                           formatter={(v, _n, item) => [
                             t("{value} {unit} (best set {best})", { value: String(v), unit: weightUnit, best: (item.payload as { best: string }).best }),
-                            "1RM",
+                            t("1RM"),
                           ]}
                         />
                         <Line
@@ -191,20 +212,27 @@ function Detail() {
                 {t("Not logged yet. Add it to a workout and finish the workout to see sets here.")}
               </p>
             ) : (
-              <ul className="mt-2 flex flex-col gap-2">
-                {recent.map((s, i) => (
-                  <Rise key={s.id} order={i} step={0.05}>
-                    <HistoryCard session={s} exercise={exercise} unit={weightUnit} />
-                  </Rise>
-                ))}
-              </ul>
+              <>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {recent.map((s, i) => (
+                    <Rise key={s.id} order={i} step={0.05}>
+                      <HistoryCard session={s} exercise={exercise} unit={weightUnit} />
+                    </Rise>
+                  ))}
+                </ul>
+                {done.length > HISTORY_SHOWN && (
+                  <p className="mt-3 text-center text-xs text-text-muted">
+                    {t("The last {shown} of {n} workouts. The rest are in History.", { shown: HISTORY_SHOWN, n: done.length })}
+                  </p>
+                )}
+              </>
             )}
           </section>
         )}
 
         {tab === "howto" && (
           <div {...tabPanelProps("ex-detail", "howto")} className="flex flex-col gap-3 outline-none">
-            <SmartExerciseMedia exercise={exercise} />
+            <SmartExerciseMedia exercise={exercise} videoOnly />
             <ExerciseGuide exercise={exercise} showInstructions />
           </div>
         )}
@@ -271,7 +299,7 @@ function MusclesWorked({ exercise }: { exercise: Exercise }) {
         <p className="mt-2 flex items-start gap-2 text-sm">
           <span aria-hidden="true" className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />
           <span>
-            <span className="text-text-muted">{t("Primary ")}</span>
+            <span className="text-text-muted">{t("Primary muscle")} </span>
             {names(exercise.primaryMuscles) || t("Not set")}
           </span>
         </p>
@@ -279,7 +307,7 @@ function MusclesWorked({ exercise }: { exercise: Exercise }) {
           <p className="mt-1 flex items-start gap-2 text-sm">
             <span aria-hidden="true" className="mt-1.5 size-2 shrink-0 rounded-full bg-accent/40" />
             <span>
-              <span className="text-text-muted">{t("Secondary ")}</span>
+              <span className="text-text-muted">{t("Secondary muscles")} </span>
               {names(exercise.secondaryMuscles)}
             </span>
           </p>
@@ -300,7 +328,8 @@ function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.React
     <header>
       {/* Only the photo stays dark in light mode; the name below it follows the page's theme. */}
       <div className="force-dark relative">
-        <PhotoLoop exercise={exercise} className="aspect-[4/3] max-h-[52vh] w-full" />
+        {/* At most 40% of the screen, so the stats and tabs start on the first screen. */}
+        <PhotoLoop exercise={exercise} className="aspect-[4/3] max-h-[40vh] w-full" />
       <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-6 pt-3">
         <BackLink
           href="/exercises"
@@ -335,12 +364,15 @@ function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.React
 }
 
 
-/** Four figures at a glance, counting up: best, heaviest, how often, how recently. */
-function QuickStats({ exercise, recent, unit }: { exercise: Exercise; recent: WorkoutSession[]; unit: WeightUnit }) {
+/**
+ * Four figures at a glance, counting up: best, heaviest, how often, how recently. Every finished
+ * workout counts (`done`, newest first), so they agree with the records below.
+ */
+function QuickStats({ exercise, done, unit }: { exercise: Exercise; done: WorkoutSession[]; unit: WeightUnit }) {
   let bestE1rm = 0;
   let heaviest = 0;
   let mostReps = 0;
-  for (const s of recent) {
+  for (const s of done) {
     for (const ex of s.exercises) {
       if (ex.exerciseId !== exercise.id) continue;
       for (const set of ex.sets) {
@@ -353,7 +385,7 @@ function QuickStats({ exercise, recent, unit }: { exercise: Exercise; recent: Wo
       }
     }
   }
-  const last = recent[0]?.startedAt;
+  const last = done[0]?.startedAt;
   const now = useNow(60_000);
   const t = useT();
   const tiles = [
@@ -361,7 +393,7 @@ function QuickStats({ exercise, recent, unit }: { exercise: Exercise; recent: Wo
       ? { icon: <Trophy size={16} />, label: t("Most reps"), value: mostReps, format: (n: number) => String(Math.round(n)), pr: mostReps > 0 }
       : { icon: <Trophy size={16} />, label: t("Best e1RM"), value: bestE1rm, format: (n: number) => (bestE1rm ? formatWeight(n, unit) : "–"), pr: bestE1rm > 0 },
     { icon: <Dumbbell size={16} />, label: t("Heaviest"), value: heaviest, format: (n: number) => (heaviest ? formatWeight(n, unit) : "–") },
-    { icon: <Repeat size={16} />, label: t("Workouts"), value: recent.length, format: (n: number) => String(Math.round(n)) },
+    { icon: <Repeat size={16} />, label: t("Workouts"), value: done.length, format: (n: number) => String(Math.round(n)) },
   ];
   return (
     <dl className="grid grid-cols-2 gap-2">
@@ -418,10 +450,19 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
   const now = useNow(60_000);
   const ex = session.exercises.find((e) => e.exerciseId === exercise.id)!;
   const nums = setNumbers(ex.sets);
-  const max = Math.max(...ex.sets.map((s) => s.weightKg ?? 0), 0);
+  // The bar measures what the lift is measured in: load, else reps, time or distance.
+  const measure = (s: WorkoutSet) =>
+    exercise.logType === "duration"
+      ? (s.durationSec ?? 0)
+      : exercise.logType === "distance_duration"
+        ? (s.distanceM ?? 0)
+        : exercise.logType === "reps_only" || exercise.isBodyweight
+          ? (s.reps ?? 0)
+          : (s.weightKg ?? 0);
+  const max = Math.max(...ex.sets.map(measure), 0);
   return (
     <li className="panel p-3">
-      <Link href={historyPath(session.id)} className="flex items-baseline justify-between gap-2 hover:underline">
+      <Link href={historyPath(session.id)} className="-mx-1 -mt-1 flex min-h-11 items-center justify-between gap-2 rounded-ctl px-1 hover:underline">
         <span className="truncate text-sm font-semibold">{session.name}</span>
         <time dateTime={new Date(session.startedAt).toISOString()} className="num shrink-0 text-xs text-text-muted">
           {relativeDay(session.startedAt, now, t)}
@@ -430,14 +471,14 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
       <ol className="mt-2 flex flex-col gap-1">
         {ex.sets.map((st, i) => {
           const num = nums[i] ?? null;
-          const fill = max > 0 && st.weightKg ? st.weightKg / max : 0;
+          const fill = max > 0 ? measure(st) / max : 0;
           return (
             <li key={st.id} className="num flex items-center gap-3 text-sm">
               <SetTypeChip type={st.type} number={num} />
               <span className="w-28 shrink-0">
                 {setText(st, exercise.logType, unit, { isBodyweight: exercise.isBodyweight, reps: (n) => t("{n} reps", { n: String(n) }) })}
               </span>
-              <span aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-800/80">
+              <span aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-track">
                 <motion.span
                   className="block h-full origin-left rounded-full bg-accent/60"
                   style={{ scaleX: 0 }}
@@ -448,7 +489,7 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
                   }}
                 />
               </span>
-              {st.rpe !== null && <span className="shrink-0 text-xs text-text-muted">RPE {st.rpe}</span>}
+              {st.rpe !== null && <span className="shrink-0 text-xs text-text-muted">{t("RPE {n}", { n: st.rpe })}</span>}
             </li>
           );
         })}

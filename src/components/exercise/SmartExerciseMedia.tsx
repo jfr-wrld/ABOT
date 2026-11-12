@@ -10,16 +10,30 @@ import { resolveTikTokShortLink } from "@/lib/tiktok-resolve";
 import { useExerciseStore } from "@/store/useExerciseStore";
 import { useT } from "@/i18n";
 import { useAppActive } from "@/lib/native/app-active";
+import { bundledThumb } from "@/lib/exercise-photo";
 
 const TABS = ["Motion", "Video", "Anatomy"] as const;
 type Tab = (typeof TABS)[number];
 
-/** Motion, video tutorial and anatomy for one exercise. Players load only when their tab is open. */
-export function SmartExerciseMedia({ exercise }: { exercise: Exercise }) {
+/**
+ * Motion, video tutorial and anatomy for one exercise. Players load only when their tab is open.
+ * `videoOnly` is for the exercise page, whose hero already plays the motion and whose Summary
+ * already maps the muscles: there it is the video and nothing else, without tabs.
+ */
+export function SmartExerciseMedia({ exercise, videoOnly = false }: { exercise: Exercise; videoOnly?: boolean }) {
   const [tab, setTab] = useState<Tab>("Motion");
   const uid = useId().replace(/:/g, "");
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const t = useT();
+
+  if (videoOnly) {
+    return (
+      <section aria-label={t("Exercise media")} className="panel p-2">
+        <h2 className="label-caps px-1 pb-2 pt-1">{t("Video")}</h2>
+        <VideoPanel exercise={exercise} />
+      </section>
+    );
+  }
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const i = TABS.indexOf(tab);
@@ -120,6 +134,16 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
 
   if (urls.length === 0) {
     return <p className="px-2 py-8 text-center text-sm text-text-muted">{t("No motion images for this exercise.")}</p>;
+  }
+  // Offline, the photo that ships with the app stands in for the loop.
+  const still = bundledThumb(exercise);
+  if (failed && still) {
+    return (
+      <div className="force-dark aspect-[4/3] w-full overflow-hidden rounded-ctl bg-black">
+        {/* eslint-disable-next-line @next/next/no-img-element -- a bundled 128 px file, no optimizer in the static build */}
+        <img src={still} alt={t("{name}, start position", { name: exercise.name })} width={128} height={128} className="h-full w-full object-contain" />
+      </div>
+    );
   }
   if (first?.kind === "file" && first.media === "video") {
     return (

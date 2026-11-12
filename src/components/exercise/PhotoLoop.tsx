@@ -50,7 +50,7 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
     return () => clearInterval(timer);
   }, [moving, appActive]);
 
-  const bundled = bundledThumb(exercise.id) ?? null;
+  const bundled = bundledThumb(exercise) ?? null;
 
   return (
     <div className={`force-dark relative overflow-hidden bg-black ${className}`}>

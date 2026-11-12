@@ -12,7 +12,8 @@ import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
-import { filterExercises } from "@/lib/exercise-search";
+import { filterExercises, shownWithoutSearch } from "@/lib/exercise-search";
+import { hasPhoto } from "@/lib/exercise-photo";
 import { exerciseUsage } from "@/lib/exercise-usage";
 import { formatWeight } from "@/lib/units";
 import { FavoriteButton, useFavorites } from "@/components/exercise/FavoriteButton";
@@ -56,10 +57,13 @@ function LibraryScreen() {
 
   const prTable = useMemo(() => buildPRTable(sessions, byId, { allGyms: true }), [sessions, byId]);
   const usage = useMemo(() => exerciseUsage(sessions), [sessions]);
+  // Browsing lists exercises with a real photo; favourites and anything already done stay listed.
+  const keep = useMemo(() => new Set([...favorites, ...Object.keys(usage.uses)]), [favorites, usage]);
   const filtered = useMemo(
-    () => filterExercises(list, { query: search, muscle, equipment }, { favorites, uses: usage.uses }),
-    [list, search, muscle, equipment, favorites, usage],
+    () => filterExercises(list, { query: search, muscle, equipment, photos: { keep } }, { favorites, uses: usage.uses }),
+    [list, search, muscle, equipment, favorites, usage, keep],
   );
+  const browsable = useMemo(() => list.filter((e) => shownWithoutSearch(e, keep)).length, [list, keep]);
   const searching = search.trim().length > 0;
   const filtering = searching || muscle !== "" || equipment !== "";
   const clear = () => {
@@ -95,7 +99,7 @@ function LibraryScreen() {
     <main className="flex flex-1 flex-col">
       <PageHeader
         title={t("Exercises")}
-        subtitle={t("{n} exercises", { n: list.length })}
+        subtitle={t("{n} exercises", { n: browsable.toLocaleString(t.locale) })}
         action={
           <Button variant="primary" onClick={() => setFormOpen(true)}>
             <Plus aria-hidden="true" size={18} /> {t("New")}
@@ -212,7 +216,8 @@ function LibraryScreen() {
                         >
                           {/* The photo fills the card's width, so it asks for a picture that size. */}
                           <span className="block aspect-square overflow-hidden rounded-lg [&>span]:!size-full [&>span]:!rounded-none [&>span]:!border-0">
-                            <ExerciseThumb exercise={e} size={128} />
+                            {/* A fixed small badge: one in proportion would cover a third of the photo. */}
+                            <ExerciseThumb exercise={e} size={128} badge={26} />
                           </span>
                           <span className="line-clamp-2 px-0.5 text-sm font-semibold leading-snug">{e.name}</span>
                           <span className="mt-auto flex flex-wrap items-center gap-1 px-0.5 text-xs text-text-muted">
@@ -270,11 +275,17 @@ function LibraryScreen() {
   );
 }
 
-/** "Custom" on the lifter's own exercises: bordered, so it reads at a glance. */
+const PILL = "shrink-0 rounded-full border border-line-strong px-1.5 py-px text-[11px] font-semibold text-text-muted";
+
+/**
+ * "Custom" on the lifter's own exercises; "No photo" on the few found only by searching, so the
+ * missing picture reads as known, not broken. Bordered, so they read at a glance.
+ */
 function Badges({ exercise: e }: { exercise: Exercise }) {
   const t = useT();
-  if (!e.isCustom) return null;
-  return <span className="shrink-0 rounded-full border border-line-strong px-1.5 py-px text-[11px] font-semibold text-text-muted">{t("Custom")}</span>;
+  if (e.isCustom) return <span className={PILL}>{t("Custom")}</span>;
+  if (!hasPhoto(e)) return <span className={PILL}>{t("No photo")}</span>;
+  return null;
 }
 
 const SORTS: LibrarySort[] = ["muscle", "az", "used", "recent"];

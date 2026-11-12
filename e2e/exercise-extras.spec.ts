@@ -66,7 +66,7 @@ test("exercise detail is split into Summary, History and How to", async ({ page 
   await expect(tabs.getByRole("tab", { name: "Summary" })).toHaveAttribute("aria-selected", "true");
   const muscles = page.getByRole("region", { name: "Muscles worked" });
   await expect(muscles).toBeVisible();
-  await expect(muscles).toContainText("Primary Quads");
+  await expect(muscles).toContainText("Primary muscle Quads");
   await expect(page.getByRole("heading", { name: "Personal records" })).toBeVisible();
 
   await tabs.getByRole("tab", { name: "Summary" }).focus();

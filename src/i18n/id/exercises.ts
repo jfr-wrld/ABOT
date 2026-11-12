@@ -85,8 +85,6 @@ export const exercises: Record<string, string> = {
   "Delete {name}?": "Hapus {name}?",
   "Past workouts keep their sets but will show “Removed exercise” for this one. Routines using it keep a dead reference until you edit them.":
     "Latihan lama tetap menyimpan set-nya, tapi gerakan ini akan tampil sebagai “Gerakan dihapus”. Rutinitas yang memakainya tetap menyimpan rujukan kosong sampai kamu ubah.",
-  "Primary ": "Utama ",
-  "Secondary ": "Pendukung ",
   "Not set": "Belum diisi",
   "also {muscles}": "juga {muscles}",
   "Most reps": "Rep terbanyak",
@@ -347,4 +345,12 @@ export const exercises: Record<string, string> = {
   "A–Z": "A–Z",
   "By muscle": "Per otot",
   "Most used": "Paling sering",
+  "No photo": "Tanpa foto",
+  "Loading the exercise library": "Memuat daftar latihan",
+  "1RM": "1RM",
+  "The last {shown} of {n} workouts. The rest are in History.": "{shown} latihan terakhir dari {n}. Sisanya ada di Riwayat.",
+  "Secondary muscles": "Otot pendukung",
+  "RPE {n}": "RPE {n}",
+  "Best set": "Set terbaik",
+  "× {reps}": "× {reps}",
 };

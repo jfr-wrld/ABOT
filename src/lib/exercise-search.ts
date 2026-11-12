@@ -1,5 +1,6 @@
 import type { Equipment, Exercise, MuscleGroup } from "@/types/workout";
 import { worksArea } from "@/components/anatomy/regions";
+import { hasPhoto } from "@/lib/exercise-photo";
 
 /**
  * Exercise search for the library and the picker, one behaviour for both. A query matches when
@@ -152,6 +153,11 @@ export interface ExerciseFilter {
   query: string;
   muscle?: MuscleGroup | "" | null;
   equipment?: Equipment | "" | null;
+  /**
+   * Browsing (no query) lists only exercises with a real photo, plus the lifter's own custom
+   * exercises and these ids (favourites, recent). A search finds every exercise, photo first.
+   */
+  photos?: { keep?: ReadonlySet<string> };
 }
 
 export interface Ranking {
@@ -165,18 +171,26 @@ export interface Ranking {
  * favourites, then how often they were done, then name; without one the list keeps its order.
  */
 export function filterExercises(list: Exercise[], f: ExerciseFilter, rank: Ranking = {}): Exercise[] {
+  const searching = f.query.trim() !== "";
   const out: { e: Exercise; score: number }[] = [];
   for (const e of list) {
     if (f.muscle && !worksArea([...e.primaryMuscles, ...e.secondaryMuscles], f.muscle)) continue;
     if (f.equipment && e.equipment !== f.equipment) continue;
-    const score = f.query.trim() ? matchScore(e, f.query) : 0;
+    if (f.photos && !searching && !shownWithoutSearch(e, f.photos.keep)) continue;
+    const score = searching ? matchScore(e, f.query) : 0;
     if (score === null) continue;
     out.push({ e, score });
   }
-  if (!f.query.trim()) return out.map((x) => x.e);
+  if (!searching) return out.map((x) => x.e);
   const fav = (e: Exercise) => (rank.favorites?.has(e.id) ? 0 : 1);
   const uses = (e: Exercise) => rank.uses?.[e.id] ?? 0;
+  const photo = (e: Exercise) => (f.photos && !hasPhoto(e) ? 1 : 0);
   return out
-    .sort((a, b) => a.score - b.score || fav(a.e) - fav(b.e) || uses(b.e) - uses(a.e) || a.e.name.localeCompare(b.e.name))
+    .sort((a, b) => a.score - b.score || photo(a.e) - photo(b.e) || fav(a.e) - fav(b.e) || uses(b.e) - uses(a.e) || a.e.name.localeCompare(b.e.name))
     .map((x) => x.e);
+}
+
+/** Listed while browsing: a real photo, the lifter's own exercise, or one they keep coming back to. */
+export function shownWithoutSearch(e: Exercise, keep?: ReadonlySet<string>): boolean {
+  return hasPhoto(e) || e.isCustom === true || (keep?.has(e.id) ?? false);
 }

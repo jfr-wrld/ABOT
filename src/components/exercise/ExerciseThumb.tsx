@@ -2,30 +2,12 @@
 
 import { memo, useState } from "react";
 import type { Exercise } from "@/types/workout";
-import { BUNDLED_THUMBS } from "@/data/exercise-thumbs.generated";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
+import { bundledThumb, remotePhotoOf } from "@/lib/exercise-photo";
+
+export { bundledThumb, exercisePhoto } from "@/lib/exercise-photo";
 
 type ThumbExercise = Pick<Exercise, "id" | "name" | "category" | "equipment" | "primaryMuscles" | "media">;
-
-/** The first still frame from free-exercise-db, if the exercise has one (never a video file). */
-function remotePhotoOf(exercise: ThumbExercise): string | undefined {
-  const url = exercise.media?.motionUrls?.[0];
-  return url && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(url) ? url : undefined;
-}
-
-/** The 128 px photo that ships with the app: seed exercises in /thumbs, free-exercise-db ones in /thumbs/fedb. */
-export function bundledThumb(id: string): string | undefined {
-  if (BUNDLED_THUMBS.has(id)) return `/thumbs/${id}.webp`;
-  return id.startsWith("fedb-") ? `/thumbs/fedb/${id.slice(5)}.webp` : undefined;
-}
-
-/** The best photo of an exercise for a larger picture: bundled first (works offline), else online. */
-export function exercisePhoto(exercise: ThumbExercise): string | undefined {
-  const bundled = bundledThumb(exercise.id);
-  if (bundled) return bundled;
-  const online = typeof navigator === "undefined" || navigator.onLine !== false;
-  return online ? remotePhotoOf(exercise) : undefined;
-}
 
 /**
  * A picture of the movement, in order of preference:
@@ -38,11 +20,14 @@ export function exercisePhoto(exercise: ThumbExercise): string | undefined {
  * Over a photo, a corner badge shows the equipment, the same icon as the equipment filter, so the
  * list can be scanned by tool as well as by movement. The row's text names the exercise, so the
  * picture is decorative for screen readers. The box is fixed-size in every case, so rows never shift.
+ * `badge` fixes the badge's size in px, for a thumb stretched past `size` (the grid tiles), where a
+ * badge in proportion to 128 px would cover a third of the photo.
  */
-export const ExerciseThumb = memo(function ExerciseThumb({ exercise, size = 48 }: { exercise: ThumbExercise; size?: number }) {
+export const ExerciseThumb = memo(function ExerciseThumb({ exercise, size = 48, badge }: { exercise: ThumbExercise; size?: number; badge?: number }) {
   const [failed, setFailed] = useState(false);
   const online = typeof navigator === "undefined" || navigator.onLine !== false;
-  const bundled = bundledThumb(exercise.id);
+  const bundled = bundledThumb(exercise);
+  const badgeBox = badge ?? Math.round(size * 0.42);
   const remote = online ? remotePhotoOf(exercise) : undefined;
   const src = failed ? undefined : (bundled ?? remote);
 
@@ -74,9 +59,9 @@ export const ExerciseThumb = memo(function ExerciseThumb({ exercise, size = 48 }
         <span
           data-equipment={exercise.equipment}
           className="force-dark absolute right-0 bottom-0 flex items-center justify-center rounded-tl-lg bg-black/80 text-accent"
-          style={{ width: Math.round(size * 0.42), height: Math.round(size * 0.42) }}
+          style={{ width: badgeBox, height: badgeBox }}
         >
-          <EquipmentIcon equipment={exercise.equipment} size={Math.round(size * 0.3)} />
+          <EquipmentIcon equipment={exercise.equipment} size={badge ? Math.round(badge * 0.62) : Math.round(size * 0.3)} />
         </span>
       )}
     </span>

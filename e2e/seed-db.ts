@@ -53,7 +53,7 @@ const id = (p: string) => `${p}-seed-${++n}`;
 /** A finished workout `daysAgo` days back: each exercise as [kg, reps] working sets. */
 export function finishedSession(
   exercises: Record<string, [number, number][]>,
-  opts: { daysAgo?: number; name?: string; routineId?: string; now?: number } = {},
+  opts: { daysAgo?: number; name?: string; routineId?: string; now?: number; bodyLoadKg?: number } = {},
 ): WorkoutSession {
   const startedAt = (opts.now ?? Date.now()) - (opts.daysAgo ?? 1) * DAY;
   return {
@@ -75,6 +75,8 @@ export function finishedSession(
         rpe: null,
         completed: true,
         completedAt: startedAt + (i + 1) * 3 * 60_000,
+        // Bodyweight lifts: the share of body weight moved, as the logger stamps it.
+        ...(opts.bodyLoadKg ? { bodyLoadKg: opts.bodyLoadKg } : {}),
       })),
     })),
   };

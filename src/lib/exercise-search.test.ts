@@ -55,3 +55,21 @@ describe("exercise search", () => {
     expect(filterExercises(lib, { query: "" })).toEqual(lib);
   });
 });
+
+describe("filterExercises with photos", () => {
+  const photo = SEED_EXERCISES.find((e) => e.id === "bench-press-barbell")!;
+  const atlas = { ...photo, id: "atlas-chest-press-machine", name: "Chest Press Machine", media: {} };
+  const mine = { ...atlas, id: "custom-1", name: "My Chest Press", isCustom: true };
+  const list = [atlas, photo, mine];
+
+  it("browsing lists photos and the lifter's own exercises, plus the ids kept", () => {
+    expect(filterExercises(list, { query: "", photos: {} }).map((e) => e.id)).toEqual(["bench-press-barbell", "custom-1"]);
+    expect(filterExercises(list, { query: "", photos: { keep: new Set([atlas.id]) } })).toHaveLength(3);
+  });
+
+  it("a search finds the photoless ones too, after photos of equal match", () => {
+    const found = filterExercises(list, { query: "chest press", photos: {} }).map((e) => e.id);
+    expect(found).toContain("atlas-chest-press-machine");
+    expect(filterExercises([atlas, { ...photo, name: "Chest Press Machine Photo" }], { query: "chest", photos: {} })[0]!.id).toBe("bench-press-barbell");
+  });
+});

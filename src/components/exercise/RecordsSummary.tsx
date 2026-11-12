@@ -40,7 +40,7 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
         <dt className="label-caps">{label}</dt>
         <dd className="text-base font-bold num">{value(r)}</dd>
         <dd className="text-xs text-text-muted">
-          {sub(r)} · {new Date(r.achievedAt).toLocaleDateString(t.locale, { day: "numeric", month: "short" })}
+          {[sub(r), new Date(r.achievedAt).toLocaleDateString(t.locale, { day: "numeric", month: "short" })].filter(Boolean).join(" · ")}
         </dd>
       </div>
     );
@@ -58,15 +58,17 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
           {t("No completed working sets yet. Records appear after you log this exercise in a finished workout.")}
         </p>
       ) : (
-        <dl className="mt-2 grid grid-cols-3 gap-2">
-          {tile(
-            "heaviest_weight",
-            t("Heaviest weight"),
-            (r) => (exercise.isBodyweight ? t("{n} reps", { n: r.reps }) : formatWeight(r.weightKg, weightUnit)),
-            (r) => `× ${r.reps}`,
-          )}
-          {tile("best_1rm", t("Best 1RM (est.)"), (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`)}
-          {tile("best_set_volume", t("Best set volume"), (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`)}
+        // Bodyweight lifts: the best set in reps, alone. A 1RM or a set volume of the added load
+        // alone says nothing about them.
+        <dl className={`mt-2 grid gap-2 ${exercise.isBodyweight ? "grid-cols-1" : "grid-cols-3"}`}>
+          {exercise.isBodyweight
+            ? // Most work in one set: at the same body weight, the most reps.
+              tile("best_set_volume", t("Best set"), (r) => t("{n} reps", { n: r.reps }), () => "")
+            : [
+                tile("heaviest_weight", t("Heaviest weight"), (r) => formatWeight(r.weightKg, weightUnit), (r) => t("× {reps}", { reps: r.reps })),
+                tile("best_1rm", t("Best 1RM (est.)"), (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`),
+                tile("best_set_volume", t("Best set volume"), (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`),
+              ]}
         </dl>
       )}
       {perGym && all?.heaviest_weight && all.heaviest_weight.value !== mine?.heaviest_weight?.value && (

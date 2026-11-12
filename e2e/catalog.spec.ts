@@ -8,7 +8,8 @@ test.beforeEach(async ({ page }) => {
 
 test("the built-in library: free-exercise-db photos offline, Atlas machines with the muscle map", async ({ page, context }) => {
   await page.goto("/exercises");
-  await expect(page.getByText("1172 exercises", { exact: true })).toBeVisible();
+  // Browsing lists the 873 with a real photo; the rest are found by name.
+  await expect(page.getByText("873 exercises", { exact: true })).toBeVisible();
   // No download to make any more.
   await expect(page.getByRole("button", { name: "Catalog", exact: true })).toHaveCount(0);
   await context.setOffline(true);
@@ -21,6 +22,7 @@ test("the built-in library: free-exercise-db photos offline, Atlas machines with
   await search.fill("pendulum squat");
   const pendulum = page.getByRole("link", { name: /^Pendulum Squat \(Machine\)/ });
   await expect(pendulum.locator('[data-thumb="icon"]')).toBeVisible();
+  await expect(pendulum).toContainText("No photo");
   // Offline in the browser also cuts the dev server off, so open the page online.
   await context.setOffline(false);
   await pendulum.click();
