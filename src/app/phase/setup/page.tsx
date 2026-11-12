@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Bike, Footprints, HardHat, Laptop, ShieldCheck, Timer, TrendingDown, TrendingUp, Utensils } from "lucide-react";
+import { Bike, Dumbbell, Footprints, HardHat, Laptop, ShieldCheck, Timer, TrendingDown, TrendingUp, Utensils } from "lucide-react";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +13,8 @@ import { CountFromZero } from "@/components/motion/Entrance";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useEntitlements } from "@/store/useEntitlements";
 import { useBodyStore } from "@/store/useBodyStore";
+import { useRoutineStore } from "@/store/useRoutineStore";
+import { ROUTINE_TEMPLATES, templateToRoutine, type RoutineTemplate } from "@/lib/seed-routines";
 import { Crown } from "lucide-react";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { dayKey } from "@/lib/bodyweight";
@@ -26,8 +28,10 @@ import {
   DEFAULT_RATE,
   PHASE_BLURB,
   PHASE_CALIBRATION,
+  DEFAULT_SESSIONS,
   PHASE_DURATIONS,
   PHASE_GOAL,
+  programTemplates,
   PHASE_LABEL,
   PHASE_TYPES,
   fuelTarget,
@@ -68,14 +72,17 @@ function Wizard() {
   const settings = useSettingsStore();
   const { canAccessPro, openPaywall } = useEntitlements();
   const unit = settings.weightUnit;
-  const current = settings.bodyPhase?.isActive ? settings.bodyPhase : null;
+  // From a finished block's summary (?next=BULKING): a new phase, not an edit of the old one.
+  const nextParam = useSearchParams().get("next");
+  const next = PHASE_TYPES.includes(nextParam as BodyPhaseType) ? (nextParam as BodyPhaseType) : null;
+  const current = settings.bodyPhase?.isActive && !next ? settings.bodyPhase : null;
   useActionBarSpace(76);
   const now = useNow(60_000);
 
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   // Nothing is picked for a new phase: the first step asks the goal, so "Next" waits for an answer.
-  const [picked, setPicked] = useState<BodyPhaseType | null>(current?.phaseType ?? null);
+  const [picked, setPicked] = useState<BodyPhaseType | null>(next ?? current?.phaseType ?? null);
   const type: BodyPhaseType = picked ?? "BULKING";
   // What ABOT already knows fills itself in: the latest weigh-in, the profile's height, the age
   // and sex given last time.
@@ -89,6 +96,15 @@ function Wizard() {
   const [activity, setActivity] = useState<number>(current?.activityMultiplier ?? 1.375);
   const [weeks, setWeeks] = useState<number>(current?.durationWeeks ?? 8);
   const [targetKg, setTargetKg] = useState<number | null>(current?.targetWeightKg ?? null);
+  const [days, setDays] = useState<number | null>(current?.sessionsPerWeek ?? null);
+  const sessionsPerWeek = days ?? DEFAULT_SESSIONS[type];
+  const routines = useRoutineStore((s) => s.routines);
+  const program = programTemplates(sessionsPerWeek)
+    .map((id) => ROUTINE_TEMPLATES.find((tpl) => tpl.id === id))
+    .filter((tpl): tpl is RoutineTemplate => !!tpl);
+  // Templates already saved (by name) are not added twice.
+  const missing = program.filter((tpl) => !routines.some((r) => r.name === tpl.name));
+  const [addRoutines, setAddRoutines] = useState(true);
 
   const rate = DEFAULT_RATE[type];
   const suggested = weightKg * (1 + (rate / 100) * weeks);
@@ -107,6 +123,9 @@ function Wizard() {
     activityMultiplier: activity,
     weeklyRatePercent: rate,
     isActive: true,
+    sessionsPerWeek,
+    // A new phase starts from its own numbers; editing one keeps what its check-ins learned.
+    ...(current && current.phaseType === type && current.kcalAdjust ? { kcalAdjust: current.kcalAdjust, checkInDay: current.checkInDay } : {}),
   };
   const fuel = fuelTarget(draft, weightKg, 0, true);
   const shown = (kg: number) => Math.round(toDisplay(kg, unit) * 10) / 10;
@@ -121,6 +140,14 @@ function Wizard() {
     feedback.setComplete();
     // The answers become the profile's, so the next phase (and Body) start from them.
     settings.update({ bodyPhase: draft, heightCm, birthYear: new Date(now).getFullYear() - age, biologicalSex: sex });
+    if (addRoutines) {
+      const { create, setExercises } = useRoutineStore.getState();
+      for (const tpl of missing) {
+        const copy = templateToRoutine(tpl);
+        const r = create(copy.name, copy.folder);
+        setExercises(r.id, copy.exercises);
+      }
+    }
     const logged = latestKg ?? settings.bodyweightKg;
     if (logged === null || Math.abs(logged - weightKg) >= 0.05) useBodyStore.getState().logWeight(weightKg);
     router.push("/phase");
@@ -294,6 +321,43 @@ function Wizard() {
                     {t("Deload every {n} weeks", { n: tunables().phase.deloadEvery })}
                   </li>
                 </ul>
+                <section aria-labelledby="program-heading" className="flex w-full flex-col gap-2 rounded-card border border-line bg-surface p-3">
+                  <h2 id="program-heading" className="label-caps">
+                    {t("Training")}
+                  </h2>
+                  <div role="radiogroup" aria-label={t("Training days a week")} className="grid grid-cols-5 gap-1.5">
+                    {[2, 3, 4, 5, 6].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        role="radio"
+                        aria-checked={sessionsPerWeek === n}
+                        aria-label={t.n(n, "{n} day a week", "{n} days a week")}
+                        onClick={() => setDays(n)}
+                        className={`num min-h-11 rounded-ctl border text-sm font-bold ${sessionsPerWeek === n ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
+                      >
+                        {n}
+                        <span className="text-[11px] font-semibold">×</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-text-muted">{t("Days a week. Your routines:")}</p>
+                  <ul className="flex flex-col gap-1 text-sm">
+                    {program.map((tpl) => (
+                      <li key={tpl.id} className="flex items-center gap-2">
+                        <Dumbbell aria-hidden="true" size={14} className="shrink-0 text-accent" />
+                        <span className="min-w-0 flex-1 truncate">{tpl.name}</span>
+                        {!missing.includes(tpl) && <span className="shrink-0 text-xs text-text-muted">{t("Saved")}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                  {missing.length > 0 && (
+                    <label className="flex min-h-11 items-center gap-2 text-sm">
+                      <input type="checkbox" checked={addRoutines} onChange={(e) => setAddRoutines(e.target.checked)} className="size-5 accent-[var(--color-accent)]" />
+                      {t.n(missing.length, "Add it to my routines", "Add them to my routines")}
+                    </label>
+                  )}
+                </section>
                 <p className="text-center text-[11px] text-text-muted">{t("Your training adds to this: the average of your workouts over the last 4 weeks. An estimate, not medical advice.")}</p>
               </div>
             )}

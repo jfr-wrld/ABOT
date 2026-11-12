@@ -33,6 +33,12 @@ export interface ActivePhaseConfig {
   /** Planned change of body weight per week, % (negative when cutting). */
   weeklyRatePercent: number;
   isActive: boolean;
+  /** Training days a week the lifter planned at setup (2 to 6). */
+  sessionsPerWeek?: number;
+  /** Calories added (or taken off) by accepted weekly check-ins, kcal a day. */
+  kcalAdjust?: number;
+  /** Local day of the last check-in answered; the next one shows a week later. */
+  checkInDay?: string;
 }
 
 export const PHASE_TYPES: BodyPhaseType[] = ["CUTTING", "BULKING", "RECOMP", "STRENGTH_PEAK"];
@@ -142,6 +148,8 @@ export interface FuelTarget {
   delta: number;
   /** The part of maintenance that is training: the daily average of the last 4 weeks, kcal. */
   trainingKcal: number;
+  /** What accepted weekly check-ins changed, kcal (0 when none). */
+  adjust: number;
 }
 
 /**
@@ -184,11 +192,20 @@ export function fuelTarget(p: ActivePhaseConfig, weightKg: number, trainingKcalP
     case "STRENGTH_PEAK":
       break;
   }
-  const kcal = Math.round(tdee + delta);
+  const kcal = Math.round(tdee + delta + (p.kcalAdjust ?? 0));
   const proteinG = Math.round(protein * weightKg);
   const fatG = Math.round(fat * weightKg);
   const carbsG = Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4));
-  return { kcal, proteinG, carbsG, fatG, tdee: Math.round(tdee), delta: Math.round(delta), trainingKcal: Math.round(trainingKcalPerDay) };
+  return {
+    kcal,
+    proteinG,
+    carbsG,
+    fatG,
+    tdee: Math.round(tdee),
+    delta: Math.round(delta),
+    trainingKcal: Math.round(trainingKcalPerDay),
+    adjust: Math.round(p.kcalAdjust ?? 0),
+  };
 }
 
 /** How much the phase stretches recovery: a deficit slows it, a surplus speeds it up. */
@@ -348,6 +365,9 @@ export function normalizePhase(raw: unknown): ActivePhaseConfig | null {
     activityMultiplier: num(r.activityMultiplier, 1.2, 1.9, 1.375)!,
     weeklyRatePercent: num(r.weeklyRatePercent, -1.5, 1.5, DEFAULT_RATE[type])!,
     isActive: r.isActive !== false,
+    ...(typeof r.sessionsPerWeek === "number" ? { sessionsPerWeek: Math.round(clamp(r.sessionsPerWeek, 2, 6)) } : {}),
+    ...(typeof r.kcalAdjust === "number" && Number.isFinite(r.kcalAdjust) ? { kcalAdjust: Math.round(clamp(r.kcalAdjust, -KCAL_ADJUST_MAX, KCAL_ADJUST_MAX)) } : {}),
+    ...(typeof r.checkInDay === "string" && /^\d{4}-\d{2}-\d{2}$/.test(r.checkInDay) ? { checkInDay: r.checkInDay } : {}),
   };
 }
 
@@ -379,3 +399,84 @@ export function templateFitsPhase(tpl: TemplateShape, phase: BodyPhaseType): boo
       return tpl.split !== "ppl";
   }
 }
+
+/* ---------------------------------------------------------------- program */
+
+/** How far check-ins may move the target in all, kcal a day. */
+export const KCAL_ADJUST_MAX = 600;
+/** One check-in's step, kcal a day: small enough to judge in a week or two. */
+export const CHECK_IN_STEP = 150;
+
+export type CheckInKind = "on_track" | "too_slow" | "too_fast" | "drifting" | "need_weighins";
+
+export interface CheckIn {
+  kind: CheckInKind;
+  /** The change it suggests, kcal a day; 0 when nothing should change. */
+  adjustKcal: number;
+  /** Trend change per week over the last two weeks, kg; null without enough weigh-ins. */
+  actualPerWeekKg: number | null;
+  plannedPerWeekKg: number;
+}
+
+/**
+ * The weekly look at the trend against the plan, from the third week on and once a week after
+ * an answer; null when none is due. A cut losing under a third of the planned rate, or a bulk
+ * gaining under a third, gets 150 kcal less (cut) or more (bulk); twice the rate or more gets the
+ * opposite, to protect muscle (cut) or limit fat (bulk). Recomp and peak hold weight, so drifting
+ * by more than 0.5% of body weight a week is corrected. Four weigh-ins in two weeks are needed.
+ */
+export function weeklyCheckIn(p: ActivePhaseConfig, points: TrendPoint[], now: number): CheckIn | null {
+  const start = dayStart(p.startDate);
+  if (now - start < 14 * DAY) return null;
+  if (mesocycleWeek(p, now).finished) return null;
+  if (p.checkInDay && now - dayStart(p.checkInDay) < 7 * DAY) return null;
+  const planned = Math.round(((p.startWeightKg * p.weeklyRatePercent) / 100) * 100) / 100;
+  const recent = points.filter((x) => x.date >= now - 14 * DAY);
+  const actual = recent.length >= 4 ? trendRatePerWeek(points, now) : null;
+  if (actual === null) return { kind: "need_weighins", adjustKcal: 0, actualPerWeekKg: null, plannedPerWeekKg: planned };
+  const room = (k: number) => clamp((p.kcalAdjust ?? 0) + k, -KCAL_ADJUST_MAX, KCAL_ADJUST_MAX) - (p.kcalAdjust ?? 0);
+  const out = (kind: CheckInKind, kcal: number): CheckIn => ({ kind, adjustKcal: room(kcal), actualPerWeekKg: actual, plannedPerWeekKg: planned });
+  if (planned === 0) {
+    const drift = actual / Math.max(1, p.startWeightKg);
+    if (Math.abs(drift) > 0.005) return out("drifting", drift > 0 ? -CHECK_IN_STEP : CHECK_IN_STEP);
+    return out("on_track", 0);
+  }
+  const ratio = actual / planned;
+  const sign = planned < 0 ? -1 : 1;
+  if (ratio < 1 / 3) return out("too_slow", sign * CHECK_IN_STEP);
+  if (ratio >= 2) return out("too_fast", -sign * CHECK_IN_STEP);
+  return out("on_track", 0);
+}
+
+/**
+ * Training days a week to plan with each phase: a cut keeps sessions short and frequent enough to
+ * hold muscle, a bulk has the most room for volume.
+ */
+export const DEFAULT_SESSIONS: Record<BodyPhaseType, number> = { CUTTING: 3, BULKING: 4, RECOMP: 3, STRENGTH_PEAK: 4 };
+
+/**
+ * The routine templates for a number of training days: full body for 2 or 3 days, upper/lower for
+ * 4, push/pull/legs for 5 or 6. Ids from lib/seed-routines.
+ */
+export function programTemplates(sessionsPerWeek: number): string[] {
+  if (sessionsPerWeek <= 3) return ["tpl-fb-1", "tpl-fb-2", "tpl-fb-3"];
+  if (sessionsPerWeek === 4) return ["tpl-upper", "tpl-lower"];
+  return ["tpl-push-a", "tpl-pull-a", "tpl-legs-a", "tpl-push-b", "tpl-pull-b", "tpl-legs-b"];
+}
+
+/** Completed workouts in the week `now` is in (starting on `firstDay`, 0 Sunday or 1 Monday). */
+export function sessionsThisWeek(sessions: WorkoutSession[], now: number, firstDay: 0 | 1): number {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  const back = (d.getDay() - firstDay + 7) % 7;
+  const from = d.getTime() - back * DAY;
+  return sessions.filter((s) => s.status === "completed" && s.startedAt >= from && s.startedAt <= now).length;
+}
+
+/** What to do after a block, by the phase that just ended. */
+export const NEXT_PHASE: Record<BodyPhaseType, { suggest: BodyPhaseType[]; why: string }> = {
+  CUTTING: { suggest: ["RECOMP", "BULKING"], why: "After a cut, a few weeks at maintenance (recomp) let hunger and training settle before a lean bulk." },
+  BULKING: { suggest: ["RECOMP", "CUTTING"], why: "After a bulk, hold the new weight for a while, or cut the fat you gained." },
+  RECOMP: { suggest: ["BULKING", "CUTTING"], why: "Keep going, or pick a direction: a lean bulk to build, a cut to lean out." },
+  STRENGTH_PEAK: { suggest: ["BULKING", "RECOMP"], why: "After a peak, lighter weeks with more volume rebuild for the next one." },
+};

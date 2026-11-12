@@ -7,7 +7,7 @@ import { Beef, ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "l
 import { addProtein, addWater, useTodayFuel } from "@/store/useFuelPacer";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useEntitlements } from "@/store/useEntitlements";
-import { PHASE_LABEL, type BodyPhaseType } from "@/lib/phase-engine";
+import { PHASE_LABEL, weeklyCheckIn, type BodyPhaseType } from "@/lib/phase-engine";
 import { toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
@@ -55,6 +55,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
 
   const Icon = PHASE_ICON[m.phase.phaseType];
   const { meso, fuel } = m;
+  const checkIn = weeklyCheckIn(m.phase, m.points, now);
   const weight = (Math.round(toDisplay(m.trendKg, unit) * 10) / 10).toFixed(1);
   const rate = m.ratePerWeek;
 
@@ -73,6 +74,12 @@ export function PhaseCommandCard({ now }: { now: number }) {
             {meso.finished ? t("Done") : t("W{week}/{of}", { week: meso.week, of: meso.of })}
           </span>
           {meso.deload && !meso.finished && <span className="shrink-0 rounded-full bg-warmup/15 px-1.5 py-px text-[10px] font-bold uppercase text-warmup">{t("Deload")}</span>}
+          {/* Something waits on the phase page: the week's check-in, or the end-of-block summary. */}
+          {(meso.finished || (checkIn && checkIn.kind !== "need_weighins")) && (
+            <span className="shrink-0 rounded-full bg-accent px-1.5 py-px text-[11px] font-bold text-on-accent">
+              {meso.finished ? t("See what's next") : t("Check-in")}
+            </span>
+          )}
           <span className="flex-1" />
           <ChevronRight aria-hidden="true" size={16} className="shrink-0 text-text-muted" />
         </div>

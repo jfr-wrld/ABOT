@@ -84,8 +84,9 @@ test("the setup wizard starts a cut, and the phase page logs weight, protein and
   // The tap plus the logged day's protein.
   await expect(card.getByRole("img", { name: /^Protein: \d+ \/ 165$/ })).toBeVisible();
 
+  // The setup added the full-body routines that fit three days a week.
   await page.goto("/routines");
-  await expect(page.getByText("Fits your cut").first()).toBeVisible();
+  await expect(page.getByText("Full Body Day 1").first()).toBeVisible();
 });
 
 test("without a phase, the phase and fuel pages offer the setup", async ({ page }) => {
@@ -94,4 +95,81 @@ test("without a phase, the phase and fuel pages offer the setup", async ({ page 
   await page.goto("/phase/fuel");
   await page.getByRole("tab", { name: "Plan" }).click();
   await expect(page.getByRole("link", { name: "Choose a body phase" })).toBeVisible();
+});
+
+/** A cut that began `daysAgo`, with a weigh-in every other day changing `perWeek` kg a week. */
+async function seedCut(page: import("@playwright/test").Page, daysAgo: number, perWeek: number, weeks = 8) {
+  await page.evaluate(
+    async ({ daysAgo, perWeek, weeks }) => {
+      const DAY = 86_400_000;
+      const key = (t: number) => {
+        const d = new Date(t);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      };
+      const start = Date.now() - daysAgo * DAY;
+      const log = [];
+      for (let i = 0; i <= daysAgo; i += 2) log.push({ id: key(start + i * DAY), date: start + i * DAY, weightKg: 80 + (perWeek * i) / 7 });
+      const bodyPhase = {
+        id: "p1", phaseType: "CUTTING", title: "CUT", startDate: key(start), durationWeeks: weeks, startWeightKg: 80, targetWeightKg: 76,
+        heightCm: 180, age: 30, biologicalSex: "male", activityMultiplier: 1.375, weeklyRatePercent: -0.5, isActive: true, sessionsPerWeek: 3,
+      };
+      await new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open("abot");
+        open.onsuccess = () => {
+          const tx = open.result.transaction("kv", "readwrite");
+          const kv = tx.objectStore("kv");
+          const get = kv.get("settings");
+          get.onsuccess = () => {
+            kv.put({ key: "settings", value: { ...(get.result?.value ?? {}), bodyPhase, bodyweightKg: log.at(-1)!.weightKg } });
+            kv.put({ key: "bodyweightLog", value: log });
+          };
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        };
+      });
+    },
+    { daysAgo, perWeek, weeks },
+  );
+  await page.goto("/phase");
+}
+
+test("the weekly check-in catches a stalled cut and moves the target with one tap", async ({ page }) => {
+  await seedCut(page, 21, 0);
+  const card = page.getByRole("region", { name: "Weekly check-in" });
+  await expect(card).toContainText("Slower than planned");
+  await expect(page.getByRole("link", { name: /Training this week/ })).toContainText("of 3 workouts");
+  await card.getByRole("button", { name: "Eat 150 kcal less" }).click();
+  await expect(card).toHaveCount(0);
+  await page.getByText("How the target is worked out").first().click();
+  await expect(page.getByText("Weekly check-ins").first()).toBeVisible();
+  await expect(page.getByText("−150").first()).toBeVisible();
+  // Answered: nothing more until next week, after a reload too.
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Weekly check-in" })).toHaveCount(0);
+});
+
+test("a finished block sums up, suggests what's next, and can be closed", async ({ page }) => {
+  await seedCut(page, 57, -0.4);
+  const summary = page.getByRole("region", { name: "8 weeks done" });
+  await expect(summary).toBeVisible();
+  await expect(summary.getByRole("link", { name: /Lose fat and build muscle, slowly/ })).toHaveAttribute("href", "/phase/setup?next=RECOMP");
+  await expectNoHorizontalOverflow(page);
+  await summary.getByRole("button", { name: "End this phase" }).click();
+  await expect(page.getByText("No phase running.")).toBeVisible();
+});
+
+test("setup offers routines for the chosen training days and saves them", async ({ page }) => {
+  await page.goto("/phase/setup");
+  await page.getByRole("radio", { name: /^Lose fat\s*Cut/ }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("radio", { name: "4 days a week" }).click();
+  await expect(page.getByText("Upper", { exact: false }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Start phase" }).click();
+  await page.waitForURL((u) => u.pathname === "/phase");
+  await expect(page.getByRole("link", { name: /Training this week/ })).toContainText("of 4 workouts");
+  await page.goto("/routines");
+  await expect(page.getByText(/^Upper/).first()).toBeVisible();
+  await expect(page.getByText(/^Lower/).first()).toBeVisible();
 });

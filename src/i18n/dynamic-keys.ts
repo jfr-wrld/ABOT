@@ -2,7 +2,7 @@ import { FAQ, LANGUAGE_LABEL, SECTION_TITLE, THEME_LABEL } from "@/components/se
 import { SPLITS } from "@/lib/seed-routines";
 import { PLATE_COLORS, PLATE_SETS } from "@/lib/plate-calculator";
 import { KIND_LABEL, PHASE_PILL_LABEL, WHY } from "@/lib/progressive-overload";
-import { ACTIVITY_LEVELS, PHASE_BLURB, PHASE_CALIBRATION, PHASE_GOAL, PHASE_LABEL, RISK_LABEL } from "@/lib/phase-engine";
+import { ACTIVITY_LEVELS, PHASE_BLURB, PHASE_CALIBRATION, NEXT_PHASE, PHASE_GOAL, PHASE_LABEL, RISK_LABEL } from "@/lib/phase-engine";
 import { CATEGORY_LABEL, DIGEST_LABEL, FOODS, LEVEL_LABEL, SOURCE_LABEL } from "@/lib/nutrition-guide";
 import { COVER_PRESETS } from "@/lib/cover-presets";
 import { AISLE_LABEL, DAY_TEMPLATES, RAW_LABELS, SLOT_LABEL } from "@/lib/meal-templates";
@@ -134,6 +134,7 @@ export const DYNAMIC_KEYS: string[] = [
   ...Object.values(PHASE_LABEL),
   ...Object.values(PHASE_BLURB),
   ...Object.values(PHASE_GOAL),
+  ...Object.values(NEXT_PHASE).map((n) => n.why),
   ...ACTIVITY_LEVELS.map((a) => a.label),
   ...Object.values(PHASE_CALIBRATION).flat(),
   ...Object.values(PHASE_PILL_LABEL),

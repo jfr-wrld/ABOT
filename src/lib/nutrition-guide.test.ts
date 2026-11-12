@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FOODS, foodsFor, mealCombos, waterTargetMl } from "./nutrition-guide";
 
-const fuel = { kcal: 2600, proteinG: 150, carbsG: 320, fatG: 75, tdee: 2350, delta: 250, trainingKcal: 200 };
+const fuel = { kcal: 2600, proteinG: 150, carbsG: 320, fatG: 75, tdee: 2350, delta: 250, trainingKcal: 200, adjust: 0 };
 
 describe("food matrix", () => {
   it("has unique ids and macros whose calories add up (4/4/9) within reason", () => {

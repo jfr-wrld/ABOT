@@ -11,6 +11,7 @@ import { CountFromZero, Rise } from "@/components/motion/Entrance";
 import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme";
 import { PHASE_ICON, Pacer } from "@/components/phase/PhaseCommandCard";
 import { TargetBreakdown } from "@/components/phase/TargetBreakdown";
+import { CheckInCard, PhaseSummary, WeekTraining } from "@/components/phase/Program";
 import { usePhaseTelemetry, type PhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
 import { BlockPlate, ChangeMeter, MacroDonut, MacroLegend, Stepper } from "@/components/phase/visuals";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -64,6 +65,16 @@ function PhaseScreen() {
       <Rise order={0} className="px-4">
         <Hero m={m} />
       </Rise>
+      {m.meso.finished ? (
+        <Rise order={1} className="px-4">
+          <PhaseSummary m={m} />
+        </Rise>
+      ) : (
+        <Rise order={1} className="flex flex-col gap-3 px-4">
+          <CheckInCard m={m} now={now} />
+          <WeekTraining m={m} now={now} />
+        </Rise>
+      )}
       <Rise order={1} className="px-4">
         <Fuel m={m} />
       </Rise>

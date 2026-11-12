@@ -18,6 +18,7 @@ export function TargetBreakdown({ fuel, phase, trainingDay }: { fuel: FuelTarget
     [t("Daily life"), n(life)],
     [t("Training, a day on average"), `+${n(fuel.trainingKcal)}`],
     [phaseLine, `${fuel.delta > 0 ? "+" : fuel.delta < 0 ? "−" : "±"}${n(Math.abs(fuel.delta))}`],
+    ...(fuel.adjust !== 0 ? ([[t("Weekly check-ins"), `${fuel.adjust > 0 ? "+" : "−"}${n(Math.abs(fuel.adjust))}`]] as [string, string][]) : []),
   ];
   return (
     <details className="group">
