@@ -89,7 +89,6 @@ function PhaseScreen() {
       <Rise order={4} className="px-4">
         <Strength m={m} />
       </Rise>
-      <p className="px-4 text-center text-[11px] text-text-muted">{t("Targets are estimates from Mifflin-St Jeor and your logged training. Not medical advice.")}</p>
     </main>
   );
 }

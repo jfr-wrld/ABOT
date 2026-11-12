@@ -275,7 +275,7 @@ function Wizard() {
                         className={`num min-h-11 rounded-ctl border text-sm font-bold ${weeks === w ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
                       >
                         {w}
-                        <span className="text-[10px] font-semibold"> {t("wk")}</span>
+                        <span className="text-[11px] font-semibold"> {t("wk")}</span>
                       </button>
                     ))}
                   </div>

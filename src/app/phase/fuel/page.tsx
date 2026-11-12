@@ -90,9 +90,6 @@ function FuelScreen() {
           ))}
         {tab === "foods" && <Foods phase={m?.phase.phaseType ?? null} />}
       </div>
-      <p className="px-4 text-center text-[11px] text-text-muted">
-        {t("Values from TKPI (Kemenkes RI) and USDA FoodData Central; mixed dishes are estimates. Brands and cooking change them.")}
-      </p>
     </main>
   );
 }
@@ -183,7 +180,7 @@ function FoodTile({ food: f, suits, onOpen }: { food: Food; suits: boolean; onOp
         <span className="relative block">
           <FoodPhoto id={f.id} size={200} className="aspect-[4/3] !h-auto !w-full" />
           {suits && (
-            <span className="absolute right-2 top-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-on-accent">
+            <span className="absolute right-2 top-2 rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-on-accent">
               {t("Fits your phase")}
             </span>
           )}

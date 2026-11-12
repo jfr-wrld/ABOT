@@ -629,4 +629,7 @@ export const phase: Record<string, string> = {
   "Wheat flour": "Tepung terigu",
   "Worked out from one {unit} of:": "Dihitung dari satu {unit} berisi:",
   "Your own numbers": "Angka buatanmu sendiri",
+  "Left today": "Sisa hari ini",
+  "Over today": "Lebih hari ini",
+  "of {n} kcal": "dari {n} kkal",
 };

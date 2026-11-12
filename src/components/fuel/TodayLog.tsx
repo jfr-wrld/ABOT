@@ -78,8 +78,8 @@ export function TodayLog({
             >
               <span className="num text-[13px] font-bold leading-none">{r.value}</span>
             </Ring>
-            <span className="text-[11px] font-semibold">{r.label}</span>
-            <span className="num text-[10px] text-text-muted">{r.max ? t("of {max} {unit}", { max: r.max, unit: r.unit }) : r.unit}</span>
+            <span className="text-xs font-semibold">{r.label}</span>
+            <span className="num text-[11px] leading-tight text-text-muted">{r.max ? t("of {max} {unit}", { max: r.max, unit: r.unit }) : r.unit}</span>
           </div>
         ))}
       </div>

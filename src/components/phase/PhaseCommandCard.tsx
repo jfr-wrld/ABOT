@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Beef, ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "lucide-react";
 import { addProtein, addWater, useTodayFuel } from "@/store/useFuelPacer";
+import { dayOf, useFoodLog } from "@/store/useFoodLog";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useEntitlements } from "@/store/useEntitlements";
 import { PHASE_LABEL, weeklyCheckIn, type BodyPhaseType } from "@/lib/phase-engine";
@@ -12,7 +13,7 @@ import { toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 import { usePhaseTelemetry } from "./usePhaseTelemetry";
-import { MacroBar, Ring } from "./visuals";
+import { Ring } from "./visuals";
 
 export const PHASE_ICON: Record<BodyPhaseType, typeof Flame> = { CUTTING: Flame, BULKING: Hammer, RECOMP: Scale, STRENGTH_PEAK: Zap };
 
@@ -26,6 +27,8 @@ export function PhaseCommandCard({ now }: { now: number }) {
   const m = usePhaseTelemetry(now);
   const unit = useSettingsStore((s) => s.weightUnit);
   const pro = useEntitlements().canAccessPro("body_phase_protocols");
+  const today = dayOf(now);
+  const eatenToday = useFoodLog((s) => Math.round(s.entries.reduce((n, e) => (e.day === today ? n + e.kcal : n), 0)));
 
   if (!m) {
     return (
@@ -56,8 +59,10 @@ export function PhaseCommandCard({ now }: { now: number }) {
   const Icon = PHASE_ICON[m.phase.phaseType];
   const { meso, fuel } = m;
   const checkIn = weeklyCheckIn(m.phase, m.points, now);
+  const eaten = eatenToday;
   const weight = (Math.round(toDisplay(m.trendKg, unit) * 10) / 10).toFixed(1);
   const rate = m.ratePerWeek;
+  const left = fuel.kcal - eaten;
 
   return (
     <section aria-labelledby="phase-heading" className="panel overflow-hidden">
@@ -73,7 +78,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
           <span className="num shrink-0 text-xs font-bold text-text-muted">
             {meso.finished ? t("Done") : t("W{week}/{of}", { week: meso.week, of: meso.of })}
           </span>
-          {meso.deload && !meso.finished && <span className="shrink-0 rounded-full bg-warmup/15 px-1.5 py-px text-[10px] font-bold uppercase text-warmup">{t("Deload")}</span>}
+          {meso.deload && !meso.finished && <span className="shrink-0 rounded-full bg-warmup/15 px-1.5 py-px text-[11px] font-bold uppercase text-warmup">{t("Deload")}</span>}
           {/* Something waits on the phase page: the week's check-in, or the end-of-block summary. */}
           {(meso.finished || (checkIn && checkIn.kind !== "need_weighins")) && (
             <span className="shrink-0 rounded-full bg-accent px-1.5 py-px text-[11px] font-bold text-on-accent">
@@ -84,31 +89,30 @@ export function PhaseCommandCard({ now }: { now: number }) {
           <ChevronRight aria-hidden="true" size={16} className="shrink-0 text-text-muted" />
         </div>
 
-        <BlockBar of={meso.of} progress={meso.progress} week={meso.week} finished={meso.finished} label={t("Block progress")} thin />
-
+        {/* Two figures and nothing else: the day's room to eat, and where the weight is heading.
+            Macros, the block and the charts are on /phase. */}
         <div className="grid grid-cols-2 gap-3">
+          <div className="min-w-0">
+            <p className="label-caps">{left >= 0 ? t("Left today") : t("Over today")}</p>
+            <p className="num text-lg font-bold leading-tight text-accent">
+              {Math.abs(left).toLocaleString(t.locale)}
+              <span className="ml-0.5 text-xs font-semibold text-text-muted">{t("of {n} kcal", { n: fuel.kcal.toLocaleString(t.locale) })}</span>
+            </p>
+          </div>
           <div className="min-w-0">
             <p className="label-caps">{t("Trend")}</p>
             <p className="num flex items-baseline gap-1.5 whitespace-nowrap">
               <span className="text-lg font-bold leading-tight">
                 {weight}
-                <span className="ml-0.5 text-[11px] font-semibold text-text-muted">{unit}</span>
+                <span className="ml-0.5 text-xs font-semibold text-text-muted">{unit}</span>
               </span>
               {rate !== null && (
-                <span className="text-[11px] font-semibold text-text-muted">
+                <span className="text-xs font-semibold text-text-muted">
                   {rate > 0 ? "+" : rate < 0 ? "−" : "±"}
                   {Math.abs(Math.round(toDisplay(rate, unit) * 10) / 10)}/{t("wk")}
                 </span>
               )}
             </p>
-          </div>
-          <div className="min-w-0">
-            <p className="label-caps">{t("Today")}</p>
-            <p className="num text-lg font-bold leading-tight text-accent">
-              {fuel.kcal.toLocaleString(t.locale)}
-              <span className="ml-0.5 text-[11px] font-semibold text-text-muted">kcal</span>
-            </p>
-            <MacroBar protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} className="mt-1 h-1" />
           </div>
         </div>
       </Link>
@@ -240,19 +244,6 @@ function PacerChip({ label, value, target, step, figure, stepText, aria, onAdd, 
         <Ghost key={id} id={id} text={stepText} done={m.done} />
       ))}
     </button>
-  );
-}
-
-/** One segment per week: done in Volt, this week half-lit. */
-export function BlockBar({ of, progress, week, finished, label, thin = false }: { of: number; progress: number; week: number; finished: boolean; label: string; thin?: boolean }) {
-  return (
-    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={of} aria-valuenow={week} className={`flex gap-0.5 ${thin ? "h-1" : "h-1.5"}`}>
-      {Array.from({ length: of }, (_, i) => {
-        const done = (i + 1) / of <= progress + 1e-9;
-        const current = i + 1 === week && !finished;
-        return <span key={i} className={`h-full flex-1 rounded-full ${done ? "bg-accent" : current ? "bg-accent/45" : "bg-track"}`} />;
-      })}
-    </div>
   );
 }
 
