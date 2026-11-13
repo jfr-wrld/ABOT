@@ -331,7 +331,8 @@ function Pill({ pressed, onClick, children }: { pressed: boolean; onClick: () =>
         onClick();
       }}
       className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors ${
-        pressed ? "border-text bg-text text-bg" : "border-line-strong bg-surface text-text-muted hover:text-text"
+        // Volt tint like the picker's chips: follows the theme instead of an inverted white pill.
+        pressed ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface text-text-muted hover:text-text"
       }`}
     >
       {children}
