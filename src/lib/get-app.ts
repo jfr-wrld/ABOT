@@ -38,11 +38,15 @@ const SESSION_KEY = "abot.getApp.session";
 
 export const emptyMemory = (): NudgeMemory => ({ bannerUntil: 0, never: false, shown: {} });
 
-/** Whether a nudge may show: never after "Don't show again", once per trigger, one per session. */
-export function shouldNudge(m: NudgeMemory, trigger: NudgeTrigger, now: number, shownThisSession: boolean): boolean {
-  if (m.never || shownThisSession) return false;
+/**
+ * Whether a nudge may show: never after "Don't show again", once per trigger, and one kind per
+ * visit. `sessionNudge` is the one already shown this visit: that same one may show again (Home
+ * redraws when the language changes, and the banner must not hide itself).
+ */
+export function shouldNudge(m: NudgeMemory, trigger: NudgeTrigger, now: number, sessionNudge: SessionNudge | null): boolean {
+  if (m.never || (sessionNudge !== null && sessionNudge !== trigger)) return false;
   if (trigger === "banner") return now >= m.bannerUntil;
-  return !m.shown[trigger];
+  return !m.shown[trigger] || sessionNudge === trigger;
 }
 
 export function readMemory(): NudgeMemory {
@@ -67,17 +71,23 @@ export function writeMemory(m: NudgeMemory): void {
   }
 }
 
-export function shownThisSession(): boolean {
+/** The nudge shown this visit, or "closed" once the visitor closed it: then none comes back. */
+export type SessionNudge = NudgeTrigger | "closed";
+const SESSION_VALUES: SessionNudge[] = ["banner", "first-workout", "reminders", "rest-timer", "closed"];
+
+/** The nudge already shown in this visit, if any. */
+export function shownThisSession(): SessionNudge | null {
   try {
-    return sessionStorage.getItem(SESSION_KEY) === "1";
+    const v = sessionStorage.getItem(SESSION_KEY);
+    return SESSION_VALUES.includes(v as SessionNudge) ? (v as SessionNudge) : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-export function markSession(): void {
+export function markSession(trigger: SessionNudge): void {
   try {
-    sessionStorage.setItem(SESSION_KEY, "1");
+    sessionStorage.setItem(SESSION_KEY, trigger);
   } catch {
     // As above.
   }

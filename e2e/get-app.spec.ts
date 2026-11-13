@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { expectNoHorizontalOverflow, freshStart } from "./helpers";
+import { expectNoHorizontalOverflow, freshStart, waitForSavedSetting } from "./helpers";
 
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36";
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
@@ -35,6 +35,22 @@ test.describe("Android browser", () => {
     await page.reload();
     await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
     await expect(page.getByRole("region", { name: "ABOT app" })).toHaveCount(0);
+  });
+});
+
+test.describe("Android browser, language change", () => {
+  test.use({ userAgent: ANDROID, viewport: { width: 390, height: 844 } });
+
+  test("the Home banner stays after switching the language", async ({ page }) => {
+    await freshStart(page);
+    await expect(page.getByRole("region", { name: "ABOT app" })).toBeVisible();
+    await page.goto("/settings?section=general");
+    await page.getByRole("radiogroup", { name: "Language" }).getByText("Bahasa Indonesia").click();
+    await waitForSavedSetting(page, "language", "id");
+    await page.goto("/");
+    await expect(page.getByRole("region", { name: "App ABOT" }).getByRole("button", { name: "Ambil app" })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("region", { name: "App ABOT" })).toBeVisible();
   });
 });
 

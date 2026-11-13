@@ -22,7 +22,7 @@ export function GetAppBanner() {
   const visible = !!platform && platform !== "native" && !hidden && allowed;
   // One nudge per visit: the banner on screen counts.
   useEffect(() => {
-    if (visible) markSession();
+    if (visible) markSession("banner");
   }, [visible]);
   if (!visible) return null;
 
@@ -31,6 +31,7 @@ export function GetAppBanner() {
 
   function later() {
     writeMemory({ ...readMemory(), bannerUntil: Date.now() + BANNER_LATER_MS });
+    markSession("closed");
     setHidden(true);
   }
 

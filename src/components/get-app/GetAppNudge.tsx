@@ -24,7 +24,7 @@ export function GetAppNudge({ trigger, line }: { trigger: Exclude<NudgeTrigger, 
     // Counted as seen the moment it appears, so it never repeats.
     const m = readMemory();
     writeMemory({ ...m, shown: { ...m.shown, [trigger]: true } });
-    markSession();
+    markSession(trigger);
   }, [visible, trigger]);
   if (!visible) return null;
 
@@ -33,7 +33,13 @@ export function GetAppNudge({ trigger, line }: { trigger: Exclude<NudgeTrigger, 
       <div className="flex items-start gap-2">
         <Smartphone aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-accent" />
         <p className="min-w-0 flex-1 text-sm">{line}</p>
-        <button type="button" onClick={() => setHidden(true)} aria-label={t("Close")} className="-m-2 flex size-10 shrink-0 items-center justify-center rounded-lg text-text-muted">
+        <button
+          type="button"
+          onClick={() => {
+            markSession("closed");
+            setHidden(true);
+          }}
+          aria-label={t("Close")} className="-m-2 flex size-10 shrink-0 items-center justify-center rounded-lg text-text-muted">
           <X aria-hidden="true" size={16} />
         </button>
       </div>

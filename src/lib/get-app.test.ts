@@ -19,11 +19,20 @@ describe("get the app", () => {
 
   it("caps nudges: once per trigger, one per session, banner after its pause, none after never", () => {
     const m = emptyMemory();
-    expect(shouldNudge(m, "first-workout", 0, false)).toBe(true);
-    expect(shouldNudge(m, "first-workout", 0, true)).toBe(false);
-    expect(shouldNudge({ ...m, shown: { "first-workout": true } }, "first-workout", 0, false)).toBe(false);
-    expect(shouldNudge({ ...m, bannerUntil: BANNER_LATER_MS }, "banner", BANNER_LATER_MS - 1, false)).toBe(false);
-    expect(shouldNudge({ ...m, bannerUntil: BANNER_LATER_MS }, "banner", BANNER_LATER_MS, false)).toBe(true);
-    expect(shouldNudge({ ...m, never: true }, "banner", 0, false)).toBe(false);
+    expect(shouldNudge(m, "first-workout", 0, null)).toBe(true);
+    // Another nudge already showed this visit.
+    expect(shouldNudge(m, "first-workout", 0, "banner")).toBe(false);
+    expect(shouldNudge({ ...m, shown: { "first-workout": true } }, "first-workout", 0, null)).toBe(false);
+    expect(shouldNudge({ ...m, bannerUntil: BANNER_LATER_MS }, "banner", BANNER_LATER_MS - 1, null)).toBe(false);
+    expect(shouldNudge({ ...m, bannerUntil: BANNER_LATER_MS }, "banner", BANNER_LATER_MS, null)).toBe(true);
+    expect(shouldNudge({ ...m, never: true }, "banner", 0, null)).toBe(false);
+  });
+
+  it("keeps the nudge already on screen this visit when the page redraws", () => {
+    // Changing the language redraws Home: the banner it already showed must stay.
+    expect(shouldNudge(emptyMemory(), "banner", 0, "banner")).toBe(true);
+    expect(shouldNudge({ ...emptyMemory(), shown: { reminders: true } }, "reminders", 0, "reminders")).toBe(true);
+    // Closed this visit: nothing comes back until the next one.
+    expect(shouldNudge(emptyMemory(), "banner", 0, "closed")).toBe(false);
   });
 });
