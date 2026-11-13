@@ -17,6 +17,7 @@ import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
 import { PhaseCommandCard } from "@/components/phase/PhaseCommandCard";
+import { GetAppBanner } from "@/components/get-app/GetAppBanner";
 import { AnnouncementBanner } from "@/components/remote/AnnouncementBanner";
 import { REGIONS } from "@/components/anatomy/regions";
 import { Sheet } from "@/components/ui/Sheet";
@@ -99,6 +100,7 @@ export function HomeDashboard() {
           selected={day.start}
           onSelect={(start) => setPicked(days.find((d) => d.start === start)?.isToday ? null : start)}
         />
+        <GetAppBanner />
       </header>
 
       {!active && <WelcomeBack now={now} />}

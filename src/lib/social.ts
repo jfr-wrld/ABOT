@@ -11,6 +11,12 @@ export const SOCIAL_LINKS: { id: SocialId; name: string; url: string | null }[] 
 ];
 
 /** A mail link with the app version in the subject, so a report says which build it is about. */
+/** A beta tester's report: the subject says beta, so it is easy to find among other mail. */
+export function betaFeedbackHref(version: string | null): string {
+  const subject = version ? `ABOT beta feedback (${version})` : "ABOT beta feedback";
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`;
+}
+
 export function contactHref(version: string | null): string {
   const subject = version ? `ABOT feedback (${version})` : "ABOT feedback";
   return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`;

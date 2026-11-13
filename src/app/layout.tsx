@@ -6,6 +6,7 @@ import "./globals.css";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StoreHydrator } from "@/components/layout/StoreHydrator";
 import { TabNotice } from "@/components/layout/TabNotice";
+import { GetAppSheet } from "@/components/get-app/GetAppSheet";
 import { UpdateCenter } from "@/components/update/UpdateCenter";
 import { ScrollMemory } from "@/components/navigation/ScrollMemory";
 import { DynamicIsland } from "@/components/layout/DynamicIsland";
@@ -47,6 +48,11 @@ const storyFaces = [anton, fraunces, silkscreen, grotesk, vt323].map((f) => f.va
 export const metadata: Metadata = {
   title: "ABOT",
   description: "Log sets, rest, and progress for strength training.",
+  // Added to the iPhone Home Screen, ABOT opens full screen with its own name.
+  appleWebApp: { capable: true, title: "ABOT", statusBarStyle: "black-translucent" },
+  // A static file: the web build (cacheComponents) and the Android export (output: export)
+  // disagree on how a manifest route is configured.
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
@@ -76,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SplashScreen />
           <DynamicIsland />
           <UpdateCenter />
+          <GetAppSheet />
           <ScrollMemory />
           <NativeShell />
           <AutoGym />

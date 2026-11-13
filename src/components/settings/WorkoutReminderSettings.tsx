@@ -1,5 +1,6 @@
 "use client";
 
+import { GetAppNudge } from "@/components/get-app/GetAppNudge";
 import { useState } from "react";
 import { BellRing, CalendarDays, CalendarPlus } from "lucide-react";
 import { useReminderStore, routineInfo } from "@/store/useReminderStore";
@@ -93,6 +94,12 @@ export function WorkoutReminderSettings() {
         {t("Set up your days and workouts in one go")}
         <CalendarDays aria-hidden="true" size={16} className="shrink-0 text-accent" />
       </Link>
+
+      {schedule.enabled && !isNativeApp() && (
+        <div className="mt-3">
+          <GetAppNudge trigger="reminders" line={t("Browsers drop reminders when the tab is closed or asleep. The Android app gets them to you on time, even when ABOT is closed.")} />
+        </div>
+      )}
 
       {!schedule.enabled ? null : (
         <div className="mt-3 flex flex-col gap-4">

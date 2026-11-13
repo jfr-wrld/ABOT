@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GetAppNudge } from "@/components/get-app/GetAppNudge";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotionConfig } from "framer-motion";
@@ -152,6 +153,11 @@ function Summary() {
         <Rise order={8}>
           <Calories session={session} byId={byId} unit={weightUnit} />
         </Rise>
+
+        {/* The first finished workout: the moment the app's lock-screen workout would have helped. */}
+        {sessions.filter((s) => s.status === "completed").length === 1 && (
+          <GetAppNudge trigger="first-workout" line={t("First workout done. In the Android app your next set and rest timer sit on the lock screen, so you never unlock between sets.")} />
+        )}
 
         {prev && prevVolume > 0 && (
           <Rise order={8}>

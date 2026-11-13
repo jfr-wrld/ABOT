@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
-import { ChevronDown, Mail } from "lucide-react";
+import { ChevronDown, Mail, Smartphone } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { useGetApp } from "@/store/useGetApp";
+import { usePlatform } from "@/components/get-app/usePlatform";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { CONTACT_EMAIL, contactHref } from "@/lib/social";
 import { useAppVersion } from "./AppVersion";
@@ -65,6 +68,7 @@ export function AboutSection() {
       </div>
 
       <UpdateCheck />
+      <AboutGetApp />
 
       <section aria-labelledby="about-privacy" className="panel p-3">
         <h2 id="about-privacy" className="text-sm font-semibold">
@@ -131,5 +135,19 @@ export function AboutSection() {
         </span>
       </a>
     </div>
+  );
+}
+
+/** Web only: the Android app from About, the place people look for "is there an app?". */
+function AboutGetApp() {
+  const t = useT();
+  const platform = usePlatform();
+  const show = useGetApp((s) => s.show);
+  if (!platform || platform === "native") return null;
+  return (
+    <Button onClick={show} className="w-full">
+      <Smartphone aria-hidden="true" size={18} />
+      {platform === "ios" ? t("Add ABOT to your Home Screen") : t("Get the Android app")}
+    </Button>
   );
 }

@@ -7,7 +7,10 @@ import { AnimatePresence, motion, type PanInfo, type Variants } from "framer-mot
 import { AbotMark } from "@/components/brand/AbotMark";
 import { Button } from "@/components/ui/Button";
 import { markOnboardingSeen } from "@/lib/onboarding";
-import { DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
+import { AppScene, DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
+import { usePlatform } from "@/components/get-app/usePlatform";
+import { APK_URL } from "@/lib/get-app";
+import { Download } from "lucide-react";
 import { PlanSaved, PlanSetup, todaysPlanned } from "@/components/plan/PlanSetup";
 import { applyPlan, type AppliedPlan } from "@/lib/apply-plan";
 import { defaultAnswers } from "@/lib/training-plan";
@@ -57,12 +60,21 @@ const SLIDES = (t: T) =>
       body: t("Every workout saves to this device and works offline. Back it up to a file or your account whenever you like."),
       Visual: DeviceScene,
     },
-  ] as const;
+  ];
+
+/** Android browsers only: the one thing the web cannot do, and the app to get it. */
+const APP_SLIDE = (t: T) => ({
+  title: t("ABOT hits harder as an app (beta)"),
+  body: t("Your set and rest countdown on the lock screen, an alarm that rings with the screen off, reminders that always arrive. Free, no account. It is in beta, so your feedback shapes it."),
+  Visual: AppScene,
+});
 
 export default function OnboardingPage() {
   const router = useRouter();
   const t = useT();
-  const slides = SLIDES(t);
+  const platform = usePlatform();
+  const appSlide = platform === "android";
+  const slides = appSlide ? [...SLIDES(t), APP_SLIDE(t)] : SLIDES(t);
   const [[index, dir], setPage] = useState<[number, number]>([0, 1]);
   // After the slides: set up the week, then start today's workout or go Home.
   const [planning, setPlanning] = useState(false);
@@ -92,7 +104,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="force-dark fixed inset-0 isolate z-30 flex h-dvh flex-col overflow-hidden overscroll-none bg-bg px-5 pt-[calc(16px+env(safe-area-inset-top))]">
+    <main className="force-dark fixed inset-0 isolate z-30 flex h-dvh flex-col overflow-clip overscroll-none bg-bg px-5 pt-[calc(16px+env(safe-area-inset-top))]">
       <div className="flex items-center justify-between">
         <span className="text-accent">
           <AbotMark size={28} title="ABOT" />
@@ -189,7 +201,21 @@ export default function OnboardingPage() {
       </div>
 
       <div className="flex flex-col gap-2 pb-[calc(16px+env(safe-area-inset-bottom))]">
-        {last ? (
+        {last && appSlide ? (
+          <>
+            <a href={APK_URL} rel="noopener" className="tap flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent text-base font-bold text-on-accent">
+              <Download aria-hidden="true" size={18} />
+              {t("Download for Android")}
+            </a>
+            <button
+              type="button"
+              onClick={() => setPlanning(true)}
+              className="flex min-h-11 items-center justify-center rounded-xl text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
+            >
+              {t("Keep using the web")}
+            </button>
+          </>
+        ) : last ? (
           <>
             <Button variant="primary" onClick={() => setPlanning(true)} className="min-h-12 w-full text-base">
               {t("Start training")}

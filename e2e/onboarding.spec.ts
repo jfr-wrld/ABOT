@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { expectNoHorizontalOverflow, freshStart } from "./helpers";
 
+// The intro's three slides as a desktop browser sees them; Android browsers get a fourth, the
+// app pitch (e2e/get-app.spec.ts).
+test.use({ userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" });
+
 test("splash covers the first paint, then gets out of the way", async ({ page }) => {
   await freshStart(page);
   await page.reload();

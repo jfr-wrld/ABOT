@@ -9,6 +9,8 @@ Exceptions, both optional and owner-approved: Supabase cloud sync, and payments 
 webhook through Supabase Edge Functions, web and Android, 2026-11-11; see `docs/payments-setup.md`),
 and the Android app's update check (GitHub Releases API, on every start, on return at most every 30 minutes,
 and when tapped; the APK downloads only after the user taps Update now; `src/lib/app-update.ts`).
+The web app's "Get the app" pitch only links to `releases/latest/download/abot.apk` on GitHub (CI uploads each
+signed build under that fixed name too) and fetches nothing; the QR code is a static SVG (`scripts/make-get-app-qr.mjs`).
 Remotion is design-time only: `tools/motion-studio/` (its own package) previews the story and streak
 painters in Remotion Studio; it is never shipped in the app, which makes its MP4s itself (`src/lib/video-export.ts`).
 Free Remotion licence (individual / at most 3 people), so renders pass no licence key.

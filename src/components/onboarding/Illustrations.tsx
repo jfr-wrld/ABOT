@@ -301,3 +301,53 @@ export function DeviceScene() {
     </div>
   );
 }
+
+/**
+ * The app pitch (Android web only): a locked phone with ABOT's live workout notification, the rest
+ * countdown ticking and the +30s / Skip buttons, the thing a browser tab cannot do.
+ */
+export function AppScene() {
+  const reduce = useReducedMotionConfig();
+  const t = useT();
+  const [left, setLeft] = useState(84);
+  useEffect(() => {
+    if (reduce) return;
+    const timer = setInterval(() => setLeft((s) => (s <= 60 ? 84 : s - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [reduce]);
+  const clock = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+
+  return (
+    <div aria-hidden="true" className="relative">
+      <Phone>
+        <div className="flex flex-col items-center pt-3">
+          <span className="num text-[34px] font-bold leading-none tracking-tight text-ink/90">07:42</span>
+          <span className="mt-1 text-[9px] text-text-muted">{t("Locked")}</span>
+        </div>
+        <motion.div
+          className="mt-4 flex flex-col gap-1.5 rounded-2xl border border-ink/[0.1] bg-surface/95 p-2.5"
+          initial={reduce ? false : { y: 26, opacity: 0, scale: 0.94 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{ ...SPRING, delay: 0.35 }}
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="flex size-4 items-center justify-center rounded-[5px] bg-black text-accent">
+              <Dumbbell size={9} />
+            </span>
+            <span className="text-[9px] font-semibold text-text-muted">ABOT</span>
+            <span className="num ml-auto text-[9px] font-bold text-accent">{clock}</span>
+          </div>
+          <span className="text-[11px] font-semibold leading-tight">Bench Press</span>
+          <span className="text-[9px] text-text-muted">{t("Set 3 of 4 · rest")}</span>
+          <span className="h-1 overflow-hidden rounded-full bg-ink/10">
+            <motion.span className="block h-full origin-left bg-accent" animate={{ scaleX: (left - 60) / 24 }} transition={{ duration: 1, ease: "linear" }} />
+          </span>
+          <div className="mt-0.5 grid grid-cols-2 gap-1">
+            <span className="rounded-md bg-ink/[0.07] py-1 text-center text-[9px] font-semibold">+30s</span>
+            <span className="rounded-md bg-ink/[0.07] py-1 text-center text-[9px] font-semibold">{t("Skip")}</span>
+          </div>
+        </motion.div>
+      </Phone>
+    </div>
+  );
+}

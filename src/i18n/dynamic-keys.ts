@@ -7,6 +7,7 @@ import { CATEGORY_LABEL, DIGEST_LABEL, FOODS, LEVEL_LABEL, SOURCE_LABEL } from "
 import { COVER_PRESETS } from "@/lib/cover-presets";
 import { AISLE_LABEL, DAY_TEMPLATES, RAW_LABELS, SLOT_LABEL } from "@/lib/meal-templates";
 import { FILTER_LABEL } from "@/lib/exercise-swapper";
+import { APP_PERKS } from "@/components/get-app/GetAppSheet";
 import { PLACE_BLURB, PLACE_LABEL, SPLIT_BLURB, SPLIT_LABEL } from "@/lib/training-plan";
 import { REDEEM_REASONS } from "@/lib/redeem-service";
 import { PLANS, PRO_FEATURE_LABEL, PRO_MATRIX, SIMULATOR } from "@/lib/entitlements";
@@ -22,6 +23,8 @@ import { VARIATION_LABEL } from "@/data/variations";
  * coverage test can see them too. Add each such constant's values here.
  */
 export const DYNAMIC_KEYS: string[] = [
+  // Get the app sheet perks
+  ...APP_PERKS.map((p) => p.title),
   // Training plan (lib/training-plan, lib/apply-plan)
   ...Object.values(SPLIT_LABEL), ...Object.values(SPLIT_BLURB), ...Object.values(PLACE_LABEL), ...Object.values(PLACE_BLURB),
   "My plan · {n} days",

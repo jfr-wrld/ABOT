@@ -130,7 +130,10 @@ jobs:
         run: |
           N="$GITHUB_RUN_NUMBER"
           NOTES=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq '.commit.message' | head -n 1)
-          gh release create "abot-$N" "abot-1.0.$N.apk" --repo "$GITHUB_REPOSITORY" \
+          # abot.apk is the same file under a fixed name, so the web app's "Get the app" link
+          # (releases/latest/download/abot.apk) always points at the newest build.
+          cp "abot-1.0.$N.apk" abot.apk
+          gh release create "abot-$N" "abot-1.0.$N.apk" abot.apk --repo "$GITHUB_REPOSITORY" \
             --title "ABOT 1.0.$N" --notes "$NOTES" --target "$GITHUB_SHA" --latest
           # Keep the ten newest abot- releases, and no apk- release at all: the apk- channel was
           # signed with the old debug key, which is public in this repository's history, so it is

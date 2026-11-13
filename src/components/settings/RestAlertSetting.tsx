@@ -1,5 +1,6 @@
 "use client";
 
+import { GetAppNudge } from "@/components/get-app/GetAppNudge";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -43,6 +44,7 @@ export function RestAlertSetting() {
           if (v) feedback.restZero();
         }}
       />
+      {!app && on && <GetAppNudge trigger="rest-timer" line={t("A browser tab goes quiet when the screen locks. The Android app rings the rest alarm with the screen off.")} />}
       {app && granted && on && (
         <div className="flex items-center justify-between gap-3">
           <p role="status" className="text-xs text-text-muted">

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { Bell, ChevronRight, MapPin, Search, CircleHelp, Cloud, Dumbbell, HeartPulse, Info, LogOut, Mail, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import { Bell, ChevronRight, FlaskConical, Smartphone, MapPin, Search, CircleHelp, Cloud, Dumbbell, HeartPulse, Info, LogOut, Mail, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useSyncStore } from "@/store/useSyncStore";
 import { useReminderStore } from "@/store/useReminderStore";
@@ -10,7 +10,7 @@ import { useLocationStore } from "@/store/useLocationStore";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { SocialIcon } from "@/components/brand/SocialIcons";
-import { CONTACT_EMAIL, SOCIAL_LINKS, contactHref } from "@/lib/social";
+import { CONTACT_EMAIL, SOCIAL_LINKS, betaFeedbackHref, contactHref } from "@/lib/social";
 import { useAppVersion } from "./AppVersion";
 import { LANGUAGE_LABEL, SECTION_TITLE, THEME_LABEL, type SettingsSection } from "./labels";
 import { useT } from "@/i18n";
@@ -21,6 +21,8 @@ import { useEntitlements } from "@/store/useEntitlements";
 import { isNativeApp } from "@/lib/native/files";
 import { DEV_TOOLS } from "@/lib/dev-tools";
 import { SETTINGS_INDEX, searchSettings } from "./search-index";
+import { useGetApp } from "@/store/useGetApp";
+import { usePlatform } from "@/components/get-app/usePlatform";
 
 export { SECTION_TITLE, type SettingsSection };
 
@@ -94,6 +96,7 @@ export function SettingsHome() {
       {/* The founder plate is for founders (and the simulator in development builds): everyone
           else starts at their account and settings, not at a card that says they have none. */}
       {(isFounder || DEV_TOOLS) && <FounderPassCard />}
+      <GetAppRow />
 
       <Group title={t("Account")}>
         <Row
@@ -120,6 +123,8 @@ export function SettingsHome() {
 
       <Group title={t("Support")}>
         <Row to={href("faq")} icon={CircleHelp} title={t(SECTION_TITLE.faq)} />
+        {/* The Android app is in beta: testers get their own, clearly labelled channel. */}
+        {native && <Row to={betaFeedbackHref(version)} icon={FlaskConical} title={t("Send beta feedback")} value={t("What broke, confused you or is missing")} external />}
         <Row to={contactHref(version)} icon={Mail} title={t("Contact us")} value={CONTACT_EMAIL} external />
         <Row to={href("about")} icon={Info} title={t(SECTION_TITLE.about)} />
       </Group>
@@ -136,6 +141,31 @@ export function SettingsHome() {
       {signedIn && <SignOutButton />}
       <BuildTag />
     </div>
+  );
+}
+
+/** Web only: the Android app (or, on iPhone, Add to Home Screen), opening the Get the app sheet. */
+function GetAppRow() {
+  const t = useT();
+  const platform = usePlatform();
+  const show = useGetApp((s) => s.show);
+  if (!platform || platform === "native") return null;
+  const ios = platform === "ios";
+  return (
+    <Group title={t("ABOT app")}>
+      <li>
+        <button type="button" onClick={show} className="tap flex min-h-14 w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface-2 active:bg-press">
+          <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-ctl bg-accent text-on-accent">
+            <Smartphone size={18} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">{ios ? t("Add ABOT to your Home Screen") : t("Get the Android app")}</span>
+            <span className="block truncate text-xs text-text-muted">{ios ? t("Full screen and offline, one tap away") : t("Beta · lock-screen workout, rest alarm, reminders")}</span>
+          </span>
+          <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
+        </button>
+      </li>
+    </Group>
   );
 }
 
