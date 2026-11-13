@@ -85,15 +85,15 @@ test("share turns the range into a story with the eight layouts", async ({ page 
   await page.getByRole("button", { name: "4 wk" }).click();
   await page.getByRole("button", { name: "Share" }).click();
   const dialog = page.getByRole("dialog", { name: "Share to Instagram Story" });
-  await expect(dialog.getByRole("img", { name: /^Obsidian Raw story card: Last 4 weeks, 480 kg/ })).toBeVisible();
+  await expect(dialog.getByRole("img", { name: /^Matchday story card: Last 4 weeks, 480 kg/ })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Download High-Res PNG" })).toBeEnabled();
   await expect(dialog.getByRole("button", { pressed: true })).toHaveCount(1);
-  await expect(dialog.getByRole("button", { name: "Split Spec Sheet", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Trophy Vault", exact: true })).toBeVisible();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     dialog.getByRole("button", { name: "Download High-Res PNG" }).click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-obsidian-raw\.png$/);
+  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-matchday\.png$/);
 });
 
 test("calendar moves months and links a day to its workout", async ({ page }) => {

@@ -119,7 +119,7 @@ export const TUNABLE_SPECS: { [G in keyof Tunables]: { title: string; fields: { 
   story: {
     title: "Story Studio",
     fields: {
-      freePresets: { label: "Free layouts (the rest are PRO)", min: 0, max: 11, step: 1 },
+      freePresets: { label: "Free layouts (the rest are PRO)", min: 0, max: 8, step: 1 },
     },
   },
   gyms: {

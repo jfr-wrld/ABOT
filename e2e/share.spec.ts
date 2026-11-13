@@ -2,19 +2,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, reachSummary, waitForSavedSetting } from "./helpers";
 
-const LAYOUTS = [
-  "Obsidian Raw",
-  "Thermal Matrix",
-  "Brutalist Receipt",
-  "Cyber-Volt HUD",
-  "Monochrome Steel",
-  "PR Trophy Vault",
-  "Photo Backdrop",
-  "Split Spec Sheet",
-  "Loaded Bar",
-  "Plate Grid",
-  "Volt Poster",
-];
+const LAYOUTS = ["Matchday", "Thermal Matrix", "Brutalist Receipt", "Editorial", "Arcade", "Loaded Bar", "Trophy Vault", "Volt Poster"];
 
 /** Logs one bench set and finishes; the app lands on the new summary page. */
 async function finishOneSet(page: Page) {
@@ -103,7 +91,8 @@ test("a background photo brings the overlay and grayscale controls", async ({ pa
   await gray.click();
   await expect(gray).toHaveAttribute("aria-checked", "true");
   await dialog.getByRole("tab", { name: "Layout" }).click();
-  await dialog.getByRole("button", { name: "Monochrome Steel", exact: true }).click();
+  // The Editorial cover is always black and white.
+  await dialog.getByRole("button", { name: "Editorial", exact: true }).click();
   await dialog.getByRole("tab", { name: /^Photo/ }).click();
   await expect(gray).toBeDisabled();
 

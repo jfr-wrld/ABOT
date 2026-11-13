@@ -183,7 +183,7 @@ function Studio({
   // The PNG remembers which card it was made from; any other card means it is being remade.
   const [made, setMade] = useState<{ from: object | null; blob: Blob | null; fileName: string }>({ from: null, blob: null, fileName: "" });
   const [tab, setTab] = useState<Tab>("layout");
-  const [preset, setPreset] = useState<StoryPresetId>("obsidian-raw");
+  const [preset, setPreset] = useState<StoryPresetId>("matchday");
   const [fonts, setFonts] = useState<StoryFonts | null>(null);
   const [fontsFailed, setFontsFailed] = useState(false);
   const [photo, setPhoto] = useState<StoryPhoto | null>(null);
@@ -313,7 +313,8 @@ function Studio({
   }, [workoutPhotos, pickWorkoutPhoto]);
 
   const current = STORY_PRESETS.find((p) => p.id === preset) ?? STORY_PRESETS[0];
-  const forcedGray = preset === "monochrome-steel";
+  // The Editorial cover is always black and white.
+  const forcedGray = preset === "editorial";
   const description =
     t("{layout} story card: {title}, {volume}, {duration}, {sets} sets", {
       layout: current.name,

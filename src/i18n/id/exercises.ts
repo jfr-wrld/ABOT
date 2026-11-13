@@ -257,16 +257,9 @@ export const exercises: Record<string, string> = {
   "This browser cannot hand images to other apps. Download the PNG instead.":
     "Browser ini tidak bisa mengirim gambar ke aplikasi lain. Unduh PNG-nya saja.",
   // Story layout tooltips (STORY_PRESETS blurbs; the layout names stay English)
-  "Black plate, steel hairlines, one Volt point": "Pelat hitam, garis tipis baja, satu titik Volt",
   "Muscle map lit by sets worked": "Peta otot yang menyala sesuai set yang dikerjakan",
   "Every set itemised like a till slip": "Setiap set dirinci seperti struk kasir",
-  "Cockpit readout, massive figures": "Tampilan kokpit, angka besar",
-  "Black and white editorial": "Editorial hitam putih",
-  "Records first, with top tonnage": "Rekor di depan, plus tonase tertinggi",
-  "Your photo behind a glass card": "Fotomu di balik kartu kaca",
-  "Stats above, progress line below": "Statistik di atas, garis progres di bawah",
   "Each lift a plate on the bar, sized by its volume": "Tiap gerakan jadi pelat di barbel, ukurannya sesuai volume",
-  "A honeycomb of plates, one per lift": "Sarang lebah pelat, satu per gerakan",
   "Swiss poster in black on Volt": "Poster gaya Swiss, hitam di atas Volt",
 
   // Progress
@@ -369,4 +362,8 @@ export const exercises: Record<string, string> = {
   "Add {photo}": "Tambah {photo}",
   "Add": "Tambah",
   "Remove {photo}": "Hapus {photo}",
+  "Full-time scoreboard: your volume is the score": "Papan skor full-time: volumemu jadi skornya",
+  "A magazine cover, your top lift the story": "Sampul majalah, angkatan terberatmu jadi beritanya",
+  "Level cleared: score, XP and a star per record": "Level selesai: skor, XP, dan bintang untuk tiap rekor",
+  "Records first, engraved in gold": "Rekor di depan, terukir emas",
 };

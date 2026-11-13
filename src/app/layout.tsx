@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { Suspense } from "react";
 import "./globals.css";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -26,6 +27,22 @@ import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
 // so the browser never calls Google: the zero-network rule still holds.
 const sans = Plus_Jakarta_Sans({ variable: "--font-sans-face", subsets: ["latin"], display: "swap" });
 const mono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], display: "swap" });
+// Story Studio's theme faces (src/fonts, OFL): declared on every page but not preloaded, so a
+// phone downloads one only when a story card draws with it. next/font needs literal options.
+const anton = localFont({ src: "../fonts/anton-latin.woff2", variable: "--font-anton", weight: "400", display: "swap", preload: false });
+const fraunces = localFont({ src: "../fonts/fraunces-latin.woff2", variable: "--font-fraunces", weight: "400 900", display: "swap", preload: false });
+const silkscreen = localFont({
+  src: [
+    { path: "../fonts/silkscreen-400-latin.woff2", weight: "400" },
+    { path: "../fonts/silkscreen-700-latin.woff2", weight: "700" },
+  ],
+  variable: "--font-silkscreen",
+  display: "swap",
+  preload: false,
+});
+const grotesk = localFont({ src: "../fonts/space-grotesk-latin.woff2", variable: "--font-space-grotesk", weight: "400 700", display: "swap", preload: false });
+const vt323 = localFont({ src: "../fonts/vt323-latin.woff2", variable: "--font-vt323", weight: "400", display: "swap", preload: false });
+const storyFaces = [anton, fraunces, silkscreen, grotesk, vt323].map((f) => f.variable).join(" ");
 
 export const metadata: Metadata = {
   title: "ABOT",
@@ -41,7 +58,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${sans.variable} ${mono.variable} h-full antialiased`}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${sans.variable} ${mono.variable} ${storyFaces} h-full antialiased`}>
       <head>
         {/* Theme before the first paint, so a light page never flashes dark. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />

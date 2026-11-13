@@ -72,16 +72,13 @@ export const DYNAMIC_KEYS: string[] = [
   // WorkoutCalendar weekday heads
   "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su",
   // STORY_PRESETS blurbs (layout tooltips in the Story Studio; copied, story-exporter needs a DOM)
-  "Black plate, steel hairlines, one Volt point",
+  "Full-time scoreboard: your volume is the score",
   "Muscle map lit by sets worked",
   "Every set itemised like a till slip",
-  "Cockpit readout, massive figures",
-  "Black and white editorial",
-  "Records first, with top tonnage",
-  "Your photo behind a glass card",
-  "Stats above, progress line below",
+  "A magazine cover, your top lift the story",
+  "Level cleared: score, XP and a star per record",
   "Each lift a plate on the bar, sized by its volume",
-  "A honeycomb of plates, one per lift",
+  "Records first, engraved in gold",
   "Swiss poster in black on Volt",
   // Errors thrown by data/backup, lib/photo, story-exporter and data/catalog, shown with t()
   "This file is not valid JSON",

@@ -180,6 +180,8 @@ interface Palette {
   plateOff: string;
   mark: string;
   sans?: "mono";
+  /** The theme's own face for the count and its words (Story Studio fonts). */
+  face?: "display" | "serif" | "pixel" | "grotesk";
   extra?: (ctx: Ctx) => void;
   /** Footer colours where the bottom of the background differs from the top (a gradient). */
   foot?: { text: string; muted: string; mark: string };
@@ -189,30 +191,41 @@ interface Palette {
 function classic(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptions, p: Palette) {
   p.bg(ctx);
   p.extra?.(ctx);
-  const family = p.sans === "mono" ? f.mono : f.sans;
-  text(ctx, "WEEK STREAK", W / 2, 300, { size: 40, weight: 700, family: f.mono, color: p.label, tracking: 10 });
+  // Each face at the weight it has: Anton has one, Fraunces goes to 900, Silkscreen to 700.
+  const face = p.face;
+  const family = face ? f[face] : p.sans === "mono" ? f.mono : f.sans;
+  const numWeight = face === "display" ? 400 : face === "serif" ? 900 : face ? 700 : 800;
+  const wordFamily = face === "serif" || face === "grotesk" || face === "pixel" ? f[face] : f.sans;
+  text(ctx, "WEEK STREAK", W / 2, 300, { size: 40, weight: 700, family: face === "pixel" ? f.pixel : f.mono, color: p.label, tracking: 10 });
   flame(ctx, W / 2, 900, 520, p.flame, p.glow);
   const n = String(d.weeks);
-  const size = fit(ctx, n, W - 160, 420, 800, family);
+  const size = fit(ctx, n, W - 160, face === "display" ? 380 : 420, numWeight, family);
   const fill = typeof p.number === "function" ? p.number(ctx) : p.number;
   ctx.save();
   if (p.glow) {
     ctx.shadowColor = p.glow;
     ctx.shadowBlur = 50;
   }
-  font(ctx, size, 800, family, -8);
+  font(ctx, size, numWeight, family, face === "pixel" ? 0 : -8);
   ctx.fillStyle = fill;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
   ctx.fillText(n, W / 2, 1300);
   ctx.restore();
-  text(ctx, d.weeks === 1 ? "week in a row" : "weeks in a row", W / 2, 1390, { size: 52, weight: 700, family: f.sans, color: p.text });
+  const words = d.weeks === 1 ? "week in a row" : "weeks in a row";
+  text(ctx, face === "display" || face === "pixel" ? words.toUpperCase() : words, W / 2, 1390, {
+    size: face === "display" ? 64 : face === "pixel" ? 44 : 52,
+    weight: face === "display" ? 400 : face === "serif" ? 600 : 700,
+    family: face === "display" ? f.display : wordFamily,
+    color: p.text,
+  });
   plateRow(ctx, d.row, 1530, p.plateOn, p.plateOff);
   footer(ctx, d, f, o, p.foot?.text ?? p.text, p.foot?.mark ?? p.mark, p.foot?.muted ?? p.muted);
 }
 
 const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
   "volt-flame": {
+    face: "display",
     bg: (ctx) => {
       ctx.fillStyle = OBSIDIAN;
       ctx.fillRect(0, 0, W, H);
@@ -229,6 +242,7 @@ const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
     mark: VOLT,
   },
   inferno: {
+    face: "display",
     bg: (ctx) => {
       ctx.fillStyle = linear(ctx, ["#1a0503", "#7c1d0b", "#ea580c"]);
       ctx.fillRect(0, 0, W, H);
@@ -245,6 +259,7 @@ const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
     mark: "#fff7ed",
   },
   paper: {
+    face: "serif",
     bg: (ctx) => {
       ctx.fillStyle = "#f4f1ea";
       ctx.fillRect(0, 0, W, H);
@@ -261,6 +276,7 @@ const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
     mark: "#18181b",
   },
   "neon-grid": {
+    face: "pixel",
     bg: (ctx) => {
       ctx.fillStyle = linear(ctx, ["#0b0420", "#1e0b3a", "#3b0764"]);
       ctx.fillRect(0, 0, W, H);
@@ -294,6 +310,7 @@ const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
     mark: "#22d3ee",
   },
   "blue-flame": {
+    face: "grotesk",
     bg: (ctx) => {
       ctx.fillStyle = linear(ctx, ["#020617", "#0c1e3e", "#082f49"]);
       ctx.fillRect(0, 0, W, H);
@@ -310,6 +327,7 @@ const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
     mark: "#38bdf8",
   },
   steel: {
+    face: "grotesk",
     bg: (ctx) => {
       ctx.fillStyle = linear(ctx, ["#3f3f46", "#18181b", "#09090b"]);
       ctx.fillRect(0, 0, W, H);
@@ -328,6 +346,7 @@ const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
     sans: "mono",
   },
   gold: {
+    face: "serif",
     bg: (ctx) => {
       ctx.fillStyle = "#0a0806";
       ctx.fillRect(0, 0, W, H);
@@ -349,6 +368,7 @@ const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
     mark: "#eab308",
   },
   sunset: {
+    face: "display",
     bg: (ctx) => {
       ctx.fillStyle = linear(ctx, ["#312e81", "#be185d", "#f97316", "#fde68a"]);
       ctx.fillRect(0, 0, W, H);
