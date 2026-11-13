@@ -7,6 +7,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { feedback } from "@/lib/feedback";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { useHideOnScroll } from "@/lib/useHideOnScroll";
+import { useSessionState } from "@/lib/useSessionState";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
@@ -48,12 +49,14 @@ function LibraryScreen() {
   const sessions = useWorkoutStore((s) => s.sessions);
   const unit = useSettingsStore((s) => s.weightUnit);
   const { favorites } = useFavorites();
-  const [query, setQuery] = useState("");
+  // Search and filters last the session: Back from an exercise returns to the same list, so the
+  // scroll offset ScrollMemory puts back lands on the same rows.
+  const [query, setQuery] = useSessionState("abot.lib.query", "");
   // The field follows every key; the list of about 1,000 rows filters a beat behind it.
   const search = useDeferredValue(query);
-  const [muscle, setMuscle] = useState<MuscleGroup | "">("");
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [equipment, setEquipment] = useState<Equipment | "">("");
+  const [muscle, setMuscle] = useSessionState<MuscleGroup | "">("abot.lib.muscle", "");
+  const [favoritesOnly, setFavoritesOnly] = useSessionState("abot.lib.favorites", false);
+  const [equipment, setEquipment] = useSessionState<Equipment | "">("abot.lib.equipment", "");
   const [formOpen, setFormOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sort, setSort] = useLibrarySort();

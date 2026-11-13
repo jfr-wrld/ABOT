@@ -38,3 +38,27 @@ test("the system Back button does the same, and a new page still opens at the to
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === "/exercises");
   await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 4000 }).toBeGreaterThan(y - 5);
 });
+
+test("a filtered list comes back filtered and at the same spot", async ({ page }) => {
+  await freshStart(page);
+  await page.goto("/exercises");
+  await page.getByRole("group", { name: "Show" }).getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByLabel("Search exercises").fill("row");
+  await expect(page.getByRole("link", { name: /Row/ }).first()).toBeVisible();
+  await page.mouse.wheel(0, 900);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(400);
+  await page.waitForTimeout(300);
+  const y = await page.evaluate(() => window.scrollY);
+  const link = page.locator('main a[href*="/exercises/detail"]').filter({ visible: true });
+  const inView = await link.evaluateAll((els) => els.findIndex((el) => {
+    const r = el.getBoundingClientRect();
+    return r.top > 80 && r.bottom < window.innerHeight - 160;
+  }));
+  await link.nth(inView).evaluate((el) => (el as HTMLElement).click());
+  await page.waitForURL(/\/exercises\/detail/);
+  await page.goBack();
+  await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === "/exercises");
+  await expect(page.getByLabel("Search exercises")).toHaveValue("row");
+  await expect(page.getByRole("group", { name: "Show" }).getByRole("button", { name: "Back", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 4000 }).toBeGreaterThan(y - 5);
+});
