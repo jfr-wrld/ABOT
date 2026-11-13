@@ -654,4 +654,10 @@ export const settings: Record<string, string> = {
   "None yet": "Belum ada",
   "Health Connect": "Health Connect",
   "More exercises, mostly newer machines: Open Exercise Atlas (CC0 1.0).": "Gerakan tambahan, kebanyakan mesin baru: Open Exercise Atlas (CC0 1.0).",
+  "Use photo": "Pakai foto",
+  "Drag to move the photo. Pinch or use the slider to zoom.": "Geser untuk memindah foto. Cubit atau pakai slider untuk zoom.",
+  "Photo crop preview": "Pratinjau potongan foto",
+  "Zoom": "Zoom",
+  "Cover": "Sampul",
+  "Fit your photo": "Atur fotomu",
 };

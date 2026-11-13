@@ -2,7 +2,7 @@ import { useId } from "react";
 import { initials } from "@/lib/profile";
 import { useT } from "@/i18n";
 
-const HEX = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
+export const HEX = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
 
 /**
  * The lifter as a weight plate: the same flat-top hexagon as the ABOT mark, outlined in Volt.

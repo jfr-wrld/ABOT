@@ -140,6 +140,18 @@ test("a profile photo is resized on the device, shown, and removable", async ({ 
   await page.goto("/profile/edit");
   await page.getByLabel("Name", { exact: true }).fill("Jafar");
   await page.getByLabel("Profile photo file").setInputFiles(path.join(__dirname, "fixtures", "frame0.jpg"));
+  // The photo is fitted first: dragged and zoomed inside the hexagon, then used.
+  const crop = page.getByRole("dialog", { name: "Fit your photo" });
+  const frame = crop.getByRole("img", { name: "Photo crop preview" });
+  await expect(frame.locator("img")).toBeVisible();
+  await crop.getByLabel("Zoom").fill("2");
+  const box = (await frame.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 20, { steps: 5 });
+  await page.mouse.up();
+  await crop.getByRole("button", { name: "Use photo" }).click();
+  await expect(crop).toHaveCount(0);
   const avatar = page.getByRole("img", { name: "Photo of Jafar" });
   await expect(avatar).toBeVisible();
   const stored = await avatar.locator("image").getAttribute("href");
@@ -197,6 +209,7 @@ test("the cover can be one of ten designs or the lifter's own image, and back to
 
   // An upload is cropped to a wide JPEG on the phone and shown behind the photo.
   await page.getByRole("dialog", { name: "Profile cover" }).getByLabel("Cover image file").setInputFiles(path.join(__dirname, "fixtures", "frame0.jpg"));
+  await page.getByRole("dialog", { name: "Fit your photo" }).getByRole("button", { name: "Use photo" }).click();
   await expect(page.locator("main img[src^='data:image/jpeg']").first()).toBeVisible();
   await page.getByRole("button", { name: "Change cover" }).click();
   await page.getByRole("dialog", { name: "Profile cover" }).getByRole("button", { name: "Remove image" }).click();

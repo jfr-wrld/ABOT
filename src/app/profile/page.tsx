@@ -86,26 +86,29 @@ function ProfileScreen() {
 
       <section aria-label={t("Identity")} className="px-4 pt-3">
         <ProfileCover weeks={covers.map((b) => b.volumeKg)} />
-        <div className="relative -mt-12 flex items-end justify-between gap-3 pl-3">
+        {/* The photo sits half over the cover; Edit profile stays fully below it, level with the
+            photo's lower half, so neither touches the cover's edge. */}
+        <div className="flex items-start justify-between gap-3 pl-3">
           {photo.input}
           <button
             type="button"
             onClick={photo.open}
             disabled={photo.busy}
             aria-label={s.profilePhoto ? t("Change photo") : t("Add photo")}
-            className="relative shrink-0 rounded-full transition-transform active:scale-95 disabled:opacity-50"
+            className="relative -mt-11 shrink-0 rounded-full transition-transform active:scale-95 disabled:opacity-50"
           >
-            <ProfileAvatar name={s.profileName} photo={s.profilePhoto} size={96} ringed />
+            <ProfileAvatar name={s.profileName} photo={s.profilePhoto} size={88} ringed />
+            {/* Set off from the hexagon by a ring of the page colour, inside its box. */}
             <span
               aria-hidden="true"
-              className="absolute right-0 bottom-1 flex size-8 items-center justify-center rounded-full border border-line-strong bg-surface-2 text-text"
+              className="absolute bottom-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-surface-2 text-text ring-[3px] ring-bg"
             >
-              <Camera size={15} />
+              <Camera size={14} />
             </span>
           </button>
           <Link
             href={EDIT_PROFILE}
-            className="tap mb-1 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-ink/[0.12] bg-surface-2 px-4 text-sm font-semibold text-text hover:border-ink/25 hover:bg-press active:bg-press-strong"
+            className="tap mt-3 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-line-strong bg-surface px-4 text-sm font-semibold text-text hover:bg-press active:bg-press-strong"
           >
             <Pencil aria-hidden="true" size={15} />
             {t("Edit profile")}

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ImagePlus, Paintbrush, Trash2 } from "lucide-react";
+import { Check, ImagePlus, Trash2 } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { CoverArt } from "./coverPresets";
 import { usePhotoPicker } from "./usePhotoPicker";
 import { COVER_PRESETS, coverKind } from "@/lib/cover-presets";
-import { wideJpeg } from "@/lib/photo";
+import { COVER_TARGET } from "@/lib/photo";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
@@ -22,7 +22,8 @@ export function ProfileCover({ weeks }: { weeks: number[] }) {
   const [open, setOpen] = useState(false);
   const kind = coverKind(cover);
   return (
-    <div className="relative h-32 overflow-hidden rounded-card border border-line bg-surface">
+    // 3:1, the shape a cover image is cropped to, so the crop is what shows.
+    <div className="relative aspect-[3/1] overflow-hidden rounded-card border border-line bg-surface">
       <CoverFill value={cover} weeks={weeks} />
       {kind.kind === "skyline" && <span className="label-caps absolute right-14 top-3">{t("12 wk volume")}</span>}
       <button
@@ -30,9 +31,10 @@ export function ProfileCover({ weeks }: { weeks: number[] }) {
         onClick={() => setOpen(true)}
         aria-label={t("Change cover")}
         aria-haspopup="dialog"
-        className="absolute right-1.5 top-1.5 flex size-11 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+        className="absolute right-2 top-2 flex min-h-11 items-center gap-1.5 rounded-full bg-black/50 px-3.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/65"
       >
-        <Paintbrush aria-hidden="true" size={17} />
+        <ImagePlus aria-hidden="true" size={15} />
+        {t("Cover")}
       </button>
       <CoverPickerSheet open={open} onClose={() => setOpen(false)} weeks={weeks} />
     </div>
@@ -86,7 +88,7 @@ export function CoverPickerSheet({ open, onClose, weeks }: { open: boolean; onCl
     update({ profileCover: v });
     onClose();
   };
-  const upload = usePhotoPicker((url) => set(url), { encode: (f) => wideJpeg(f), title: t("Cover image"), facing: "environment" });
+  const upload = usePhotoPicker((url) => set(url), { title: t("Cover image"), facing: "environment", crop: { shape: "rect", target: COVER_TARGET } });
   const options: { value: string | null; label: string }[] = [
     { value: null, label: t("Your training") },
     ...COVER_PRESETS.map((p) => ({ value: `preset:${p.id}`, label: t(p.name) })),
