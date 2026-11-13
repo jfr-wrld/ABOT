@@ -26,6 +26,7 @@ import type { Weekday } from "@/lib/notifications/schedule";
 import type { Routine } from "@/types/workout";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useReminderStore } from "@/store/useReminderStore";
+import { routineMinutes } from "@/lib/home";
 import { useT, type T } from "@/i18n";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
@@ -37,11 +38,6 @@ export function weekdayName(t: T, wd: Weekday, style: "long" | "short" = "long")
   return new Date(2024, 0, 7 + wd).toLocaleDateString(t.locale, { weekday: style });
 }
 
-/** Minutes for a routine: about 45 s a set plus its rest, a minute to set up each exercise, five to warm up. */
-export function routineMinutes(r: Routine): number {
-  const sec = r.exercises.reduce((sum, e) => sum + e.sets.length * (45 + e.restSeconds) + 60, 5 * 60);
-  return Math.max(5, Math.round(sec / 60 / 5) * 5);
-}
 
 /**
  * The week in five short steps: goal and experience, the days, where, the week itself (with the

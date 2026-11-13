@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { exerciseBucket, trainingFocus } from "./training-focus";
+import { exerciseBucket, routineFocus, trainingFocus } from "./training-focus";
+import { ROUTINE_TEMPLATES, templateToRoutine } from "./seed-routines";
 import type { Exercise, WorkoutSession } from "@/types/workout";
-import { SEED_EXERCISES } from "@/data/exercises";
+import { SEED_EXERCISES, SEED_EXERCISES_BY_ID } from "@/data/exercises";
 
 const byId: Record<string, Exercise> = Object.fromEntries(SEED_EXERCISES.map((e) => [e.id, e]));
 let n = 0;
@@ -43,5 +44,15 @@ describe("exerciseBucket", () => {
   it("files an exercise under its first primary muscle", () => {
     expect(exerciseBucket(byId["bench-press-barbell"]!)).toBe("push");
     expect(exerciseBucket(byId["squat-barbell"]!)).toBe("legs");
+  });
+});
+
+describe("routine focus", () => {
+  it("reads a routine's planned sets: push for a push day, legs for a leg day", () => {
+    const tpl = (id: string) => templateToRoutine(ROUTINE_TEMPLATES.find((t) => t.id === id)!);
+    expect(routineFocus(tpl("tpl-push-a"), SEED_EXERCISES_BY_ID)?.label).toBe("Push");
+    expect(routineFocus(tpl("tpl-legs-a"), SEED_EXERCISES_BY_ID)?.label).toBe("Legs");
+    expect(routineFocus(tpl("tpl-upper"), SEED_EXERCISES_BY_ID)?.label).toBe("Upper");
+    expect(routineFocus({ ...tpl("tpl-upper"), exercises: [] }, SEED_EXERCISES_BY_ID)).toBeNull();
   });
 });

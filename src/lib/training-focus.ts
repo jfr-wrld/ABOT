@@ -1,4 +1,4 @@
-import type { Exercise, MuscleGroup, WorkoutSession } from "@/types/workout";
+import type { Exercise, MuscleGroup, Routine, WorkoutSession } from "@/types/workout";
 import { isWorkingSet } from "./calc";
 
 /**
@@ -46,6 +46,11 @@ export function trainingFocus(sessions: WorkoutSession[], byId: Record<string, E
     }
   }
   return focusOf(work);
+}
+
+/** The focus a routine will train, from its planned sets (warm-ups excluded). */
+export function routineFocus(routine: Routine, byId: Record<string, Exercise>): Focus | null {
+  return focusOf(routine.exercises.map((e) => ({ muscles: byId[e.exerciseId]?.primaryMuscles ?? [], sets: e.sets.filter((st) => st.type !== "warmup").length })));
 }
 
 /** Sets planned or done on one exercise, with that exercise's primary muscles. */

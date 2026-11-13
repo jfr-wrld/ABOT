@@ -14,28 +14,51 @@ async function setUpWeek(page: Page, days: string, place: RegExp) {
 }
 
 test("Home sets up a week, then adjusting it replaces the old plan's workouts", async ({ page }) => {
+  // Monday 16 November 2026.
+  await page.clock.setFixedTime(new Date(2026, 10, 16, 9, 0));
   await freshStart(page);
-  await page.getByRole("link", { name: "Set up my week" }).click();
+  await page.getByRole("link", { name: "Set up week" }).click();
   await page.waitForURL("**/plan");
   await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
   await setUpWeek(page, "3", /^Gym/);
   await page.getByRole("button", { name: "Go to Home" }).click();
-  const card = page.getByRole("region", { name: "Your week" });
-  await expect(card.getByText("3 days at 17:30")).toBeVisible();
-  await expect(card.getByText("Full Body Day 2")).toBeVisible();
 
-  await card.getByRole("link", { name: "Adjust your plan" }).click();
+  const rail = page.getByRole("list", { name: "This week" });
+  await expect(page.getByRole("link", { name: "Adjust your plan" }).first()).toContainText("3 days · 17:30");
+  await expect(page.getByRole("heading", { name: "Full Body Day 1" })).toBeVisible();
+  await expect(page.getByText("Today · 17:30")).toBeVisible();
+  // Any day of the week opens in the hero.
+  await rail.getByRole("button", { name: /Wednesday/ }).click();
+  await expect(page.getByRole("heading", { name: "Full Body Day 2" })).toBeVisible();
+  await rail.getByRole("button", { name: /Tuesday/ }).click();
+  await expect(page.getByRole("heading", { name: "Rest day" })).toBeVisible();
+
+  await page.getByRole("link", { name: "Adjust your plan" }).first().click();
   await expect(page.getByRole("button", { name: "2 years +" })).toBeVisible();
   await setUpWeek(page, "4", /^Gym/);
   await expect(page.getByText("3 old plan workouts replaced, 0 you edited kept.")).toBeVisible();
   await page.getByRole("button", { name: "Go to Home" }).click();
-  await expect(card.getByText("4 days at 17:30")).toBeVisible();
-  await expect(card.getByText("Upper day")).toHaveCount(2);
+  await expect(page.getByRole("link", { name: "Adjust your plan" }).first()).toContainText("4 days · 17:30");
+  await rail.getByRole("button", { name: /Thursday/ }).click();
+  await expect(page.getByRole("heading", { name: "Upper day" })).toBeVisible();
 
   await page.goto("/routines");
   await expect(page.getByRole("heading", { name: "My plan · 4 days" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "My plan · 3 days" })).toHaveCount(0);
   await expect(page.getByText("Full Body Day 1")).toHaveCount(0);
+});
+
+test("a rest day says so and offers the next workout", async ({ page }) => {
+  // Tuesday 17 November 2026: the default three days are Monday, Wednesday and Friday.
+  await page.clock.setFixedTime(new Date(2026, 10, 17, 9, 0));
+  await freshStart(page);
+  await page.goto("/plan");
+  await setUpWeek(page, "3", /^Gym/);
+  await page.getByRole("button", { name: "Go to Home" }).click();
+  await expect(page.getByRole("heading", { name: "Rest day" })).toBeVisible();
+  await expect(page.getByText("Next: Full Body Day 2 · Tomorrow")).toBeVisible();
+  await page.getByRole("button", { name: "Train anyway: Full Body Day 2" }).click();
+  await page.waitForURL("**/workout");
 });
 
 test("training with no equipment builds bodyweight days", async ({ page }) => {

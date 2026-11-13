@@ -712,4 +712,17 @@ export const settings: Record<string, string> = {
   "Dumbbells, kettlebells and bands": "Dumbel, kettlebell dan resistance band",
   "Push-ups, pull-ups and squats. A bar helps": "Push-up, pull-up dan squat. Lebih enak kalau ada palang",
   "My plan · {n} days": "Rencanaku · {n} hari",
+  // Home: week rail and day hero
+  "{n} days · {time}": "{n} hari · {time}",
+  "Set up week": "Atur minggu",
+  "Next: {name} · {day}": "Berikutnya: {name} · {day}",
+  "See summary": "Lihat ringkasan",
+  "Rest day": "Hari istirahat",
+  "Recovery is where the muscle grows.": "Otot tumbuh saat istirahat.",
+  "Nothing planned for this day.": "Belum ada latihan di hari ini.",
+  "No workout this day.": "Tidak ada latihan di hari ini.",
+  "Train anyway: {name}": "Tetap latihan: {name}",
+  "Train anyway": "Tetap latihan",
+  "Or set up your week: ABOT makes the workouts and reminds you.": "Atau atur minggumu: ABOT menyusun latihannya dan mengingatkanmu.",
+  "Next: {name}": "Berikutnya: {name}",
 };

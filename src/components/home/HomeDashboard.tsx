@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotionConfig } from "framer-motion";
-import { Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, RotateCcw, Settings, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
+import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, RotateCcw, Settings, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -17,31 +17,30 @@ import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
 import { PhaseCommandCard } from "@/components/phase/PhaseCommandCard";
-import { PlanCard } from "@/components/home/PlanCard";
 import { AnnouncementBanner } from "@/components/remote/AnnouncementBanner";
-import { REGIONS, type Region } from "@/components/anatomy/regions";
+import { REGIONS } from "@/components/anatomy/regions";
 import { Sheet } from "@/components/ui/Sheet";
-import { regionTelemetry, sleepFactor, type RegionTelemetry, type Sleep } from "@/lib/muscle-recovery";
+import { regionTelemetry, sleepFactor } from "@/lib/muscle-recovery";
 import { estimateCalories } from "@/lib/calorie-estimator";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume, toDisplay } from "@/lib/units";
 import {
   nextProtocol,
+  routineMinutes,
   prCounts,
   relativeDay,
-  weekDayVolumes,
   weekStrip,
   weeklyFrequency,
   weeklyVolume,
   type NextProtocol,
 } from "@/lib/home";
-import type { Exercise, WorkoutSession } from "@/types/workout";
-import type { Weekday, WorkoutSchedule } from "@/lib/notifications/schedule";
+import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
+import type { Weekday } from "@/lib/notifications/schedule";
 import { historyPath } from "@/lib/routes";
-import { useT } from "@/i18n";
+import { useT, type T } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
-import { trainingFocus } from "@/lib/training-focus";
+import { routineFocus, trainingFocus } from "@/lib/training-focus";
 import { weekStreak } from "@/lib/analytics";
 import { asRoutine, comeback, dismissWelcomeBack, welcomeBackDismissed } from "@/lib/comeback";
 import { currentStreak, type StreakMoment as StreakMomentData } from "@/lib/streak-moment";
@@ -53,9 +52,10 @@ const TILE = "rounded-xl border border-line bg-surface p-3";
 const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
 
 /**
- * Home as a command centre, told in pictures more than words: this week's days, the next routine
- * as its exercise photos, the week as a bar chart, a ring and a body map, and the log as cards
- * with photos and icons. Every figure comes from finished workouts on this device.
+ * Home as "today first": the week as one rail (trained days lit, planned days ringed, any day
+ * tappable), the selected day as the one large card with its workout and Start, the week's
+ * numbers on one row, then the body phase and the latest workouts. Every figure comes from
+ * finished workouts on this device.
  */
 export function HomeDashboard() {
   const t = useT();
@@ -69,10 +69,14 @@ export function HomeDashboard() {
   const now = useNow(60_000);
 
   const next = useMemo(() => nextProtocol(routines, sessions, schedule, now), [routines, sessions, schedule, now]);
+  const days = useMemo(() => weekStrip(sessions, now, firstDayOfWeek), [sessions, now, firstDayOfWeek]);
+  // The day the hero shows: today unless another day of this week was tapped.
+  const [picked, setPicked] = useState<number | null>(null);
+  const day = days.find((d) => d.start === picked) ?? days.find((d) => d.isToday) ?? days[0]!;
 
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 pt-4">
-      <header className="flex flex-col gap-4">
+      <header className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h1>
             <AbotWordmark />
@@ -86,29 +90,28 @@ export function HomeDashboard() {
           </Link>
         </div>
         <AnnouncementBanner />
-        <WeekStrip
-          days={weekStrip(sessions, now, firstDayOfWeek)}
+        <WeekRail
+          days={days}
           sessions={sessions}
           byId={byId}
           streak={weekStreak(sessions, now, firstDayOfWeek)}
-          planned={schedule.enabled ? schedule.days : null}
+          selected={day.start}
+          onSelect={(start) => setPicked(days.find((d) => d.start === start)?.isToday ? null : start)}
         />
       </header>
 
       {!active && <WelcomeBack now={now} />}
 
-      <Rise step={0.07} order={1}>{active ? <ActiveCard /> : <ProtocolHero next={next} byId={byId} />}</Rise>
+      <Rise step={0.07} order={1}>
+        {active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />}
+      </Rise>
 
       <Rise step={0.07} order={2}>
-        <PlanCard now={now} />
+        <NumbersRow now={now} />
       </Rise>
 
       <Rise step={0.07} order={2}>
         <PhaseCommandCard now={now} />
-      </Rise>
-
-      <Rise step={0.07} order={2}>
-        <ThisWeek now={now} />
       </Rise>
 
       <Rise step={0.07} order={3}>
@@ -170,111 +173,153 @@ function WelcomeBack({ now }: { now: number }) {
   );
 }
 
-/* ---------------------------------------------------------------- week strip */
+/* ---------------------------------------------------------------- week rail */
 
-/** Trained days light up one after another; today keeps a slow breathing ring. */
+/** Long weekday name for Date#getDay numbering (7 Jan 2024 was a Sunday). */
+const weekdayLong = (t: T, wd: number) => new Date(2024, 0, 7 + wd).toLocaleDateString(t.locale, { weekday: "long" });
+
 /**
- * The week as seven days: the date under each letter, and on a trained day the muscle that got
- * the most sets lit in Volt with the day's focus (Push, Pull, Legs...) under it, so the split
- * reads at a glance. Above: the month, and the week streak when there is one.
+ * The week as seven tappable days, the strip and the plan in one: a trained day shows the muscle
+ * that got the most sets with its focus (Push, Pull...), a planned day still to come a Volt ring
+ * with the focus of its workout, the rest a dot. Tapping a day shows it in the hero. Above: the
+ * month, the streak, and the plan (days and time) with Adjust.
  */
-function WeekStrip({
+function WeekRail({
   days,
   sessions,
   byId,
   streak,
-  planned,
+  selected,
+  onSelect,
 }: {
   days: ReturnType<typeof weekStrip>;
   sessions: WorkoutSession[];
   byId: Record<string, Exercise>;
   streak: number;
-  /** The schedule's days, to mark the training days still to come; null with no schedule. */
-  planned: WorkoutSchedule["days"] | null;
+  selected: number;
+  onSelect: (start: number) => void;
 }) {
   const t = useT();
   const controls = useEntrance();
   const reduce = useReducedMotionConfig();
   const firstDay = useSettingsStore((st) => st.firstDayOfWeek);
+  const schedule = useReminderStore((s) => s.schedule);
+  const routines = useRoutineStore((s) => s.routines);
   const [replay, setReplay] = useState<StreakMomentData | null>(null);
-  const focus = useMemo(
+  const planDays = schedule.enabled ? ([0, 1, 2, 3, 4, 5, 6] as Weekday[]).filter((wd) => schedule.days[wd].on).length : 0;
+
+  const cells = useMemo(
     () =>
-      days.map((d) =>
-        d.trained ? trainingFocus(sessions.filter((s) => s.status === "completed" && s.startedAt >= d.start && s.startedAt < d.start + 86_400_000), byId) : null,
-      ),
-    [days, sessions, byId],
+      days.map((d) => {
+        const wd = new Date(d.start).getDay() as Weekday;
+        if (d.trained) {
+          const f = trainingFocus(sessions.filter((s) => s.status === "completed" && s.startedAt >= d.start && s.startedAt < d.start + 86_400_000), byId);
+          return { kind: "trained" as const, focus: f, label: f?.label ?? null };
+        }
+        const plan = schedule.enabled && schedule.days[wd].on && (d.isToday || d.isFuture);
+        if (plan) {
+          const r = routines.find((x) => x.id === schedule.days[wd].routineId);
+          return { kind: "planned" as const, focus: null, label: r ? (routineFocus(r, byId)?.label ?? null) : null };
+        }
+        return { kind: "none" as const, focus: null, label: null };
+      }),
+    [days, sessions, byId, schedule, routines],
   );
   const month = new Date(days[0]!.start).toLocaleDateString(t.locale, { month: "long", year: "numeric" });
+
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="label-caps">{month}</p>
-        {streak > 0 && (
-          // The streak plays its flame again on a tap, the same screen as after Finish.
-          <button
-            type="button"
-            onClick={() => setReplay(currentStreak(sessions, Date.now(), firstDay))}
-            aria-haspopup="dialog"
-            className="tap num -my-2 -mr-2 flex min-h-11 items-center gap-1 rounded-ctl px-2 text-xs font-bold text-accent hover:bg-accent/10"
-          >
-            <Flame aria-hidden="true" size={14} />
-            {t.n(streak, "{n}-week streak", "{n}-week streak")}
-          </button>
-        )}
+        <p className="label-caps truncate">{month}</p>
+        <div className="-my-2 -mr-2 flex shrink-0 items-center">
+          {streak > 0 && (
+            // The streak plays its flame again on a tap, the same screen as after Finish.
+            <button
+              type="button"
+              onClick={() => setReplay(currentStreak(sessions, Date.now(), firstDay))}
+              aria-haspopup="dialog"
+              aria-label={t.n(streak, "{n}-week streak", "{n}-week streak")}
+              className="tap num flex min-h-11 items-center gap-1 rounded-ctl px-2 text-xs font-bold text-accent hover:bg-accent/10"
+            >
+              <Flame aria-hidden="true" size={14} />
+              <span aria-hidden="true">{t("{n} wk", { n: streak })}</span>
+            </button>
+          )}
+          {planDays > 0 ? (
+            <Link
+              href="/plan"
+              aria-label={t("Adjust your plan")}
+              className="tap num flex min-h-11 items-center gap-1.5 rounded-ctl px-2 text-xs font-bold text-text-muted hover:bg-surface hover:text-text"
+            >
+              <span>{t("{n} days · {time}", { n: planDays, time: schedule.time })}</span>
+              <SlidersHorizontal aria-hidden="true" size={14} className="text-accent" />
+            </Link>
+          ) : (
+            <Link
+              href="/plan"
+              className="tap flex min-h-11 items-center gap-1 rounded-ctl px-2 text-xs font-bold text-accent hover:bg-accent/10"
+            >
+              <CalendarDays aria-hidden="true" size={14} />
+              {t("Set up week")}
+            </Link>
+          )}
+        </div>
       </div>
       {replay && <StreakMoment moment={replay} onClose={() => setReplay(null)} />}
-      <ol aria-label={t("This week")} className="grid grid-cols-7 gap-1.5">
+      <ol aria-label={t("This week")} className="grid grid-cols-7 gap-1">
         {days.map((d, i) => {
           const date = new Date(d.start);
-          const weekday = date.toLocaleDateString(t.locale, { weekday: "short" });
-          const f = focus[i];
-          const plannedDay = !d.trained && (d.isToday || d.isFuture) && !!planned?.[date.getDay() as Weekday]?.on;
-          const status = d.trained ? t("trained") : d.isToday ? (plannedDay ? t("today, planned") : t("today")) : d.isFuture ? (plannedDay ? t("planned") : "") : t("rest");
+          const c = cells[i]!;
+          const on = d.start === selected;
+          const status =
+            c.kind === "trained" ? t("trained") : d.isToday ? (c.kind === "planned" ? t("today, planned") : t("today")) : c.kind === "planned" ? t("planned") : d.isFuture ? "" : t("rest");
           return (
-            <li key={d.start} className="flex flex-col items-center gap-1">
-              <span aria-hidden="true" className={`label-caps ${d.isToday ? "!text-text" : ""}`}>
-                {weekday.slice(0, 1)}
-              </span>
-              <span aria-hidden="true" className={`num text-xs font-bold leading-none ${d.isToday ? "text-text" : "text-text-muted"}`}>
-                {date.getDate()}
-              </span>
-              <span aria-hidden="true" className="relative flex h-11 w-full max-w-11 items-center justify-center">
-                {d.isToday && !d.trained && (
-                  <motion.span
-                    className="absolute inset-0 rounded-lg border border-ink/70"
-                    animate={reduce ? undefined : { opacity: [1, 0.45, 1] }}
-                    transition={{ duration: 2.4, repeat: 2, ease: "easeInOut" }}
-                  />
-                )}
-                {d.trained ? (
-                  <motion.span
-                    className={`flex size-full items-center justify-center rounded-lg border bg-accent-tint ${d.isToday ? "border-accent" : "border-accent/40"}`}
-                    style={{ scale: 0.4, opacity: 0 }}
-                    animate={controls}
-                    variants={{
-                      still: { scale: 1, opacity: 1 },
-                      show: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 420, damping: 18, delay: 0.15 + i * 0.06 } },
-                    }}
-                  >
-                    {f ? <MuscleIcon muscle={f.muscle} size={30} /> : <Check size={16} strokeWidth={3} className="text-accent" />}
-                  </motion.span>
-                ) : (
-                  plannedDay ? (
+            <li key={d.start}>
+              <button
+                type="button"
+                aria-pressed={on}
+                onClick={() => onSelect(d.start)}
+                className={`tap flex w-full flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${on ? "bg-surface ring-1 ring-line" : "hover:bg-surface/60"}`}
+              >
+                <span aria-hidden="true" className={`label-caps ${d.isToday ? "!text-text" : ""}`}>
+                  {date.toLocaleDateString(t.locale, { weekday: "narrow" })}
+                </span>
+                <span aria-hidden="true" className={`num text-xs font-bold leading-none ${d.isToday || on ? "text-text" : "text-text-muted"}`}>
+                  {date.getDate()}
+                </span>
+                <span aria-hidden="true" className="relative flex size-10 items-center justify-center">
+                  {c.kind === "trained" ? (
+                    <motion.span
+                      className={`flex size-full items-center justify-center rounded-lg border bg-accent-tint ${d.isToday ? "border-accent" : "border-accent/40"}`}
+                      style={{ scale: 0.4, opacity: 0 }}
+                      animate={controls}
+                      variants={{
+                        still: { scale: 1, opacity: 1 },
+                        show: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 420, damping: 18, delay: 0.15 + i * 0.06 } },
+                      }}
+                    >
+                      {c.focus ? <MuscleIcon muscle={c.focus.muscle} size={28} /> : <Check size={16} strokeWidth={3} className="text-accent" />}
+                    </motion.span>
+                  ) : c.kind === "planned" ? (
                     // A training day still to come: a ring where the muscle will light up.
-                    <span className={`size-3 rounded-full border-2 ${d.isToday ? "border-accent" : "border-accent/60"}`} />
+                    <motion.span
+                      className={`size-3.5 rounded-full border-2 ${d.isToday ? "border-accent" : "border-accent/60"}`}
+                      animate={d.isToday && !reduce ? { scale: [1, 1.25, 1] } : undefined}
+                      transition={{ duration: 2.4, repeat: 2, ease: "easeInOut" }}
+                    />
                   ) : (
-                    <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-zinc-800"}`} />
-                  )
-                )}
-              </span>
-              <span aria-hidden="true" className="h-3 max-w-full truncate text-[10px] font-semibold leading-3 text-text-muted">
-                {f ? t(f.label) : ""}
-              </span>
-              <span className="sr-only">
-                {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric" })}
-                {f && `, ${t(f.label)}`}
-                {status && `, ${status}`}
-              </span>
+                    <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-ink/20"}`} />
+                  )}
+                </span>
+                <span aria-hidden="true" className={`h-3 max-w-full truncate px-0.5 text-[10px] font-semibold leading-3 ${c.kind === "planned" ? "text-text" : "text-text-muted"}`}>
+                  {c.label ? t(c.label) : ""}
+                </span>
+                <span className="sr-only">
+                  {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric" })}
+                  {c.label && `, ${t(c.label)}`}
+                  {status && `, ${status}`}
+                </span>
+              </button>
             </li>
           );
         })}
@@ -310,80 +355,243 @@ function ThumbRow({ exerciseIds, byId, size = 44 }: { exerciseIds: string[]; byI
   );
 }
 
-function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<string, Exercise> }) {
+/** "TODAY · 16:30", "TOMORROW", "SATURDAY": when the hero's workout is. */
+function whenLabel(t: T, start: number, now: number, time: string | null): string {
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((start - today.getTime()) / 86_400_000);
+  const day = diff === 0 ? t("Today") : diff === 1 ? t("Tomorrow") : weekdayLong(t, new Date(start).getDay());
+  return time ? `${day} · ${time}` : day;
+}
+
+/**
+ * The selected day as the one large card. Today: the planned (or next) workout with Start; on a
+ * rest day, the rest and the next workout, with Train anyway; once trained, what was done. Another
+ * day of the week: its planned workout, which can be started now too, or what was done.
+ */
+function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[number]; next: NextProtocol | null; byId: Record<string, Exercise>; now: number }) {
   const t = useT();
   const router = useRouter();
-  const { startEmpty, startFromRoutine } = useWorkoutStore.getState();
+  const reduce = useReducedMotionConfig();
+  const sessions = useWorkoutStore((s) => s.sessions);
+  const routines = useRoutineStore((s) => s.routines);
+  const schedule = useReminderStore((s) => s.schedule);
+  const unit = useSettingsStore((s) => s.weightUnit);
   const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
+  const { startEmpty, startFromRoutine } = useWorkoutStore.getState();
+
+  const wd = new Date(day.start).getDay() as Weekday;
+  const planned = schedule.enabled && schedule.days[wd].on;
+  const plannedRoutine = planned ? (routines.find((r) => r.id === schedule.days[wd].routineId && r.exercises.length > 0) ?? null) : null;
+  const hasPlan = schedule.enabled && ([0, 1, 2, 3, 4, 5, 6] as Weekday[]).some((d) => schedule.days[d].on);
+  const done = day.trained
+    ? sessions.filter((s) => s.status === "completed" && s.startedAt >= day.start && s.startedAt < day.start + 86_400_000).sort((a, b) => b.startedAt - a.startedAt)
+    : [];
 
   const empty = () => {
     startEmpty(defaultRest);
     // Straight to picking what to do: an empty workout has nothing else to show.
     router.push("/workout?add=1");
   };
+  const start = (r: Routine) => {
+    startFromRoutine(r);
+    router.push("/workout");
+  };
+  const nextLine = next && next.why.kind !== "yours" && next.why.kind !== "after" ? t("Next: {name} · {day}", { name: next.routine.name, day: whenLabel(t, startOfNext(next, now), now, null) }) : null;
 
-  if (!next) {
-    return (
-      <section aria-labelledby="hero-heading" className={`${TILE} relative flex flex-col gap-3 overflow-hidden p-4`}>
-        <HeroPlate />
-        <div className="relative">
-          <p className="label-caps">{t("Next up")}</p>
-          <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
-            {t("Free session")}
+  let body: ReactNode;
+  if (done.length > 0) {
+    const s = done[0]!;
+    const kg = done.reduce((n, x) => n + sessionVolume(x, byId), 0);
+    body = (
+      <>
+        <div className="relative min-w-0">
+          <p className="label-caps flex items-center gap-1.5">
+            <Check aria-hidden="true" size={13} strokeWidth={3} className="text-accent" />
+            {t("Done")} · {whenLabel(t, day.start, now, null)}
+          </p>
+          <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
+            {s.name}
           </h2>
+          <p className="num mt-1 flex items-center gap-3 text-sm text-text-muted">
+            <span className="inline-flex items-center gap-1">
+              <Timer aria-hidden="true" size={14} />
+              {formatDuration(sessionDurationSec(s))}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Dumbbell aria-hidden="true" size={14} />
+              {formatVolume(toDisplay(kg, unit), unit)}
+            </span>
+          </p>
         </div>
+        {day.isToday && next && (
+          // Done for today, the next workout one tap away (another session, or tomorrow's early).
+          <div className="relative flex items-center gap-3 rounded-lg border border-line px-3 py-2">
+            <span className="min-w-0 flex-1 truncate text-sm text-text-muted">
+              {nextLine ?? t("Next: {name}", { name: next.routine.name })}
+            </span>
+            <Button onClick={() => start(next.routine)} aria-label={t("Start {name}", { name: next.routine.name })} className="min-h-11 shrink-0 !px-3 text-sm">
+              <Play aria-hidden="true" size={15} />
+              {t("Start")}
+            </Button>
+          </div>
+        )}
         <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-          <Button variant="primary" onClick={empty} className="min-h-12 text-base">
-            <Play aria-hidden="true" size={18} />
-            {t("Start an empty workout")}
-          </Button>
-          <Link
-            href="/workout"
-            aria-label={t("Create a routine")}
-            className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
-          >
-            <Plus aria-hidden="true" size={20} />
+          <Link href={historyPath(s.id)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-ink/[0.12] text-base font-semibold hover:border-ink/25">
+            {t("See summary")}
+            <ChevronRight aria-hidden="true" size={18} />
           </Link>
+          <Button onClick={empty} aria-label={t("Start an empty workout")} className="size-12 !bg-transparent !px-0">
+            <Plus aria-hidden="true" size={20} />
+          </Button>
         </div>
-      </section>
+      </>
     );
+  } else {
+    // The workout this card offers: the day's planned one, or (today, without one) the next.
+    const routine = plannedRoutine ?? (day.isToday && !(hasPlan && !planned) ? (next?.routine ?? null) : null);
+    const rest = !routine && (hasPlan || !day.isToday);
+    if (routine) {
+      const label = plannedRoutine
+        ? whenLabel(t, day.start, now, schedule.time)
+        : next && (next.why.kind === "tomorrow" || next.why.kind === "weekday")
+          ? whenLabel(t, startOfNext(next, now), now, null)
+          : t("Next up");
+      body = (
+        <>
+          <div className="relative min-w-0">
+            <p className="label-caps">{label}</p>
+            <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
+              {routine.name}
+            </h2>
+            <p className="num mt-1 flex items-center gap-3 text-sm text-text-muted">
+              <span className="inline-flex items-center gap-1">
+                <Timer aria-hidden="true" size={14} />
+                {t("{n} min", { n: routineMinutes(routine) })}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Layers aria-hidden="true" size={14} />
+                {t.n(routine.exercises.length, "{n} exercise", "{n} exercises")}
+              </span>
+            </p>
+          </div>
+          <div className="relative">
+            <ThumbRow exerciseIds={routine.exercises.map((e) => e.exerciseId)} byId={byId} />
+          </div>
+          <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <Button variant="primary" onClick={() => start(routine)} aria-label={t("Start {name}", { name: routine.name })} className="min-h-12 text-base">
+              <Play aria-hidden="true" size={18} />
+              {t("Start")}
+            </Button>
+            <Button onClick={empty} aria-label={t("Start an empty workout")} className="size-12 !bg-transparent !px-0">
+              <Plus aria-hidden="true" size={20} />
+            </Button>
+          </div>
+        </>
+      );
+    } else if (rest) {
+      // Today with a plan and nothing planned, or another day with nothing planned.
+      const upcoming = day.isToday && next ? next.routine : null;
+      body = (
+        <>
+          <div className="relative min-w-0">
+            <p className="label-caps">{whenLabel(t, day.start, now, null)}</p>
+            <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
+              {t("Rest day")}
+            </h2>
+            <p className="mt-1 text-sm text-text-muted">
+              {day.isToday ? (nextLine ?? t("Recovery is where the muscle grows.")) : day.isFuture ? t("Nothing planned for this day.") : t("No workout this day.")}
+            </p>
+          </div>
+          {upcoming && (
+            <div className="relative">
+              <ThumbRow exerciseIds={upcoming.exercises.map((e) => e.exerciseId)} byId={byId} size={36} />
+            </div>
+          )}
+          <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            {upcoming ? (
+              <Button onClick={() => start(upcoming)} aria-label={t("Train anyway: {name}", { name: upcoming.name })} className="min-h-12 text-base">
+                <Play aria-hidden="true" size={18} />
+                {t("Train anyway")}
+              </Button>
+            ) : (
+              <Button onClick={empty} className="min-h-12 text-base">
+                <Play aria-hidden="true" size={18} />
+                {t("Start an empty workout")}
+              </Button>
+            )}
+            <Link
+              href="/plan"
+              aria-label={t("Adjust your plan")}
+              className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
+            >
+              <SlidersHorizontal aria-hidden="true" size={18} />
+            </Link>
+          </div>
+        </>
+      );
+    } else {
+      body = (
+        <>
+          <div className="relative">
+            <p className="label-caps">{t("Next up")}</p>
+            <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
+              {t("Free session")}
+            </h2>
+            <p className="mt-1 text-sm text-text-muted">{t("Or set up your week: ABOT makes the workouts and reminds you.")}</p>
+          </div>
+          <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <Button variant="primary" onClick={empty} className="min-h-12 text-base">
+              <Play aria-hidden="true" size={18} />
+              {t("Start an empty workout")}
+            </Button>
+            <Link
+              href="/workout"
+              aria-label={t("Create a routine")}
+              className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
+            >
+              <Plus aria-hidden="true" size={20} />
+            </Link>
+          </div>
+          <Link href="/plan" className="relative -mb-1 flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-accent">
+            <CalendarDays aria-hidden="true" size={16} />
+            {t("Set up your week")}
+          </Link>
+        </>
+      );
+    }
   }
 
-  const { routine } = next;
   return (
-    <section aria-labelledby="hero-heading" className={`${TILE} relative flex flex-col gap-3 overflow-hidden p-4`}>
+    <section aria-labelledby="hero-heading" className={`${TILE} relative overflow-hidden p-4`}>
       <HeroPlate />
-      <div className="relative min-w-0">
-        <p className="label-caps">
-          {t("Next up")}
-          {next.why.kind === "today" ? ` · ${t("Today")}` : next.why.kind === "tomorrow" ? ` · ${t("Tomorrow")}` : next.why.kind === "weekday" ? ` · ${new Date(2024, 0, 7 + next.why.weekday).toLocaleDateString(t.locale, { weekday: "long" })}` : ""}
-        </p>
-        <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
-          {routine.name}
-        </h2>
-      </div>
-      <div className="relative">
-        <ThumbRow exerciseIds={routine.exercises.map((e) => e.exerciseId)} byId={byId} />
-      </div>
-      <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-        <Button
-          variant="primary"
-          onClick={() => {
-            startFromRoutine(routine);
-            router.push("/workout");
-          }}
-          aria-label={t("Start {name}", { name: routine.name })}
-          className="min-h-12 text-base"
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={day.start}
+          className="flex flex-col gap-3"
+          initial={reduce ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduce ? undefined : { opacity: 0, y: -6 }}
+          transition={{ duration: 0.16 }}
         >
-          <Play aria-hidden="true" size={18} />
-          {t("Start")}
-        </Button>
-        <Button onClick={empty} aria-label={t("Start an empty workout")} className="size-12 !bg-transparent !px-0">
-          <Plus aria-hidden="true" size={20} />
-        </Button>
-      </div>
+          {body}
+        </motion.div>
+      </AnimatePresence>
     </section>
   );
+}
+
+/** The start of the day the next workout is on. */
+function startOfNext(next: NextProtocol, now: number): number {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  if (next.why.kind === "today") return d.getTime();
+  if (next.why.kind === "tomorrow") return d.getTime() + 86_400_000;
+  if (next.why.kind === "weekday") {
+    const ahead = (next.why.weekday - d.getDay() + 7) % 7 || 7;
+    return d.getTime() + ahead * 86_400_000;
+  }
+  return d.getTime();
 }
 
 /**
@@ -453,116 +661,49 @@ function ActiveCard() {
   );
 }
 
-/* ---------------------------------------------------------------- this week */
+/* ---------------------------------------------------------------- numbers */
 
-function ThisWeek({ now }: { now: number }) {
+/** Volume short enough for a third of the row: 12,400, then 124k. */
+const shortVolume = (n: number, locale: string) => (n >= 100_000 ? `${Math.round(n / 1000).toLocaleString(locale)}k` : Math.round(n).toLocaleString(locale));
+
+/**
+ * The week in three figures on one row: sessions against the plan (or the 7 days), the volume
+ * with its change on last week, and muscles ready, which opens the recovery map.
+ */
+function NumbersRow({ now }: { now: number }) {
   const t = useT();
+  const controls = useEntrance();
   const sessions = useWorkoutStore((s) => s.sessions);
   const schedule = useReminderStore((s) => s.schedule);
-  const { weightUnit, firstDayOfWeek } = useSettingsStore();
+  const { weightUnit: unit, firstDayOfWeek } = useSettingsStore();
   const { byId } = useAllExercises();
+  const active = useWorkoutStore((s) => s.active);
+  const sleep = useSettingsStore((s) => s.lastSleep);
+  const [open, setOpen] = useState(false);
 
   const volume = useMemo(() => weeklyVolume(sessions, now, firstDayOfWeek, byId), [sessions, now, firstDayOfWeek, byId]);
-  const days = useMemo(() => weekDayVolumes(sessions, now, firstDayOfWeek, byId), [sessions, now, firstDayOfWeek, byId]);
-  const strip = weekStrip(sessions, now, firstDayOfWeek);
   const freq = weeklyFrequency(sessions, schedule, now, firstDayOfWeek);
-  const active = useWorkoutStore((s) => s.active);
   // Sets ticked in a workout still running tire the muscles too.
-  const sleep = useSettingsStore((s) => s.lastSleep);
-  const recovery = useMemo(
-    () => regionTelemetry(active ? [...sessions, active] : sessions, byId, now, sleep),
-    [sessions, active, byId, now, sleep],
-  );
+  const recovery = useMemo(() => regionTelemetry(active ? [...sessions, active] : sessions, byId, now, sleep), [sessions, active, byId, now, sleep]);
+  const ready = REGIONS.filter((r) => recovery[r].stage === "fresh").length;
+  const speed = sleepFactor(sleep, now);
+  const target = freq.target ?? 7;
+  const perWeek = freq.target !== null;
+  const fraction = Math.min(1, freq.done / Math.max(1, target));
+  const change = volume.changePct;
 
   return (
-    <section aria-label={t("This week")} className="grid grid-cols-2 gap-2">
-      <VolumeCard
-        kg={volume.kg}
-        change={volume.changePct}
-        days={days}
-        letters={strip.map((d) => new Date(d.start).toLocaleDateString(t.locale, { weekday: "narrow" }))}
-        todayIndex={strip.findIndex((d) => d.isToday)}
-        unit={weightUnit}
-      />
-      <SessionsRing done={freq.done} target={freq.target ?? 7} perWeek={freq.target !== null} />
-      <RecoveryCard data={recovery} now={now} sleep={sleep} />
-    </section>
-  );
-}
-
-/** The week's volume: a counting figure, the change, and a bar per day that grows into place. */
-function VolumeCard({
-  kg,
-  change,
-  days,
-  letters,
-  todayIndex,
-  unit,
-}: {
-  kg: number;
-  change: number | null;
-  days: number[];
-  letters: string[];
-  todayIndex: number;
-  unit: "kg" | "lbs";
-}) {
-  const t = useT();
-  const controls = useEntrance();
-  const max = Math.max(...days, 1);
-  return (
-    <div className={`${TILE} col-span-2 flex items-end justify-between gap-3`}>
-      <div className="min-w-0">
-        <p className="label-caps">{t("Volume")}</p>
-        <p className="num mt-1 flex items-baseline gap-1 text-3xl font-bold tracking-tight tabular-nums">
-          <CountFromZero delay={0.2} value={Math.round(toDisplay(kg, unit))} format={(n) => Math.round(n).toLocaleString(t.locale)} />
-          <span className="text-sm font-semibold text-text-muted">{unit}</span>
-        </p>
-        {change !== null && (
-          <p className={`num mt-1 inline-flex items-center gap-1 text-xs ${change >= 0 ? "text-text" : "text-text-muted"}`}>
-            {change >= 0 ? <TrendingUp aria-hidden="true" size={14} className="text-accent" /> : <TrendingDown aria-hidden="true" size={14} />}
-            {change > 0 ? "+" : ""}
-            {change}%<span className="sr-only"> {t("against last week")}</span>
-          </p>
-        )}
-      </div>
-      <div aria-hidden="true" className="flex h-20 shrink-0 items-end gap-1.5">
-        {days.map((v, i) => (
-          <div key={i} className="flex h-full flex-col items-center justify-end gap-1">
-            <motion.span
-              className={`block w-3 origin-bottom rounded-sm ${i === todayIndex ? "bg-accent" : v > 0 ? "bg-accent/45" : "bg-zinc-800"}`}
-              style={{ height: `${Math.max(6, (v / max) * 100)}%`, scaleY: 0 }}
-              animate={controls}
-              variants={{
-                still: { scaleY: 1 },
-                show: { scaleY: 1, transition: { type: "spring", stiffness: 220, damping: 20, delay: 0.25 + i * 0.05 } },
-              }}
-            />
-            <span className={`text-[9px] ${i === todayIndex ? "text-text" : "text-text-muted"}`}>{letters[i]}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Sessions as a ring that draws itself: against the schedule when there is one, else the 7 days. */
-function SessionsRing({ done, target, perWeek }: { done: number; target: number; perWeek: boolean }) {
-  const t = useT();
-  const controls = useEntrance();
-  const r = 30;
-  const fraction = Math.min(1, done / Math.max(1, target));
-  return (
-    <div className={`${TILE} flex flex-col items-center justify-center gap-1`}>
-      <div className="relative size-[76px]">
-        <svg viewBox="0 0 76 76" className="size-full -rotate-90" aria-hidden="true">
-          <circle cx="38" cy="38" r={r} fill="none" stroke="var(--color-track)" strokeWidth="7" />
+    <section aria-label={t("This week")} className="grid grid-cols-3 divide-x divide-line rounded-xl border border-line bg-surface">
+      <div className="flex min-w-0 items-center gap-2 p-3">
+        <svg viewBox="0 0 36 36" className="hidden size-9 shrink-0 -rotate-90 min-[380px]:block" aria-hidden="true">
+          <circle cx="18" cy="18" r="14" fill="none" stroke="var(--color-track)" strokeWidth="4" />
           <motion.circle
-            cx="38"
-            cy="38"
-            r={r}
+            cx="18"
+            cy="18"
+            r="14"
             fill="none"
             stroke="var(--color-accent)"
-            strokeWidth="7"
+            strokeWidth="4"
             strokeLinecap="round"
             style={{ pathLength: 0, opacity: fraction > 0 ? 1 : 0 }}
             animate={controls}
@@ -572,49 +713,58 @@ function SessionsRing({ done, target, perWeek }: { done: number; target: number;
             }}
           />
         </svg>
-        <span className="num absolute inset-0 flex items-center justify-center text-xl font-bold tabular-nums">
-          {done}
-          <span className="text-xs font-semibold text-text-muted">/{target}</span>
-        </span>
+        <div className="min-w-0">
+          <p aria-hidden="true" className="num text-lg font-bold leading-tight tabular-nums">
+            {freq.done}
+            <span className="text-xs font-semibold text-text-muted">/{target}</span>
+          </p>
+          <p aria-hidden="true" className="label-caps truncate">
+            {perWeek ? t("Planned") : t("Days")}
+          </p>
+          <span className="sr-only">
+            {perWeek ? t("{done} of {target} planned sessions this week", { done: freq.done, target }) : t("{done} of {target} days this week", { done: freq.done, target })}
+          </span>
+        </div>
       </div>
-      <p className="label-caps">{perWeek ? t("Planned") : t("Days")}</p>
-      <span className="sr-only">
-        {perWeek
-          ? t("{done} of {target} planned sessions this week", { done, target })
-          : t("{done} of {target} days this week", { done, target })}
-      </span>
-    </div>
-  );
-}
 
-/**
- * The body, front and back, coloured by how tired each muscle is. Tapping opens the full map:
- * one side at a time, each muscle with its recovery and time to ready.
- */
-function RecoveryCard({ data, now, sleep }: { data: Record<Region, RegionTelemetry>; now: number; sleep: Sleep | null }) {
-  const t = useT();
-  const speed = sleepFactor(sleep, now);
-  const [open, setOpen] = useState(false);
-  const ready = REGIONS.filter((r) => data[r].stage === "fresh").length;
-  return (
-    <>
+      <div className="min-w-0 p-3">
+        <p className="num flex items-baseline gap-0.5 text-lg font-bold leading-tight tabular-nums">
+          <CountFromZero delay={0.2} value={Math.round(toDisplay(volume.kg, unit))} format={(n) => shortVolume(n, t.locale)} />
+          <span className="text-[11px] font-semibold text-text-muted">{unit}</span>
+        </p>
+        <p className="label-caps flex items-center gap-1 truncate">
+          {t("Volume")}
+          {change !== null && (
+            <span className={`num inline-flex items-center gap-0.5 normal-case ${change >= 0 ? "!text-text" : ""}`}>
+              {change >= 0 ? <TrendingUp aria-hidden="true" size={11} className="text-accent" /> : <TrendingDown aria-hidden="true" size={11} />}
+              {change > 0 ? "+" : ""}
+              {change}%<span className="sr-only"> {t("against last week")}</span>
+            </span>
+          )}
+        </p>
+      </div>
+
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-label={t("Muscle recovery: {ready} of {total} muscles ready. Open the map.", { ready, total: REGIONS.length })}
-        className={`${TILE} force-dark flex flex-col items-center justify-center gap-1 !bg-black !pb-2 text-left transition-colors hover:!border-line-strong`}
+        className="flex min-w-0 items-center gap-2 rounded-r-xl p-3 text-left transition-colors hover:bg-ink/[0.03]"
       >
-        <div className="w-full px-1" aria-hidden="true">
-          <RecoveryMap data={data} now={now} compact />
-        </div>
-        <p className="num text-sm font-bold tabular-nums text-text" aria-hidden="true">
-          {ready}/{REGIONS.length}
-          <span className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">{t("ready")}</span>
-        </p>
+        <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent min-[380px]:flex">
+          <Activity size={16} />
+        </span>
+        <span aria-hidden="true" className="min-w-0">
+          <span className="num block text-lg font-bold leading-tight tabular-nums">
+            {ready}
+            <span className="text-xs font-semibold text-text-muted">/{REGIONS.length}</span>
+          </span>
+          <span className="label-caps block truncate">{t("ready")}</span>
+        </span>
       </button>
+
       <Sheet open={open} onClose={() => setOpen(false)} title={t("Muscle recovery")}>
-        <RecoveryMap data={data} now={now} />
+        <RecoveryMap data={recovery} now={now} />
         {speed !== 1 && sleep && (
           <p className="mt-3 text-xs font-semibold tabular-nums">
             {speed < 1
@@ -628,7 +778,7 @@ function RecoveryCard({ data, now, sleep }: { data: Record<Region, RegionTelemet
           )}
         </p>
       </Sheet>
-    </>
+    </section>
   );
 }
 
@@ -637,7 +787,7 @@ function RecoveryCard({ data, now, sleep }: { data: Record<Region, RegionTelemet
 function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<string, Exercise>; now: number }) {
   const t = useT();
   const sessions = useWorkoutStore((s) => s.sessions);
-  const recent = useMemo(() => [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 10), [sessions]);
+  const recent = useMemo(() => [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 3), [sessions]);
   const prs = useMemo(() => prCounts(recent, sessions, byId), [recent, sessions, byId]);
 
   const [view, setView] = useViewMode("recent");

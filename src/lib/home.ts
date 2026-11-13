@@ -36,6 +36,12 @@ export function weekStrip(sessions: WorkoutSession[], now: number, firstDay: 0 |
   });
 }
 
+/** Minutes for a routine: about 45 s a set plus its rest, a minute to set up each exercise, five to warm up. */
+export function routineMinutes(r: Routine): number {
+  const sec = r.exercises.reduce((sum, e) => sum + e.sets.length * (45 + e.restSeconds) + 60, 5 * 60);
+  return Math.max(5, Math.round(sec / 60 / 5) * 5);
+}
+
 /* ---------------------------------------------------------------- weekly figures */
 
 export interface WeeklyVolume {

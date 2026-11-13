@@ -36,7 +36,7 @@ test("export, wipe the device, import with replace", async ({ page }, info) => {
   await page.getByRole("button", { name: "Yes, replace everything" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Imported" })).toBeVisible();
   await page.goto("/");
-  await expect(page.getByText("Backup Day")).toBeVisible();
+  await expect(page.getByText("Backup Day").first()).toBeVisible();
 });
 
 test("an invalid file shows why it was refused", async ({ page }, info) => {
@@ -64,7 +64,7 @@ test("Delete my data: this phone only clears everything and starts over", async 
   // Cancel deletes nothing.
   await sheet.getByRole("button", { name: "Cancel" }).click();
   await page.goto("/");
-  await expect(page.getByText("Gone Day")).toBeVisible();
+  await expect(page.getByText("Gone Day").first()).toBeVisible();
 
   await page.goto("/settings?section=data");
   await page.getByRole("button", { name: "Delete my data" }).click();

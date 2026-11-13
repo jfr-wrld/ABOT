@@ -40,6 +40,8 @@ test("a new device sees the intro once, with Next and swipe", async ({ page }) =
 });
 
 test("the intro ends at a training week: routines, schedule and Home follow it", async ({ page }) => {
+  // A Monday, so today is a training day.
+  await page.clock.setFixedTime(new Date(2026, 10, 16, 9, 0));
   await freshStart(page, { intro: true });
   await page.waitForURL("**/onboarding");
   for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "Next" }).click();
@@ -75,10 +77,12 @@ test("the intro ends at a training week: routines, schedule and Home follow it",
   await page.getByRole("button", { name: "Go to Home" }).click();
 
   await page.waitForURL((u) => u.pathname === "/");
-  const card = page.getByRole("region", { name: "Your week" });
-  await expect(card.getByText("5 days at 17:30")).toBeVisible();
-  await expect(card.getByText("Legs A: Quads")).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Start (Push A|Pull A|Legs A|Upper day|Lower day)/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Adjust your plan" }).first()).toContainText("5 days · 17:30");
+  const rail = page.getByRole("list", { name: "This week" });
+  await expect(rail.getByRole("button", { name: /Wednesday.*Legs, planned$/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start Push A: Strength" })).toBeVisible();
+  await rail.getByRole("button", { name: /Wednesday/ }).click();
+  await expect(page.getByRole("heading", { name: "Legs A: Quads" })).toBeVisible();
 
   await page.goto("/routines");
   await expect(page.getByRole("heading", { name: "My plan · 5 days" })).toBeVisible();
