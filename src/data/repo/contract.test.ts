@@ -112,6 +112,10 @@ describe.each([
         biologicalSex: "male",
         myFoods: [{ id: "m1", name: "Nasi padang dekat kantor", kcal: 750, protein: 30, carbs: 90, fat: 28 }],
         bodyPhase: null,
+        trainingPlan: {
+          goal: "muscle", level: "some", days: 3, weekdays: [1, 3, 5], place: "gym", split: "full_body", time: "18:00",
+          routineIds: { "tpl-fb-1": "r1" }, routineStamps: { r1: 5 }, createdAt: 9,
+        },
       },
       activeWorkout: { ...session("live"), status: "active", finishedAt: undefined },
       exerciseMedia: { "bench-press-barbell": { customVideoUrl: "https://youtu.be/dQw4w9WgXcQ" } },

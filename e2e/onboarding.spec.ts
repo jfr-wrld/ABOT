@@ -30,7 +30,7 @@ test("a new device sees the intro once, with Next and swipe", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Your training stays on this phone" })).toBeVisible();
 
   await page.getByRole("button", { name: "Start training" }).click();
-  await expect(page.getByRole("heading", { name: "Your first workout" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What are you training for?" })).toBeVisible();
   await page.getByRole("button", { name: "Look around first" }).click();
   await page.waitForURL((u) => u.pathname === "/");
   await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
@@ -39,21 +39,53 @@ test("a new device sees the intro once, with Next and swipe", async ({ page }) =
   await expect(page).toHaveURL((u) => u.pathname === "/");
 });
 
-test("the intro ends at a first workout picked from three answers, ready to start", async ({ page }) => {
+test("the intro ends at a training week: routines, schedule and Home follow it", async ({ page }) => {
   await freshStart(page, { intro: true });
   await page.waitForURL("**/onboarding");
   for (let i = 0; i < 2; i++) await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("button", { name: "Start training" }).click();
-  await expect(page.getByRole("heading", { name: "Your first workout" })).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "What are you training for?" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  // Three days a week: a full-body day. Five, past the first months: push/pull/legs.
-  await expect(page.getByRole("heading", { name: "Full Body Day 1" })).toBeVisible();
-  await page.getByRole("button", { name: "5+" }).click();
   await page.getByRole("button", { name: "2 years +" }).click();
-  await expect(page.getByRole("button", { name: "Start Push A: Strength" })).toBeVisible();
-  await page.getByRole("button", { name: "Start Push A: Strength" }).click();
-  await page.waitForURL("**/workout");
-  await expect(page.getByRole("heading", { name: "Bench Press (Barbell)", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Next" }).click();
+
+  await expect(page.getByRole("heading", { name: "How many days a week?" })).toBeVisible();
+  await page.getByRole("button", { name: "5", exact: true }).click();
+  for (const day of ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]) await expect(page.getByRole("button", { name: day })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Saturday" })).toHaveAttribute("aria-pressed", "false");
+  await page.getByRole("button", { name: "Next" }).click();
+
+  await expect(page.getByRole("heading", { name: "Where do you train?" })).toBeVisible();
+  await page.getByRole("button", { name: /^Gym/ }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+
+  // Five days: push, pull, legs, then upper and lower.
+  await expect(page.getByRole("heading", { name: "Your week" })).toBeVisible();
+  const week = page.getByRole("list", { name: "Your week" });
+  for (const name of ["Push A: Strength", "Pull A: Width", "Legs A: Quads", "Upper day", "Lower day"]) await expect(week.getByText(name)).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await week.getByRole("button", { name: /Push A: Strength/ }).click();
+  await expect(week.getByText("Bench Press (Barbell)")).toBeVisible();
+  await page.getByRole("button", { name: "Looks good" }).click();
+
+  await expect(page.getByRole("heading", { name: "When do you train?" })).toBeVisible();
+  await page.getByRole("button", { name: "Save without reminders" }).click();
+  await expect(page.getByRole("heading", { name: "Your week is set" })).toBeVisible();
+  await page.getByRole("button", { name: "Go to Home" }).click();
+
+  await page.waitForURL((u) => u.pathname === "/");
+  const card = page.getByRole("region", { name: "Your week" });
+  await expect(card.getByText("5 days at 17:30")).toBeVisible();
+  await expect(card.getByText("Legs A: Quads")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Start (Push A|Pull A|Legs A|Upper day|Lower day)/ })).toBeVisible();
+
+  await page.goto("/routines");
+  await expect(page.getByRole("heading", { name: "My plan · 5 days" })).toBeVisible();
+  await page.goto("/settings?section=notifications");
+  await expect(page.getByRole("switch", { name: "Workout reminders" })).toBeChecked();
+  await expect(page.getByRole("button", { name: "Wednesday" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Sunday" })).toHaveAttribute("aria-pressed", "false");
 });
 
 test("skipping the intro goes straight to Home", async ({ page }) => {

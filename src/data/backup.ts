@@ -9,6 +9,7 @@ import { WORKOUT_PHOTO_MAX_BYTES } from "@/lib/photo";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
 import { COVER_PRESET_IDS } from "@/lib/cover-presets";
+import { normalizePlan } from "@/lib/training-plan";
 import type { Weekday, WorkoutSchedule } from "@/lib/notifications/schedule";
 
 export interface AbotBackup {
@@ -156,6 +157,7 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     birthYear: typeof raw.birthYear === "number" && Number.isInteger(raw.birthYear) && raw.birthYear >= 1900 && raw.birthYear <= new Date().getFullYear() - 10 ? raw.birthYear : null,
     biologicalSex: raw.biologicalSex === "male" || raw.biologicalSex === "female" ? raw.biologicalSex : null,
     myFoods: normalizeMyFoods(raw.myFoods),
+    trainingPlan: normalizePlan(raw.trainingPlan),
   };
 }
 

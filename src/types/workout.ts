@@ -13,6 +13,7 @@
 
 import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
 import type { ActivePhaseConfig } from "@/lib/phase-engine";
+import type { TrainingPlan } from "@/lib/training-plan";
 
 export type WeightUnit = "kg" | "lbs";
 
@@ -295,6 +296,8 @@ export interface UserSettings {
   entitlement: EntitlementState;
   /** Cut, lean bulk, recomp or strength peak, with its targets (lib/phase-engine); null for none. */
   bodyPhase: ActivePhaseConfig | null;
+  /** The week set up at install or from Home (lib/training-plan); null before any. */
+  trainingPlan: TrainingPlan | null;
 }
 
 export type AppLanguage = "auto" | "en" | "id";
@@ -378,6 +381,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   birthYear: null,
   biologicalSex: null,
   myFoods: [],
+  trainingPlan: null,
 };
 
 export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {

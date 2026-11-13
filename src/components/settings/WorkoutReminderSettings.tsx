@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BellRing, CalendarPlus } from "lucide-react";
+import { BellRing, CalendarDays, CalendarPlus } from "lucide-react";
 import { useReminderStore, routineInfo } from "@/store/useReminderStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useNow } from "@/lib/useNow";
@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { isNativeApp, saveFile } from "@/lib/native/files";
+import Link from "next/link";
 import { useT } from "@/i18n";
 import { Switch } from "./controls";
 
@@ -84,6 +85,14 @@ export function WorkoutReminderSettings() {
         </InfoTip>
         <Switch checked={schedule.enabled} onChange={(enabled) => update({ enabled })} aria-label={t("Workout reminders")} />
       </div>
+
+      <Link
+        href="/plan"
+        className="mt-3 flex min-h-11 items-center justify-between gap-2 rounded-ctl border border-ink/[0.08] px-3 text-sm font-semibold hover:border-ink/25"
+      >
+        {t("Set up your days and workouts in one go")}
+        <CalendarDays aria-hidden="true" size={16} className="shrink-0 text-accent" />
+      </Link>
 
       {!schedule.enabled ? null : (
         <div className="mt-3 flex flex-col gap-4">

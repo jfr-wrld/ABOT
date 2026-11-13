@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
 import { Bike, Dumbbell, Footprints, HardHat, Laptop, ShieldCheck, Timer, TrendingDown, TrendingUp, Utensils } from "lucide-react";
@@ -96,7 +97,9 @@ function Wizard() {
   const [activity, setActivity] = useState<number>(current?.activityMultiplier ?? 1.375);
   const [weeks, setWeeks] = useState<number>(current?.durationWeeks ?? 8);
   const [targetKg, setTargetKg] = useState<number | null>(current?.targetWeightKg ?? null);
-  const [days, setDays] = useState<number | null>(current?.sessionsPerWeek ?? null);
+  // A training week set up already decides the routines; the phase only counts its days.
+  const plan = settings.trainingPlan;
+  const [days, setDays] = useState<number | null>(current?.sessionsPerWeek ?? plan?.weekdays.length ?? null);
   const sessionsPerWeek = days ?? DEFAULT_SESSIONS[type];
   const routines = useRoutineStore((s) => s.routines);
   const program = programTemplates(sessionsPerWeek)
@@ -140,7 +143,7 @@ function Wizard() {
     feedback.setComplete();
     // The answers become the profile's, so the next phase (and Body) start from them.
     settings.update({ bodyPhase: draft, heightCm, birthYear: new Date(now).getFullYear() - age, biologicalSex: sex });
-    if (addRoutines) {
+    if (addRoutines && !plan) {
       const { create, setExercises } = useRoutineStore.getState();
       for (const tpl of missing) {
         const copy = templateToRoutine(tpl);
@@ -341,6 +344,15 @@ function Wizard() {
                       </button>
                     ))}
                   </div>
+                  {plan ? (
+                    <p className="text-xs text-text-muted">
+                      {t("Your training week already has its workouts.")}{" "}
+                      <Link href="/plan" className="font-semibold text-accent underline-offset-2 hover:underline">
+                        {t("Adjust your plan")}
+                      </Link>
+                    </p>
+                  ) : (
+                  <>
                   <p className="text-xs text-text-muted">{t("Days a week. Your routines:")}</p>
                   <ul className="flex flex-col gap-1 text-sm">
                     {program.map((tpl) => (
@@ -356,6 +368,8 @@ function Wizard() {
                       <input type="checkbox" checked={addRoutines} onChange={(e) => setAddRoutines(e.target.checked)} className="size-5 accent-[var(--color-accent)]" />
                       {t.n(missing.length, "Add it to my routines", "Add them to my routines")}
                     </label>
+                  )}
+                  </>
                   )}
                 </section>
                 <p className="text-center text-[11px] text-text-muted">{t("Your training adds to this: the average of your workouts over the last 4 weeks. An estimate, not medical advice.")}</p>

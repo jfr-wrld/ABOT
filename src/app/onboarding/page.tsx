@@ -8,9 +8,13 @@ import { AbotMark } from "@/components/brand/AbotMark";
 import { Button } from "@/components/ui/Button";
 import { markOnboardingSeen } from "@/lib/onboarding";
 import { DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
-import { FirstPlan } from "@/components/onboarding/FirstPlan";
-import { templateToRoutine, type RoutineTemplate } from "@/lib/seed-routines";
+import { PlanSaved, PlanSetup, todaysPlanned } from "@/components/plan/PlanSetup";
+import { applyPlan, type AppliedPlan } from "@/lib/apply-plan";
+import { defaultAnswers } from "@/lib/training-plan";
+import type { Routine } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useRoutineStore } from "@/store/useRoutineStore";
+import { useReminderStore } from "@/store/useReminderStore";
 import { useT, type T } from "@/i18n";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
@@ -60,8 +64,9 @@ export default function OnboardingPage() {
   const t = useT();
   const slides = SLIDES(t);
   const [[index, dir], setPage] = useState<[number, number]>([0, 1]);
-  // After the slides: pick and start a first workout.
+  // After the slides: set up the week, then start today's workout or go Home.
   const [planning, setPlanning] = useState(false);
+  const [saved, setSaved] = useState<AppliedPlan | null>(null);
   const last = index === slides.length - 1;
   const slide = slides[index]!;
 
@@ -76,9 +81,9 @@ export default function OnboardingPage() {
     markOnboardingSeen();
     router.replace(to);
   }
-  function startFirst(tpl: RoutineTemplate) {
+  function startFirst(r: Routine) {
     markOnboardingSeen();
-    useWorkoutStore.getState().startFromRoutine(templateToRoutine(tpl));
+    useWorkoutStore.getState().startFromRoutine(r);
     router.replace("/workout");
   }
   function onDragEnd(_: unknown, info: PanInfo) {
@@ -117,7 +122,20 @@ export default function OnboardingPage() {
       </motion.svg>
 
       {planning ? (
-        <FirstPlan onStart={startFirst} onSkip={() => finish("/")} />
+        saved ? (
+          <PlanSaved
+            routines={Object.keys(saved.plan.routineIds).length}
+            replaced={saved.replaced}
+            kept={saved.kept}
+            time={saved.plan.time}
+            weekdays={saved.plan.weekdays}
+            today={todaysPlanned(useRoutineStore.getState().routines, useReminderStore.getState().schedule)}
+            onStart={startFirst}
+            onHome={() => finish("/")}
+          />
+        ) : (
+          <PlanSetup initial={defaultAnswers()} adjusting={false} onSave={(a) => setSaved(applyPlan(a))} onExit={() => finish("/")} exitLabel={t("Look around first")} />
+        )
       ) : (
         <>
       <section

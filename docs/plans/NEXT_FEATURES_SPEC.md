@@ -439,3 +439,32 @@ shared as short videos, made on the phone.
   - Arcade's @handle sits under the stage name.
 
   The temporary wipe is gone: all eight layouts now have their own motion.
+
+## 16. Training plan: set up at install, adjust from Home
+- **The steps.** The intro ends with five short steps:
+  1. goal and experience;
+  2. days a week (2-6) and which days;
+  3. where you train (gym, at home, no equipment);
+  4. the week itself, where the split can be changed;
+  5. the session time.
+
+  Home's "Your week" card opens the same steps at `/plan`, prefilled.
+- **Lib split:**
+  - `lib/training-plan.ts` is pure: split by days, weekday spread, equipment swaps through the
+    swapper (loaded before bodyweight; no close swap means the exercise is dropped), goal tweaks,
+    and which old routines can be replaced.
+  - `lib/apply-plan.ts` writes it in one step:
+    - routines go into the "My plan · N days" folder;
+    - the schedule names a routine per day, which drives reminders, Next up, the Planned ring and
+      the week strip's planned rings;
+    - `settings.trainingPlan` is saved.
+- **Splits:**
+  - 2-3 days: Full Body;
+  - 4 days: Upper / Lower;
+  - 5 days: Push / Pull / Legs + Upper / Lower;
+  - 6 days: Push / Pull / Legs twice;
+  - a new lifter past 4 days stays on Upper / Lower;
+  - no equipment: the calisthenics days.
+- **Adjusting** replaces the old plan's routines the lifter never edited and keeps the edited
+  ones. History is untouched.
+- **Body Phase setup** reads the plan's days and does not add a second program.

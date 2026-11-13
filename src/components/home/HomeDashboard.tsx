@@ -17,6 +17,7 @@ import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
 import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
 import { PhaseCommandCard } from "@/components/phase/PhaseCommandCard";
+import { PlanCard } from "@/components/home/PlanCard";
 import { AnnouncementBanner } from "@/components/remote/AnnouncementBanner";
 import { REGIONS, type Region } from "@/components/anatomy/regions";
 import { Sheet } from "@/components/ui/Sheet";
@@ -36,6 +37,7 @@ import {
   type NextProtocol,
 } from "@/lib/home";
 import type { Exercise, WorkoutSession } from "@/types/workout";
+import type { Weekday, WorkoutSchedule } from "@/lib/notifications/schedule";
 import { historyPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
@@ -84,12 +86,22 @@ export function HomeDashboard() {
           </Link>
         </div>
         <AnnouncementBanner />
-        <WeekStrip days={weekStrip(sessions, now, firstDayOfWeek)} sessions={sessions} byId={byId} streak={weekStreak(sessions, now, firstDayOfWeek)} />
+        <WeekStrip
+          days={weekStrip(sessions, now, firstDayOfWeek)}
+          sessions={sessions}
+          byId={byId}
+          streak={weekStreak(sessions, now, firstDayOfWeek)}
+          planned={schedule.enabled ? schedule.days : null}
+        />
       </header>
 
       {!active && <WelcomeBack now={now} />}
 
       <Rise step={0.07} order={1}>{active ? <ActiveCard /> : <ProtocolHero next={next} byId={byId} />}</Rise>
+
+      <Rise step={0.07} order={2}>
+        <PlanCard now={now} />
+      </Rise>
 
       <Rise step={0.07} order={2}>
         <PhaseCommandCard now={now} />
@@ -171,11 +183,14 @@ function WeekStrip({
   sessions,
   byId,
   streak,
+  planned,
 }: {
   days: ReturnType<typeof weekStrip>;
   sessions: WorkoutSession[];
   byId: Record<string, Exercise>;
   streak: number;
+  /** The schedule's days, to mark the training days still to come; null with no schedule. */
+  planned: WorkoutSchedule["days"] | null;
 }) {
   const t = useT();
   const controls = useEntrance();
@@ -213,7 +228,8 @@ function WeekStrip({
           const date = new Date(d.start);
           const weekday = date.toLocaleDateString(t.locale, { weekday: "short" });
           const f = focus[i];
-          const status = d.trained ? t("trained") : d.isToday ? t("today") : d.isFuture ? "" : t("rest");
+          const plannedDay = !d.trained && (d.isToday || d.isFuture) && !!planned?.[date.getDay() as Weekday]?.on;
+          const status = d.trained ? t("trained") : d.isToday ? (plannedDay ? t("today, planned") : t("today")) : d.isFuture ? (plannedDay ? t("planned") : "") : t("rest");
           return (
             <li key={d.start} className="flex flex-col items-center gap-1">
               <span aria-hidden="true" className={`label-caps ${d.isToday ? "!text-text" : ""}`}>
@@ -243,7 +259,12 @@ function WeekStrip({
                     {f ? <MuscleIcon muscle={f.muscle} size={30} /> : <Check size={16} strokeWidth={3} className="text-accent" />}
                   </motion.span>
                 ) : (
-                  <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-zinc-800"}`} />
+                  plannedDay ? (
+                    // A training day still to come: a ring where the muscle will light up.
+                    <span className={`size-3 rounded-full border-2 ${d.isToday ? "border-accent" : "border-accent/60"}`} />
+                  ) : (
+                    <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-zinc-800"}`} />
+                  )
                 )}
               </span>
               <span aria-hidden="true" className="h-3 max-w-full truncate text-[10px] font-semibold leading-3 text-text-muted">
@@ -333,7 +354,10 @@ function ProtocolHero({ next, byId }: { next: NextProtocol | null; byId: Record<
     <section aria-labelledby="hero-heading" className={`${TILE} relative flex flex-col gap-3 overflow-hidden p-4`}>
       <HeroPlate />
       <div className="relative min-w-0">
-        <p className="label-caps">{t("Next up")}</p>
+        <p className="label-caps">
+          {t("Next up")}
+          {next.why.kind === "today" ? ` · ${t("Today")}` : next.why.kind === "tomorrow" ? ` · ${t("Tomorrow")}` : next.why.kind === "weekday" ? ` · ${new Date(2024, 0, 7 + next.why.weekday).toLocaleDateString(t.locale, { weekday: "long" })}` : ""}
+        </p>
         <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
           {routine.name}
         </h2>

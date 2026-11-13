@@ -82,6 +82,7 @@ export async function migrateFromLocalStorage(
       birthYear: null,
       biologicalSex: null,
       myFoods: [],
+      trainingPlan: null,
       showRpe: typeof s.showRpe === "boolean" ? s.showRpe : true,
     });
   }
