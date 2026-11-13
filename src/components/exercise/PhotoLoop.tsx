@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
 import type { Exercise } from "@/types/workout";
-import { bundledThumb } from "./ExerciseThumb";
+import { isImageUrl, isOwnPhoto, localPhoto } from "@/lib/exercise-photo";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { useT } from "@/i18n";
 import { useAppActive } from "@/lib/native/app-active";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 
 const FRAME_MS = 900;
-const isImage = (u: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
 
 /**
  * The exercise's two real photos, start and end position, crossfading like a GIF so the movement
@@ -23,12 +22,13 @@ const isImage = (u: string) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u);
 export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; className?: string }) {
   const reduce = useReducedMotion() === true;
   const t = useT();
-  const frames = (exercise.media.motionUrls ?? []).filter(isImage).slice(0, 2);
+  const frames = (exercise.media.motionUrls ?? []).filter(isImageUrl).slice(0, 2);
   const [online, setOnline] = useState(true);
   const [failed, setFailed] = useState(false);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(true);
-  const pair = frames.length === 2 && online && !failed;
+  // The lifter's own photos are stored with the exercise, so they play without a connection.
+  const pair = frames.length === 2 && (online || frames.every(isOwnPhoto)) && !failed;
   const moving = pair && playing && !reduce;
 
   useEffect(() => {
@@ -50,7 +50,8 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
     return () => clearInterval(timer);
   }, [moving, appActive]);
 
-  const bundled = bundledThumb(exercise) ?? null;
+  // One frame: the bundled photo, or the lifter's only (start) photo.
+  const bundled = localPhoto(exercise) ?? null;
 
   return (
     <div className={`force-dark relative overflow-hidden bg-black ${className}`}>

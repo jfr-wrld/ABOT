@@ -143,3 +143,9 @@ export async function cropJpeg(file: Blob, rect: { x: number; y: number; w: numb
   }
   throw new Error("This photo is too detailed to store. Try another one.");
 }
+
+/**
+ * A start or end photo of the lifter's own exercise: 640 x 480, stored with the exercise (so it
+ * is backed up and synced with it), at most about 110 KB as a data URL.
+ */
+export const EXERCISE_PHOTO_TARGET: CropTarget = { width: 640, height: 480, maxLength: 150_000 };

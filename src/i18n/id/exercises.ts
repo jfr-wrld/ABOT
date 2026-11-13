@@ -364,4 +364,9 @@ export const exercises: Record<string, string> = {
   "Grid": "Kisi",
   "Show {n} exercise": "Tampilkan {n} latihan",
   "Show {n} exercises": "Tampilkan {n} latihan",
+  "The start and the end of one rep. They show in the list and play on the exercise page.": "Awal dan akhir satu repetisi. Tampil di daftar dan diputar di halaman latihan.",
+  "Change {photo}": "Ganti {photo}",
+  "Add {photo}": "Tambah {photo}",
+  "Add": "Tambah",
+  "Remove {photo}": "Hapus {photo}",
 };

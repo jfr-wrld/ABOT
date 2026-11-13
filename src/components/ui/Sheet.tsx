@@ -36,7 +36,11 @@ export function Sheet({
     <dialog
       ref={ref}
       aria-labelledby={titleId}
-      onClose={onClose}
+      // Only this dialog's own close: React passes a nested sheet's close up through its parents
+      // (a crop sheet inside the exercise form closed the form with it).
+      onClose={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       onClick={(e) => {
         // Click on the backdrop (outside the panel) closes.
         if (e.target === e.currentTarget) onClose();

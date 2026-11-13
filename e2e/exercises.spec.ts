@@ -1,3 +1,4 @@
+import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, choose, waitForSavedSetting, showPill, sortAndFilter } from "./helpers";
 
@@ -132,4 +133,35 @@ test("Sort & filter floats in the dock's glass, follows the theme, and steps asi
   await expect(button).toHaveAttribute("data-hidden", "false");
   await button.click();
   await expect(page.getByRole("dialog", { name: "Sort & filter" })).toBeVisible();
+});
+
+test("a custom exercise takes its own start and end photos; without them it shows its muscle", async ({ page }) => {
+  await page.goto("/exercises");
+  await page.getByRole("button", { name: "New", exact: true }).click();
+  const form = page.getByRole("dialog", { name: "New exercise" });
+  await form.getByLabel("Name").fill("Landmine Press Mine");
+  for (const [slot, file] of [["Start position", "frame0.jpg"], ["End position", "frame1.jpg"]] as const) {
+    await form.getByLabel(`${slot} file`).setInputFiles(path.join(__dirname, "fixtures", file));
+    await page.getByRole("dialog", { name: "Fit your photo" }).getByRole("button", { name: "Use photo" }).click();
+    await expect(form.getByRole("button", { name: `Change ${slot}` }).locator("img")).toBeVisible();
+  }
+  await form.getByRole("button", { name: "Add to library" }).click();
+
+  await page.getByLabel("Search exercises").fill("landmine press mine");
+  const row = page.getByRole("link", { name: /^Landmine Press Mine/ });
+  await expect(row.locator('[data-thumb="photo"] img')).toHaveAttribute("src", /^data:image\/jpeg/);
+  await row.click();
+  await page.waitForURL(/\/exercises\/detail/);
+  await expect(page.getByTestId("hero-phase")).toHaveText("Start");
+  // Stored with the exercise, so the two photos play on its page, even after a reload.
+  await page.reload();
+  await expect(page.getByTestId("hero-phase")).toHaveText("Start");
+
+  // One without photos shows the body with its muscle lit.
+  await page.goto("/exercises");
+  await page.getByRole("button", { name: "New", exact: true }).click();
+  await page.getByRole("dialog", { name: "New exercise" }).getByLabel("Name").fill("Plain Mine");
+  await page.getByRole("dialog", { name: "New exercise" }).getByRole("button", { name: "Add to library" }).click();
+  await page.getByLabel("Search exercises").fill("plain mine");
+  await expect(page.getByRole("link", { name: /^Plain Mine/ }).locator('[data-thumb="icon"] svg')).toBeVisible();
 });

@@ -9,6 +9,11 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { useT } from "@/i18n";
 import { muscleLabel } from "@/components/exercise/MuscleTags";
+import { usePhotoPicker } from "@/components/profile/usePhotoPicker";
+import { MuscleIcon } from "@/components/icons/MuscleIcon";
+import { EXERCISE_PHOTO_TARGET } from "@/lib/photo";
+import { isOwnPhoto, ownPhotos } from "@/lib/exercise-photo";
+import { Camera, X } from "lucide-react";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -40,6 +45,11 @@ export function ExerciseForm({
   const [logChoice, setLogChoice] = useState<LogType | null>(initial?.logType ?? null);
   const logType = logChoice ?? (equipment === "bodyweight" ? "reps_only" : "weight_reps");
   const machineDependent = machineChoice ?? (equipment === "machine" || equipment === "cable");
+  // The lifter's own start and end photos; without them the exercise shows its muscle map.
+  const [photos, setPhotos] = useState<(string | null)[]>(() => {
+    const own = initial ? ownPhotos(initial) : [];
+    return [own[0] ?? null, own[1] ?? null];
+  });
 
   function submit() {
     const trimmed = name.trim();
@@ -57,6 +67,7 @@ export function ExerciseForm({
       loadMode,
       logType,
       isMachineDependent: machineDependent,
+      media: withPhotos(initial?.media ?? {}, photos.filter((p): p is string => !!p)),
     });
   }
 
@@ -163,6 +174,14 @@ export function ExerciseForm({
             className="w-full !text-base"
           />
         </div>
+        <fieldset>
+          <legend className="mb-1 text-sm font-semibold">{t("Photos")}</legend>
+          <p className="mb-2 text-xs text-text-muted">{t("The start and the end of one rep. They show in the list and play on the exercise page.")}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <PhotoSlot label={t("Start position")} url={photos[0] ?? null} muscle={primary} onChange={(u) => setPhotos([u, photos[1] ?? null])} />
+            <PhotoSlot label={t("End position")} url={photos[1] ?? null} muscle={primary} onChange={(u) => setPhotos([photos[0] ?? null, u])} />
+          </div>
+        </fieldset>
         <label htmlFor="ex-machine" className="flex min-h-11 items-center gap-3 text-sm">
           <input
             id="ex-machine"
@@ -178,5 +197,65 @@ export function ExerciseForm({
         </button>
       </form>
     </Sheet>
+  );
+}
+
+/** The exercise's media with the lifter's own photos (start first) in place of any old ones. */
+function withPhotos(media: Exercise["media"], own: string[]): Exercise["media"] {
+  const others = (media.motionUrls ?? []).filter((u) => !isOwnPhoto(u));
+  const motionUrls = own.length ? own : others;
+  const { motionUrls: _old, ...rest } = media;
+  void _old;
+  return motionUrls.length ? { ...rest, motionUrls } : rest;
+}
+
+/** One photo slot: add (fitted to 4:3 in the crop sheet), see, or remove. */
+function PhotoSlot({ label, url, muscle, onChange }: { label: string; url: string | null; muscle: MuscleGroup; onChange: (url: string | null) => void }) {
+  const t = useT();
+  const picker = usePhotoPicker((u) => onChange(u), { title: label, facing: "environment", crop: { shape: "rect", target: EXERCISE_PHOTO_TARGET } });
+  return (
+    <div className="flex flex-col gap-1">
+      {picker.input}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={picker.open}
+          disabled={picker.busy}
+          aria-label={url ? t("Change {photo}", { photo: label }) : t("Add {photo}", { photo: label })}
+          className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-ctl border border-dashed border-line-strong bg-surface-2 hover:border-line-hover"
+        >
+          {url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a data URL made on the device
+            <img src={url} alt="" className="absolute inset-0 size-full object-cover" />
+          ) : (
+            <span className="flex flex-col items-center gap-1 text-text-muted">
+              <MuscleIcon muscle={muscle} size={36} />
+              <span className="flex items-center gap-1 text-xs font-semibold">
+                <Camera aria-hidden="true" size={14} />
+                {t("Add")}
+              </span>
+            </span>
+          )}
+        </button>
+        {url && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            aria-label={t("Remove {photo}", { photo: label })}
+            className="absolute right-0 top-0 flex size-11 items-center justify-center"
+          >
+            <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-black/60 text-white">
+              <X size={14} />
+            </span>
+          </button>
+        )}
+      </div>
+      <span className="text-xs font-semibold text-text-muted">{label}</span>
+      {picker.error && (
+        <p role="alert" className="text-xs text-failure">
+          {t(picker.error)}
+        </p>
+      )}
+    </div>
   );
 }

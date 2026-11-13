@@ -27,6 +27,7 @@ test("RPE is off for a new lifter and the toggle shows the column", async ({ pag
   await expect(toggle).toHaveAttribute("aria-checked", "false");
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-checked", "true");
+  await waitForSavedSetting(page, "showRpe", true);
   await page.goto("/workout");
   await expect(page.getByLabel("Set 1 RPE, 6 to 10")).toBeVisible();
 });
