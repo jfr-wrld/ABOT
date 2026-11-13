@@ -204,6 +204,7 @@ function PaymentTestPanel({ mode }: { mode: AdminMode }) {
                 <span className="break-all font-mono text-xs text-white">{o.orderId}</span>
                 <span className={`font-mono text-[11px] font-bold uppercase ${o.status === "paid" ? "text-[#ccff00]" : o.status === "pending" ? "text-[#f59e0b]" : "text-zinc-400"}`}>
                   {o.status}
+                  {o.overCap && <span className="ml-2 text-[#f87171]">over cap</span>}
                 </span>
               </div>
               <p className="font-mono text-[11px] tabular-nums text-zinc-400">

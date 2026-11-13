@@ -86,6 +86,18 @@ describe("normalizeSession", () => {
     expect(normalizeSession(null)).toBeNull();
     expect(normalizeSession("x")).toBeNull();
   });
+  it("rejects a start time Date cannot hold, and drops such end and set times", () => {
+    // A shared backup with startedAt 1e300 made Home throw on every launch (audit 2026-11-13).
+    expect(normalizeSession({ ...legacy, startedAt: 1e300 })).toBeNull();
+    expect(normalizeSession({ ...legacy, startedAt: -5 })).toBeNull();
+    const s = normalizeSession({
+      ...legacy,
+      finishedAt: 9e15,
+      exercises: [{ ...legacy.exercises[0], sets: [{ ...legacy.exercises[0]!.sets[0], completedAt: 1e300 }] }],
+    })!;
+    expect(s.finishedAt).toBeUndefined();
+    expect(s.exercises[0]!.sets[0]!.completedAt).toBeUndefined();
+  });
   it("defaults an unknown set type to normal and an unknown status to completed", () => {
     const s = normalizeSession({
       ...legacy,

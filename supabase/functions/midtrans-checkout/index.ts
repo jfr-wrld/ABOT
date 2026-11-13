@@ -41,6 +41,11 @@ const refuse = (req: Request, status: number, code: string, detail?: string) => 
 
 /** How long a pending order's payment page is offered again before a new order is made. */
 const REUSE_MS = 30 * 60_000;
+/**
+ * A founders payment page closes when its seat hold ends (founder_seats_left counts a pending
+ * founders order for 30 minutes), so a seat that went to someone else cannot be paid for later.
+ */
+const FOUNDERS_EXPIRY = { unit: "minute", duration: 30 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return respond(req, 204, null);
@@ -96,7 +101,12 @@ Deno.serve(async (req) => {
     await db.rpc("abot_order_closed", { p_order_id: pending.order_id, p_status: "expired" });
   }
   const orderId = makeOrderId(plan, Date.now());
-  const { error: insertError } = await db.from("payment_orders").insert({ order_id: orderId, user_id: user.id, plan, amount_idr: amount });
+  // A founders order takes its seat under the database's lock: two buyers cannot both get the last one.
+  const { data: created, error: insertError } =
+    plan === "founders"
+      ? await db.rpc("abot_create_founders_order", { p_order_id: orderId, p_user_id: user.id, p_amount_idr: amount })
+      : await db.from("payment_orders").insert({ order_id: orderId, user_id: user.id, plan, amount_idr: amount }).then((r) => ({ data: true, error: r.error }));
+  if (!insertError && created === false) return refuse(req, 409, "seats_gone");
   if (insertError) {
     // A second tap racing the first meets the unique index.
     if (insertError.code === "23505") return refuse(req, 409, "busy");
@@ -110,6 +120,7 @@ Deno.serve(async (req) => {
       transaction_details: { order_id: orderId, gross_amount: amount },
       item_details: [{ id: plan, price: amount, quantity: 1, name: PLAN_LABEL[plan] }],
       customer_details: { email: user.email },
+      ...(plan === "founders" ? { expiry: FOUNDERS_EXPIRY } : {}),
       // After paying, Midtrans opens a small static page on ABOT's site, not the app itself:
       // the app stays open in the tab the buyer came from (see public/payment-done.html).
       // "app=1" tells that page the Android app is waiting, so its button reopens the app.

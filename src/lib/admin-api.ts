@@ -139,13 +139,16 @@ export interface AdminOrder {
   status: string;
   paymentType: string | null;
   createdAt: string;
+  /** A founders order paid past the seat cap: granted, waiting for the owner to review or refund. */
+  overCap: boolean;
 }
 
 /** The latest Midtrans orders (admins read every row through RLS). */
 export async function listOrders(): Promise<AdminOrder[]> {
   const { data, error } = await (await getSupabase())
     .from("payment_orders")
-    .select("order_id, plan, amount_idr, status, payment_type, created_at")
+    // "*": over_cap exists only once 20261114_founder_seat_lock.sql is applied.
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(15);
   fail(error);
@@ -156,6 +159,7 @@ export async function listOrders(): Promise<AdminOrder[]> {
     status: String(r.status),
     paymentType: (r.payment_type as string | null) ?? null,
     createdAt: String(r.created_at),
+    overCap: r.over_cap === true,
   }));
 }
 

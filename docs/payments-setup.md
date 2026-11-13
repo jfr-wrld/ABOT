@@ -30,7 +30,7 @@ The Server Key only lives in Supabase secrets. It is never in the app, this repo
 
 You need the Supabase CLI logged in and linked to the project (`supabase link --project-ref <ref>`).
 
-1. **Database:** apply `supabase/migrations/20261111_midtrans_payments.sql`, then `20261112_payment_test_tools.sql`, then `20261113_security_hardening.sql`, using the SQL editor or `supabase db push`.
+1. **Database:** apply `supabase/migrations/20261111_midtrans_payments.sql`, then `20261112_payment_test_tools.sql`, then `20261113_security_hardening.sql`, then `20261114_founder_seat_lock.sql`, using the SQL editor or `supabase db push`.
 2. **Secrets.** Use the Sandbox Server Key from Midtrans Dashboard → Settings → Access Keys (it starts with `SB-Mid-server-`). Replace `<site>` with the web app's domain.
 
    ```bash
@@ -114,7 +114,7 @@ select u.email, e.tier, e.pro_expires_at, e.is_founder, e.source from public.use
 2. Set the same Notification and Redirect URLs in the **Production** dashboard.
 3. Redeploy both functions so they pick up the new secrets.
 
-The seat cap is in `app_remote_config.founder_seats`, for example `update public.app_remote_config set founder_seats = 300;`. A pending founder order holds a seat for 24 hours.
+The seat cap is in `app_remote_config.founder_seats`, for example `update public.app_remote_config set founder_seats = 300;`. A pending founder order holds a seat for 30 minutes, and its Midtrans payment page closes after the same 30 minutes. Seats are taken under a database lock, so two buyers cannot both get the last one. If a founders payment still settles past the cap (Midtrans grace, a manual settlement), the buyer gets lifetime and the order is marked `over_cap` for you to review or refund: `select order_id, user_id, paid_at from public.payment_orders where over_cap;`. Mission Control shows it as OVER CAP.
 
 ## Google Play note
 

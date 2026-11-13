@@ -725,4 +725,9 @@ export const settings: Record<string, string> = {
   "Train anyway": "Tetap latihan",
   "Or set up your week: ABOT makes the workouts and reminds you.": "Atau atur minggumu: ABOT menyusun latihannya dan mengingatkanmu.",
   "Next: {name}": "Berikutnya: {name}",
+  // Route error screen
+  "Something went wrong": "Ada yang salah",
+  "This screen could not be shown": "Layar ini tidak bisa ditampilkan",
+  "Your data is still on this phone. If this started after an import, restore a backup you trust in Settings > Data.": "Datamu masih ada di HP ini. Kalau ini terjadi setelah import, pulihkan backup yang kamu percaya di Pengaturan > Data.",
+  "Open Settings > Data": "Buka Pengaturan > Data",
 };

@@ -28,6 +28,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261111_midtrans_payments.sql
 \i supabase/migrations/20261112_payment_test_tools.sql
 \i supabase/migrations/20261113_security_hardening.sql
+\i supabase/migrations/20261114_founder_seat_lock.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
@@ -36,6 +37,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261111_midtrans_payments.sql
 \i supabase/migrations/20261112_payment_test_tools.sql
 \i supabase/migrations/20261113_security_hardening.sql
+\i supabase/migrations/20261114_founder_seat_lock.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
 insert into auth.users values
@@ -421,6 +423,38 @@ do $$ begin
     insert into public.payment_orders (order_id, user_id, plan, amount_idr) values ('ABOT-ANNUAL-TWO-BBB', '00000000-0000-0000-0000-00000000000a', 'annual', 1000);
     raise exception 'second pending order accepted';
   exception when unique_violation then null;
+  end;
+end $$;
+
+-- Founder seats hold through payment (audit 2026-11-13). One seat left.
+reset role;
+update public.app_remote_config set founder_seats = (
+  select count(*)::integer + 1 from public.payment_orders where plan = 'founders' and status = 'paid'
+) where id = 'global';
+-- An older founders order whose 30-minute hold has lapsed, but whose payment page was still open.
+insert into public.payment_orders (order_id, user_id, plan, amount_idr, created_at) values
+  ('ABOT-LIFETIME-OLD-555', '00000000-0000-0000-0000-00000000000b', 'founders', 399000, now() - interval '31 minutes');
+set role service_role;
+do $$ begin
+  if public.founder_seats_left() <> 1 then raise exception 'a lapsed hold should free its seat'; end if;
+  if not public.abot_create_founders_order('ABOT-LIFETIME-NEW-666', '00000000-0000-0000-0000-00000000000c', 399000) then raise exception 'last seat refused'; end if;
+  if public.abot_create_founders_order('ABOT-LIFETIME-TWO-777', '00000000-0000-0000-0000-00000000000a', 399000) then raise exception 'a second buyer took the last seat'; end if;
+  if exists (select 1 from public.payment_orders where order_id = 'ABOT-LIFETIME-TWO-777') then raise exception 'refused order was inserted'; end if;
+  if not public.abot_order_paid('ABOT-LIFETIME-NEW-666', 'qris', 't6') then raise exception 'seat holder not granted'; end if;
+  if (select over_cap from public.payment_orders where order_id = 'ABOT-LIFETIME-NEW-666') then raise exception 'in-cap payment flagged'; end if;
+  -- The late payment is still granted (the money is taken), and flagged for the owner.
+  if not public.abot_order_paid('ABOT-LIFETIME-OLD-555', 'qris', 't5') then raise exception 'late founders payment not granted'; end if;
+  if not (select over_cap from public.payment_orders where order_id = 'ABOT-LIFETIME-OLD-555') then raise exception 'over-cap payment not flagged'; end if;
+end $$;
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+set request.jwt.claim.email = 'a@example.com';
+do $$ begin
+  begin
+    perform public.abot_create_founders_order('ABOT-LIFETIME-X-888', '00000000-0000-0000-0000-00000000000a', 1);
+    raise exception 'client created a founders order';
+  exception when insufficient_privilege then null;
   end;
 end $$;
 

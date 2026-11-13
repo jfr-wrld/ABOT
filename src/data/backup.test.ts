@@ -93,6 +93,20 @@ describe("export and parse", () => {
     expect(parsed.counts.sessions).toBe(1);
     expect(parsed.counts.dropped).toBe(1);
   });
+
+  it("drops a workout whose start time Date cannot hold, so Home cannot crash on it", () => {
+    // Audit 2026-11-13: a shared file with startedAt 1e300 broke Home on every launch.
+    const text = JSON.stringify({
+      app: "ABOT",
+      schemaVersion: 1,
+      exportedAt: "2026-11-08T00:00:00.000Z",
+      data: { sessions: [session("ok"), { ...session("bad"), startedAt: 1e300 }], routines: [], exercises: [], locations: [], settings: null, activeWorkout: null },
+    });
+    const parsed = parseBackup(text);
+    if (!parsed.ok) throw new Error(parsed.error);
+    expect(parsed.backup.data.sessions.map((x) => x.id)).toEqual(["ok"]);
+    expect(parsed.counts.dropped).toBe(1);
+  });
 });
 
 describe("importBackup", () => {

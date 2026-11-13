@@ -38,6 +38,7 @@ import {
 import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
 import type { Weekday } from "@/lib/notifications/schedule";
 import { historyPath } from "@/lib/routes";
+import { isoTime } from "@/lib/safe-date";
 import { useT, type T } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { routineFocus, trainingFocus } from "@/lib/training-focus";
@@ -890,7 +891,7 @@ export function RecentCard({
     </span>
   );
   const when = (
-    <time dateTime={new Date(s.startedAt).toISOString()} className="num shrink-0 text-xs text-text-muted">
+    <time dateTime={isoTime(s.startedAt)} className="num shrink-0 text-xs text-text-muted">
       {relativeDay(s.startedAt, now, t)}
     </time>
   );

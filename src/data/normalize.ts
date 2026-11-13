@@ -80,6 +80,15 @@ const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object
 const str = (v: unknown): string | undefined => (typeof v === "string" && v.length > 0 ? v : undefined);
 const num = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 const numOrNull = (v: unknown): number | null | undefined => (v === null ? null : num(v));
+/**
+ * A moment in epoch ms that Date can hold (0 to 8.64e15). A larger finite number from a file
+ * (1e300) makes `new Date(t).toISOString()` throw while a screen renders, so it never gets in.
+ */
+export const MAX_TIME_MS = 8.64e15;
+const time = (v: unknown): number | undefined => {
+  const n = num(v);
+  return n !== undefined && n >= 0 && n <= MAX_TIME_MS ? n : undefined;
+};
 
 function normalizeSet(raw: unknown): WorkoutSet | null {
   if (!isObj(raw)) return null;
@@ -94,7 +103,7 @@ function normalizeSet(raw: unknown): WorkoutSet | null {
     reps,
     rpe: numOrNull(raw.rpe) ?? null,
     completed: raw.completed === true,
-    completedAt: num(raw.completedAt),
+    completedAt: time(raw.completedAt),
     durationSec: numOrNull(raw.durationSec) ?? undefined,
     distanceM: numOrNull(raw.distanceM) ?? undefined,
     bodyLoadKg: num(raw.bodyLoadKg),
@@ -129,7 +138,7 @@ function repRange(raw: unknown): [number, number] | undefined {
 export function normalizeSession(raw: unknown): WorkoutSession | null {
   if (!isObj(raw)) return null;
   const id = str(raw.id);
-  const startedAt = num(raw.startedAt);
+  const startedAt = time(raw.startedAt);
   if (!id || startedAt === undefined) return null;
   const exercises = Array.isArray(raw.exercises)
     ? raw.exercises.map(normalizeSessionExercise).filter((x): x is SessionExercise => x !== null)
@@ -140,7 +149,7 @@ export function normalizeSession(raw: unknown): WorkoutSession | null {
     routineId: str(raw.routineId),
     locationId: str(raw.locationId),
     startedAt,
-    finishedAt: num(raw.finishedAt),
+    finishedAt: time(raw.finishedAt),
     status: STATUSES.includes(raw.status as SessionStatus) ? (raw.status as SessionStatus) : "completed",
     exercises,
     notes: str(raw.notes),
@@ -186,8 +195,8 @@ export function normalizeRoutine(raw: unknown): Routine | null {
     name,
     folder: str(raw.folder),
     exercises,
-    createdAt: num(raw.createdAt) ?? 0,
-    updatedAt: num(raw.updatedAt) ?? 0,
+    createdAt: time(raw.createdAt) ?? 0,
+    updatedAt: time(raw.updatedAt) ?? 0,
   };
 }
 

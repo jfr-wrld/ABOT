@@ -1,6 +1,7 @@
 "use client";
 
 import { setText } from "@/lib/set-metrics";
+import { isoTime } from "@/lib/safe-date";
 import { setNumbers } from "@/lib/sets";
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -464,7 +465,7 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
     <li className="panel p-3">
       <Link href={historyPath(session.id)} className="-mx-1 -mt-1 flex min-h-11 items-center justify-between gap-2 rounded-ctl px-1 hover:underline">
         <span className="truncate text-sm font-semibold">{session.name}</span>
-        <time dateTime={new Date(session.startedAt).toISOString()} className="num shrink-0 text-xs text-text-muted">
+        <time dateTime={isoTime(session.startedAt)} className="num shrink-0 text-xs text-text-muted">
           {relativeDay(session.startedAt, now, t)}
         </time>
       </Link>
