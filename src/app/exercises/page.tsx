@@ -6,6 +6,7 @@ import { LayoutGrid, List, Plus, Search, SlidersHorizontal, Star, X } from "luci
 import { Sheet } from "@/components/ui/Sheet";
 import { feedback } from "@/lib/feedback";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
+import { useHideOnScroll } from "@/lib/useHideOnScroll";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
@@ -60,6 +61,8 @@ function LibraryScreen() {
   const t = useT();
   // The workout capsule, when one is running, rises above the floating button instead of covering it.
   useActionBarSpace(60);
+  const scrollingDown = useHideOnScroll();
+  const buttonHidden = scrollingDown && !sheetOpen;
 
   const prTable = useMemo(() => buildPRTable(sessions, byId, { allGyms: true }), [sessions, byId]);
   const usage = useMemo(() => exerciseUsage(sessions), [sessions]);
@@ -169,16 +172,22 @@ function LibraryScreen() {
         </div>
       )}
 
-      {/* Floats above the dock, so it is in reach wherever the list has scrolled to. */}
+      {/* Floats above the dock in the dock's own glass, and steps aside while the list scrolls
+          down, coming back on any scroll up. Kept while its sheet is open, for focus to return. */}
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
         aria-haspopup="dialog"
         aria-label={sheetChoices ? t("Sort and filter, {n} set", { n: sheetChoices }) : t("Sort and filter")}
-        className="fixed left-1/2 z-20 flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-text px-4 text-sm font-semibold text-bg shadow-lg transition-transform active:scale-95"
+        aria-hidden={buttonHidden || undefined}
+        tabIndex={buttonHidden ? -1 : undefined}
+        data-hidden={buttonHidden}
+        className={`liquid-glass fixed left-1/2 z-20 flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full px-4 text-sm font-semibold text-text transition-[translate,opacity,scale] duration-200 ease-out active:scale-95 ${
+          buttonHidden ? "pointer-events-none translate-y-[72px] opacity-0 motion-reduce:translate-y-0" : ""
+        }`}
         style={{ bottom: "calc(var(--dock-h, 96px) - 4px + env(safe-area-inset-bottom))" }}
       >
-        <SlidersHorizontal aria-hidden="true" size={16} />
+        <SlidersHorizontal aria-hidden="true" size={16} className="text-accent" />
         {t("Sort & filter")}
         {sheetChoices > 0 && (
           <span aria-hidden="true" className="num flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-on-accent">

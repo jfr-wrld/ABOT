@@ -113,3 +113,23 @@ test("library: records in the lifter's unit, favourites first, other orders, cle
   await expect(page.getByRole("region", { name: "All exercises" }).getByRole("link").first()).toContainText("Squat (Barbell)");
   await expectNoHorizontalOverflow(page);
 });
+
+test("Sort & filter floats in the dock's glass, follows the theme, and steps aside while scrolling down", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/exercises");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  const button = page.getByRole("button", { name: /^Sort and filter/ });
+  await expect(button).toHaveAttribute("data-hidden", "false");
+  // Dark theme: glass over the page, not a white pill.
+  const bg = await button.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(bg).not.toMatch(/^rgba?\(255, 255, 255/);
+  expect(await button.evaluate((el) => getComputedStyle(el).color)).not.toMatch(/^rgba?\(0, 0, 0/);
+
+  await page.mouse.move(195, 400);
+  await page.mouse.wheel(0, 1200);
+  await expect(page.locator("button[data-hidden]")).toHaveAttribute("data-hidden", "true");
+  await page.mouse.wheel(0, -300);
+  await expect(button).toHaveAttribute("data-hidden", "false");
+  await button.click();
+  await expect(page.getByRole("dialog", { name: "Sort & filter" })).toBeVisible();
+});
