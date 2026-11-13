@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { AUTO_CHECK_MS, changelogLines, checkDue, checkForUpdate, compareBuild, parseRelease, putOff } from "./app-update";
 
 const release = {
-  tag_name: "apk-130",
+  tag_name: "abot-130",
   name: "ABOT 1.0.130",
   body: "Dock in liquid glass",
   published_at: "2026-11-10T08:00:00Z",
-  assets: [{ name: "abot-1.0.130.apk", browser_download_url: "https://github.com/jfr-wrld/ABOT/releases/download/apk-130/abot-1.0.130.apk" }],
+  assets: [{ name: "abot-1.0.130.apk", browser_download_url: "https://github.com/jfr-wrld/ABOT/releases/download/abot-130/abot-1.0.130.apk" }],
 };
 
 const rel = (channel: "apk" | "abot", n: number) => ({
@@ -19,18 +19,17 @@ const rel = (channel: "apk" | "abot", n: number) => ({
 describe("app updates", () => {
   it("takes the APK only from this repository's release for that tag", () => {
     const url = (u: string) => ({ ...release, assets: [{ name: "abot-1.0.130.apk", browser_download_url: u }] });
-    expect(parseRelease(url("https://github.com/attacker/ABOT/releases/download/apk-130/abot-1.0.130.apk"))).toBeNull();
-    expect(parseRelease(url("https://github.com/jfr-wrld/ABOT/releases/download/apk-129/abot-1.0.130.apk"))).toBeNull();
-    expect(parseRelease(url("https://github.com/jfr-wrld/ABOT/releases/download/apk-130/../x/evil.apk"))).toBeNull();
-    expect(parseRelease(url("http://github.com/jfr-wrld/ABOT/releases/download/apk-130/abot-1.0.130.apk"))).toBeNull();
+    expect(parseRelease(url("https://github.com/attacker/ABOT/releases/download/abot-130/abot-1.0.130.apk"))).toBeNull();
+    expect(parseRelease(url("https://github.com/jfr-wrld/ABOT/releases/download/abot-129/abot-1.0.130.apk"))).toBeNull();
+    expect(parseRelease(url("https://github.com/jfr-wrld/ABOT/releases/download/abot-130/../x/evil.apk"))).toBeNull();
+    expect(parseRelease(url("http://github.com/jfr-wrld/ABOT/releases/download/abot-130/abot-1.0.130.apk"))).toBeNull();
   });
 
-  it("a build on the old key is told to reinstall once releases are signed with the release key", () => {
-    const r = compareBuild([parseRelease(rel("apk", 170))!, parseRelease(rel("abot", 171))!], 169, "apk");
-    expect(r.kind).toBe("moved");
-    // A release-signed build ignores the old channel.
-    const n = compareBuild([parseRelease(rel("apk", 175))!, parseRelease(rel("abot", 171))!], 170, "abot");
-    expect(n.kind === "available" && n.release.channel).toBe("abot");
+  it("never offers an apk- release: that channel was signed with the old public debug key", () => {
+    // Security audit 2026-11-13: the apk- channel is retired, even if such a release reappears.
+    expect(parseRelease(rel("apk", 170))).toBeNull();
+    const list = [rel("apk", 999), rel("abot", 226)].map(parseRelease).filter((r) => r !== null);
+    expect(compareBuild(list, 220)).toMatchObject({ kind: "available", release: { build: 226 } });
   });
 
   it("reads an APK release: build, version, download link", () => {
@@ -55,7 +54,7 @@ describe("app updates", () => {
     expect(await checkForUpdate(1, (async () => { throw new Error("offline"); }) as unknown as typeof fetch)).toEqual({ kind: "error" });
   });
 
-  it("finds the newest abot- release behind ten older apk- ones, in GitHub's order", async () => {
+  it("finds the newest abot- release behind older apk- ones, in GitHub's order", async () => {
     const list = [...Array.from({ length: 10 }, (_, i) => rel("apk", 170 - i)), rel("abot", 180), rel("abot", 176)];
     let asked = "";
     const fetcher = (async (url: string) => {
@@ -64,13 +63,11 @@ describe("app updates", () => {
     }) as unknown as typeof fetch;
     const r = await checkForUpdate(176, fetcher);
     expect(asked).toContain("per_page=30");
-    // Tests run as a legacy build, so seeing abot-180 at all shows up as "moved".
-    expect(r.kind).toBe("moved");
-    expect(compareBuild(list.map((x) => parseRelease(x)!), 176, "abot")).toMatchObject({ kind: "available", release: { build: 180 } });
+    expect(r).toMatchObject({ kind: "available", release: { build: 180 } });
   });
 
   it("gathers every newer build into the changelog, newest first", () => {
-    const at = (n: number) => parseRelease(rel("apk", n))!;
+    const at = (n: number) => parseRelease(rel("abot", n))!;
     const r = compareBuild([at(128), at(130), at(129), at(127)], 128);
     expect(r.kind).toBe("available");
     if (r.kind !== "available") return;

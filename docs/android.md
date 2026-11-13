@@ -39,7 +39,10 @@ After changing web code, `npm run build:android` refreshes the copy.
 
 Security audit 2026-11-11: the old debug key (`abot-debug.keystore`, public passwords) was in the
 repository, so anyone could sign an APK that phones took as an ABOT update. It is gone; treat it
-as burnt.
+as burnt. Audit 2026-11-13: the repository is public and the key is still in its history (commit
+95d3e06, tag apk-170), so the old channel is retired outright: CI deletes every `apk-` release
+and tag, and the app never offers one. History is not rewritten: public clones already hold the
+key, so a rewrite would only force-push `main` for no gain.
 
 - **Release key**: private, never in the repository. Make it once with
   `bash scripts/make-release-keystore.sh` and add the four values it prints as secrets of the
@@ -56,9 +59,9 @@ as burnt.
   https://github.com/jfr-wrld/ABOT/actions?query=is%3Awaiting (GitHub may not email the owner
   about runs their own pushes started). `versionCode` is the run number, so each release
   installs over the last and keeps the data.
-- **The move from the old key**: phones on the old key cannot update in place. The last
-  old-key build (an `apk-<n>` release) sees `abot-<n>` releases and walks the lifter through
-  backup, uninstall, install, restore (`src/components/update/MoveGuide.tsx`).
+- **A phone still on an old-key build** (`apk-<n>`, before 10 Nov 2026) cannot update in place
+  and stays exposed to fake updates signed with the burnt key. Back up in Settings > Data,
+  uninstall ABOT, install the newest `abot-<n>` APK from Releases, and restore the backup.
 - **Backups**: `allowBackup` is off, with rules that exclude everything, so the sign-in session
   and health data never go into a device or cloud backup. The in-app backup file and cloud sync
   move data instead.

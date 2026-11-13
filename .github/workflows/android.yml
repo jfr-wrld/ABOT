@@ -50,12 +50,10 @@ jobs:
         run: npm run build:android
         # Cloud sync: the project URL and anon key (public by design), from the repository's
         # Actions variables. Without them the APK runs local-only. See docs/cloud-sync-setup.md.
-        # NEXT_PUBLIC_ABOT_SIGNING tells the updater this build takes abot-<n> releases.
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_ABOT_ADMIN_PIN: ${{ vars.NEXT_PUBLIC_ABOT_ADMIN_PIN }}
-          NEXT_PUBLIC_ABOT_SIGNING: release
 
       - name: Build the release APK (unsigned) and the debug APK for the smoke test
         working-directory: android
@@ -134,14 +132,14 @@ jobs:
           NOTES=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq '.commit.message' | head -n 1)
           gh release create "abot-$N" "abot-1.0.$N.apk" --repo "$GITHUB_REPOSITORY" \
             --title "ABOT 1.0.$N" --notes "$NOTES" --target "$GITHUB_SHA" --latest
-          # Keep the ten newest abot- releases, and of the old apk- releases only the newest: the
-          # bridge that guides phones on the old key to reinstall. GitHub lists apk- before abot-,
-          # so more apk- releases pushed abot- off the first page the app reads (no update shown).
+          # Keep the ten newest abot- releases, and no apk- release at all: the apk- channel was
+          # signed with the old debug key, which is public in this repository's history, so it is
+          # retired (security audit 2026-11-13). Phones on it uninstall and install abot-.
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' \
             | grep '^abot-' | sort -t- -k2 -n -r | tail -n +11 \
             | xargs -r -I{} gh release delete {} --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' \
-            | grep '^apk-' | sort -t- -k2 -n -r | tail -n +2 \
+            | grep '^apk-' \
             | xargs -r -I{} gh release delete {} --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
 
   # The APK on a real Android 14 emulator: intro and permissions screens, Android's permission

@@ -1,6 +1,6 @@
 /**
  * Android app updates from GitHub Releases. Builds of main are published as release
- * "apk-<run number>" with the APK attached (.github/workflows/android.yml); the installed app's
+ * "abot-<run number>" with the APK attached (.github/workflows/android.yml); the installed app's
  * build number is the same run number (versionCode), so newer means a bigger number. Checked every
  * time the app starts, on return from the background at most every 30 minutes, and when the
  * lifter taps "Check for updates" (CLAUDE.md network exceptions).
@@ -9,17 +9,11 @@
 export const UPDATE_REPO = process.env.NEXT_PUBLIC_ABOT_UPDATE_REPO || "jfr-wrld/ABOT";
 
 /**
- * Which key signed this build. "legacy": the old debug key that was public in the repository,
- * releases tagged apk-<n>. "release": the private release key, releases tagged abot-<n>. A phone
- * cannot move between the two in place (Android refuses an update signed by another key), so a
- * legacy build that sees an abot-<n> release guides a reinstall instead of downloading it.
+ * Releases are tagged abot-<n> and signed with the private release key. The old apk-<n> channel
+ * was signed with a debug key that is public in this repository's history; it is retired
+ * (security audit 2026-11-13), and an apk- release is never offered, even if one reappears.
  */
-export const SIGNING: "legacy" | "release" = process.env.NEXT_PUBLIC_ABOT_SIGNING === "release" ? "release" : "legacy";
-export type Channel = "apk" | "abot";
-const OWN_CHANNEL: Channel = SIGNING === "release" ? "abot" : "apk";
-
 export interface LatestRelease {
-  channel: Channel;
   build: number;
   version: string;
   apkUrl: string;
@@ -31,9 +25,8 @@ export interface LatestRelease {
 export function parseRelease(raw: unknown): LatestRelease | null {
   if (typeof raw !== "object" || raw === null) return null;
   const r = raw as { tag_name?: unknown; name?: unknown; body?: unknown; published_at?: unknown; assets?: unknown };
-  const m = typeof r.tag_name === "string" ? /^(apk|abot)-(\d+)$/.exec(r.tag_name) : null;
+  const m = typeof r.tag_name === "string" ? /^abot-(\d+)$/.exec(r.tag_name) : null;
   if (!m) return null;
-  const channel = m[1] as Channel;
   const assets = Array.isArray(r.assets) ? (r.assets as { name?: unknown; browser_download_url?: unknown }[]) : [];
   // The APK must come from this repository's own release for this tag, nowhere else.
   const own = `https://github.com/${UPDATE_REPO}/releases/download/${r.tag_name}/`;
@@ -46,9 +39,8 @@ export function parseRelease(raw: unknown): LatestRelease | null {
       /^[\w.-]+\.apk$/.test(a.browser_download_url.slice(own.length)),
   );
   if (!apk) return null;
-  const build = Number(m[2]);
+  const build = Number(m[1]);
   return {
-    channel,
     build,
     version: `1.0.${build}`,
     apkUrl: String(apk.browser_download_url),
@@ -59,8 +51,6 @@ export function parseRelease(raw: unknown): LatestRelease | null {
 
 export type UpdateCheck =
   | { kind: "available"; release: LatestRelease; changes: LatestRelease[] }
-  /** A legacy build, and the app now ships signed with the release key: reinstall once. */
-  | { kind: "moved"; release: LatestRelease }
   | { kind: "current"; build: number }
   | { kind: "none" }
   | { kind: "error" };
@@ -69,12 +59,8 @@ export type UpdateCheck =
  * Compares the newest releases with the installed build. `changes` is every newer release,
  * newest first, so the changelog covers all the builds this phone skipped.
  */
-export function compareBuild(releases: LatestRelease | LatestRelease[] | null, installedBuild: number, own: Channel = OWN_CHANNEL): UpdateCheck {
-  const all = (Array.isArray(releases) ? releases : releases ? [releases] : []).slice().sort((a, b) => b.build - a.build);
-  // Only releases signed like this build can install over it.
-  const list = all.filter((r) => r.channel === own);
-  const moved = own === "apk" ? all.find((r) => r.channel === "abot") : undefined;
-  if (moved) return { kind: "moved", release: moved };
+export function compareBuild(releases: LatestRelease | LatestRelease[] | null, installedBuild: number): UpdateCheck {
+  const list = (Array.isArray(releases) ? releases : releases ? [releases] : []).slice().sort((a, b) => b.build - a.build);
   if (list.length === 0) return { kind: "none" };
   const newer = list.filter((r) => r.build > installedBuild);
   return newer.length > 0 ? { kind: "available", release: newer[0]!, changes: newer } : { kind: "current", build: installedBuild };
