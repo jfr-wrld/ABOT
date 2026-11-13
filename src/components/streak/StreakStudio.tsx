@@ -8,12 +8,19 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useNow } from "@/lib/useNow";
 import { streakCardData } from "@/lib/streak-moment";
 import { STREAK_THEMES, exportStreakPng, renderStreakCard, streakFileName, type StreakThemeId } from "@/lib/streak-card";
+import { useReducedMotionConfig } from "framer-motion";
+import { FormatSwitch, VideoActions } from "@/components/share/VideoActions";
+import { useStoryVideo } from "@/components/share/useStoryVideo";
+import { canShareFiles } from "@/lib/native/files";
+import { STORY_SECONDS } from "@/lib/story-motion";
 import { STORY_HEIGHT, STORY_WIDTH, downloadStoryPng, loadStoryFonts, shareStoryPng, type StoryFonts } from "@/lib/story-exporter";
 import { openSaved, type SaveResult } from "@/lib/native/files";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 
 const THUMB_W = 108;
+/** What the share sheet says with a streak, image or video. */
+const STREAK_SHARE = { title: "ABOT Streak", text: "My week streak with ABOT 🔥" };
 const THUMB_H = (THUMB_W * STORY_HEIGHT) / STORY_WIDTH;
 
 type Message = { kind: "info" | "error"; text: string; saved?: Extract<SaveResult, { kind: "saved" }> };
@@ -60,6 +67,36 @@ function Studio({ onClose }: { onClose: () => void }) {
   const thumbs = useRef<Partial<Record<StreakThemeId, HTMLCanvasElement | null>>>({});
   const opts = useMemo(() => ({ theme, hideWatermark: false }), [theme]);
   const blob = png?.theme === theme ? png.blob : null;
+  // Image or Video; the streak video is free (it is how a streak gets shown off).
+  const [format, setFormat] = useState<"image" | "video">("image");
+  const reduceMotion = useReducedMotionConfig();
+  const videoKey = useMemo(() => ({ data, opts }), [data, opts]);
+  const drawFrame = useMemo(
+    () => (fonts && data ? (ctx: CanvasRenderingContext2D, time: number) => renderStreakCard(ctx, data, opts, fonts, time) : null),
+    [fonts, data, opts],
+  );
+  const clip = useStoryVideo({
+    key: videoKey,
+    draw: drawFrame,
+    fileName: data ? streakFileName(data, theme).replace(/\.png$/, "") : "abot-streak",
+    shareText: STREAK_SHARE,
+  });
+  const [videoShareable] = useState(() => canShareFiles(new File([new Uint8Array(1)], "abot.mp4", { type: "video/mp4" })));
+
+  // Video preview: the streak moment in a loop, held on its last frame for a beat.
+  useEffect(() => {
+    if (!fonts || !data || format !== "video" || reduceMotion) return;
+    let raf = 0;
+    const start = performance.now();
+    const loop = (now: number) => {
+      const t = ((now - start) / 1000) % (STORY_SECONDS + 0.8);
+      const ctx = preview.current?.getContext("2d");
+      if (ctx) renderStreakCard(ctx, data, opts, fonts, Math.min(t, STORY_SECONDS));
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [fonts, data, opts, format, reduceMotion]);
 
   useEffect(() => {
     let alive = true;
@@ -76,7 +113,7 @@ function Studio({ onClose }: { onClose: () => void }) {
     if (!fonts || !data) return;
     const raf = requestAnimationFrame(() => {
       const ctx = preview.current?.getContext("2d");
-      if (ctx) renderStreakCard(ctx, data, opts, fonts);
+      if (ctx && (format === "image" || reduceMotion)) renderStreakCard(ctx, data, opts, fonts);
       for (const th of STREAK_THEMES) {
         const c = thumbs.current[th.id];
         const tctx = c?.getContext("2d");
@@ -87,7 +124,7 @@ function Studio({ onClose }: { onClose: () => void }) {
       }
     });
     return () => cancelAnimationFrame(raf);
-  }, [fonts, data, opts]);
+  }, [fonts, data, opts, format, reduceMotion]);
 
   // The PNG is made ahead of the tap: some browsers only open the share sheet inside the tap itself.
   useEffect(() => {
@@ -119,7 +156,7 @@ function Studio({ onClose }: { onClose: () => void }) {
   async function share() {
     if (!blob) return;
     try {
-      const r = await shareStoryPng(blob, fileName);
+      const r = await shareStoryPng(blob, fileName, STREAK_SHARE);
       if (r === "shared") setMessage({ kind: "info", text: t("Sent to the share sheet.") });
       else if (r !== "cancelled") setMessage({ kind: "error", text: t("This browser cannot share images. Download the PNG and post it from your gallery.") });
     } catch {
@@ -158,14 +195,16 @@ function Studio({ onClose }: { onClose: () => void }) {
         </div>
         <button
           type="button"
-          onClick={() => void download()}
-          disabled={!ready}
-          aria-label={t("Download High-Res PNG")}
+          onClick={() => void (format === "video" ? clip.download() : download())}
+          disabled={format === "video" ? clip.video.kind !== "ready" : !ready}
+          aria-label={format === "video" ? t("Save video") : t("Download High-Res PNG")}
           className="flex size-11 items-center justify-center rounded-full text-text hover:bg-surface-2 disabled:opacity-40"
         >
           <Download aria-hidden="true" size={20} />
         </button>
       </header>
+
+      <FormatSwitch value={format} onChange={setFormat} />
 
       <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 py-2">
         <canvas
@@ -182,7 +221,14 @@ function Studio({ onClose }: { onClose: () => void }) {
             {t("Preparing the card")}
           </p>
         )}
-        {message && (
+        {format === "video" && (clip.video.kind === "error" || clip.note) && (
+          <div className="absolute inset-x-6 bottom-4 rounded-ctl border border-line bg-black/85 px-3 py-2 backdrop-blur">
+            <p role={clip.video.kind === "error" || clip.note?.kind === "error" ? "alert" : "status"} className="text-xs">
+              {clip.video.kind === "error" ? clip.video.text : clip.note?.text}
+            </p>
+          </div>
+        )}
+        {format === "image" && message && (
           <div className="absolute inset-x-6 bottom-4 flex items-center gap-2 rounded-ctl border border-line bg-black/85 px-3 py-2 backdrop-blur">
             <p role={message.kind === "error" ? "alert" : "status"} className={`min-w-0 flex-1 text-xs ${message.kind === "error" ? "text-failure" : "text-text"}`}>
               {message.text}
@@ -230,10 +276,14 @@ function Studio({ onClose }: { onClose: () => void }) {
       </ul>
 
       <div className="shrink-0 px-4 pt-2">
-        <Button variant="primary" onClick={() => void share()} disabled={!ready} className="w-full">
-          <Share2 aria-hidden="true" size={16} />
-          {t("Share")}
-        </Button>
+        {format === "video" ? (
+          <VideoActions clip={clip} gate={null} onGate={() => {}} shareable={videoShareable} ready={drawFrame !== null} />
+        ) : (
+          <Button variant="primary" onClick={() => void share()} disabled={!ready} className="w-full">
+            <Share2 aria-hidden="true" size={16} />
+            {t("Share")}
+          </Button>
+        )}
       </div>
     </div>
   );

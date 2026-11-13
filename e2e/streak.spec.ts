@@ -104,3 +104,22 @@ test("the streak can be shared as a story card in twelve themes", async ({ page 
   await expect(studio).toBeHidden();
   await expect(streak).toBeVisible();
 });
+
+test("the streak plays as a free video: the flame, the count rolling over, the weeks lighting up", async ({ page }) => {
+  test.setTimeout(120_000);
+  await freshStart(page);
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.getByRole("dialog", { name: "Streak started" }).getByRole("button", { name: "Share" }).click();
+  const studio = page.getByRole("dialog", { name: "Share your streak" });
+  await studio.getByRole("radio", { name: "Video" }).click();
+  await studio.getByRole("button", { name: "Make video" }).click();
+  await expect(studio.getByRole("button", { name: /^(Share|Save) video$/ })).toBeVisible({ timeout: 90_000 });
+  const [download] = await Promise.all([page.waitForEvent("download"), studio.getByRole("button", { name: "Save video" }).first().click()]);
+  expect(download.suggestedFilename()).toMatch(/^abot-streak-1wk-volt-flame\.(mp4|webm)$/);
+  const bytes = await (await import("node:fs/promises")).readFile((await download.path())!);
+  if (download.suggestedFilename().endsWith(".mp4")) expect(bytes.subarray(4, 8).toString("latin1")).toBe("ftyp");
+});

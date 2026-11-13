@@ -340,3 +340,80 @@ leaving the workout. Builds on Priority 10 (the swap engine and drawer already s
 - e2e: `gym-floor.spec.ts` (steppers move and hand over to the next set, typing still works,
   dumbbell step; routine swap with Update routine changes the routine); `coaching.spec.ts`
   checks the `/ hand` label.
+
+---
+
+## PRIORITY 15: Story Studio themes and motion video
+
+**Objective:** each share card looks like its own thing, and the workout and the streak can be
+shared as short videos, made on the phone.
+
+### 15.1 Eight themes (`src/lib/story-exporter.ts`)
+- The 11 near-identical layouts become 8, each with its own typeface, palette, texture and
+  layout. Order sets what is free: the first two (`tunables().story.freePresets`, 0-8).
+
+  | # | Layout | Free? | Look |
+  | --- | --- | --- | --- |
+  | 1 | Matchday | Free | Anton scoreboard: volume as the final score, lifts as the line-up, records as goals |
+  | 2 | Thermal Matrix | Free | Muscle heat map in Space Grotesk, scanlines |
+  | 3 | Brutalist Receipt | PRO | Till slip in VT323 |
+  | 4 | Editorial | PRO | Fraunces magazine cover. Photo always black and white; without a photo, the volume is the cover image |
+  | 5 | Arcade | PRO | Silkscreen "LEVEL CLEARED", XP bar, quests with a star per record |
+  | 6 | Loaded Bar | PRO | Plates on the bar, Space Grotesk |
+  | 7 | Trophy Vault | PRO | Records engraved in Fraunces gold, then "Also lifted" |
+  | 8 | Volt Poster | PRO | Anton numerals on Volt |
+
+- **Retired ids** (Obsidian Raw, Cyber-Volt HUD, Monochrome Steel, PR Trophy Vault, Photo
+  Backdrop, Split Spec Sheet, Plate Grid) map to the closest layout (`presetId`).
+- **Fonts** are in `src/fonts/` (OFL, latin subsets, about 150 KB; see `OFL-NOTICE.md`):
+  - declared with `next/font/local` and `preload: false`, so a phone downloads one only when a
+    card draws with it;
+  - loaded for the canvas by `loadStoryFonts`.
+- **Streak themes:** the eight colour themes of the classic streak card each get a face (Anton,
+  Fraunces, Silkscreen or Space Grotesk). Poster, Heatmap, Badge and Terminal keep their layouts.
+
+### 15.2 Motion (`src/lib/story-motion.ts`)
+- A card is drawn at `time` seconds into a 7 s clip at 30 fps. The still PNG is the same painter
+  at `STILL_TIME` (6 s), so picture and video never differ.
+- **Beats:** `beat`, `stagger`, `countUp`, `typed`, plus eases.
+- **How each layout moves:**
+  - Matchday: the band slides in, the tag flips, the score counts up, the stats and line-up come in
+    one by one;
+  - Arcade: LEVEL CLEARED types out, the XP bar fills, the quests and stars appear;
+  - Editorial: slow push-in on the photo, the masthead and teasers fade up;
+  - Thermal: the heat spreads over the body;
+  - the others open with a wipe down the card.
+- **Closing card:** from 6.2 s every video ends on the ABOT mark and the @handle, unless the
+  watermark is off.
+- **Streak** (`src/lib/streak-card.ts`): the streak moment's beats:
+  1. the flame ignites at 0.35 s;
+  2. the count rolls from last week's to this week's at 1.2 s;
+  3. the twelve weeks light up from 1.9 s.
+
+  The other streak layouts zoom in from black.
+
+### 15.3 Video export (`src/lib/video-export.ts`)
+- Made frame by frame, not in real time, with WebCodecs `VideoEncoder` and muxed to MP4 with
+  `mp4-muxer` (MIT, no WebAssembly, so the CSP is unchanged).
+- **Encoder order:**
+  1. H.264 1080x1920 at 6 Mbps (about 1-2 MB, a few seconds to make);
+  2. VP9 in MP4;
+  3. MediaRecorder on the canvas;
+  4. otherwise "This device cannot make videos".
+- **Studios:** both studios get an **Image | Video** switch.
+  - Video loops the animation in the preview; with reduced motion it shows the finished card.
+  - "Make video" shows progress with Cancel. The made file is then shared ("Share video") or
+    saved (the header button).
+  - Any change to the card drops the old video.
+- **Access:** the workout video is PRO (`story_video`). The streak video is free.
+- **Android:** `FileSaverPlugin` saves videos to Movies/ABOT, and the FileProvider path
+  `abot_movies` covers Android 9 and older.
+
+### 15.4 Verification
+- **Unit:** `story-motion.test.ts`.
+- **e2e:**
+  - `share.spec.ts`: the 8 layouts; Video makes an MP4 whose bytes contain `ftyp`; a new layout
+    drops the video.
+  - `pro.spec.ts`: a free user's workout video opens the paywall.
+  - `streak.spec.ts`: the free streak MP4.
+- **Checked by eye:** frames from 1080x1920 30 fps H.264 files at several seconds.

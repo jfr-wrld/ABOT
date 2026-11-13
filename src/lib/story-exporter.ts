@@ -251,11 +251,12 @@ export type { ShareResult };
  * Opens the system share sheet with the PNG. Call it straight from the tap: Safari only allows
  * sharing during the user's gesture, so the blob must already exist.
  */
-export function shareStoryPng(blob: Blob, fileName: string): Promise<ShareResult> {
-  return shareFile(new File([blob], fileName, { type: "image/png" }), {
-    title: "ABOT Workout Story",
-    text: "Crushed today's workout with ABOT ⚡",
-  });
+export function shareStoryPng(
+  blob: Blob,
+  fileName: string,
+  text: { title: string; text: string } = { title: "ABOT Workout Story", text: "Crushed today's workout with ABOT ⚡" },
+): Promise<ShareResult> {
+  return shareFile(new File([blob], fileName, { type: "image/png" }), text);
 }
 
 /** A browser download, or the phone's gallery (Pictures/ABOT) in the Android app. */
@@ -1593,6 +1594,12 @@ function wipe(s: Scene, base: string) {
   ctx.fillRect(0, edge, W, H - edge);
   ctx.fillStyle = base === VOLT ? INK : VOLT;
   ctx.fillRect(0, edge - 3, W, 6);
+}
+
+/** The closing card on any canvas (the streak video uses it too). */
+export function closingCard(ctx: Ctx, fonts: StoryFonts, time: number, handle: string | null, hideWatermark: boolean) {
+  const data = { handle } as StoryData;
+  endCard({ ctx, fonts, time, data, unit: "kg", opts: { preset: "matchday", photo: null, overlay: 0, grayscale: false, hideWatermark }, onPhoto: false });
 }
 
 /** The closing seconds of a video: the ABOT mark and the @handle over the card. Skipped without the watermark. */

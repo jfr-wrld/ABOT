@@ -7,7 +7,8 @@
 import { FLAME_CORE, FLAME_MIDDLE, FLAME_OUTER } from "@/components/streak/flame-path";
 import { MARK_PATH } from "@/components/brand/mark-path";
 import type { StreakCardData } from "@/lib/streak-moment";
-import { STORY_HEIGHT as H, STORY_WIDTH as W, type StoryFonts } from "@/lib/story-exporter";
+import { STORY_HEIGHT as H, STORY_WIDTH as W, closingCard, type StoryFonts } from "@/lib/story-exporter";
+import { STILL_TIME, backOut, beat, easeOut, linear as linearEase } from "@/lib/story-motion";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -187,8 +188,16 @@ interface Palette {
   foot?: { text: string; muted: string; mark: string };
 }
 
+/**
+ * The streak moment's beats (components/streak/StreakMoment), for the video: the flame ignites,
+ * the count rolls from last week's to this week's, then the twelve plates light up to this one.
+ */
+const IGNITE = 0.35;
+const ROLL = 1.2;
+const LIGHT = 1.9;
+
 /** Flame on top, the count under it, the label, then the twelve weeks. Most themes use it. */
-function classic(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptions, p: Palette) {
+function classic(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptions, p: Palette, time = STILL_TIME) {
   p.bg(ctx);
   p.extra?.(ctx);
   // Each face at the weight it has: Anton has one, Fraunces goes to 900, Silkscreen to 700.
@@ -197,8 +206,11 @@ function classic(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOption
   const numWeight = face === "display" ? 400 : face === "serif" ? 900 : face ? 700 : 800;
   const wordFamily = face === "serif" || face === "grotesk" || face === "pixel" ? f[face] : f.sans;
   text(ctx, "WEEK STREAK", W / 2, 300, { size: 40, weight: 700, family: face === "pixel" ? f.pixel : f.mono, color: p.label, tracking: 10 });
-  flame(ctx, W / 2, 900, 520, p.flame, p.glow);
-  const n = String(d.weeks);
+  const lit = beat(time, IGNITE, 0.6, backOut);
+  if (lit > 0) flame(ctx, W / 2, 900, 520 * lit, p.flame, p.glow);
+  // The count rolls over: last week's number slides up and out, this week's comes up in its place.
+  const roll = beat(time, ROLL, 0.45, easeOut);
+  const n = String(roll < 0.5 ? Math.max(0, d.weeks - 1) : d.weeks);
   const size = fit(ctx, n, W - 160, face === "display" ? 380 : 420, numWeight, family);
   const fill = typeof p.number === "function" ? p.number(ctx) : p.number;
   ctx.save();
@@ -210,7 +222,9 @@ function classic(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOption
   ctx.fillStyle = fill;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText(n, W / 2, 1300);
+  const slide = roll < 0.5 ? -roll * 2 * 120 : (1 - roll) * 2 * 120;
+  ctx.globalAlpha *= roll > 0 && roll < 1 ? Math.abs(roll - 0.5) * 2 : 1;
+  ctx.fillText(n, W / 2, 1300 + slide);
   ctx.restore();
   const words = d.weeks === 1 ? "week in a row" : "weeks in a row";
   text(ctx, face === "display" || face === "pixel" ? words.toUpperCase() : words, W / 2, 1390, {
@@ -219,7 +233,8 @@ function classic(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOption
     family: face === "display" ? f.display : wordFamily,
     color: p.text,
   });
-  plateRow(ctx, d.row, 1530, p.plateOn, p.plateOff);
+  const shown = Math.round(d.row.length * beat(time, LIGHT, 1.2, linearEase));
+  plateRow(ctx, d.row.map((on, i) => on && i < shown), 1530, p.plateOn, p.plateOff);
   footer(ctx, d, f, o, p.foot?.text ?? p.text, p.foot?.mark ?? p.mark, p.foot?.muted ?? p.muted);
 }
 
@@ -500,15 +515,33 @@ function terminal(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptio
   if (!o.hideWatermark) footer(ctx, { ...d, handle: null }, f, o, "#a7f3d0", green, "rgba(167,243,208,0.6)");
 }
 
-export function renderStreakCard(ctx: Ctx, d: StreakCardData, o: StreakCardOptions, f: StoryFonts): void {
+/**
+ * Draws the streak card at `time` seconds into its video (a still at STILL_TIME). The classic
+ * themes play the streak moment; the others zoom in from black. Every video closes on the ABOT
+ * card unless the watermark is off.
+ */
+export function renderStreakCard(ctx: Ctx, d: StreakCardData, o: StreakCardOptions, f: StoryFonts, time = STILL_TIME): void {
   ctx.save();
   ctx.clearRect(0, 0, W, H);
   const p = PALETTES[o.theme];
-  if (p) classic(ctx, d, f, o, p);
-  else if (o.theme === "poster") poster(ctx, d, f, o);
-  else if (o.theme === "heatmap") heatmap(ctx, d, f, o);
-  else if (o.theme === "badge") badge(ctx, d, f, o);
-  else terminal(ctx, d, f, o);
+  if (p) classic(ctx, d, f, o, p, time);
+  else {
+    const z = beat(time, 0, 1.4, easeOut);
+    ctx.save();
+    ctx.translate(W / 2, H / 2);
+    ctx.scale(1.12 - 0.12 * z, 1.12 - 0.12 * z);
+    ctx.translate(-W / 2, -H / 2);
+    if (o.theme === "poster") poster(ctx, d, f, o);
+    else if (o.theme === "heatmap") heatmap(ctx, d, f, o);
+    else if (o.theme === "badge") badge(ctx, d, f, o);
+    else terminal(ctx, d, f, o);
+    ctx.restore();
+    if (z < 1) {
+      ctx.fillStyle = `rgba(0,0,0,${1 - z})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+  closingCard(ctx, f, time, d.handle ?? null, o.hideWatermark === true);
   ctx.restore();
 }
 

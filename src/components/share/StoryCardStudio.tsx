@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Download, Film, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "lucide-react";
 import { useReducedMotionConfig } from "framer-motion";
 import { useStoryVideo } from "./useStoryVideo";
+import { FormatSwitch, VideoActions } from "./VideoActions";
 import { STILL_TIME, STORY_SECONDS } from "@/lib/story-motion";
 import { canShareFiles } from "@/lib/native/files";
 import { useEntitlements } from "@/store/useEntitlements";
@@ -414,32 +415,7 @@ function Studio({
       </header>
 
       {/* Image or video: the same card, still or in motion. */}
-      <div role="radiogroup" aria-label={t("Format")} className="mx-auto grid shrink-0 grid-cols-2 gap-1 rounded-full bg-surface-2 p-1">
-        {(
-          [
-            ["image", t("Image"), ImageIcon],
-            ["video", t("Video"), Film],
-          ] as const
-        ).map(([id, label, Icon]) => (
-          <button
-            key={id}
-            type="button"
-            role="radio"
-            aria-checked={format === id}
-            onClick={() => {
-              if (format !== id) feedback.tick();
-              setFormat(id);
-            }}
-            className={`flex min-h-9 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-semibold transition-colors ${
-              format === id ? "bg-surface text-text" : "text-text-muted hover:text-text"
-            }`}
-          >
-            <Icon aria-hidden="true" size={14} />
-            {label}
-            {id === "video" && !proActive && <ProBadge className="scale-75" />}
-          </button>
-        ))}
-      </div>
+      <FormatSwitch value={format} onChange={setFormat} videoPro={!proActive} />
 
       {/* The preview takes whatever height is left, at 9:16. */}
       <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 py-2">
@@ -732,57 +708,3 @@ function ProRow({ label, badge, checked, onChange }: { label: string; badge: Rea
   );
 }
 
-/**
- * The bottom action in Video: make the clip (a few seconds, with progress and Cancel), then share
- * it. Shared by the workout and streak studios. `gate` opens the paywall instead.
- */
-export function VideoActions({
-  clip,
-  gate,
-  onGate,
-  shareable,
-  ready,
-}: {
-  clip: ReturnType<typeof useStoryVideo>;
-  gate: string | null;
-  onGate: () => void;
-  shareable: boolean;
-  ready: boolean;
-}) {
-  const t = useT();
-  const v = clip.video;
-  if (v.kind === "making") {
-    const pct = Math.round(v.progress * 100);
-    return (
-      <div className="flex items-center gap-3">
-        <div className="min-w-0 flex-1">
-          <p role="status" className="mb-1.5 text-xs font-semibold">
-            {t("Making video… {n}%", { n: pct })}
-          </p>
-          <div role="progressbar" aria-label={t("Making video")} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} className="h-2 overflow-hidden rounded-full bg-track">
-            <div className="h-full rounded-full bg-accent transition-[width] duration-150" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
-        <Button onClick={clip.cancel} className="shrink-0">
-          {t("Cancel")}
-        </Button>
-      </div>
-    );
-  }
-  if (v.kind === "ready")
-    return (
-      <>
-        <Button variant="primary" onClick={() => void (shareable ? clip.share() : clip.download())} className="min-h-12 w-full text-base">
-          <Share2 aria-hidden="true" size={18} />
-          {shareable ? t("Share video") : t("Save video")}
-        </Button>
-        {!shareable && <p className="mt-1.5 text-center text-xs text-text-muted">{t("This browser cannot hand videos to other apps. Save it and post it from your gallery.")}</p>}
-      </>
-    );
-  return (
-    <Button variant="primary" onClick={() => (gate ? onGate() : void clip.make())} disabled={!ready} className="min-h-12 w-full text-base">
-      <Film aria-hidden="true" size={18} />
-      {t("Make video")}
-    </Button>
-  );
-}
