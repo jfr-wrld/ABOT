@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Download, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "lucide-react";
+import { Camera, Download, Film, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "lucide-react";
+import { useReducedMotionConfig } from "framer-motion";
+import { useStoryVideo } from "./useStoryVideo";
+import { STILL_TIME, STORY_SECONDS } from "@/lib/story-motion";
+import { canShareFiles } from "@/lib/native/files";
 import { useEntitlements } from "@/store/useEntitlements";
 import { ProBadge } from "@/components/paywall/ProBadge";
 import { tunables } from "@/lib/tunables";
@@ -220,23 +224,54 @@ function Studio({
     [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge],
   );
   const exportKey = useMemo(() => ({ card, opts }), [card, opts]);
+  // Image (the PNG, as before) or Video (the same card in motion, PRO for a workout).
+  const [format, setFormat] = useState<"image" | "video">("image");
+  const reduceMotion = useReducedMotionConfig();
+  const drawFrame = useMemo(
+    () => (fonts ? (ctx: CanvasRenderingContext2D, time: number) => renderStory(ctx, card, opts, fonts, time) : null),
+    [card, opts, fonts],
+  );
+  const videoFile = storyFileName(card, opts.preset).replace(/\.png$/, "");
+  const clip = useStoryVideo({
+    key: exportKey,
+    draw: drawFrame,
+    fileName: videoFile,
+    shareText: { title: "ABOT Workout Story", text: "Crushed today's workout with ABOT ⚡" },
+  });
+  const [videoShareable] = useState(() => canShareFiles(new File([new Uint8Array(1)], "abot.mp4", { type: "video/mp4" })));
   const png: PngState = made.from === exportKey ? { blob: made.blob, fileName: made.fileName, busy: false } : { blob: null, fileName: "", busy: true };
   const actions = usePngActions(png);
 
+  // Video preview: the card plays in a loop, with a short hold on the last frame. With reduced
+  // motion it stays on the finished card.
+  useEffect(() => {
+    if (!fonts || format !== "video" || reduceMotion) return;
+    let raf = 0;
+    const start = performance.now();
+    const loop = (now: number) => {
+      const t = ((now - start) / 1000) % (STORY_SECONDS + 0.8);
+      const ctx = preview.current?.getContext("2d");
+      if (ctx) renderStory(ctx, card, opts, fonts, Math.min(t, STORY_SECONDS));
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [card, opts, fonts, format, reduceMotion]);
+
   // Preview: redraw on the next frame, so dragging the slider never queues stale frames.
   useEffect(() => {
-    if (!fonts) return;
+    if (!fonts || (format === "video" && !reduceMotion)) return;
     const raf = requestAnimationFrame(() => {
       const ctx = preview.current?.getContext("2d");
       if (!ctx) return;
       try {
-        renderStory(ctx, card, opts, fonts);
+        renderStory(ctx, card, opts, fonts, STILL_TIME);
       } catch {
         setStatus({ kind: "error", text: t("The card could not be drawn. Close this and try again.") });
       }
     });
     return () => cancelAnimationFrame(raf);
-  }, [card, opts, fonts, setStatus, t]);
+  }, [card, opts, fonts, setStatus, t, format, reduceMotion]);
 
   // Thumbnails show each layout with the same data and photo, so the choice is made on the real thing.
   // The Layout panel unmounts on the other tabs, so its fresh canvases are drawn again on return.
@@ -338,12 +373,21 @@ function Studio({
     );
   }
 
+  const video = format === "video";
   const message =
     status.kind !== "idle"
       ? { kind: status.kind, text: status.text }
-      : actions.shown
-        ? { kind: actions.shown.kind, text: actions.shown.text }
-        : null;
+      : video
+        ? clip.video.kind === "error"
+          ? { kind: "error" as const, text: clip.video.text }
+          : clip.note
+            ? { kind: clip.note.kind, text: clip.note.text }
+            : null
+        : actions.shown
+          ? { kind: actions.shown.kind, text: actions.shown.text }
+          : null;
+  // Gates, in order: a PRO layout, then the video itself (PRO for a workout).
+  const gate = presetLocked ? "story_studio_pro_presets" : video && !proActive ? "story_video" : null;
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[520px] flex-col pt-[env(safe-area-inset-top)] pb-[calc(12px+env(safe-area-inset-bottom))]">
@@ -360,14 +404,42 @@ function Studio({
         </div>
         <button
           type="button"
-          onClick={() => (presetLocked ? openPaywall("story_studio_pro_presets") : void actions.download())}
-          disabled={!actions.ready}
-          aria-label={t("Download High-Res PNG")}
+          onClick={() => (gate ? openPaywall(gate) : video ? void clip.download() : void actions.download())}
+          disabled={video ? clip.video.kind !== "ready" && !gate : !actions.ready}
+          aria-label={video ? t("Save video") : t("Download High-Res PNG")}
           className="flex size-11 items-center justify-center rounded-full text-text hover:bg-surface-2 disabled:opacity-40"
         >
           <Download aria-hidden="true" size={20} />
         </button>
       </header>
+
+      {/* Image or video: the same card, still or in motion. */}
+      <div role="radiogroup" aria-label={t("Format")} className="mx-auto grid shrink-0 grid-cols-2 gap-1 rounded-full bg-surface-2 p-1">
+        {(
+          [
+            ["image", t("Image"), ImageIcon],
+            ["video", t("Video"), Film],
+          ] as const
+        ).map(([id, label, Icon]) => (
+          <button
+            key={id}
+            type="button"
+            role="radio"
+            aria-checked={format === id}
+            onClick={() => {
+              if (format !== id) feedback.tick();
+              setFormat(id);
+            }}
+            className={`flex min-h-9 items-center justify-center gap-1.5 rounded-full px-4 text-xs font-semibold transition-colors ${
+              format === id ? "bg-surface text-text" : "text-text-muted hover:text-text"
+            }`}
+          >
+            <Icon aria-hidden="true" size={14} />
+            {label}
+            {id === "video" && !proActive && <ProBadge className="scale-75" />}
+          </button>
+        ))}
+      </div>
 
       {/* The preview takes whatever height is left, at 9:16. */}
       <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 py-2">
@@ -404,7 +476,13 @@ function Studio({
             <p role={message.kind === "error" ? "alert" : "status"} className={`min-w-0 flex-1 text-xs ${message.kind === "error" ? "text-failure" : "text-text"}`}>
               {message.text}
             </p>
-            {status.kind === "idle" && actions.shown?.saved && (
+            {status.kind === "idle" && video && clip.note?.saved && (
+              <Button variant="ghost" onClick={() => clip.openSaved(clip.note!.saved!)} className="min-h-9 shrink-0 px-2 text-xs">
+                <Film aria-hidden="true" size={14} />
+                {t("Open")}
+              </Button>
+            )}
+            {status.kind === "idle" && !video && actions.shown?.saved && (
               <Button variant="ghost" onClick={() => void actions.openInGallery(actions.shown!.saved!)} className="min-h-9 shrink-0 px-2 text-xs">
                 <ImageIcon aria-hidden="true" size={14} />
                 {t("Open")}
@@ -598,17 +676,23 @@ function Studio({
       </div>
 
       <div className="shrink-0 px-4 pt-3">
-        <Button
-          variant="primary"
-          onClick={() => (presetLocked ? openPaywall("story_studio_pro_presets") : void actions.share())}
-          disabled={!actions.ready || !shareable}
-          aria-label={t("Share to Instagram / System Share")}
-          className="min-h-12 w-full text-base"
-        >
-          <Share2 aria-hidden="true" size={18} />
-          {t("Share to Instagram")}
-        </Button>
-        {!shareable && <p className="mt-1.5 text-center text-xs text-text-muted">{t("This browser cannot hand images to other apps. Download the PNG instead.")}</p>}
+        {video ? (
+          <VideoActions clip={clip} gate={gate} onGate={() => gate && openPaywall(gate)} shareable={videoShareable} ready={drawFrame !== null} />
+        ) : (
+          <>
+            <Button
+              variant="primary"
+              onClick={() => (presetLocked ? openPaywall("story_studio_pro_presets") : void actions.share())}
+              disabled={!actions.ready || !shareable}
+              aria-label={t("Share to Instagram / System Share")}
+              className="min-h-12 w-full text-base"
+            >
+              <Share2 aria-hidden="true" size={18} />
+              {t("Share to Instagram")}
+            </Button>
+            {!shareable && <p className="mt-1.5 text-center text-xs text-text-muted">{t("This browser cannot hand images to other apps. Download the PNG instead.")}</p>}
+          </>
+        )}
       </div>
     </div>
   );
@@ -645,5 +729,60 @@ function ProRow({ label, badge, checked, onChange }: { label: string; badge: Rea
         <span aria-hidden="true" className={`absolute top-0.5 size-6 rounded-full transition-[left] ${checked ? "left-7 bg-on-accent" : "left-0.5 bg-text"}`} />
       </button>
     </label>
+  );
+}
+
+/**
+ * The bottom action in Video: make the clip (a few seconds, with progress and Cancel), then share
+ * it. Shared by the workout and streak studios. `gate` opens the paywall instead.
+ */
+export function VideoActions({
+  clip,
+  gate,
+  onGate,
+  shareable,
+  ready,
+}: {
+  clip: ReturnType<typeof useStoryVideo>;
+  gate: string | null;
+  onGate: () => void;
+  shareable: boolean;
+  ready: boolean;
+}) {
+  const t = useT();
+  const v = clip.video;
+  if (v.kind === "making") {
+    const pct = Math.round(v.progress * 100);
+    return (
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p role="status" className="mb-1.5 text-xs font-semibold">
+            {t("Making video… {n}%", { n: pct })}
+          </p>
+          <div role="progressbar" aria-label={t("Making video")} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} className="h-2 overflow-hidden rounded-full bg-track">
+            <div className="h-full rounded-full bg-accent transition-[width] duration-150" style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+        <Button onClick={clip.cancel} className="shrink-0">
+          {t("Cancel")}
+        </Button>
+      </div>
+    );
+  }
+  if (v.kind === "ready")
+    return (
+      <>
+        <Button variant="primary" onClick={() => void (shareable ? clip.share() : clip.download())} className="min-h-12 w-full text-base">
+          <Share2 aria-hidden="true" size={18} />
+          {shareable ? t("Share video") : t("Save video")}
+        </Button>
+        {!shareable && <p className="mt-1.5 text-center text-xs text-text-muted">{t("This browser cannot hand videos to other apps. Save it and post it from your gallery.")}</p>}
+      </>
+    );
+  return (
+    <Button variant="primary" onClick={() => (gate ? onGate() : void clip.make())} disabled={!ready} className="min-h-12 w-full text-base">
+      <Film aria-hidden="true" size={18} />
+      {t("Make video")}
+    </Button>
   );
 }

@@ -56,6 +56,7 @@ export type ProFeatureKey =
   | "smart_exercise_swap"
   | "story_studio_pro_presets"
   | "remove_story_watermark"
+  | "story_video"
   | "body_phase_protocols";
 
 /** Names shown on the paywall's "Unlock feature" banner. */
@@ -67,6 +68,7 @@ export const PRO_FEATURE_LABEL: Record<ProFeatureKey, string> = {
   smart_exercise_swap: "Smart exercise swap",
   story_studio_pro_presets: "Story Studio pro presets",
   remove_story_watermark: "Story without watermark",
+  story_video: "Story video",
   body_phase_protocols: "Body phase protocols",
 };
 

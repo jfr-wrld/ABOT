@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Saves a file the user asked to download: images to Pictures/ABOT (so they show in the gallery),
- * anything else to Download/ABOT. The WebView cannot follow a download link, so the web layer
+ * Saves a file the user asked to download: images to Pictures/ABOT and videos to Movies/ABOT (so
+ * they show in the gallery), anything else to Download/ABOT. The WebView cannot follow a download link, so the web layer
  * sends the bytes here. Android 10+ needs no permission; older versions ask for storage once.
  */
 @CapacitorPlugin(
@@ -62,7 +62,8 @@ public class FileSaverPlugin extends Plugin {
             return;
         }
         boolean image = mimeType.startsWith("image/");
-        String base = image ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_DOWNLOADS;
+        boolean video = mimeType.startsWith("video/");
+        String base = image ? Environment.DIRECTORY_PICTURES : video ? Environment.DIRECTORY_MOVIES : Environment.DIRECTORY_DOWNLOADS;
         String folder = base + "/ABOT";
         byte[] bytes = Base64.decode(data, Base64.DEFAULT);
         Uri saved;
@@ -76,7 +77,9 @@ public class FileSaverPlugin extends Plugin {
                 values.put(MediaStore.MediaColumns.IS_PENDING, 1);
                 Uri collection = image
                     ? MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                    : MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+                    : video
+                        ? MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                        : MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
                 Uri uri = resolver.insert(collection, values);
                 if (uri == null) throw new IOException("The file could not be created.");
                 try (OutputStream out = resolver.openOutputStream(uri)) {
@@ -116,8 +119,8 @@ public class FileSaverPlugin extends Plugin {
             call.reject("uri is required.");
             return;
         }
-        // Only a file this plugin saved: a MediaStore entry, or ABOT's own Pictures/ABOT and
-        // Download/ABOT folders through the FileProvider. Any other content:// URI would be handed
+        // Only a file this plugin saved: a MediaStore entry, or ABOT's own Pictures/ABOT,
+        // Movies/ABOT and Download/ABOT folders through the FileProvider. Any other content:// URI would be handed
         // to another app with read access granted.
         Uri parsed = Uri.parse(uri);
         String auth = parsed.getAuthority();
@@ -125,7 +128,7 @@ public class FileSaverPlugin extends Plugin {
         boolean ours = "content".equals(parsed.getScheme())
             && ("media".equals(auth)
                 || ((getContext().getPackageName() + ".fileprovider").equals(auth)
-                    && (path.startsWith("/abot_pictures/") || path.startsWith("/abot_downloads/"))
+                    && (path.startsWith("/abot_pictures/") || path.startsWith("/abot_movies/") || path.startsWith("/abot_downloads/"))
                     && !path.contains("..")));
         if (!ours) {
             call.reject("Not a file ABOT saved.", "BAD_URI");

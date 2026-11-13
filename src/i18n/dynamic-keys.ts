@@ -81,6 +81,7 @@ export const DYNAMIC_KEYS: string[] = [
   "Records first, engraved in gold",
   "Swiss poster in black on Volt",
   // Errors thrown by data/backup, lib/photo, story-exporter and data/catalog, shown with t()
+  "This device cannot make videos. Download the image instead.",
   "This file is not valid JSON",
   "This is not an ABOT backup",
   "This backup was made by a newer version of ABOT",

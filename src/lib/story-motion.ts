@@ -1,12 +1,16 @@
 /**
  * The clock of a story card. A painter reads `time` (seconds into the clip) and asks how far
- * each beat has come; the still PNG is the same painter at the last second, so the picture and
+ * each beat has come; the still PNG is the same painter at STILL_TIME, so the picture and
  * the video can never disagree. Pure, so it is tested without a canvas.
  */
 
 /** Length of a story video, and its frame rate. */
 export const STORY_SECONDS = 7;
 export const STORY_FPS = 30;
+/** The moment a still is taken: every beat has landed, the closing card has not begun. */
+export const STILL_TIME = 6;
+/** The closing card (mark and @handle) runs from here to the end of the clip. */
+export const END_CARD_AT = 6.2;
 
 export type Ease = (x: number) => number;
 

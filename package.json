@@ -28,6 +28,7 @@
     "dexie": "4.4.7",
     "framer-motion": "^12.43.0",
     "lucide-react": "^1.70.0",
+    "mp4-muxer": "5.2.2",
     "next": "16.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",

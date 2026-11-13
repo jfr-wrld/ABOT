@@ -119,3 +119,20 @@ test("Story Studio: free layouts export, PRO layouts and the watermark switch as
   await badge.click();
   await expect(badge).toHaveAttribute("aria-checked", "true");
 });
+
+test("Free locked: the workout video asks to unlock", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await page.getByRole("button", { name: "Finish", exact: true }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await reachSummary(page);
+  const summary = page.url();
+  await simulate(page, "Free locked");
+  await page.goto(summary);
+  await page.getByRole("button", { name: "Share to IG Story" }).click();
+  const studio = page.getByRole("dialog", { name: "Share to Instagram Story" });
+  await studio.getByRole("radio", { name: /^Video/ }).click();
+  await studio.getByRole("button", { name: "Make video" }).click();
+  await expect(page.getByText("Unlock feature: Story video")).toBeVisible();
+});

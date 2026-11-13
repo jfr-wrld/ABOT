@@ -14,7 +14,7 @@ import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT } from "@/components
 import type { StoryData, StorySet } from "@/lib/story-data";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 import { MARK_PATH } from "@/components/brand/mark-path";
-import { STORY_SECONDS, backOut, beat, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
+import { END_CARD_AT, STILL_TIME, STORY_SECONDS, backOut, beat, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
 
 export const STORY_WIDTH = 1080;
 export const STORY_HEIGHT = 1920;
@@ -272,7 +272,7 @@ type Ctx = CanvasRenderingContext2D;
 interface Scene {
   ctx: Ctx;
   fonts: StoryFonts;
-  /** Seconds into the clip; a still is drawn at the end (STORY_SECONDS), every beat complete. */
+  /** Seconds into the clip; a still is drawn at STILL_TIME, every beat complete. */
   time: number;
   data: StoryData;
   unit: WeightUnit;
@@ -584,7 +584,11 @@ function thermalMatrix(s: Scene) {
   const mapX = (W - mapW) / 2;
   const mapY = SAFE_TOP + 170;
   const mapH = (mapW * 1360) / 1448;
-  const { heat, max } = regionHeat(data);
+  const { heat: full, max } = regionHeat(data);
+  // In the video the heat spreads over the body; the still shows it all.
+  const spread = beat(s.time, 0.5, 2.2, easeInOut);
+  const heat: typeof full = {};
+  for (const [r, v] of Object.entries(full)) if ((v ?? 0) * spread > 0.02) heat[r as Region] = (v ?? 0) * spread;
   drawBody(ctx, mapX, mapY, mapW, heat);
 
   // Reticle brackets around the figure.
@@ -625,7 +629,7 @@ function thermalMatrix(s: Scene) {
   y += 110;
   for (const { muscle, sets } of data.muscles.slice(0, 3)) {
     text(s, MUSCLE_GROUP_LABELS[muscle], x, y, { size: 36, weight: 500, family: "grotesk" });
-    const frac = max > 0 ? sets / max : 0;
+    const frac = (max > 0 ? sets / max : 0) * beat(s.time, 2.4, 1.2);
     ctx.fillStyle = CARBON_2;
     ctx.fillRect(x + 330, y - 22, 480, 16);
     ctx.fillStyle = VOLT;
@@ -1452,7 +1456,7 @@ function arcade(s: Scene) {
   });
 
   // Blinks in the video; steady on the still.
-  const blink = time >= STORY_SECONDS || Math.floor(time * 2) % 2 === 0;
+  const blink = time >= STILL_TIME || Math.floor(time * 2) % 2 === 0;
   if (blink) px("PRESS START TO TRAIN AGAIN", W / 2, SAFE_BOTTOM + 60, 30, "#ffffff", "center", 400);
 }
 
@@ -1562,7 +1566,7 @@ function drawFounderBadge(s: Scene) {
   text(s, num, x + 20, y + 56, { size: 22, weight: 700, family: "mono", color: "#ffffff", baseline: "middle", tracking: 2, shadow: false });
 }
 
-export function renderStory(ctx: Ctx, data: StoryData, opts: StoryOptions, fonts: StoryFonts, time = STORY_SECONDS): void {
+export function renderStory(ctx: Ctx, data: StoryData, opts: StoryOptions, fonts: StoryFonts, time = STILL_TIME): void {
   const scene: Scene = { ctx, fonts, time, data, unit: data.unit, opts, onPhoto: opts.photo !== null };
   ctx.save();
   ctx.clearRect(0, 0, W, H);
@@ -1570,5 +1574,42 @@ export function renderStory(ctx: Ctx, data: StoryData, opts: StoryOptions, fonts
   PAINTERS[opts.preset](scene);
   drawHandle(scene);
   drawFounderBadge(scene);
+  if (!OWN_MOTION.has(opts.preset)) wipe(scene, WIPE_BASE[opts.preset] ?? OBSIDIAN);
+  endCard(scene);
+  ctx.restore();
+}
+
+/** Layouts that animate their own parts; the rest open with a wipe down the card. */
+const OWN_MOTION = new Set<StoryPresetId>(["matchday", "editorial", "arcade", "thermal-matrix"]);
+const WIPE_BASE: Partial<Record<StoryPresetId, string>> = { "brutalist-receipt": "#d4d4d8", "volt-poster": VOLT };
+
+/** The card revealed from the top down over its first two seconds, a Volt line at the edge. */
+function wipe(s: Scene, base: string) {
+  const p = beat(s.time, 0.15, 2.2, easeInOut);
+  if (p >= 1) return;
+  const { ctx } = s;
+  const edge = p * H;
+  ctx.fillStyle = base;
+  ctx.fillRect(0, edge, W, H - edge);
+  ctx.fillStyle = base === VOLT ? INK : VOLT;
+  ctx.fillRect(0, edge - 3, W, 6);
+}
+
+/** The closing seconds of a video: the ABOT mark and the @handle over the card. Skipped without the watermark. */
+function endCard(s: Scene) {
+  if (s.time < END_CARD_AT || s.opts.hideWatermark) return;
+  const p = beat(s.time, END_CARD_AT, 0.45, easeOut);
+  const { ctx } = s;
+  ctx.save();
+  ctx.globalAlpha = p;
+  ctx.fillStyle = "rgba(9, 9, 11, 0.92)";
+  ctx.fillRect(0, 0, W, H);
+  const size = 220 * (0.85 + 0.15 * p);
+  mark(ctx, W / 2 - size / 2, H / 2 - size, size, VOLT);
+  s.onPhoto = false;
+  text(s, "ABOT", W / 2, H / 2 + 120, { size: 120, family: "display", align: "center", tracking: 6 });
+  text(s, "Logged with ABOT", W / 2, H / 2 + 200, { size: 40, weight: 500, family: "grotesk", color: MUTED, align: "center" });
+  const handle = s.data.handle?.trim();
+  if (handle) text(s, `@${handle}`, W / 2, H / 2 + 270, { size: 40, weight: 700, family: "grotesk", color: VOLT, align: "center" });
   ctx.restore();
 }

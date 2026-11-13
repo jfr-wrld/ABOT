@@ -212,3 +212,23 @@ test("the story carries the username from the profile", async ({ page }) => {
   await expect(dialog.getByText("@JafarLifts", { exact: false }).first()).toBeVisible();
   await expect(dialog.getByRole("textbox")).toHaveCount(0);
 });
+
+test("Video makes the card in motion as a short MP4, saved and shared from the studio", async ({ page }) => {
+  test.setTimeout(120_000);
+  await finishOneSet(page);
+  const dialog = await openStudio(page);
+  await dialog.getByRole("radio", { name: "Video" }).click();
+  await expect(dialog.getByRole("radio", { name: "Video" })).toHaveAttribute("aria-checked", "true");
+  await dialog.getByRole("button", { name: "Make video" }).click();
+  await expect(dialog.getByRole("progressbar", { name: "Making video" })).toBeVisible();
+  // Made frame by frame: 7 seconds at 30 fps.
+  await expect(dialog.getByRole("button", { name: /^(Share|Save) video$/ })).toBeVisible({ timeout: 90_000 });
+  const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Save video" }).first().click()]);
+  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-matchday\.(mp4|webm)$/);
+  const bytes = await (await import("node:fs/promises")).readFile((await download.path())!);
+  expect(bytes.length).toBeGreaterThan(20_000);
+  if (download.suggestedFilename().endsWith(".mp4")) expect(bytes.subarray(4, 8).toString("latin1")).toBe("ftyp");
+  // A different layout drops the video: it shows another card.
+  await dialog.getByRole("button", { name: "Thermal Matrix", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Make video" })).toBeVisible();
+});

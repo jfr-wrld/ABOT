@@ -134,6 +134,8 @@ export async function showPill(page: Page, name: string): Promise<void> {
 
 /** The Exercises library: opens Sort & filter, picks each option by its label, and shows the results. */
 export async function sortAndFilter(page: Page, ...options: string[]): Promise<void> {
+  // The button steps aside while the list scrolls down; a scroll up brings it back, as for a lifter.
+  await page.mouse.wheel(0, -400);
   await page.getByRole("button", { name: /^Sort and filter/ }).click();
   const sheet = page.getByRole("dialog", { name: "Sort & filter" });
   for (const o of options) await sheet.getByRole("radio", { name: o, exact: true }).click();
