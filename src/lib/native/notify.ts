@@ -26,6 +26,28 @@ const sessionId = (wd: Weekday) => 100 + wd;
 const prepId = (wd: Weekday) => 110 + wd;
 const REMINDER_IDS = [0, 1, 2, 3, 4, 5, 6].flatMap((wd) => [sessionId(wd as Weekday), prepId(wd as Weekday)]);
 
+/** A reminder only ever opens a workout: /workout?start=<routine id or "empty">. */
+const REMINDER_URL = /^\/workout\?start=([A-Za-z0-9_.~-]{1,80})$/;
+
+export type ReminderAction = { kind: "ignore" } | { kind: "open"; url: string } | { kind: "snooze"; routineId: string | null };
+
+/**
+ * What a reminder tap may do. Android hands ABOT any intent another app sends to its launcher
+ * with the plugin's extras as if it were a tap (security audit 2026-11-13), so nothing in the
+ * payload is trusted: only ABOT's own reminder ids count, the url must be a workout start link,
+ * and a snooze carries just the routine id, the text being rebuilt from this phone's data.
+ */
+export function reminderAction(notificationId: unknown, actionId: unknown, extra: unknown): ReminderAction {
+  if (typeof notificationId !== "number" || !(REMINDER_IDS.includes(notificationId) || notificationId === ID.snooze)) return { kind: "ignore" };
+  const url = typeof extra === "object" && extra !== null ? (extra as { url?: unknown }).url : undefined;
+  const m = typeof url === "string" ? REMINDER_URL.exec(url) : null;
+  if (actionId === "snooze") {
+    const id = m ? decodeURIComponent(m[1]!) : "empty";
+    return { kind: "snooze", routineId: id === "empty" ? null : id };
+  }
+  return { kind: "open", url: m ? url as string : "/workout" };
+}
+
 const CHANNEL = { live: "workout-live", rest: "rest-over", reminders: "reminders" } as const;
 const REMINDER_ACTIONS = "abot-reminder";
 const SNOOZE_MS = 30 * 60_000;
@@ -55,10 +77,15 @@ export async function openExactAlarmSettings(): Promise<void> {
 }
 
 /**
- * Channels, the Start / Snooze buttons, and what a tap does. `open` navigates inside the app.
+ * Channels, the Start / Snooze buttons, and what a tap does. `open` navigates inside the app;
+ * `routine` and `time` rebuild a snoozed reminder from the saved routines and schedule.
  * Returns a cleanup for the listener.
  */
-export async function setupNativeNotifications(open: (url: string) => void): Promise<() => void> {
+export async function setupNativeNotifications(
+  open: (url: string) => void,
+  routine: (id: string | null) => { id: string; name: string; muscles: string[] } | null,
+  time: () => string,
+): Promise<() => void> {
   const { ln } = await plugin();
   await Promise.all([
     ln.createChannel({ id: CHANNEL.live, name: "Workout in progress", description: "The workout and your next set while ABOT is in the background.", importance: 2, vibration: false }),
@@ -77,12 +104,19 @@ export async function setupNativeNotifications(open: (url: string) => void): Pro
     ],
   });
   const handle = await ln.addListener("localNotificationActionPerformed", ({ actionId, notification }) => {
-    const extra = (notification.extra ?? {}) as { url?: string; reminder?: ReminderContent };
-    if (actionId === "snooze" && extra.reminder) {
-      void ln.schedule({ notifications: [reminderNotification(ID.snooze, extra.reminder, { at: new Date(Date.now() + SNOOZE_MS), allowWhileIdle: true })] });
+    const act = reminderAction(notification.id, actionId, notification.extra);
+    if (act.kind === "ignore") return;
+    if (act.kind === "snooze") {
+      const now = new Date();
+      const content = reminderContent(
+        { kind: "session", at: now.getTime(), weekday: now.getDay() as Weekday, routineId: act.routineId, key: "snooze" },
+        routine(act.routineId),
+        time(),
+      );
+      void ln.schedule({ notifications: [reminderNotification(ID.snooze, content, { at: new Date(now.getTime() + SNOOZE_MS), allowWhileIdle: true })] });
       return;
     }
-    open(extra.url ?? "/workout");
+    open(act.url);
   });
   return () => void handle.remove();
 }

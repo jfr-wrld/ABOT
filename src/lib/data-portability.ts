@@ -1,4 +1,4 @@
-import { normalizeExercise } from "@/data/normalize";
+import { normalizeExercise, normalizeSession } from "@/data/normalize";
 import { lbsToKg } from "@/lib/calc";
 import type {
   Equipment,
@@ -485,6 +485,9 @@ export interface CsvImportPlan {
   matched: { from: string; to: string }[];
   /** Workouts already on the device (imported before, or logged at the same minute), left out. */
   duplicates: number;
+  /** Workouts dated before 1990 or in the future, left out: no app logged them, and a far-past
+   * date made every Home render walk millions of weeks (security audit 2026-11-13). */
+  outOfRange: number;
   sets: number;
 }
 
@@ -501,11 +504,15 @@ function hash(s: string): string {
 }
 
 const MINUTE = 60_000;
+const DAY = 86_400_000;
+/** The earliest workout date an import accepts; Hevy and Strong are far younger than this. */
+const EARLIEST_MS = Date.UTC(1990, 0, 1);
 
 export function planCsvImport(
   parsed: { source: CsvSource; workouts: ParsedWorkout[] },
-  opts: { unit: WeightUnit; library: Exercise[]; existing: WorkoutSession[] },
+  opts: { unit: WeightUnit; library: Exercise[]; existing: WorkoutSession[]; now?: number },
 ): CsvImportPlan {
+  const latest = (opts.now ?? Date.now()) + DAY;
   const toKg = (w: number | null) => (w === null ? null : opts.unit === "kg" ? w : Math.round(lbsToKg(w) * 100) / 100);
   const existingMinutes = new Set(opts.existing.map((s) => Math.floor(s.startedAt / MINUTE)));
   const existingIds = new Set(opts.existing.map((s) => s.id));
@@ -526,8 +533,13 @@ export function planCsvImport(
 
   const sessions: WorkoutSession[] = [];
   let duplicates = 0;
+  let outOfRange = 0;
   let setCount = 0;
   for (const w of parsed.workouts) {
+    if (!(w.startedAt >= EARLIEST_MS && w.startedAt <= latest)) {
+      outOfRange++;
+      continue;
+    }
     const id = `import-${parsed.source}-${hash(w.key)}`;
     // Already imported (same id), or logged in ABOT at the same minute: the same session.
     if (existingIds.has(id) || existingMinutes.has(Math.floor(w.startedAt / MINUTE))) {
@@ -564,21 +576,29 @@ export function planCsvImport(
     for (const e of exercises) if (e.supersetId) ssCount.set(e.supersetId, (ssCount.get(e.supersetId) ?? 0) + 1);
     for (const e of exercises) if (e.supersetId && (ssCount.get(e.supersetId) ?? 0) < 2) delete e.supersetId;
 
-    sessions.push({
+    // The same checks as a backup file: whatever the CSV said, the stored session is one the
+    // rest of the app can handle. A workout lasts at most a day.
+    const session = normalizeSession({
       id,
       name: w.name,
       startedAt: w.startedAt,
-      finishedAt: Math.max(w.finishedAt, w.startedAt),
+      finishedAt: Number.isFinite(w.finishedAt) ? Math.min(Math.max(w.finishedAt, w.startedAt), w.startedAt + DAY) : w.startedAt,
       status: "completed",
       exercises,
       ...(w.notes ? { notes: w.notes } : {}),
     });
+    if (!session) {
+      outOfRange++;
+      continue;
+    }
+    sessions.push(session);
   }
   return {
     sessions,
     newExercises: [...created.values()],
     matched: [...matchedNames].map(([from, to]) => ({ from, to })),
     duplicates,
+    outOfRange,
     sets: setCount,
   };
 }

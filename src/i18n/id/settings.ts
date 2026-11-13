@@ -730,4 +730,6 @@ export const settings: Record<string, string> = {
   "This screen could not be shown": "Layar ini tidak bisa ditampilkan",
   "Your data is still on this phone. If this started after an import, restore a backup you trust in Settings > Data.": "Datamu masih ada di HP ini. Kalau ini terjadi setelah import, pulihkan backup yang kamu percaya di Pengaturan > Data.",
   "Open Settings > Data": "Buka Pengaturan > Data",
+  "{n} workout has an impossible date (before 1990 or in the future) and will be skipped.": "{n} workout punya tanggal yang tidak mungkin (sebelum 1990 atau di masa depan) dan akan dilewati.",
+  "{n} workouts have an impossible date (before 1990 or in the future) and will be skipped.": "{n} workout punya tanggal yang tidak mungkin (sebelum 1990 atau di masa depan) dan akan dilewati.",
 };

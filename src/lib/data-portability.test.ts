@@ -152,6 +152,19 @@ describe("planCsvImport", () => {
     return r;
   };
 
+  it("skips workouts dated before 1990 or in the future, and caps a workout at a day", () => {
+    // Security audit 2026-11-13: a far-past date froze Home; a huge duration overflowed.
+    const csv = `Date,Workout Name,Duration,Exercise Name,Set Order,Weight,Reps
+"-271000-01-01T00:00:00Z",Old,1h,Bench Press,1,60,5
+2999-01-01 08:00:00,Future,1h,Bench Press,1,60,5
+2024-01-15 08:30:00,Long,99999999999999,Bench Press,1,60,5`;
+    const plan = planCsvImport(parse(csv), { unit: "kg", library: SEED_EXERCISES, existing: [], now: Date.UTC(2026, 10, 13) });
+    expect(plan.outOfRange).toBe(2);
+    expect(plan.sessions.map((x) => x.name)).toEqual(["Long"]);
+    const long = plan.sessions[0]!;
+    expect(long.finishedAt! - long.startedAt).toBeLessThanOrEqual(86_400_000);
+  });
+
   it("builds finished sessions on library exercises, with supersets and custom exercises", () => {
     const plan = planCsvImport(parse(HEVY), { unit: "kg", library: SEED_EXERCISES, existing: [] });
     expect(plan.sessions).toHaveLength(2);

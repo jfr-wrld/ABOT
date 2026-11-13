@@ -185,6 +185,9 @@ export function DataPortabilityCard() {
                 {newNames.length > SHOWN_NAMES && <> {t("and {n} more", { n: newNames.length - SHOWN_NAMES })}</>}
               </li>
             )}
+            {plan.outOfRange > 0 && (
+              <li>{t.n(plan.outOfRange, "{n} workout has an impossible date (before 1990 or in the future) and will be skipped.", "{n} workouts have an impossible date (before 1990 or in the future) and will be skipped.")}</li>
+            )}
             {plan.duplicates > 0 && (
               <li>{t.n(plan.duplicates, "{n} workout is already on this phone and will be skipped.", "{n} workouts are already on this phone and will be skipped.")}</li>
             )}

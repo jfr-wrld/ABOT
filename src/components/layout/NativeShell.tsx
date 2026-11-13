@@ -8,7 +8,7 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { applyCapsuleAction } from "@/lib/live-capsule";
 import { useExerciseStore } from "@/store/useExerciseStore";
 import { buildExerciseIndex } from "@/lib/sets";
-import { syncPermission } from "@/store/useReminderStore";
+import { routineInfo, syncPermission, useReminderStore } from "@/store/useReminderStore";
 import { hasSeenOnboarding } from "@/lib/onboarding";
 import { withPermissionsStep } from "@/lib/native/permissions-step";
 import { finishNativeSignIn } from "@/store/useSyncStore";
@@ -79,7 +79,11 @@ export function NativeShell() {
       keep(() => void h.remove());
       void signInReturn((await App.getLaunchUrl())?.url);
     });
-    void setupNativeNotifications((url) => router.push(url))
+    void setupNativeNotifications(
+      (url) => router.push(url),
+      routineInfo,
+      () => useReminderStore.getState().schedule.time,
+    )
       .then(keep)
       .catch(() => {});
     // +30s, Skip rest, Log set, Pause and Resume tapped on the workout notification.

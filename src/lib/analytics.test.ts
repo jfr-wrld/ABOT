@@ -65,6 +65,16 @@ describe("weekStreak", () => {
     // The rest week is spent; the next gap needs four more trained weeks.
     expect(weekStreak(weeks(8, 7, 6, 5, 3, 1), now)).toBe(1);
   });
+
+  it("stays fast and right with a workout dated far in the past", () => {
+    // A CSV import once stored year -271000, and this loop walked ~14 million weeks per render.
+    const ancient = session(-8.6e15);
+    const t0 = performance.now();
+    expect(weekStreak([ancient, session(now - WEEK), session(now - 2 * WEEK)], now)).toBe(2);
+    expect(performance.now() - t0).toBeLessThan(200);
+    // A long break in the middle resets the streak exactly as stepping week by week did.
+    expect(weekStreak([session(now - 400 * WEEK), session(now - 399 * WEEK), session(now)], now)).toBe(1);
+  });
 });
 
 describe("monthGrid", () => {

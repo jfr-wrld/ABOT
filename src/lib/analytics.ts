@@ -77,7 +77,11 @@ export function streakWeeks(
   const restWeeks = new Set<number>();
   if (trained.size === 0) return { streak: 0, restWeeks, restReady: false };
   const current = startOfWeek(now, firstDay);
-  const cursor = new Date(Math.min(...trained));
+  // Trained weeks in order: after a break the walk jumps to the next one instead of stepping
+  // through every empty week, so an old date cannot make this loop run for millions of weeks.
+  const ordered = [...trained].sort((a, b) => a - b);
+  let next = 0;
+  const cursor = new Date(ordered[0]!);
   let streak = 0;
   let sinceCredit = 0;
   let credit = 0;
@@ -99,6 +103,10 @@ export function streakWeeks(
         sinceCredit = 0;
         credit = 0;
         used = [];
+        while (next < ordered.length && ordered[next]! <= week) next++;
+        if (next >= ordered.length || ordered[next]! > current) break;
+        cursor.setTime(ordered[next]!);
+        continue;
       }
     }
     cursor.setDate(cursor.getDate() + 7);
