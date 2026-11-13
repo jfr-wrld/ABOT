@@ -417,3 +417,25 @@ shared as short videos, made on the phone.
   - `pro.spec.ts`: a free user's workout video opens the paywall.
   - `streak.spec.ts`: the free streak MP4.
 - **Checked by eye:** frames from 1080x1920 30 fps H.264 files at several seconds.
+
+### 15.5 Designing the motion (Remotion Studio)
+- `tools/motion-studio/` is a Remotion project, with its own package, never shipped in the app.
+  It draws the app's `renderStory` and `renderStreakCard` frame by frame on a canvas, so Studio
+  shows exactly what the phone encodes.
+  - Nine compositions: the 8 workout layouts and the streak.
+  - Props: layout or theme, sample data, handle, watermark.
+- Run it with `cd tools/motion-studio`, then `npm install`, then `npm run studio`.
+  `npm run frames` renders review frames.
+- **Why not render with Remotion on the phone:**
+  - `@remotion/web-renderer` reports every render to Remotion's server, which the zero-network
+    rule rules out;
+  - the app's own encoder already makes the same frames.
+- **Tuned with Studio:**
+  - Receipt prints up and the stamp lands;
+  - the plates slide onto the bar;
+  - the record plaques drop;
+  - the poster figure slides in;
+  - Matchday's time stat gets a wider column;
+  - Arcade's @handle sits under the stage name.
+
+  The temporary wipe is gone: all eight layouts now have their own motion.

@@ -659,6 +659,10 @@ function brutalistReceipt(s: Scene) {
   const { ctx, data, unit } = s;
   s.onPhoto = false;
   paintBackground(s, "#d4d4d8");
+  // In the video the slip prints up from the bottom of the screen, then the stamp lands.
+  const printed = beat(s.time, 0.1, 2.4, easeOut);
+  ctx.save();
+  ctx.translate(0, (1 - printed) * (H - 200));
 
   const px = 100;
   const pw = W - 2 * px;
@@ -774,7 +778,9 @@ function brutalistReceipt(s: Scene) {
   ctx.save();
   ctx.translate(W / 2, stampY);
   ctx.rotate((-8 * Math.PI) / 180);
-  ctx.globalAlpha = 0.9;
+  const stamped = beat(s.time, 2.9, 0.4, backOut);
+  ctx.scale(1 + (1 - stamped) * 0.9, 1 + (1 - stamped) * 0.9);
+  ctx.globalAlpha = 0.9 * beat(s.time, 2.9, 0.15, linear);
   ctx.strokeStyle = STAMP_INK;
   ctx.lineWidth = 6;
   ctx.strokeRect(-260, -66, 520, 132);
@@ -809,6 +815,7 @@ function brutalistReceipt(s: Scene) {
   }
   text(s, "KEEP THIS SLIP.", r, by + 36, { ...ink, size: 24, align: "right" });
   text(s, "NEXT TIME, BEAT IT.", r, by + 72, { ...ink, size: 24, align: "right" });
+  ctx.restore();
 }
 
 const SHORT_KIND: Record<PRKind, string> = { heaviest_weight: "Weight", best_1rm: "1RM", best_set_volume: "Volume" };
@@ -896,7 +903,11 @@ function trophyVault(s: Scene) {
     const cardH = 230;
     const fit = Math.max(1, Math.floor((SAFE_BOTTOM - y) / (cardH + 24)));
     const shown = lifts.slice(0, fit);
-    for (const lift of shown) {
+    for (const [k, lift] of shown.entries()) {
+      const drop = stagger(s.time, k, 0.9, 0.35, 0.55, backOut);
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, Math.max(0, drop));
+      ctx.translate(0, (1 - drop) * -180);
       rrect(ctx, x, y, inner, cardH, 28);
       ctx.fillStyle = CARBON;
       ctx.fill();
@@ -916,6 +927,7 @@ function trophyVault(s: Scene) {
         color: MUTED,
         align: "right",
       });
+      ctx.restore();
       y += cardH + 24;
     }
     if (shown.length < lifts.length) caps(s, `+${lifts.length - shown.length} more lifts`, x, y + 20);
@@ -1008,6 +1020,11 @@ function loadedBar(s: Scene) {
     plates.forEach((p, i) => {
       const h = 200 + 420 * Math.sqrt(p.volumeKg / max);
       const w = 64 - i * 6;
+      // In the video the plates slide onto the bar, heaviest first, both sides together.
+      const on = stagger(s.time, i, 0.7, 0.35, 0.55, backOut);
+      ctx.save();
+      ctx.translate(side * (1 - on) * 520, 0);
+      ctx.globalAlpha = Math.min(1, Math.max(0, on));
       const left = side === 1 ? x : x - w;
       ctx.fillStyle = shade(i);
       rrect(ctx, left, cy - h / 2, w, h, 10);
@@ -1022,6 +1039,7 @@ function loadedBar(s: Scene) {
         rrect(ctx, left + 4, cy - h / 2 + 4, w - 8, 18, 6);
         ctx.fill();
       }
+      ctx.restore();
       x += side * (w + 6);
     });
     // Outer collar clamps the stack.
@@ -1092,7 +1110,11 @@ function voltPoster(s: Scene) {
   // The figure.
   const [vol, u] = volumeParts(data.volumeKg, unit);
   const vs = fitSize(s, vol, inner, 400, 160, 400, "display");
+  const slideIn = beat(s.time, 0.2, 0.9, easeOut);
+  ctx.save();
+  ctx.translate((1 - slideIn) * -W, 0);
   ink(vol, m - 8, SAFE_TOP + 40 + vs * 0.86, { size: vs, family: "display", tracking: -4 });
+  ctx.restore();
   // The figure's comma and digits hang below the baseline; leave them room.
   let y = SAFE_TOP + 40 + vs * 0.86 + 110;
   ink(`${u.toUpperCase()} LIFTED`, m, y, { size: 64, family: "display", tracking: 2 });
@@ -1210,12 +1232,14 @@ function matchday(s: Scene) {
     ["SETS", String(data.setsDone)],
     [recordLifts(data).size === 1 ? "GOAL" : "GOALS", String(recordLifts(data).size)],
   ];
-  const colW = inner / 3;
+  // Time reads longest ("45M 00S"), so it gets the widest column.
+  const share = [0.46, 0.24, 0.3];
   stats.forEach(([label, value], i) => {
     const pi = stagger(time, i, 2.0, 0.15, 0.4, backOut);
     ctx.save();
     ctx.globalAlpha = Math.min(1, pi);
-    const cx = m + i * colW;
+    const colW = inner * share[i]!;
+    const cx = m + inner * share.slice(0, i).reduce((a, b) => a + b, 0);
     ctx.translate(0, (1 - pi) * 40);
     const size = fitSize(s, value, colW - 24, 96, 48, 400, "display");
     text(s, value, cx, 1080, { size, family: "display", color: i === 2 && recordLifts(data).size ? VOLT : TEXT });
@@ -1499,8 +1523,8 @@ const HANDLE_SPOTS: Record<StoryPresetId, HandleSpot | null> = {
   "brutalist-receipt": null,
   // The cover credit, under the teasers.
   editorial: { x: 64, y: 1700, align: "left", color: "#a8a29e" },
-  // The player name, under the quests.
-  arcade: { x: W - 72, y: 300, align: "right", color: "#ff3ea5" },
+  // The player, centred under the stage name.
+  arcade: { x: W / 2, y: SAFE_TOP + 268, align: "center", color: "#ff3ea5" },
   // Under the totals.
   "loaded-bar": { x: 72, y: 1722, align: "left", color: MUTED },
   // Above the tonnage footer.
@@ -1575,26 +1599,10 @@ export function renderStory(ctx: Ctx, data: StoryData, opts: StoryOptions, fonts
   PAINTERS[opts.preset](scene);
   drawHandle(scene);
   drawFounderBadge(scene);
-  if (!OWN_MOTION.has(opts.preset)) wipe(scene, WIPE_BASE[opts.preset] ?? OBSIDIAN);
   endCard(scene);
   ctx.restore();
 }
 
-/** Layouts that animate their own parts; the rest open with a wipe down the card. */
-const OWN_MOTION = new Set<StoryPresetId>(["matchday", "editorial", "arcade", "thermal-matrix"]);
-const WIPE_BASE: Partial<Record<StoryPresetId, string>> = { "brutalist-receipt": "#d4d4d8", "volt-poster": VOLT };
-
-/** The card revealed from the top down over its first two seconds, a Volt line at the edge. */
-function wipe(s: Scene, base: string) {
-  const p = beat(s.time, 0.15, 2.2, easeInOut);
-  if (p >= 1) return;
-  const { ctx } = s;
-  const edge = p * H;
-  ctx.fillStyle = base;
-  ctx.fillRect(0, edge, W, H - edge);
-  ctx.fillStyle = base === VOLT ? INK : VOLT;
-  ctx.fillRect(0, edge - 3, W, 6);
-}
 
 /** The closing card on any canvas (the streak video uses it too). */
 export function closingCard(ctx: Ctx, fonts: StoryFonts, time: number, handle: string | null, hideWatermark: boolean) {

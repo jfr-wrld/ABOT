@@ -1,0 +1,17 @@
+{
+  "name": "abot-motion-studio",
+  "private": true,
+  "description": "Design-time only: Remotion Studio over ABOT's story and streak painters. Never shipped in the app.",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "frames": "node scripts/frames.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.543",
+    "@remotion/zod-types": "4.0.543",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.543",
+    "zod": "4.6.7"
+  }
+}
