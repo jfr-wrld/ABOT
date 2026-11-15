@@ -14,6 +14,7 @@ import { useSettingsStore } from "@/store/useSettingsStore";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { useLiquidGlass } from "@/components/layout/useLiquidGlass";
 import { normalizePath, usePagePath } from "@/components/layout/usePagePath";
+import { TodayButton } from "@/components/layout/TodayButton";
 import { useT } from "@/i18n";
 
 /*
@@ -52,7 +53,7 @@ function CurrentNav() {
   const shown = showsDock(pathname);
   // Pages pad for the dock, and the workout bar sits above it, through this one value.
   useEffect(() => {
-    document.documentElement.style.setProperty("--dock-h", shown ? "96px" : "16px");
+    document.documentElement.style.setProperty("--dock-h", shown ? "112px" : "16px");
   }, [shown]);
   return <NavBar pathname={pathname} />;
 }
@@ -78,6 +79,9 @@ function NavBar({ pathname }: { pathname: string | null }) {
   const reduceMotion = useReducedMotionConfig();
   const list = useRef<HTMLUListElement>(null);
   const [tabW, setTabW] = useState(0);
+  // Where each tab starts inside the dock: the centre button leaves a gap between the two halves,
+  // so the lens reads real positions rather than equal slots.
+  const [offsets, setOffsets] = useState<number[]>([]);
   // The tab the lens is over while a finger drags it; null when no drag is under way.
   const [hover, setHover] = useState<number | null>(null);
   const [pressed, setPressed] = useState(false);
@@ -100,7 +104,11 @@ function NavBar({ pathname }: { pathname: string | null }) {
   useEffect(() => {
     const el = list.current;
     if (!el) return;
-    const measure = () => setTabW((el.clientWidth - 8) / TABS.length);
+    const measure = () => {
+      const tabs = [...el.querySelectorAll<HTMLElement>("[data-tab]")];
+      setTabW(tabs[0]?.offsetWidth ?? 0);
+      setOffsets(tabs.map((tab) => tab.offsetLeft - 4));
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -110,10 +118,10 @@ function NavBar({ pathname }: { pathname: string | null }) {
   // Between drags the lens rests on the current page's tab, sliding there on a soft spring.
   useEffect(() => {
     if (tabW === 0 || currentIndex < 0 || drag.current?.dragging) return;
-    const to = currentIndex * tabW;
+    const to = offsets[currentIndex] ?? 0;
     if (reduceMotion) x.set(to);
     else void animate(x, to, LENS_SPRING);
-  }, [currentIndex, tabW, reduceMotion, x]);
+  }, [currentIndex, tabW, offsets, reduceMotion, x]);
 
   // Real liquid glass on the dock and its lens; they wait until the dock is on screen.
   const lensRef = useRef<HTMLSpanElement>(null);
@@ -122,10 +130,16 @@ function NavBar({ pathname }: { pathname: string | null }) {
   useLiquidGlass(lensRef, { bezel: 22, strength: 46, blur: 0.3, on: docked && tabW > 0 && currentIndex >= 0 });
   if (!docked) return null;
 
-  const indexAt = (px: number) => Math.max(0, Math.min(TABS.length - 1, Math.round(px / tabW)));
+  const at = (i: number) => offsets[i] ?? i * tabW;
+  // The tab whose start is nearest the lens.
+  const indexAt = (px: number) => {
+    let best = 0;
+    for (let i = 1; i < TABS.length; i++) if (Math.abs(at(i) - px) < Math.abs(at(best) - px)) best = i;
+    return best;
+  };
   const follow = (clientX: number) => {
     const box = list.current!.getBoundingClientRect();
-    const px = Math.max(0, Math.min(tabW * (TABS.length - 1), clientX - box.left - 4 - tabW / 2));
+    const px = Math.max(at(0), Math.min(at(TABS.length - 1), clientX - box.left - 4 - tabW / 2));
     // A stiff spring, not a jump: the lens catches up with the finger within a frame or two and
     // keeps its speed between moves, so it glides even when touch events arrive unevenly.
     if (reduceMotion) x.set(px);
@@ -145,10 +159,10 @@ function NavBar({ pathname }: { pathname: string | null }) {
     if (!d?.dragging) return;
     const i = indexAt(x.get());
     swallowClick.current = true;
-    if (reduceMotion) x.set(i * tabW);
-    else void animate(x, i * tabW, LENS_SPRING);
+    if (reduceMotion) x.set(at(i));
+    else void animate(x, at(i), LENS_SPRING);
     if (commit && i !== currentIndex) router.push(TABS[i]!.href);
-    else if (!commit && currentIndex >= 0) void animate(x, currentIndex * tabW, LENS_SPRING);
+    else if (!commit && currentIndex >= 0) void animate(x, at(currentIndex), LENS_SPRING);
   };
 
   const lit = hover ?? currentIndex;
@@ -158,9 +172,13 @@ function NavBar({ pathname }: { pathname: string | null }) {
       aria-label={t("Primary")}
       className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(10px+env(safe-area-inset-bottom))]"
     >
+      <div className="relative mx-auto max-w-[616px]">
+      {/* Today's workout, raised in the gap between the two pairs of tabs; after the stores load,
+          since it reads the clock and the plan. */}
+      {hydrated && <TodayButton />}
       <ul
         ref={list}
-        className="liquid-glass relative mx-auto flex max-w-[616px] touch-none select-none rounded-2xl p-1"
+        className="liquid-glass dock-notch relative flex touch-none select-none rounded-2xl p-1"
         onPointerDown={(e) => {
           if (tabW === 0 || (e.pointerType === "mouse" && e.button !== 0)) return;
           drag.current = { id: e.pointerId, startX: e.clientX, dragging: false, at: currentIndex };
@@ -201,7 +219,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
           const on = i === lit;
           const live = href === "/workout" && hydrated && hasActive;
           return (
-            <li key={href} className="min-w-0 flex-1">
+            <li key={href} data-tab className={`min-w-0 flex-1 ${i === 2 ? "ml-[72px]" : ""}`}>
               <Link
                 href={href}
                 aria-current={current ? "page" : undefined}
@@ -231,6 +249,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
           );
         })}
       </ul>
+      </div>
     </nav>
   );
 }

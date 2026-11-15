@@ -139,11 +139,11 @@ function LiftGrid({ sum, byId }: { sum: RoutineSummary; byId: Record<string, Exe
  * lift is a line: its name, and sets × reps on the right (SS for a superset). A native
  * <details>, so it opens by tap, keyboard or screen reader without any script.
  */
-export function LiftList({ items }: { items: { name: string; detail: string; superset?: boolean }[] }) {
+export function LiftList({ items, open }: { items: { name: string; detail: string; superset?: boolean }[]; open?: boolean }) {
   const t = useT();
   if (items.length === 0) return null;
   return (
-    <details className="group mt-3 border-t border-line">
+    <details open={open} className="group mt-3 border-t border-line">
       <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 pt-1 text-sm font-semibold text-text-muted hover:text-text [&::-webkit-details-marker]:hidden">
         {t("See exercises")}
         <ChevronDown aria-hidden="true" size={18} className="transition-transform duration-200 group-open:rotate-180" />

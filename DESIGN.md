@@ -71,6 +71,20 @@ An empty state leads with `EmptyArt`: the subject's icon on a raised tile that f
 slight tilt while a ring breathes out behind it (3.2 s loop, CSS only, still with reduced motion
 or Visual effects: Light), then one plain sentence and, where there is one, the next action.
 
+## Home header, notifications, the dock's centre
+
+- **Header** (owner, 2026-11-15): a dark/light switch on the left (sun and moon turning; it saves
+  Light or Dark, System stays in Settings), the ABOT mark centred, and a bell on the right with a
+  green count of what is new. Settings opens from the gear on Profile.
+- **Notifications** (`/notifications`, `src/lib/inbox.ts`): worked out on the phone, nothing sent.
+  Today's planned session and a missed one, new records and the weekly streak, the admin's
+  announcement, and backup or sync trouble. New ones lead with a dot; opening the page marks
+  them seen on this device.
+- **Dock centre** (`TodayButton`): a raised green disc with a glassy sheen and a Play mark, set
+  in a notch between the two pairs of tabs. A tap opens today's workout in a sheet (muscle map,
+  lifts, Start). When today's workout is finished, a tick lands once, then Play returns for the
+  next one.
+
 ## Glass buttons
 
 Buttons that stand on their own (back, settings, options, close) are round liquid glass in the

@@ -23,6 +23,9 @@ import { VARIATION_LABEL } from "@/data/variations";
  * coverage test can see them too. Add each such constant's values here.
  */
 export const DYNAMIC_KEYS: string[] = [
+  // Notifications (lib/inbox)
+  "Today: {name} at {time}", "Missed yesterday: {name}", "{n} new records in {name}", "{n}-week streak",
+  "Backup failed. Tap to try again.", "{n} workouts are not backed up",
   // Get the app sheet perks
   ...APP_PERKS.map((p) => p.title),
   // Training plan (lib/training-plan, lib/apply-plan)

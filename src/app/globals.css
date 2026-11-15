@@ -683,6 +683,38 @@ input.bg-well:not(:focus) {
   mask-image: radial-gradient(circle at 100% 0, #000 0, transparent 70%);
 }
 
+/* The dock's centre button (TodayButton): the primary button's green, raised like it, with a
+   glassy sheen across the top half and a bright rim. It sits in a real notch cut out of the dock
+   (`dock-notch`), so the dock's glass and outline stop around it. A press sinks it 1px. */
+.today-fab {
+  color: var(--color-on-accent);
+  background-color: var(--color-accent);
+  background-image:
+    radial-gradient(120% 70% at 50% 0%, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 60%),
+    var(--neo-accent-face);
+  border: 1px solid var(--color-accent-edge);
+  box-shadow:
+    inset 0 1.5px 0 rgb(255 255 255 / 0.7),
+    inset 0 -3px 3px rgb(0 0 0 / 0.18),
+    0 6px 14px -4px color-mix(in oklab, var(--color-accent) 55%, transparent);
+  transition: translate 120ms, box-shadow 120ms;
+}
+.today-fab:active {
+  translate: 0 1px;
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.25);
+}
+@media (prefers-reduced-motion: reduce) {
+  .today-fab:active {
+    translate: none;
+  }
+}
+/* The notch: a circle 8px wider than the disc, centred where the disc sits (its centre is 12px
+   below the dock's top edge), cut out of the dock, its glass, outline and shadow included. */
+.dock-notch {
+  -webkit-mask-image: radial-gradient(circle 38px at 50% 12px, transparent 37px, #000 38px);
+  mask-image: radial-gradient(circle 38px at 50% 12px, transparent 37px, #000 38px);
+}
+
 /* Real liquid glass where the browser draws SVG backdrop filters (useLiquidGlass sets
    data-liquid and each surface's --liquid-filter): the page behind is barely blurred but bent at
    the rim like a lens, colour lifted, with a specular edge brighter at the top left than the

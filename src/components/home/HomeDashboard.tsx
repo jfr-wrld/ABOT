@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, RotateCcw, Settings, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "@/components/icons";
+import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Bell, RotateCcw, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -51,6 +51,8 @@ import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 import { EmptyArt } from "@/components/ui/EmptyArt";
 import { routineSummary } from "@/lib/routine-summary";
 import { LiftList } from "@/components/routines/RoutineCard";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { useInbox } from "@/components/notifications/useInbox";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-card border border-line bg-surface p-3";
@@ -63,7 +65,6 @@ const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
  * finished workouts on this device.
  */
 export function HomeDashboard() {
-  const t = useT();
   const sessions = useWorkoutStore((s) => s.sessions);
   const active = useWorkoutStore((s) => s.active);
   const routines = useRoutineStore((s) => s.routines);
@@ -82,17 +83,14 @@ export function HomeDashboard() {
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 pt-4">
       <header className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h1>
+        {/* Theme switch, the mark in the middle, notifications (owner, 2026-11-15). Settings
+            moved to the gear on Profile. */}
+        <div className="grid grid-cols-[auto_1fr_auto] items-center">
+          <ThemeToggle />
+          <h1 className="justify-self-center">
             <AbotWordmark />
           </h1>
-          <Link
-            href="/settings"
-            aria-label={t("Settings")}
-            className="glass-icon rounded-full flex size-11 items-center justify-center text-text"
-          >
-            <Settings aria-hidden="true" size={22} />
-          </Link>
+          <NotificationsBell />
         </div>
         <AnnouncementBanner />
         <WeekRail
@@ -124,6 +122,26 @@ export function HomeDashboard() {
         <RecentWorkouts unit={weightUnit} byId={byId} now={now} />
       </Rise>
     </main>
+  );
+}
+
+/** The bell at the top right of Home, with a dot and count while something is new. */
+function NotificationsBell() {
+  const t = useT();
+  const { unreadCount } = useInbox();
+  return (
+    <Link
+      href="/notifications"
+      aria-label={unreadCount > 0 ? t("Notifications, {n} new", { n: unreadCount }) : t("Notifications")}
+      className="glass-icon relative flex size-11 items-center justify-center rounded-full text-text"
+    >
+      <Bell aria-hidden="true" size={22} variant="bold" />
+      {unreadCount > 0 && (
+        <span aria-hidden="true" className="num absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-bold text-on-accent ring-2 ring-bg">
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </span>
+      )}
+    </Link>
   );
 }
 

@@ -560,4 +560,9 @@ export const workout: Record<string, string> = {
   "One rep more on {set}": "+1 rep di {set}",
   "See exercises": "Lihat latihan",
   "Apply": "Pakai",
+  "Done today. Next: {name}": "Hari ini selesai. Berikutnya: {name}",
+  "Today: {name}": "Hari ini: {name}",
+  "No workout planned": "Belum ada latihan terjadwal",
+  "Today's workout is done.": "Latihan hari ini selesai.",
+  "Set up your week to see today's workout here.": "Atur minggumu untuk melihat latihan hari ini.",
 };
