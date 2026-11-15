@@ -1,36 +1,37 @@
 # ABOT: design direction
 
 Reading this as: a mobile-first workout logger used mid-set, one hand, between reps.
-Direction (owner, 2026-11-15): **gym analog**. It replaces "Tactile Industrial Luxury" (matte black
-plus a neon Volt accent, every label in a code font), which people read as AI-made: near-black with
-one acid-green pop and monospace caps is the stock AI look. The new system is taken from the gym
-itself: chalk, iron, rubber and the colours stamped on plates.
+Direction (owner, 2026-11-15): **obsidian and Volt**, dark by default. The owner tried a chalk
+and plate-red palette during the redesign and chose to keep the original colours: near-black
+with the neon Volt accent. What the redesign kept: Barlow and Anton type, sentence-case labels,
+and plain copy ("ABOT Pro", "Templates", "Upper day at 17:30").
 
 ## Palette (and why)
 
-| Token | Light (default) | Dark | Reason |
+| Token | Dark (default) | Light | Reason |
 |---|---|---|---|
-| `bg` | `#f1eee7` chalk | `#121110` iron | A chalked floor and a painted wall; warm, not screen-grey. |
-| `surface` | `#faf8f3` | `#1b1a17` | One step off the background for the one thing that needs a card. |
-| `text` | `#1d1b17` iron | `#ece8df` chalk | 15:1 and 14:1. |
-| `text-muted` | `#5b564c` | `#a8a296` | 6.9:1 and 7:1 on surface. |
-| `accent` | `#c8102e` red 25 kg plate, white text | same fill; red text `#ff7a7f` on iron | The brand colour (owner, 2026-11-15, after an all-black step 1 read as monochrome): the primary action, the current tab, progress rings. White on it is 5.9:1. |
-| `pr` | `#8a6300` gold | `#e8b931` | Records only: the medal colour. |
-| `failure` | `#b54708` | `#f08c45` | Burnt orange: red is now the brand, so failure sets and destructive actions move off it. |
-| `dropset` | `#1f4fa3` | `#7ea6e6` | Blue 20 kg plate. |
-| `warmup` | `#2e6b30` | `#74b878` | Green 10 kg plate: warm-ups are the light plates. |
+| `bg` | `#09090b` obsidian | `#f4f4f2` | A dark gym floor; the screen stays dim between sets. |
+| `surface` | `#121215` | `#ffffff` | One step off the background. |
+| `text` | `#f4f4f5` | `#18181b` | 16:1 on both. |
+| `text-muted` | `#a1a1aa` | `#52525b` | 7.7:1. |
+| `accent` | `#ccff00` Volt, black text | fill `#65a30d`, text `#3f6212` | The brand colour (owner's choice): the primary action, the current tab, progress. Neon text on white fails contrast, so light pages use a darker lime. |
+| `pr` | `#00f0ff` cyan | `#155e75` | Records only. |
+| `warmup` | `#facc15` | `#a16207` | |
+| `dropset` | `#c084fc` | `#7e22ce` | |
+| `failure` | `#f87171` | `#b91c1c` | |
 
-Plate colours are also the data colours (the plate calculator, the recovery map: bare iron, then
+Plate colours stay real in the data (the plate calculator, the recovery map: bare iron, then
 yellow, orange, red as load climbs). Set types are always paired with their letter, never colour
 alone.
 
 ## Themes
 
-Light (chalk) is the default for new installs; Dark (iron) and System stay in Settings > General.
-The same token names take dark values on `[data-theme="dark"]` and inside `.force-dark` (photos,
-video, the intro, Story Studio, the paywall and the streak moment), in `globals.css`.
+System is the default for new installs, and the page paints dark until it resolves. Light and
+Dark stay in Settings > General. Light values sit on `[data-theme="light"]`; `.force-dark`
+(photos, video, the intro, Story Studio, the paywall and the streak moment) keeps the dark
+values in either theme, in `globals.css`.
 
-- **`ink`** is black on light and white on dark: hairlines and hovers are `border-ink/[…]` and
+- **`ink`** is white on dark and black on light: hairlines and hovers are `border-ink/[…]` and
   `bg-ink/[…]`.
 - The theme is set before the first paint by `THEME_SCRIPT` (`ThemeController.tsx`).
 

@@ -194,7 +194,7 @@ export default function OnboardingPage() {
           <motion.span
             key={i}
             className="h-1.5 rounded-full"
-            animate={{ width: i === index ? 24 : 6, backgroundColor: i === index ? "#ece8df" : "rgb(255 255 255 / 0.2)" }}
+            animate={{ width: i === index ? 24 : 6, backgroundColor: i === index ? "#ccff00" : "rgb(255 255 255 / 0.2)" }}
             transition={SPRING}
           />
         ))}

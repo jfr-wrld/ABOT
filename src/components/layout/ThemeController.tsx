@@ -13,9 +13,9 @@ export const THEME_KEY = "abot.theme";
  * Runs in <head> before the page paints: sets data-theme from the last saved choice, so a light
  * page never flashes dark first. Kept tiny and dependency-free.
  */
-export const THEME_SCRIPT = `try{var t=localStorage.getItem("${THEME_KEY}")||"light";var l=t==="light"||(t==="system"&&matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.dataset.theme=l?"light":"dark"}catch(e){}`;
+export const THEME_SCRIPT = `try{var t=localStorage.getItem("${THEME_KEY}")||"system";var l=t==="light"||(t==="system"&&matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.dataset.theme=l?"light":"dark"}catch(e){}`;
 
-const BAR = { dark: "#121110", light: "#f1eee7" } as const;
+const BAR = { dark: "#09090b", light: "#f4f4f2" } as const;
 
 function resolve(theme: AppTheme): "dark" | "light" {
   if (theme !== "system") return theme;
