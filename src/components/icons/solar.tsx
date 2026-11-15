@@ -5,7 +5,7 @@ export type IconVariant = "duotone" | "linear";
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "ref"> {
   size?: number | string;
   /** Bold Duotone or Linear; each icon has its own default (see scripts/make-icons.mjs), and
-   *  icons of 16 px or less default to Linear. */
+   *  icons of 18 px or less default to Linear. */
   variant?: IconVariant;
   color?: string;
   /** Accepted so call sites written for stroke icons keep compiling; Solar shapes ignore it. */
@@ -30,9 +30,9 @@ export function solarIcon(name: string, fallback: IconVariant, duotone: Shape, l
     const { strokeWidth: _strokeWidth, absoluteStrokeWidth: _absolute, ...rest } = props;
     void _strokeWidth;
     void _absolute;
-    // Duotone needs room: at 16 px and under its two layers close up into a blot, so small icons
+    // Duotone needs room: at 18 px and under its two layers close up into a blot, so small icons
     // are drawn in line unless a style is asked for.
-    const small = typeof size === "number" ? size <= 16 : parseFloat(size) <= 16;
+    const small = typeof size === "number" ? size <= 18 : parseFloat(size) <= 18;
     const shape = (variant ?? (small ? "linear" : fallback)) === "linear" ? linear : duotone;
     const css: CSSProperties | undefined = color ? { color, ...style } : style;
     return (

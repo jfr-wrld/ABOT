@@ -59,7 +59,7 @@ plate outlines behind Home's hero and the intro stay gone.
 Solar by 480 Design (CC BY 4.0, credited in About), owner's choice 2026-11-15 over Lucide's thin
 default lines. Meaningful icons are Bold Duotone: a solid shape over a faded second layer, which
 sits well in the raised tiles. Small UI glyphs (arrows, chevrons, close, plus, minus, check,
-grips) are Linear so they stay light, and so is any icon drawn at 16 px or less, where the two
+grips) are Linear so they stay light, and so is any icon drawn at 18 px or less, where the two
 duotone layers would close up into a blot. The dock draws the current tab solid and the others in
 line. Import from `@/components/icons` only; a new icon goes into `scripts/make-icons.mjs`, which
 writes `src/components/icons/solar.generated.tsx` from the `@iconify-json/solar` dev dependency
