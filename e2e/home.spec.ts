@@ -38,7 +38,9 @@ test("a finished workout lights today, fills the week and lists the session", as
   const card = page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first();
   await expect(card).toContainText("400 kg");
   await expect(card).toContainText("Today");
-  await expect(card.locator("[data-thumb]")).toHaveCount(1);
+  // The muscles it worked, as a small map in place of photos.
+  await expect(card.locator("[data-muscles]")).toHaveCount(1);
+  await expect(card.locator("[data-thumb]")).toHaveCount(0);
   // A first attempt beats nothing, so it earns no record badge.
   await expect(card.getByText(/PR$/)).toHaveCount(0);
   await card.click();

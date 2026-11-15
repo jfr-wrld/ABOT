@@ -653,6 +653,12 @@ function HeroMuscles({ routine, byId }: { routine: Routine; byId: Record<string,
   );
 }
 
+/** The muscles a finished workout worked: its lifts with a done set, or all its lifts when none is ticked. */
+function sessionMuscles(s: WorkoutSession, byId: Record<string, Exercise>): MuscleGroup[] {
+  const done = s.exercises.filter((e) => e.sets.some((st) => st.completed));
+  return [...new Set((done.length ? done : s.exercises).flatMap((e) => byId[e.exerciseId]?.primaryMuscles ?? []))];
+}
+
 /** The routine's lifts folded under "See exercises", as on the routine cards. */
 function HeroLifts({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
   const t = useT();
@@ -667,31 +673,6 @@ function HeroLifts({ routine, byId }: { routine: Routine; byId: Record<string, E
         }))}
       />
     </div>
-  );
-}
-
-/** A routine as the faces of its lifts: up to five photos and a "+N". */
-function ThumbRow({ exerciseIds, byId, size = 44 }: { exerciseIds: string[]; byId: Record<string, Exercise>; size?: number }) {
-  const shown = exerciseIds.slice(0, 5);
-  const more = exerciseIds.length - shown.length;
-  return (
-    <ul aria-hidden="true" className="flex gap-1.5">
-      {shown.map((id, i) =>
-        byId[id] ? (
-          <li key={`${id}-${i}`}>
-            <ExerciseThumb exercise={byId[id]} size={size} />
-          </li>
-        ) : null,
-      )}
-      {more > 0 && (
-        <li
-          className="num flex items-center justify-center rounded-xl bg-surface-2 text-xs text-text-muted"
-          style={{ width: size, height: size }}
-        >
-          +{more}
-        </li>
-      )}
-    </ul>
   );
 }
 
@@ -743,9 +724,12 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
   if (done.length > 0) {
     const s = done[0]!;
     const kg = done.reduce((n, x) => n + sessionVolume(x, byId), 0);
+    const worked = [...new Set(done.flatMap((x) => sessionMuscles(x, byId)))];
     body = (
       <>
-        <div className="relative min-w-0">
+        {/* As for a planned workout: what was done on the left, the muscles it worked on the right. */}
+        <div className="relative flex items-center gap-3">
+        <div className="min-w-0 flex-1">
           <p className="field-label flex items-center gap-1.5">
             <Check aria-hidden="true" size={13} strokeWidth={3} className="text-accent" />
             {t("Done")} · {whenLabel(t, day.start, now, null)}
@@ -763,6 +747,12 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
               {formatVolume(toDisplay(kg, unit), unit)}
             </span>
           </p>
+        </div>
+        {worked.length > 0 && (
+          <div className="w-24 shrink-0 [&_figcaption]:hidden">
+            <MuscleMap primary={worked} width={96} />
+          </div>
+        )}
         </div>
         {day.isToday && next && (
           // Done for today, the next workout one tap away (another session, or tomorrow's early).
@@ -1172,6 +1162,7 @@ export function RecentCard({
   const est = estimateCalories(s, { bodyweightKg, byId });
   // Under a minute (a test tap, a mistake) the figure means nothing.
   const kcal = est.minutes >= 1 ? est.kcal : 0;
+  const muscles = sessionMuscles(s, byId);
   const stats = (
     <p className="num flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-zinc-400">
       {gym && (
@@ -1262,9 +1253,14 @@ export function RecentCard({
               {prChip}
               <span className="ml-auto">{when}</span>
             </div>
-            {/* Photos and figures share a row while they fit; the figures wrap below on narrow cards. */}
+            {/* The muscles it worked, one small map instead of a row of photos: quicker to read,
+                and the same for every lift. Map and figures share a row while they fit. */}
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-              <ThumbRow exerciseIds={s.exercises.map((e) => e.exerciseId)} byId={byId} size={30} />
+              {muscles.length > 0 && (
+                <div aria-hidden="true" data-muscles className="w-16 shrink-0">
+                  <MuscleMap primary={muscles} width={64} captions={false} />
+                </div>
+              )}
               {stats}
             </div>
           </div>
