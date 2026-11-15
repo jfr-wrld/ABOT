@@ -101,7 +101,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
           <SignInReturn />
         </MotionProvider>
-        <Analytics />
+        {/* Web on Vercel only: page views go to Vercel Web Analytics on this site's own origin
+            (/_vercel/insights), which exists only there. The Android build leaves it out
+            (zero-network rule), and so does any build off Vercel, where the script would 404. */}
+        {process.env.VERCEL && process.env.ABOT_TARGET !== "android" && <Analytics />}
       </body>
     </html>
   );
