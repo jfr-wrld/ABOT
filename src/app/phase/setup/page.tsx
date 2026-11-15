@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Bike, Dumbbell, Footprints, HardHat, Laptop, ShieldCheck, Timer, TrendingDown, TrendingUp, Utensils } from "lucide-react";
+import { Bike, Dumbbell, Footprints, HardHat, Laptop, ShieldCheck, Timer, TrendingDown, TrendingUp, Utensils } from "@/components/icons";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -195,7 +195,7 @@ function Wizard() {
                         setPicked(p);
                         setTargetKg(null);
                       }}
-                      className={`flex flex-col gap-2 rounded-card border p-3 text-left transition-colors ${on ? "border-accent bg-accent-tint" : "border-line bg-surface hover:border-line-hover"}`}
+                      className={`chip flex flex-col gap-2 rounded-card border p-3 text-left transition-colors ${on ? "border-accent bg-accent-tint" : "border-line bg-surface hover:border-line-hover"}`}
                     >
                       <span className="flex items-start gap-2">
                         <Icon aria-hidden="true" size={18} className={`mt-px shrink-0 ${on ? "text-accent" : "text-text-muted"}`} />
@@ -230,7 +230,7 @@ function Wizard() {
                         role="radio"
                         aria-checked={sex === s}
                         onClick={() => setSex(s)}
-                        className={`min-h-11 rounded-ctl border text-sm font-semibold ${sex === s ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
+                        className={`chip min-h-11 rounded-ctl border text-sm font-semibold ${sex === s ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
                       >
                         {s === "male" ? t("Male") : t("Female")}
                       </button>
@@ -249,7 +249,7 @@ function Wizard() {
                           role="radio"
                           aria-checked={on}
                           onClick={() => setActivity(a.value)}
-                          className={`flex min-h-16 items-center gap-2 rounded-ctl border px-3 text-left text-xs font-semibold ${on ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
+                          className={`chip flex min-h-16 items-center gap-2 rounded-ctl border px-3 text-left text-xs font-semibold ${on ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
                         >
                           <Icon aria-hidden="true" size={18} className={on ? "shrink-0 text-accent" : "shrink-0"} />
                           {t(a.label)}
@@ -275,7 +275,7 @@ function Wizard() {
                           setWeeks(w);
                           setTargetKg(null);
                         }}
-                        className={`num min-h-11 rounded-ctl border text-sm font-bold ${weeks === w ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
+                        className={`chip num min-h-11 rounded-ctl border text-sm font-bold ${weeks === w ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
                       >
                         {w}
                         <span className="text-[11px] font-semibold"> {t("wk")}</span>
@@ -337,7 +337,7 @@ function Wizard() {
                         aria-checked={sessionsPerWeek === n}
                         aria-label={t.n(n, "{n} day a week", "{n} days a week")}
                         onClick={() => setDays(n)}
-                        className={`num min-h-11 rounded-ctl border text-sm font-bold ${sessionsPerWeek === n ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
+                        className={`chip num min-h-11 rounded-ctl border text-sm font-bold ${sessionsPerWeek === n ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"}`}
                       >
                         {n}
                         <span className="text-[11px] font-semibold">×</span>

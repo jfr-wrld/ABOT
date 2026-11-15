@@ -1,5 +1,6 @@
 "use client";
 
+import { FilePickButton } from "@/components/ui/FilePickButton";
 import { IMPORT_MAX_BYTES } from "@/data/backup";
 import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -128,14 +129,7 @@ export function DataPortabilityCard() {
         <label htmlFor="csv-file" className="mb-1 block text-sm font-semibold">
           {t("CSV file")}
         </label>
-        <input
-          ref={fileInput}
-          id="csv-file"
-          type="file"
-          accept=".csv,text/csv,text/comma-separated-values,application/vnd.ms-excel"
-          onChange={(e) => onFile(e.target.files?.[0])}
-          className="block w-full text-sm text-text-muted file:mr-3 file:min-h-11 file:rounded-ctl file:border file:border-line-strong file:bg-surface-2 file:px-4 file:text-sm file:font-semibold file:text-text hover:file:bg-[var(--color-press-strong)]"
-        />
+        <FilePickButton id="csv-file" accept=".csv,text/csv,text/comma-separated-values,application/vnd.ms-excel" onFile={onFile} inputRef={fileInput} />
       </div>
 
       {error && (

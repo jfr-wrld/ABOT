@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "@/components/icons";
 import { customers, type AdminMode } from "@/lib/admin-api";
 import { missingFunctionMessage, proStatus, shortDate, sourceLabel, type Customer, type OrderTotals } from "@/lib/customers";
 import { Metric, Note, Panel, cls } from "./ui";
@@ -10,7 +10,7 @@ import { Metric, Note, Panel, cls } from "./ui";
 
 const MIGRATION = "20261116_admin_customers_visits.sql";
 const idr = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
-const toneClass = (tone: "volt" | "amber" | undefined) => (tone === "volt" ? "text-[#ccff00]" : tone === "amber" ? "text-[#f59e0b]" : "text-zinc-400");
+const toneClass = (tone: "volt" | "amber" | undefined) => (tone === "volt" ? "text-accent" : tone === "amber" ? "text-caution" : "text-text-muted");
 
 function founderText(c: Customer): string | null {
   if (c.founderUnitCode) return c.founderUnitCode.replace("FOUNDER // ", "Founder ");
@@ -98,7 +98,7 @@ export function CustomersModule({ mode }: { mode: AdminMode }) {
         <input id="c-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by email" className={cls.input} />
 
         {!data ? null : shown.length === 0 ? (
-          <p className="text-sm text-zinc-400">{data.list.length === 0 ? "Nobody has paid or holds PRO yet." : "No email matches."}</p>
+          <p className="text-sm text-text-muted">{data.list.length === 0 ? "Nobody has paid or holds PRO yet." : "No email matches."}</p>
         ) : (
           <>
             {/* Phones: one block per customer. */}
@@ -107,15 +107,15 @@ export function CustomersModule({ mode }: { mode: AdminMode }) {
                 const pro = proStatus(c, now);
                 const founder = founderText(c);
                 return (
-                  <li key={c.userId} className="flex flex-col gap-1 border-t border-[#27272a] py-3 first:border-t-0">
-                    <p className="break-all text-sm font-semibold text-white">{c.email}</p>
+                  <li key={c.userId} className="flex flex-col gap-1 border-t border-line py-3 first:border-t-0">
+                    <p className="break-all text-sm font-semibold text-text">{c.email}</p>
                     <p className={`text-sm ${toneClass(pro.tone)}`}>
                       {pro.label}
-                      {founder && <span className="text-zinc-400"> · {founder}</span>}
-                      {c.overCap && <span className="text-[#ef4444]"> · Over cap</span>}
+                      {founder && <span className="text-text-muted"> · {founder}</span>}
+                      {c.overCap && <span className="text-failure"> · Over cap</span>}
                     </p>
-                    <p className="text-xs text-zinc-400">{lastPayment(c)}</p>
-                    <p className="text-xs text-zinc-400">
+                    <p className="text-xs text-text-muted">{lastPayment(c)}</p>
+                    <p className="text-xs text-text-muted">
                       {sourceLabel(c.source)} · {c.paidOrders} paid{c.paidOrders > 0 ? `, ${idr(c.paidTotalIdr)}` : ""}
                     </p>
                   </li>
@@ -127,7 +127,7 @@ export function CustomersModule({ mode }: { mode: AdminMode }) {
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">Customers, latest payment first</caption>
                 <thead>
-                  <tr className="text-xs text-zinc-400">
+                  <tr className="text-xs text-text-muted">
                     <th scope="col" className="py-2 pr-3 font-normal">Email</th>
                     <th scope="col" className="py-2 pr-3 font-normal">PRO</th>
                     <th scope="col" className="py-2 pr-3 font-normal">Last order</th>
@@ -140,18 +140,18 @@ export function CustomersModule({ mode }: { mode: AdminMode }) {
                     const pro = proStatus(c, now);
                     const founder = founderText(c);
                     return (
-                      <tr key={c.userId} className="border-t border-[#27272a] align-top">
-                        <td className="max-w-[16rem] break-all py-2 pr-3 text-white">{c.email}</td>
+                      <tr key={c.userId} className="border-t border-line align-top">
+                        <td className="max-w-[16rem] break-all py-2 pr-3 text-text">{c.email}</td>
                         <td className="py-2 pr-3">
                           <span className={toneClass(pro.tone)}>{pro.label}</span>
-                          {founder && <span className="block text-xs text-zinc-400">{founder}</span>}
-                          {c.overCap && <span className="block text-xs text-[#ef4444]">Over cap: review or refund</span>}
+                          {founder && <span className="block text-xs text-text-muted">{founder}</span>}
+                          {c.overCap && <span className="block text-xs text-failure">Over cap: review or refund</span>}
                         </td>
-                        <td className="py-2 pr-3 text-zinc-300">{lastPayment(c)}</td>
-                        <td className="py-2 pr-3 text-zinc-300">{sourceLabel(c.source)}</td>
-                        <td className="py-2 text-right tabular-nums text-zinc-300">
+                        <td className="py-2 pr-3 text-text">{lastPayment(c)}</td>
+                        <td className="py-2 pr-3 text-text">{sourceLabel(c.source)}</td>
+                        <td className="py-2 text-right tabular-nums text-text">
                           {c.paidOrders}
-                          {c.paidOrders > 0 && <span className="block text-xs text-zinc-400">{idr(c.paidTotalIdr)}</span>}
+                          {c.paidOrders > 0 && <span className="block text-xs text-text-muted">{idr(c.paidTotalIdr)}</span>}
                         </td>
                       </tr>
                     );

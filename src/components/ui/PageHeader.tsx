@@ -1,5 +1,5 @@
 import { BackLink } from "@/components/navigation/BackLink";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "@/components/icons";
 import type { ReactNode } from "react";
 
 export function PageHeader({
@@ -19,13 +19,14 @@ export function PageHeader({
       {back && (
         <BackLink
           href={back.href}
-          className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-ctl pr-3 pl-1 text-sm text-text-muted hover:bg-surface hover:text-text"
+          className="glass-icon rounded-full inline-flex min-h-11 items-center gap-1 pr-3 pl-1 text-sm text-text"
         >
           <ChevronLeft aria-hidden="true" size={18} />
           {back.label}
         </BackLink>
       )}
-      <div className="flex items-start justify-between gap-3">
+      {/* A clear step between the back pill and the page title, so the two never touch. */}
+      <div className={`flex items-start justify-between gap-3 ${back ? "mt-4" : ""}`}>
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold">{title}</h1>
           {subtitle && <p className="text-sm text-text-muted">{subtitle}</p>}

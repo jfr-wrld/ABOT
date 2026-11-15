@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/icons";
 import { PHASE_LABEL, type BodyPhaseType, type FuelTarget } from "@/lib/phase-engine";
 import { useT } from "@/i18n";
 

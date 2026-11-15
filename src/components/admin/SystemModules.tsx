@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "@/components/icons";
 import { getActivePersistence, getActiveRepository, hydrateStores, snapshotFromStores } from "@/store/persistence";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { useSyncStore } from "@/store/useSyncStore";
@@ -48,11 +48,11 @@ export function OverviewModule({ mode, numbers }: { mode: AdminMode; numbers: Ad
       </Panel>
       <Panel id="o-config" title="Live config" scope="global">
         <dl className="grid grid-cols-2 gap-2">
-          <Metric label="Mode" value={remote.config.monetizationMode === "FOUNDERS_BETA" ? "BETA" : "LIVE"} tone={remote.config.monetizationMode === "FOUNDERS_BETA" ? "volt" : "amber"} />
+          <Metric label="Mode" value={remote.config.monetizationMode === "FOUNDERS_BETA" ? "Beta" : "Live"} tone={remote.config.monetizationMode === "FOUNDERS_BETA" ? "volt" : "amber"} />
           <Metric label="Source" value={remote.source.toUpperCase()} tone="cyan" />
         </dl>
-        <p className="text-xs text-zinc-400">Banner: {remote.config.announcement ?? "none"}</p>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-text-muted">Banner: {remote.config.announcement ?? "none"}</p>
+        <p className="text-xs text-text-muted">
           Licence signing: {LICENSE_KEY_SET ? "on, PRO needs a signed licence" : "off, set NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY (docs/payments-setup.md)"}
           {MONETIZATION_FLOOR ? " · Mode floor: live" : ""}
         </p>
@@ -64,7 +64,7 @@ export function OverviewModule({ mode, numbers }: { mode: AdminMode; numbers: Ad
           <Metric label="Custom exercises" value={snap.exercises.length} />
           <Metric label="Weigh-ins" value={snap.bodyweightLog.length} />
         </dl>
-        <p className="font-mono text-[11px] tabular-nums text-zinc-400">Last workout: {last ? new Date(last).toLocaleString("en-GB") : "-"}</p>
+        <p className="num text-[11px] tabular-nums text-text-muted">Last workout: {last ? new Date(last).toLocaleString("en-GB") : "-"}</p>
       </Panel>
     </>
   );
@@ -160,13 +160,13 @@ export function DatabaseModule() {
               role="tab"
               aria-selected={table === k}
               onClick={() => setTable(k)}
-              className={`min-h-9 rounded-ctl border px-2 font-mono text-[10px] font-bold uppercase tabular-nums ${table === k ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-400"}`}
+              className={`chip num min-h-9 rounded-xl px-2 text-xs font-semibold ${table === k ? "text-accent shadow-[var(--sink)]" : "text-text-muted"}`}
             >
               {k} {snap ? size(snap[k]) : ""}
             </button>
           ))}
         </div>
-        <pre aria-label={`${table} as JSON`} className="max-h-[360px] overflow-auto rounded-ctl border border-[#27272a] bg-[#09090b] p-3 font-mono text-[11px] leading-relaxed text-zinc-300">
+        <pre aria-label={`${table} as JSON`} className="sunk max-h-[360px] overflow-auto rounded-ctl bg-bg p-3 font-[ui-monospace,monospace] text-[11px] leading-relaxed text-text">
           {json.length > 200_000 ? `${json.slice(0, 200_000)}\n... (${json.length.toLocaleString("en-US")} characters, cut)` : json || "-"}
         </pre>
         <button type="button" onClick={() => void navigator.clipboard?.writeText(json)} className={`${cls.ghost} w-fit`}>
@@ -177,20 +177,20 @@ export function DatabaseModule() {
       <Panel id="d-health" title="Integrity check" scope="device">
         <ul className="flex flex-col gap-1.5">
           {findings.map((f) => (
-            <li key={f.code} className={`text-xs ${f.level === "ok" ? "text-[#ccff00]" : "text-[#f59e0b]"}`}>
+            <li key={f.code} className={`text-xs ${f.level === "ok" ? "text-accent" : "text-caution"}`}>
               {f.level === "ok" ? "OK" : "WARN"} · {f.text}
             </li>
           ))}
         </ul>
-        <p className="text-[11px] text-zinc-400">Read only. A deleted custom exercise in old workouts is expected and harmless.</p>
+        <p className="text-[11px] text-text-muted">Read only. A deleted custom exercise in old workouts is expected and harmless.</p>
       </Panel>
 
       <Panel id="d-tools" title="Backup and reset" scope="device">
         <button type="button" onClick={() => void exportBackup()} className={cls.volt}>
           Export backup JSON
         </button>
-        <div className="flex flex-col gap-2 border-t border-[#27272a] pt-3">
-          <label className="flex flex-col gap-1 text-xs text-zinc-400">
+        <div className="flex flex-col gap-2 border-t border-line pt-3">
+          <label className="flex flex-col gap-1 text-xs text-text-muted">
             Type RESET to wipe this device&apos;s workouts, routines, custom exercises, gyms and settings
             <input value={confirm} onChange={(e) => setConfirm(e.target.value)} className={cls.input} />
           </label>
@@ -239,7 +239,7 @@ export function DeviceModule() {
             tone={phase?.isActive ? "volt" : "cyan"}
           />
         </dl>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-text-muted">
           {sync.email ? `Signed in as ${sync.email}` : "Not signed in"} · {active ? `workout running: ${active.name}` : "no workout running"}
         </p>
         <button
@@ -255,7 +255,7 @@ export function DeviceModule() {
         </button>
       </Panel>
       <Panel id="v-remote" title="Remote config on this device" scope="device">
-        <p className="font-mono text-xs tabular-nums text-zinc-300">
+        <p className="num text-xs tabular-nums text-text">
           Source {remote.source.toUpperCase()} · server row {remote.config.updatedAt ? new Date(remote.config.updatedAt).toLocaleString("en-GB") : "never fetched"}
         </p>
         <div className="flex flex-wrap gap-2">

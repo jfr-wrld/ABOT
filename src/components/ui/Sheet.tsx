@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import { useT } from "@/i18n";
 
 /**
@@ -54,7 +54,7 @@ export function Sheet({
             type="button"
             onClick={onClose}
             aria-label={t("Close")}
-            className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
+            className="glass-icon rounded-full flex size-11 items-center justify-center text-text"
           >
             <X aria-hidden="true" size={20} />
           </button>

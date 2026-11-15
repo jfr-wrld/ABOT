@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ExternalLink, RefreshCw } from "lucide-react";
+import { ExternalLink, RefreshCw } from "@/components/icons";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { growth, visits, type AdminMode } from "@/lib/admin-api";
 import { missingFunctionMessage } from "@/lib/customers";
@@ -75,33 +75,33 @@ function AccountsPanel({ mode }: { mode: AdminMode }) {
             <Metric label="Today" value={num(data?.signupsToday)} tone="volt" />
             <Metric label="Last 7 days" value={num(data?.signups7)} />
             <Metric label="Last 30 days" value={num(data?.signupsTotal)} />
-            <Metric label="Synced today" value={num(data?.activeToday)} tone="cyan" />
+            <Metric label="Synced today" value={num(data?.activeToday)} />
           </dl>
           {data && data.days.length > 0 && (
             <figure className="flex flex-col gap-2">
               <div className="h-56 w-full" role="img" aria-label={`Sign-ups per day over the last ${data.days.length} days, ${data.signupsTotal} in all, and accounts that synced each day, at most ${data.activePeak}.`}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.days} margin={{ top: 8, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
-                    <CartesianGrid vertical={false} stroke="#27272a" />
-                    <XAxis dataKey="day" tickFormatter={shortDay} tick={{ fill: "#a1a1aa", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "#27272a" }} minTickGap={16} />
-                    <YAxis allowDecimals={false} tick={{ fill: "#a1a1aa", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
+                    <CartesianGrid vertical={false} stroke="var(--color-line)" />
+                    <XAxis dataKey="day" tickFormatter={shortDay} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "var(--color-line)" }} minTickGap={16} />
+                    <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
                     <Tooltip
                       cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                      contentStyle={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
-                      labelStyle={{ color: "#fff" }}
+                      contentStyle={{ background: "var(--color-surface-2)", border: "1px solid var(--color-line)", color: "var(--color-text)", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "var(--color-text)" }}
                       labelFormatter={(v) => shortDay(String(v))}
                     />
-                    <Bar dataKey="signups" name="Sign-ups" fill="#ccff00" radius={[2, 2, 0, 0]} />
-                    <Bar dataKey="active" name="Synced" fill="#00f0ff" fillOpacity={0.55} radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="signups" name="Sign-ups" fill="var(--color-accent)" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="active" name="Synced" fill="var(--color-text-muted)" fillOpacity={0.55} radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-400">
+              <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
                 <span className="flex items-center gap-1.5">
-                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-[#ccff00]" /> Sign-ups
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-accent" /> Sign-ups
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-[#00f0ff]/55" /> Accounts that synced
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-text-muted/55" /> Accounts that synced
                 </span>
                 <span>Days in Jakarta time.</span>
               </figcaption>
@@ -148,7 +148,7 @@ function DownloadsPanel() {
         <table className="w-full font-mono text-xs tabular-nums">
           <caption className="sr-only">Downloads per build, newest first</caption>
           <thead>
-            <tr className="text-left text-zinc-400">
+            <tr className="text-left text-text-muted">
               <th scope="col" className="py-1 font-normal">Build</th>
               <th scope="col" className="py-1 font-normal">Released</th>
               <th scope="col" className="py-1 text-right font-normal">Link</th>
@@ -157,9 +157,9 @@ function DownloadsPanel() {
           </thead>
           <tbody>
             {data.releases.slice(0, 8).map((r) => (
-              <tr key={r.tag} className="border-t border-[#27272a] text-zinc-200">
+              <tr key={r.tag} className="border-t border-line text-text">
                 <td className="py-1.5">{r.build}</td>
-                <td className="py-1.5 text-zinc-400">{r.publishedAt ? new Date(r.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "-"}</td>
+                <td className="py-1.5 text-text-muted">{r.publishedAt ? new Date(r.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "-"}</td>
                 <td className="py-1.5 text-right">{num(r.fromLink)}</td>
                 <td className="py-1.5 text-right">{num(r.updates)}</td>
               </tr>
@@ -214,26 +214,26 @@ function VisitorsPanel({ mode }: { mode: AdminMode }) {
               <div className="h-48 w-full" role="img" aria-label={`Web visitors per day over the last ${data.days.length} days, ${data.last30} in all, and page views per day.`}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.days} margin={{ top: 8, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
-                    <CartesianGrid vertical={false} stroke="#27272a" />
-                    <XAxis dataKey="day" tickFormatter={shortDay} tick={{ fill: "#a1a1aa", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "#27272a" }} minTickGap={16} />
-                    <YAxis allowDecimals={false} tick={{ fill: "#a1a1aa", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
+                    <CartesianGrid vertical={false} stroke="var(--color-line)" />
+                    <XAxis dataKey="day" tickFormatter={shortDay} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "var(--color-line)" }} minTickGap={16} />
+                    <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
                     <Tooltip
                       cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                      contentStyle={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
-                      labelStyle={{ color: "#fff" }}
+                      contentStyle={{ background: "var(--color-surface-2)", border: "1px solid var(--color-line)", color: "var(--color-text)", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "var(--color-text)" }}
                       labelFormatter={(v) => shortDay(String(v))}
                     />
-                    <Bar dataKey="visitors" name="Visitors" fill="#ccff00" radius={[2, 2, 0, 0]} />
-                    <Bar dataKey="views" name="Page views" fill="#71717a" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="visitors" name="Visitors" fill="var(--color-accent)" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="views" name="Page views" fill="var(--color-text-muted)" fillOpacity={0.55} radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-400">
+              <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
                 <span className="flex items-center gap-1.5">
-                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-[#ccff00]" /> Visitors
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-accent" /> Visitors
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-[#71717a]" /> Page views
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-text-muted/55" /> Page views
                 </span>
                 <span>Days in Jakarta time.</span>
               </figcaption>
@@ -243,7 +243,7 @@ function VisitorsPanel({ mode }: { mode: AdminMode }) {
             <table className="w-full text-sm tabular-nums">
               <caption className="sr-only">Most viewed pages, last 30 days</caption>
               <thead>
-                <tr className="text-left text-xs text-zinc-400">
+                <tr className="text-left text-xs text-text-muted">
                   <th scope="col" className="py-1 font-normal">Page</th>
                   <th scope="col" className="py-1 text-right font-normal">Visitors</th>
                   <th scope="col" className="py-1 text-right font-normal">Views</th>
@@ -251,7 +251,7 @@ function VisitorsPanel({ mode }: { mode: AdminMode }) {
               </thead>
               <tbody>
                 {data.topPaths.map((p) => (
-                  <tr key={p.path} className="border-t border-[#27272a] text-zinc-200">
+                  <tr key={p.path} className="border-t border-line text-text">
                     <td className="py-1.5">{p.path === "other" ? "Other pages" : p.path}</td>
                     <td className="py-1.5 text-right">{num(p.visitors)}</td>
                     <td className="py-1.5 text-right">{num(p.views)}</td>

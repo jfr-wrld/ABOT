@@ -11,7 +11,7 @@ import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
 import { motion } from "framer-motion";
-import { MapPin, MoreHorizontal, Pause, Play, Timer, Trash2 } from "lucide-react";
+import { MapPin, MoreHorizontal, Pause, Play, Timer, Trash2 } from "@/components/icons";
 import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { useT } from "@/i18n";
@@ -62,7 +62,7 @@ export function ActiveWorkoutHeader({
           onClick={() => setMenuOpen(true)}
           aria-label={t("Workout options")}
           aria-haspopup="dialog"
-          className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
+          className="glass-icon rounded-full flex size-11 shrink-0 items-center justify-center text-text"
         >
           <MoreHorizontal aria-hidden="true" size={20} />
         </button>
@@ -71,7 +71,7 @@ export function ActiveWorkoutHeader({
           onClick={onFinish}
           {...press}
           className={`min-h-11 shrink-0 rounded-xl px-5 text-sm font-extrabold transition-[filter,background-color] duration-150 ${
-            ready ? "bg-accent text-on-accent shadow-volt hover:brightness-110" : "border border-line-strong bg-surface text-text hover:bg-surface-2"
+            ready ? "bg-accent text-on-accent shadow-volt hover:brightness-110" : "raised text-text"
           }`}
         >
           {t("Finish")}
@@ -102,9 +102,10 @@ export function ActiveWorkoutHeader({
         </Link>
       )}
 
-      {/* Three figures and, right of Sets, the muscles worked so far as a small map. */}
-      <dl className="mt-3 grid grid-cols-[1.15fr_1fr_0.75fr_auto] gap-2">
-        <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
+      {/* Three figures and, right of Sets, the muscles worked so far as a small map: four tiles
+          of one size, so the row reads as a set (volume shortens to "12.4k" past 10,000). */}
+      <dl className="mt-3 grid grid-cols-4 gap-2">
+        <div className="tile min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
           <dt className="field-label flex items-center gap-1.5">
             {t("Duration")}
             {paused && <span className="rounded bg-accent px-1.5 text-[11px] font-bold normal-case tracking-normal text-on-accent">{t("Paused")}</span>}
@@ -148,7 +149,7 @@ function Stat({ label, value, small }: { label: string; value: string; small?: s
   // quarter of a 360 px screen.
   const m = small !== undefined ? [value, value, small] : /^(.*) (kg|lbs)$/.exec(value);
   return (
-    <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
+    <div className="tile min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
       <dt className="field-label truncate">{label}</dt>
       <dd className="num flex min-h-11 items-baseline truncate pt-2 text-lg font-bold tracking-tight text-text">
         {m ? (
@@ -220,7 +221,7 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
       <p className="mb-4 text-xs text-text-muted">
         {paused
           ? t("The clock is stopped. Ticking a set also resumes it.")
-          : t("Stops the clock for a break. The rest timer is cleared; ticking a set resumes.")}
+          : t("Stops the clock. Tick a set to resume.")}
       </p>
       <label htmlFor="start-time" className="mb-1 block text-sm font-semibold">
         {t("Started at")}
@@ -243,7 +244,7 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
         </p>
       ) : (
         <p id="start-time-hint" className="mt-1 text-xs text-text-muted">
-          {t("Use this if you started the timer late. Duration is counted from this time.")}
+          {t("Started late? Set the real start time.")}
         </p>
       )}
     </Sheet>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Camera } from "lucide-react";
+import { Camera } from "@/components/icons";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";

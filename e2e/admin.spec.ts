@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 /** Five taps on the build tag at the foot of Settings, then the PIN. */
-async function openConsole(page: Page, expectMode = "● LOCAL MODE") {
+async function openConsole(page: Page, expectMode = "● Local mode") {
   await page.goto("/settings");
   const tag = page.getByRole("button", { name: /^ABOT (v[\d.]+|web)$/ });
   for (let i = 0; i < 5; i++) await tag.click();
@@ -40,7 +40,7 @@ test.describe("local mode (no Supabase in the build)", () => {
 test("hidden entry, PIN gate, and the monetization switch with prices and banner reaching the app", async ({ page }) => {
   await openConsole(page);
   await nav(page, "Monetization").click();
-  await page.getByRole("radio", { name: /COMMERCIAL_LIVE/ }).click();
+  await page.getByRole("radio", { name: /Commercial live/ }).click();
   await page.getByLabel("Monthly IDR").fill("35000");
   await page.getByLabel(/Broadcast banner/).fill("v1.2 is out: Mission Control.");
   await page.getByRole("button", { name: "Push monetization config" }).click();
@@ -65,7 +65,7 @@ test("hidden entry, PIN gate, and the monetization switch with prices and banner
 test("a code made in the console is redeemed on the device; built-in codes stop in commercial mode", async ({ page }) => {
   await openConsole(page);
   await nav(page, "Monetization").click();
-  await page.getByRole("radio", { name: /COMMERCIAL_LIVE/ }).click();
+  await page.getByRole("radio", { name: /Commercial live/ }).click();
   await page.getByRole("button", { name: "Push monetization config" }).click();
   await nav(page, "Licenses").click();
   await page.getByRole("radio", { name: "30-day influencer trial" }).click();
@@ -79,7 +79,7 @@ test("a code made in the console is redeemed on the device; built-in codes stop 
   const card = page.getByRole("region", { name: "Plan & billing" });
   await expect(card).toContainText("PRO features are locked on this phone.");
   await card.getByRole("button", { name: "Redeem code" }).click();
-  const redeem = page.getByRole("dialog", { name: "Redeem license code" });
+  const redeem = page.getByRole("dialog", { name: "Redeem a code" });
   await redeem.getByLabel("Promo or gift code").fill("ABOT-NOPE-0000");
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("alert")).toHaveText("This code is not valid, or it has been used up.");
@@ -155,7 +155,7 @@ test("desktop: sidebar layout with every module", async ({ page }) => {
 
 test("server mode: signed out, Global modules stay closed and Device modules work", async ({ page }) => {
   test.skip(!configured, "needs a build with Supabase (.env)");
-  await openConsole(page, "● NOT AN ADMIN");
+  await openConsole(page, "● Not an admin");
   for (const m of ["Monetization", "Licenses", "Algorithms"]) {
     await nav(page, m).click();
     await expect(page.getByText("Admin account needed")).toBeVisible();

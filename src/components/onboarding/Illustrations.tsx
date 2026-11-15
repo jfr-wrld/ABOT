@@ -1,301 +1,316 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
-import { Check, Dumbbell, House, Search, Trophy, WifiOff } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { motion, useReducedMotionConfig } from "framer-motion";
+import { Check, ClipboardList, CloudCheck, DumbbellLarge, Home, Search, Trophy, WifiOff } from "@/components/icons";
+import { AbotMark } from "@/components/brand/AbotMark";
 import { useT } from "@/i18n";
 
 /*
- * The intro's three illustrations, drawn from ABOT's own parts (the set row, the rest capsule, the
- * hex plate) rather than stock art, each acting out what its slide says on a short loop. They are
- * decorative: the slide's heading and text carry the meaning. Reduced motion shows the end state.
+ * The intro's illustrations, built from the app's own surfaces (the raised set row, the sunk
+ * fields, the liquid-glass dock with its notch and the green button, the rest capsule, the Volt
+ * week card) at their real size, so they look like ABOT today and follow it when those classes
+ * change. Inside a phone they are laid out on a 390-wide screen and scaled down. They are
+ * decorative: each slide's heading and text carry the meaning. Reduced motion shows the end state.
  */
 
-const LOOP = 3.6;
 const SPRING = { type: "spring", stiffness: 300, damping: 24 } as const;
+/** The screen width the phone scenes are laid out at, as on a common phone. */
+const SCREEN_W = 390;
+/** How many times a scene acts itself out before it rests on its last frame (battery). */
+const ROUNDS = 4;
 
-/** A phone outline at a fixed size, so the three scenes share one frame. */
-function Phone({ children }: { children: React.ReactNode }) {
+/**
+ * A step counter for a scene's little story: `steps` frames of `ms` each, played `ROUNDS` times,
+ * then held on the last frame. Reduced motion holds the last frame from the start.
+ */
+function useStory(steps: number, ms: number): number {
+  const reduce = useReducedMotionConfig();
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (reduce) return;
+    const timer = setInterval(() => {
+      setTick((n) => {
+        if (n >= steps * ROUNDS - 1) {
+          clearInterval(timer);
+          return n;
+        }
+        return n + 1;
+      });
+    }, ms);
+    return () => clearInterval(timer);
+  }, [reduce, steps, ms]);
+  return reduce ? steps - 1 : tick % steps;
+}
+
+/**
+ * A phone in the app's raised material: a thin bezel round a screen, the scene laid out at
+ * SCREEN_W and scaled to fit. `from` pins the scene to the top or the bottom of the screen.
+ */
+function Phone({ children, width = 212, height = 292, from = "top" }: { children: ReactNode; width?: number; height?: number; from?: "top" | "bottom" }) {
+  const bezel = 6;
+  const scale = (width - bezel * 2) / SCREEN_W;
   return (
-    <div className="relative h-[232px] w-[176px] overflow-hidden rounded-[30px] border border-ink/[0.14] bg-black p-2.5 shadow-[0_0_0_6px_#1b1a17]">
-      <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-ink/10" />
-      {children}
+    <div className="raised-card relative shrink-0 rounded-[34px] bg-surface" style={{ width, height, padding: bezel }}>
+      <div className="relative size-full overflow-hidden rounded-[28px] bg-bg">
+        <div
+          className={`absolute left-0 ${from === "top" ? "top-0 origin-top-left" : "bottom-0 origin-bottom-left"}`}
+          style={{ width: SCREEN_W, transform: `scale(${scale})` }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** One set row as the logger draws it: set number, last time, kg and reps fields, the check. */
+function SetRow({ n, last, kg, reps, done, record, pressing }: { n: number; last: string; kg: string; reps: string; done?: boolean; record?: boolean; pressing?: boolean }) {
+  return (
+    <div
+      className={`relative grid grid-cols-[40px_1fr_64px_48px_44px] items-center gap-1.5 overflow-hidden rounded-xl border px-1 py-1 transition-colors duration-200 ${
+        done ? "border-accent/25 bg-accent/[0.06]" : "border-ink/[0.04]"
+      }`}
+    >
+      <span className={`tile num flex size-9 items-center justify-center rounded-lg text-sm font-bold ${done ? "text-accent" : ""}`}>{n}</span>
+      {record ? (
+        <motion.span
+          className="num inline-flex items-center gap-1 text-[11px] font-bold text-pr"
+          initial={{ opacity: 0, y: 6, scale: 0.85 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={SPRING}
+        >
+          <Trophy size={12} /> PR
+        </motion.span>
+      ) : (
+        <span className="num truncate text-[11px] text-text-muted">{last}</span>
+      )}
+      <span className="sunk num flex h-11 items-center justify-center rounded-ctl bg-bg text-lg font-bold">{kg}</span>
+      <span className="sunk num flex h-11 items-center justify-center rounded-ctl bg-bg text-lg font-bold">{reps}</span>
+      <motion.span
+        className={`flex size-11 items-center justify-center rounded-xl border transition-colors duration-150 ${
+          done ? "border-accent bg-accent text-on-accent" : "raised text-text-muted"
+        }`}
+        animate={{ scale: pressing ? 0.86 : 1 }}
+        transition={{ type: "spring", stiffness: 600, damping: 20 }}
+      >
+        <Check size={22} variant="linear" />
+      </motion.span>
+      {/* The band of light that crosses a row as its set is ticked. */}
+      {done && (
+        <motion.span
+          className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-transparent via-accent/25 to-transparent"
+          initial={{ x: -90 }}
+          animate={{ x: 380 }}
+          transition={{ duration: 0.65, ease: [0.2, 0.7, 0.2, 1] }}
+        />
+      )}
     </div>
   );
 }
 
 /**
- * Slide 1: a finger taps the check, the row lights, a band of light passes, a record pops.
- * The loop is started from an effect: the intro's first slide mounts with initial animations
- * switched off (AnimatePresence initial={false}), which would otherwise leave it frozen.
+ * Slide 1: the exercise card from the logger. A fingertip taps the check on set 2, the row
+ * lights and a record pops in gold where last time's numbers were.
  */
 export function LogSetScene() {
-  const reduce = useReducedMotionConfig();
-  const controls = useAnimationControls();
-  useEffect(() => {
-    void controls.start(reduce ? "still" : "loop");
-  }, [controls, reduce]);
-
-  const loop = (times: number[], ease: "easeInOut" | "easeOut" = "easeInOut") => ({
-    duration: LOOP,
-    repeat: Infinity,
-    ease,
-    times,
-  });
-  // One cycle: idle, finger travels in, presses at 35%, row stays lit until 85%, resets.
-  const ROW_TIMES = [0, 0.3, 0.35, 0.85, 1];
-
+  const t = useT();
+  // 0 idle, 1 the finger arrives, 2 it presses: done, 3-4 the record shows.
+  const step = useStory(5, 650);
+  const done = step >= 2;
   return (
-    <div aria-hidden="true" className="relative flex w-full max-w-[320px] flex-col gap-2">
-      <Row n={2} weight="100" reps="8" dim />
-      <motion.div
-        className="relative grid grid-cols-[36px_1fr_64px_44px_44px] items-center gap-1.5 overflow-hidden rounded-xl border border-ink/[0.07] bg-surface p-1.5"
-        animate={controls}
-        variants={{
-          still: { backgroundColor: "rgba(236, 232, 223, 0.08)", borderColor: "rgba(236, 232, 223, 0.3)" },
-          loop: {
-            backgroundColor: ["rgba(18, 18, 21, 1)", "rgba(18, 18, 21, 1)", "rgba(36, 44, 8, 1)", "rgba(36, 44, 8, 1)", "rgba(18, 18, 21, 1)"],
-            borderColor: [
-              "rgba(255, 255, 255, 0.07)",
-              "rgba(255, 255, 255, 0.07)",
-              "rgba(236, 232, 223, 0.3)",
-              "rgba(236, 232, 223, 0.3)",
-              "rgba(255, 255, 255, 0.07)",
-            ],
-            transition: loop(ROW_TIMES),
-          },
-        }}
-      >
-        <span className="num flex size-9 items-center justify-center rounded-lg border border-ink/10 bg-black/40 text-sm font-bold">3</span>
-        <span className="num truncate text-[11px] text-text-muted">100 × 8</span>
-        <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">102.5</span>
-        <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">8</span>
-        <motion.span
-          className="flex size-11 items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 text-text-muted"
-          animate={controls}
-          variants={{
-            still: { backgroundColor: "rgba(236, 232, 223, 1)", color: "rgba(18, 17, 16, 1)", borderColor: "rgba(236, 232, 223, 1)" },
-            loop: {
-              backgroundColor: ["rgba(28, 28, 33, 1)", "rgba(28, 28, 33, 1)", "rgba(236, 232, 223, 1)", "rgba(236, 232, 223, 1)", "rgba(28, 28, 33, 1)"],
-              color: ["rgba(161, 161, 170, 1)", "rgba(161, 161, 170, 1)", "rgba(0, 0, 0, 1)", "rgba(0, 0, 0, 1)", "rgba(161, 161, 170, 1)"],
-              borderColor: [
-                "rgba(255, 255, 255, 0.12)",
-                "rgba(255, 255, 255, 0.12)",
-                "rgba(236, 232, 223, 1)",
-                "rgba(236, 232, 223, 1)",
-                "rgba(255, 255, 255, 0.12)",
-              ],
-              scale: [1, 1, 0.88, 1, 1],
-              transition: loop([0, 0.3, 0.35, 0.42, 1]),
-            },
-          }}
-        >
-          <Check size={22} strokeWidth={3} />
-        </motion.span>
-        {/* The band of light that crosses a row when its set is ticked. */}
-        <motion.span
-          className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-[linear-gradient(90deg,transparent,rgb(236_232_223/0.3),transparent)]"
-          style={{ x: -80 }}
-          animate={controls}
-          variants={{ still: { opacity: 0 }, loop: { x: [-80, -80, 340, 340], transition: loop([0, 0.36, 0.55, 1], "easeOut") } }}
-        />
-      </motion.div>
-      <Row n={4} weight="" reps="" dim />
-
-      {/* The record that the ticked set just set. */}
+    <div aria-hidden="true" className="raised-card relative w-full max-w-[340px] rounded-card bg-surface p-3">
+      <div className="mb-3 flex items-center gap-2.5">
+        <span className="tile flex size-10 items-center justify-center rounded-xl text-accent">
+          <DumbbellLarge size={20} />
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-bold">Bench Press</span>
+          <span className="block text-xs text-text-muted">{t("Chest")}</span>
+        </span>
+      </div>
+      <div className="mb-1 grid grid-cols-[40px_1fr_64px_48px_44px] gap-1.5 px-1 text-[11px] text-text-muted">
+        <span className="text-center">{t("Set")}</span>
+        <span>{t("Last time")}</span>
+        <span className="text-center">kg</span>
+        <span className="text-center">{t("Reps")}</span>
+        <span />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <SetRow n={1} last="80 × 8" kg="80" reps="8" done />
+        <SetRow n={2} last="80 × 8" kg="82.5" reps="8" done={done} record={step >= 3} pressing={step === 2} />
+        <div className="opacity-50">
+          <SetRow n={3} last="80 × 7" kg="82.5" reps="8" />
+        </div>
+      </div>
+      {/* A fingertip: comes in from below, presses the check, leaves. */}
       <motion.span
-        className="num absolute -top-3 right-14 inline-flex items-center gap-1 rounded-full border border-pr/50 bg-black px-2 py-0.5 text-[11px] font-semibold text-pr"
-        style={{ opacity: 0 }}
-        animate={controls}
-        variants={{
-          still: { opacity: 1 },
-          loop: { opacity: [0, 0, 1, 1, 0], y: [8, 8, 0, 0, -4], scale: [0.8, 0.8, 1, 1, 0.95], transition: loop([0, 0.38, 0.46, 0.82, 0.9]) },
-        }}
-      >
-        <Trophy size={11} /> PR
-      </motion.span>
-
-      {/* A fingertip: travels to the check, presses, lifts away. */}
-      <motion.span
-        className="absolute size-10 rounded-full border-2 border-ink/70 bg-ink/15"
-        style={{ right: 2, top: 58, opacity: 0 }}
-        animate={controls}
-        variants={{
-          still: { opacity: 0 },
-          loop: {
-            x: [60, 6, 0, 0, 60],
-            y: [70, 8, 2, 2, 70],
-            scale: [1, 1, 0.82, 1, 1],
-            opacity: [0, 1, 1, 0, 0],
-            transition: loop([0, 0.28, 0.35, 0.5, 1]),
-          },
-        }}
+        className="pointer-events-none absolute size-10 rounded-full border-2 border-ink/70 bg-ink/15"
+        style={{ right: 14, top: 112 }}
+        animate={
+          step === 1 || step === 2
+            ? { x: 0, y: 0, opacity: 1, scale: step === 2 ? 0.82 : 1 }
+            : { x: 40, y: 70, opacity: 0, scale: 1 }
+        }
+        transition={{ type: "spring", stiffness: 260, damping: 24 }}
       />
     </div>
   );
 }
 
-function Row({ n, weight, reps, dim }: { n: number; weight: string; reps: string; dim?: boolean }) {
+/** The dock as the app draws it: liquid glass with a notch, the green button in it, four tabs. */
+function MiniDock({ lit }: { lit: number }) {
+  const t = useT();
+  const tabs = [
+    { label: t("Home"), Icon: Home },
+    { label: t("Workout"), Icon: ClipboardList },
+    { label: t("Exercises"), Icon: Search },
+    { label: t("Profile"), Icon: null },
+  ];
   return (
-    <div className={`grid grid-cols-[36px_1fr_64px_44px_44px] items-center gap-1.5 rounded-xl border border-ink/[0.07] bg-surface p-1.5 ${dim ? "opacity-45" : ""}`}>
-      <span className="num flex size-9 items-center justify-center rounded-lg border border-ink/10 text-sm font-bold">{n}</span>
-      <span className="num text-[11px] text-text-muted">100 × 8</span>
-      <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">{weight || "0"}</span>
-      <span className="num flex h-11 items-center justify-center rounded-ctl bg-well text-lg font-bold">{reps || "0"}</span>
-      <span className="flex size-11 items-center justify-center rounded-xl border border-ink/[0.12] text-text-muted">
-        <Check size={22} strokeWidth={3} />
+    <div className="relative px-3 pb-3">
+      <span className="today-fab absolute left-1/2 top-0 z-10 flex size-[60px] -translate-x-1/2 -translate-y-[18px] items-center justify-center rounded-full">
+        <DumbbellLarge size={30} variant="bold" />
       </span>
+      {/* The intro is always dark, so its dock is the dark glass even when the phone is in light mode. */}
+      <ul
+        className="liquid-glass dock-notch relative flex rounded-2xl p-1"
+        style={{ background: "color-mix(in oklab, #09090b 55%, transparent)", borderColor: "rgb(255 255 255 / 0.13)", boxShadow: "inset 0 1px 0 rgb(255 255 255 / 0.24), 0 14px 40px rgb(0 0 0 / 0.45)" }}
+      >
+        {tabs.map(({ label, Icon }, i) => (
+          <li key={i} className={`relative min-w-0 flex-1 ${i === 2 ? "ml-[72px]" : ""}`}>
+            {i === lit && <span className="glass-lens absolute inset-0 rounded-xl" style={{ background: "rgb(255 255 255 / 0.1)" }} />}
+            <span className={`relative flex h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium ${i === lit ? "text-text" : "text-text-muted"}`}>
+              {Icon ? (
+                <Icon size={22} variant={i === lit ? "bold" : "linear"} className={i === lit ? "text-accent" : ""} />
+              ) : (
+                <span className="size-[22px] rounded-full border-2 border-current opacity-60" />
+              )}
+              <span className="truncate">{label}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-/** Slide 2: a phone with the rest capsule above the dock, counting down inside the thumb's reach. */
+/**
+ * Slide 2: the bottom of the workout screen. A set is ticked, the rest capsule rises above the
+ * dock and counts down, inside the thumb's reach.
+ */
 export function RestScene() {
-  const reduce = useReducedMotionConfig();
   const t = useT();
-  const [left, setLeft] = useState(90);
-  useEffect(() => {
-    if (reduce) return;
-    const timer = setInterval(() => setLeft((s) => (s <= 75 ? 90 : s - 1)), 1000);
-    return () => clearInterval(timer);
-  }, [reduce]);
+  const reduce = useReducedMotionConfig();
+  // Counts 1:30 down a second at a time for a while, then holds.
+  const step = useStory(14, 1000);
+  const left = 90 - step;
   const clock = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
-
   return (
     <div aria-hidden="true" className="relative">
       {/* The thumb's comfortable arc, drawn from the lower corner of the phone. */}
-      <svg className="pointer-events-none absolute -bottom-4 -right-10 z-10 h-40 w-44 overflow-visible" viewBox="0 0 176 160" fill="none">
+      <svg className="pointer-events-none absolute -bottom-2 -right-12 z-10 h-40 w-44 overflow-visible" viewBox="0 0 176 160" fill="none">
         <motion.path
-          d="M170 158 C 150 80, 80 40, 8 52"
-          stroke="#ece8df"
-          strokeOpacity={0.55}
+          d="M170 158 C 150 80, 80 40, 8 64"
+          stroke="currentColor"
+          className="text-accent"
+          strokeOpacity={0.7}
           strokeWidth={1.5}
           strokeDasharray="4 6"
           initial={reduce ? false : { pathLength: 0 }}
           animate={{ pathLength: 1 }}
-          transition={{ duration: 1.1, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 1.1, delay: 0.4, ease: "easeOut" }}
         />
       </svg>
-      <Phone>
-        <div className="flex flex-col gap-1.5">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className={`h-7 rounded-lg border border-ink/[0.07] ${i === 1 ? "bg-accent/10" : "bg-surface"}`} />
-          ))}
+      <Phone from="bottom" height={256}>
+        <div className="flex items-center gap-3 px-4 pb-3">
+          <span className="tile flex size-12 items-center justify-center rounded-xl text-accent">
+            <DumbbellLarge size={24} />
+          </span>
+          <span className="text-xl font-bold">Bench Press</span>
         </div>
-        <div className="absolute inset-x-2.5 bottom-2.5 flex flex-col gap-1.5">
-          <motion.div
-            className="relative flex h-9 items-center gap-2 overflow-hidden rounded-full border border-accent/30 bg-black px-3"
-            initial={reduce ? false : { y: 24, opacity: 0, scale: 0.9 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            transition={{ ...SPRING, delay: 0.5 }}
-          >
-            <span className="field-label !text-[8px]">{t("Rest")}</span>
-            <span className="num text-sm font-extrabold text-accent">{clock}</span>
-            <span className="ml-auto flex gap-2 text-text-muted">
-              <span className="text-xs">−</span>
-              <span className="text-xs">+</span>
-            </span>
-            <span className="absolute inset-x-3 bottom-0 h-px bg-ink/10">
-              <motion.span
-                className="block h-full origin-left bg-accent"
-                animate={{ scaleX: (left - 75) / 15 }}
-                transition={{ duration: 1, ease: "linear" }}
-              />
-            </span>
-          </motion.div>
-          <div className="flex h-10 items-center justify-around rounded-2xl border border-ink/[0.08] bg-surface text-text-muted">
-            <House size={14} />
-            <Dumbbell size={14} className="text-accent" />
-            <Search size={14} />
-            <span className="size-3.5 rounded-sm border border-ink/30" />
-          </div>
+        <div className="flex flex-col gap-1.5 px-3 pb-4">
+          <SetRow n={2} last="80 × 8" kg="82.5" reps="8" done />
+          <SetRow n={3} last="80 × 7" kg="82.5" reps="8" />
+          <SetRow n={4} last="80 × 6" kg="82.5" reps="8" />
         </div>
+        <motion.div
+          className="glass-capsule relative mx-3 mb-6 flex h-16 items-center gap-3 overflow-hidden rounded-full border border-accent/25 px-6 text-text"
+          initial={reduce ? false : { y: 40, opacity: 0, scale: 0.92 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{ ...SPRING, delay: 0.5 }}
+        >
+          <span className="text-base text-text-muted">{t("Rest")}</span>
+          <span className="num text-[28px] font-bold text-accent">{clock}</span>
+          <span className="num ml-auto flex gap-5 text-base font-semibold text-text-muted">
+            <span>−15s</span>
+            <span>+15s</span>
+          </span>
+          <span className="absolute inset-x-6 bottom-0 h-[3px] rounded-full bg-ink/10">
+            <motion.span className="block h-full origin-left rounded-full bg-accent" animate={{ scaleX: left / 90 }} transition={{ duration: 1, ease: "linear" }} />
+          </span>
+        </motion.div>
+        <MiniDock lit={1} />
       </Phone>
     </div>
   );
 }
 
-/** Side-view plates, heaviest first: height and thickness in a 176-wide frame. */
-const PLATES = [
-  { h: 112, w: 14 },
-  { h: 92, w: 12 },
-  { h: 70, w: 10 },
-];
-/** Each plate's x on the sleeve, packed against the stop with a 3-unit gap, and the collar's. */
-const placed = PLATES.map((p, i) => ({ ...p, x: 44 + PLATES.slice(0, i).reduce((n, q) => n + q.w + 3, 0) }));
-const COLLAR_X = 44 + PLATES.reduce((n, q) => n + q.w + 3, 0);
-
 /**
- * Slide 3: a barbell sleeve inside the phone is loaded plate by plate and clamped, with the
- * signal gone: everything is kept here, on this device.
+ * Slide 3: Home on a phone with no signal. The week card and the day's card are all there
+ * offline; then a backup lands, as it can whenever the lifter wants one.
  */
 export function DeviceScene() {
-  const reduce = useReducedMotionConfig();
-  const [cycle, setCycle] = useState(0);
-  useEffect(() => {
-    if (reduce) return;
-    const t = setInterval(() => setCycle((c) => c + 1), LOOP * 1000 + 600);
-    return () => clearInterval(t);
-  }, [reduce]);
-
-
+  const t = useT();
+  // 0-1 Home shows, 2 the offline badge, 3-5 the backup chip.
+  const step = useStory(6, 700);
   return (
     <div aria-hidden="true" className="relative">
       <Phone>
-        <svg key={cycle} viewBox="0 0 156 190" className="h-[196px] w-full" fill="none">
-          {/* The bar's sleeve and the stop it loads against. */}
-          <rect x="8" y="91" width="140" height="8" rx="2" fill="#3f3f46" />
-          <rect x="36" y="76" width="6" height="38" rx="1.5" fill="#71717a" />
-          {placed.map((p, i) => (
-            <motion.rect
-              key={i}
-              x={p.x}
-              y={95 - p.h / 2}
-              width={p.w}
-              height={p.h}
-              rx={2.5}
-              fill={["#c8102e", "#1f4fa3", "#e0a100"][i]}
-              initial={reduce ? false : { x: 140, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.3 + i * 0.32 }}
-            />
-          ))}
-          {/* The collar clamps the plates on. */}
-          <motion.rect
-            x={COLLAR_X}
-            y={84}
-            width={9}
-            height={22}
-            rx={2}
-            fill="#f4f4f5"
-            initial={reduce ? false : { x: 120, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 380, damping: 22, delay: 1.35 }}
-          />
-          <motion.text
-            x="78"
-            y="176"
-            textAnchor="middle"
-            className="num"
-            fontSize="10"
-            letterSpacing="1.5"
-            fill="#a1a1aa"
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.6 }}
-          >
-            SAVED ON DEVICE
-          </motion.text>
-        </svg>
+        <div className="flex items-center justify-center px-4 pb-4 pt-6 text-accent">
+          <AbotMark size={30} />
+        </div>
+        <div className="px-4">
+          {/* Home's wallet stack: the Volt week card behind, the day's card over its lower edge. */}
+          <div className="wallet-card grid grid-cols-2 divide-x divide-line overflow-hidden rounded-card pb-9">
+            <div className="p-4">
+              <p className="num text-2xl font-bold leading-tight">
+                2<span className="text-sm font-semibold text-text-muted">/4</span>
+              </p>
+              <p className="field-label">{t("Planned")}</p>
+            </div>
+            <div className="p-4">
+              <p className="num text-2xl font-bold leading-tight">
+                12.4<span className="text-sm font-semibold text-text-muted">k</span>
+              </p>
+              <p className="field-label">{t("Volume")}</p>
+            </div>
+          </div>
+          <div className="wallet-front -mt-9">
+            <div className="raised-card rounded-card bg-surface p-4">
+              <p className="text-xl font-bold">Push Day</p>
+              <p className="mt-1 text-sm text-text-muted">Bench Press · Overhead Press · Dips</p>
+              <span className="mt-4 flex min-h-12 items-center justify-center rounded-xl bg-accent text-base font-bold text-on-accent">{t("Start")}</span>
+            </div>
+          </div>
+          <div className="mt-3 h-24 rounded-card border border-line bg-surface/60" />
+        </div>
       </Phone>
       <motion.span
-        key={`signal-${cycle}`}
-        className="absolute -right-3 -top-3 flex size-10 items-center justify-center rounded-full border border-ink/15 bg-surface text-text-muted"
-        initial={reduce ? false : { scale: 0, rotate: -30 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ ...SPRING, delay: 1.7 }}
+        className="glass-icon absolute -right-5 -top-3 flex h-10 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-text"
+        initial={false}
+        animate={step >= 2 ? { scale: 1, opacity: 1 } : { scale: 0.4, opacity: 0 }}
+        transition={SPRING}
       >
-        <WifiOff size={18} />
+        <WifiOff size={16} /> {t("Offline")}
+      </motion.span>
+      <motion.span
+        className="raised-card absolute -left-5 bottom-10 flex h-10 items-center gap-1.5 rounded-full bg-surface px-3 text-xs font-semibold text-text"
+        initial={false}
+        animate={step >= 3 ? { x: 0, opacity: 1 } : { x: -24, opacity: 0 }}
+        transition={SPRING}
+      >
+        <CloudCheck size={16} className="text-accent" /> {t("Backed up")}
       </motion.span>
     </div>
   );
@@ -306,44 +321,40 @@ export function DeviceScene() {
  * countdown ticking and the +30s / Skip buttons, the thing a browser tab cannot do.
  */
 export function AppScene() {
-  const reduce = useReducedMotionConfig();
   const t = useT();
-  const [left, setLeft] = useState(84);
-  useEffect(() => {
-    if (reduce) return;
-    const timer = setInterval(() => setLeft((s) => (s <= 60 ? 84 : s - 1)), 1000);
-    return () => clearInterval(timer);
-  }, [reduce]);
+  const reduce = useReducedMotionConfig();
+  const step = useStory(20, 1000);
+  const left = 84 - step;
   const clock = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
 
   return (
     <div aria-hidden="true" className="relative">
       <Phone>
-        <div className="flex flex-col items-center pt-3">
-          <span className="num text-[34px] font-bold leading-none tracking-tight text-ink/90">07:42</span>
-          <span className="mt-1 text-[9px] text-text-muted">{t("Locked")}</span>
+        <div className="flex flex-col items-center pt-14">
+          <span className="num text-[76px] font-bold leading-none tracking-tight text-ink/90">07:42</span>
+          <span className="mt-2 text-base text-text-muted">{t("Locked")}</span>
         </div>
         <motion.div
-          className="mt-4 flex flex-col gap-1.5 rounded-2xl border border-ink/[0.1] bg-surface/95 p-2.5"
-          initial={reduce ? false : { y: 26, opacity: 0, scale: 0.94 }}
+          className="liquid-glass mx-4 mt-10 flex flex-col gap-3 rounded-3xl p-5"
+          initial={reduce ? false : { y: 40, opacity: 0, scale: 0.94 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           transition={{ ...SPRING, delay: 0.35 }}
         >
-          <div className="flex items-center gap-1.5">
-            <span className="flex size-4 items-center justify-center rounded-[5px] bg-black text-accent">
-              <Dumbbell size={9} />
+          <div className="flex items-center gap-2.5">
+            <span className="today-fab flex size-8 items-center justify-center rounded-[10px]">
+              <DumbbellLarge size={18} variant="bold" />
             </span>
-            <span className="text-[9px] font-semibold text-text-muted">ABOT</span>
-            <span className="num ml-auto text-[9px] font-bold text-accent">{clock}</span>
+            <span className="text-base font-semibold text-text-muted">ABOT</span>
+            <span className="num ml-auto text-lg font-bold text-accent">{clock}</span>
           </div>
-          <span className="text-[11px] font-semibold leading-tight">Bench Press</span>
-          <span className="text-[9px] text-text-muted">{t("Set 3 of 4 · rest")}</span>
-          <span className="h-1 overflow-hidden rounded-full bg-ink/10">
-            <motion.span className="block h-full origin-left bg-accent" animate={{ scaleX: (left - 60) / 24 }} transition={{ duration: 1, ease: "linear" }} />
+          <span className="text-xl font-bold leading-tight">Bench Press</span>
+          <span className="text-base text-text-muted">{t("Set 3 of 4 · rest")}</span>
+          <span className="sunk h-2 overflow-hidden rounded-full">
+            <motion.span className="block h-full origin-left rounded-full bg-accent" animate={{ scaleX: left / 84 }} transition={{ duration: 1, ease: "linear" }} />
           </span>
-          <div className="mt-0.5 grid grid-cols-2 gap-1">
-            <span className="rounded-md bg-ink/[0.07] py-1 text-center text-[9px] font-semibold">+30s</span>
-            <span className="rounded-md bg-ink/[0.07] py-1 text-center text-[9px] font-semibold">{t("Skip")}</span>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <span className="raised rounded-xl py-3 text-center text-base font-semibold">+30s</span>
+            <span className="raised rounded-xl py-3 text-center text-base font-semibold">{t("Skip")}</span>
           </div>
         </motion.div>
       </Phone>

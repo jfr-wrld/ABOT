@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, Dumbbell, Home as HomeIcon, ListOrdered, PersonStanding, Play, Timer } from "lucide-react";
+import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, Dumbbell, Home as HomeIcon, ListOrdered, PersonStanding, Play, Timer } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
@@ -93,7 +93,7 @@ export function PlanSetup({
             type="button"
             onClick={() => setStep(step - 1)}
             aria-label={t("Back")}
-            className="-ml-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.05] hover:text-text"
+            className="glass-icon rounded-full flex size-11 items-center justify-center text-text"
           >
             <ArrowLeft aria-hidden="true" size={20} />
           </button>
@@ -160,7 +160,7 @@ export function PlanSetup({
                         const weekdays = on ? a.weekdays.filter((d) => d !== wd) : [...a.weekdays, wd];
                         set({ weekdays, days: weekdays.length as PlanDays });
                       }}
-                      className={`tap min-h-11 rounded-lg border text-xs font-bold disabled:opacity-40 ${
+                      className={`chip tap min-h-11 rounded-lg border text-xs font-bold disabled:opacity-40 ${
                         on ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted"
                       }`}
                     >
@@ -188,7 +188,7 @@ export function PlanSetup({
                     if (!on) feedback.tick();
                     set({ place: p });
                   }}
-                  className={`tap flex min-h-16 items-center gap-3 rounded-xl border p-3 text-left ${on ? "border-accent bg-accent-tint" : "border-ink/[0.12]"}`}
+                  className={`chip tap flex min-h-16 items-center gap-3 rounded-xl border p-3 text-left ${on ? "border-accent bg-accent-tint" : "border-ink/[0.12]"}`}
                 >
                   <Icon aria-hidden="true" size={22} className={on ? "text-accent" : "text-text-muted"} />
                   <span className="flex min-w-0 flex-1 flex-col">
@@ -307,7 +307,7 @@ function WeekPreview({ a, firstDay, onSplit }: { a: PlanAnswers; firstDay: 0 | 1
                   if (a.split !== s) feedback.tick();
                   onSplit(s);
                 }}
-                className={`tap flex min-h-12 flex-col justify-center rounded-xl border px-3 py-2 text-left ${a.split === s ? "border-accent bg-accent-tint" : "border-ink/[0.12]"}`}
+                className={`chip tap flex min-h-12 flex-col justify-center rounded-xl border px-3 py-2 text-left ${a.split === s ? "border-accent bg-accent-tint" : "border-ink/[0.12]"}`}
               >
                 <span className="flex items-center gap-2 text-sm font-semibold">
                   {t(SPLIT_LABEL[s])}
@@ -396,7 +396,7 @@ function Pills<V extends string | number>({ label, value, onChange, options }: {
               if (value !== v) feedback.tick();
               onChange(v);
             }}
-            className={`tap min-h-11 min-w-11 rounded-full border px-4 text-sm font-semibold ${
+            className={`chip tap min-h-11 min-w-11 rounded-full border px-4 text-sm font-semibold ${
               value === v ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
             }`}
           >

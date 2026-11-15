@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarCheck, ChevronRight, Flag, Scale } from "lucide-react";
+import { CalendarCheck, ChevronRight, Flag, Scale } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";

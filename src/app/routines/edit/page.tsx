@@ -5,7 +5,7 @@ import { Select } from "@/components/ui/Select";
 import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowDown, ArrowUp, Link2, Link2Off, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Link2, Link2Off, Plus, Trash2, ListPlus } from "@/components/icons";
 import { SUPERSET_COLORS, linkSupersetIn, removeFromList, supersetLabels, unlinkSupersetIn } from "@/lib/superset";
 import { newId } from "@/lib/id";
 import { Sheet } from "@/components/ui/Sheet";
@@ -32,6 +32,7 @@ import { SPLITS } from "@/lib/seed-routines";
 import { routineSummary } from "@/lib/routine-summary";
 import { MusclesWorked, SummaryMeta } from "@/components/routines/RoutineCard";
 import type { Exercise, Routine } from "@/types/workout";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
 
@@ -122,7 +123,7 @@ function Editor() {
                   type="button"
                   aria-pressed={routine.folder === sp.folder}
                   onClick={() => update(routine.id, { folder: routine.folder === sp.folder ? "" : sp.folder })}
-                  className={`tap h-8 shrink-0 rounded-full border px-3 text-xs font-semibold ${
+                  className={`chip tap h-8 shrink-0 rounded-full border px-3 text-xs font-semibold ${
                     routine.folder === sp.folder ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
                   }`}
                 >
@@ -136,9 +137,10 @@ function Editor() {
         {routine.exercises.length > 0 && <RoutineOverview routine={routine} byId={byId} />}
 
         {routine.exercises.length === 0 && (
-          <p className="panel px-4 py-6 text-center text-sm text-text-muted">
-            {t("No exercises in this routine yet. Add the first one below; each starts with three planned sets.")}
-          </p>
+          <div className="panel flex flex-col gap-3 px-4 py-6 text-center">
+            <EmptyArt icon={ListPlus} />
+            <p className="text-sm text-text-muted">{t("No exercises yet. Add the first one below.")}</p>
+          </div>
         )}
 
         {routine.exercises.map((ex, i) => {
@@ -349,7 +351,7 @@ function Editor() {
         return (
           <Sheet open onClose={() => setSupersetFor(null)} title={t("Superset {name} with", { name: fromName })}>
             <p className="mb-3 text-sm text-text-muted">
-              {t("Do one set of each back to back. Rest starts after the last exercise of the superset.")}
+              {t("One set of each, back to back. Rest after the last.")}
             </p>
             <ul className="flex flex-col gap-1">
               {routine.exercises

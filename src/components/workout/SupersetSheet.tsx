@@ -17,7 +17,7 @@ export function SupersetSheet({ item, name, onClose }: { item: SessionExercise; 
   return (
     <Sheet open onClose={onClose} title={t("Superset {name} with", { name })}>
       <p className="mb-3 text-sm text-text-muted">
-        {t("Do one set of each back to back. The rest timer starts after the last exercise of the superset.")}
+        {t("One set of each, back to back. Rest after the last.")}
       </p>
       {others.length === 0 ? (
         <p className="py-6 text-center text-sm text-text-muted">{t("Add another exercise to the workout first.")}</p>

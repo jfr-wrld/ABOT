@@ -5,7 +5,7 @@ import { GetAppNudge } from "@/components/get-app/GetAppNudge";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotionConfig } from "framer-motion";
-import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Pencil, Sparkles, Timer, Trophy } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Pencil, Sparkles, Timer, Trophy } from "@/components/icons";
 import { RenameWorkoutSheet, SaveAsRoutineButton, UpdateRoutineCard } from "@/components/workout/SessionActions";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -44,7 +44,7 @@ export default function WorkoutSummaryPage() {
 
 /**
  * Shown right after Finish: a moment of completion first (the plate closes, a check, a burst of
- * small plates, Cyan when a record fell), then what the workout added up to, how it compares with
+ * small plates, gold when a record fell), then what the workout added up to, how it compares with
  * the last time, the records and first lifts, the muscles worked, and the way to share it.
  */
 function Summary() {
@@ -266,7 +266,7 @@ const HEX = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
 
 /**
  * The completion mark: the plate outline is traced shut, it fills faintly, a check is drawn, and a
- * ring of small plates bursts outward (Cyan when a record fell, Volt otherwise). About 1.4 s.
+ * ring of small plates bursts outward (gold when a record fell, Volt otherwise). About 1.4 s.
  */
 function Celebration({ record }: { record: boolean }) {
   const controls = useEntrance();
@@ -369,7 +369,7 @@ function Calories({ session, byId, unit }: { session: WorkoutSession; byId: Reco
   return (
     <section aria-labelledby="summary-kcal" className="panel flex flex-col gap-2 p-3">
       <div className="flex items-center gap-3">
-        <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted">
+        <span aria-hidden="true" className="tile flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted">
           <Flame size={16} />
         </span>
         <div className="min-w-0 flex-1">
@@ -425,7 +425,7 @@ function Calories({ session, byId, unit }: { session: WorkoutSession; byId: Reco
 function Tile({ icon, label, value, format }: { icon: React.ReactNode; label: string; value: number; format: (n: number) => string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
-      <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
+      <span aria-hidden="true" className="tile hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
         {icon}
       </span>
       <div className="min-w-0">

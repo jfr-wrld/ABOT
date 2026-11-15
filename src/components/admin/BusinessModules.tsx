@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Copy } from "lucide-react";
+import { Copy } from "@/components/icons";
 import { useRemoteConfig, type RemoteConfig } from "@/lib/remote-config";
 import { selectLicense, useLicense } from "@/store/useLicense";
 import { createCode, grantByEmail, listOrders, saveConfig, setCodeActive, simulateOrder, type AdminCode, type AdminMode, type AdminOrder, type SimulatedOutcome } from "@/lib/admin-api";
@@ -56,32 +56,28 @@ export function MonetizationModule({ mode }: { mode: AdminMode }) {
                 feedback.tick();
                 setDraft((d) => ({ ...d, monetizationMode: m }));
               }}
-              className={`min-h-14 rounded-ctl border px-2 font-mono text-[11px] font-bold uppercase leading-tight tracking-[0.06em] ${
-                draft.monetizationMode === m
-                  ? m === "FOUNDERS_BETA"
-                    ? "border-[#ccff00] bg-[#ccff00] text-black"
-                    : "border-[#f59e0b] bg-[#f59e0b] text-black"
-                  : "border-[#27272a] text-zinc-400"
-              }`}
+              // The live mode keeps its colour: Volt for the beta, caution orange once money is real.
+              className={`chip min-h-14 rounded-xl px-2 text-sm font-bold leading-tight ${draft.monetizationMode === m ? "text-on-accent" : "text-text-muted"}`}
+              style={draft.monetizationMode === m ? { backgroundColor: m === "FOUNDERS_BETA" ? "var(--color-accent)" : "var(--color-caution)" } : undefined}
             >
-              {m}
+              {m === "FOUNDERS_BETA" ? "Founders beta" : "Commercial live"}
               <span className="block text-[10px] font-semibold opacity-80">{m === "FOUNDERS_BETA" ? "All PRO free" : "Paywall active"}</span>
             </button>
           ))}
         </div>
-        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300">
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-text">
           Built-in test codes work (development builds only)
-          <input type="checkbox" checked={draft.offlineCodesEnabled} onChange={(e) => setDraft((d) => ({ ...d, offlineCodesEnabled: e.target.checked }))} className="size-6 accent-[#ccff00]" />
+          <input type="checkbox" checked={draft.offlineCodesEnabled} onChange={(e) => setDraft((d) => ({ ...d, offlineCodesEnabled: e.target.checked }))} className="size-6 accent-[var(--color-accent)]" />
         </label>
-        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300">
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-text">
           Midtrans checkout open (needs the Edge Functions deployed)
-          <input type="checkbox" checked={draft.checkoutEnabled} onChange={(e) => setDraft((d) => ({ ...d, checkoutEnabled: e.target.checked }))} className="size-6 accent-[#ccff00]" />
+          <input type="checkbox" checked={draft.checkoutEnabled} onChange={(e) => setDraft((d) => ({ ...d, checkoutEnabled: e.target.checked }))} className="size-6 accent-[var(--color-accent)]" />
         </label>
-        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300">
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-text">
           Also in the Android app (off: web only, Google Play billing rules)
-          <input type="checkbox" checked={draft.checkoutOnAndroid} onChange={(e) => setDraft((d) => ({ ...d, checkoutOnAndroid: e.target.checked }))} className="size-6 accent-[#ccff00]" />
+          <input type="checkbox" checked={draft.checkoutOnAndroid} onChange={(e) => setDraft((d) => ({ ...d, checkoutOnAndroid: e.target.checked }))} className="size-6 accent-[var(--color-accent)]" />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-zinc-400">
+        <label className="flex flex-col gap-1 text-xs text-text-muted">
           Broadcast banner on Home (empty: none)
           <textarea
             value={draft.announcement ?? ""}
@@ -107,13 +103,13 @@ export function MonetizationModule({ mode }: { mode: AdminMode }) {
               ["lifetimeUsd", "Lifetime USD (full)"],
             ] as const
           ).map(([k, l]) => (
-            <label key={k} className="flex flex-col gap-1 text-xs text-zinc-400">
+            <label key={k} className="flex flex-col gap-1 text-xs text-text-muted">
               {l}
               <input inputMode="decimal" value={String(draft.prices[k])} onChange={(e) => price(k, e.target.value)} className={cls.input} />
             </label>
           ))}
         </fieldset>
-        <p className="font-mono text-[11px] tabular-nums text-zinc-400">
+        <p className="num text-[11px] tabular-nums text-text-muted">
           Paywall: {rupiah(plans[0]!.idr)} / {rupiah(plans[1]!.idr)} (save {annualSaving(plans)}%) / {rupiah(plans[2]!.idr)}, founders {rupiah(plans[2]!.idr / 2)}
         </p>
         <button type="button" onClick={() => void save()} disabled={busy} className={cls.volt}>
@@ -194,21 +190,21 @@ function PaymentTestPanel({ mode }: { mode: AdminMode }) {
       {!server ? (
         <Note tone="error">Needs Supabase and an admin account: sign in with the admin Google account.</Note>
       ) : orders === null ? (
-        <p className="text-sm text-zinc-400">Loading orders...</p>
+        <p className="text-sm text-text-muted">Loading orders...</p>
       ) : orders.length === 0 ? (
-        <p className="text-sm text-zinc-400">No orders yet. Press Buy on the paywall (signed in), then come back here.</p>
+        <p className="text-sm text-text-muted">No orders yet. Press Buy on the paywall (signed in), then come back here.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {orders.map((o) => (
-            <li key={o.orderId} className="flex flex-col gap-2 rounded-ctl border border-[#27272a] p-3">
+            <li key={o.orderId} className="flex flex-col gap-2 rounded-ctl border border-line p-3">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <span className="break-all font-mono text-xs text-white">{o.orderId}</span>
-                <span className={`font-mono text-[11px] font-bold uppercase ${o.status === "paid" ? "text-[#ccff00]" : o.status === "pending" ? "text-[#f59e0b]" : "text-zinc-400"}`}>
+                <span className="break-all num text-xs text-text">{o.orderId}</span>
+                <span className={`num text-[11px] font-bold ${o.status === "paid" ? "text-accent" : o.status === "pending" ? "text-caution" : "text-text-muted"}`}>
                   {o.status}
                   {o.overCap && <span className="ml-2 text-[#f87171]">over cap</span>}
                 </span>
               </div>
-              <p className="font-mono text-[11px] tabular-nums text-zinc-400">
+              <p className="num text-[11px] tabular-nums text-text-muted">
                 {o.plan} · {rupiah(o.amountIdr)} · {new Date(o.createdAt).toLocaleString()}
                 {o.paymentType ? ` · ${o.paymentType}` : ""}
               </p>
@@ -230,7 +226,7 @@ function PaymentTestPanel({ mode }: { mode: AdminMode }) {
         </ul>
       )}
       {note && <Note tone={note.error ? "error" : "ok"}>{note.text}</Note>}
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-text-muted">
         Works only while payments_sandbox is on in the database. When going live run: update public.app_remote_config set payments_sandbox = false;
       </p>
     </Panel>
@@ -299,14 +295,14 @@ function VoucherPanel({ mode, onChange }: { mode: AdminMode; onChange: () => voi
             role="radio"
             aria-checked={preset === x.id}
             onClick={() => setPreset(x.id)}
-            className={`min-h-11 rounded-ctl border px-2 text-xs font-semibold ${preset === x.id ? "border-[#ccff00] bg-[#ccff00]/10 text-[#ccff00]" : "border-[#27272a] text-zinc-400"}`}
+            className={`min-h-11 rounded-ctl border px-2 text-xs font-semibold ${preset === x.id ? "border-accent bg-accent/10 text-accent" : "border-line text-text-muted"}`}
           >
             {x.label}
           </button>
         ))}
       </div>
       <div className="grid grid-cols-[1fr_auto] items-end gap-2">
-        <label className="flex flex-col gap-1 text-xs text-zinc-400">
+        <label className="flex flex-col gap-1 text-xs text-text-muted">
           Uses (1 for one buyer, 100 for a giveaway)
           <input inputMode="numeric" value={String(uses)} onChange={(e) => setUses(Math.max(1, Math.min(10_000, Number(e.target.value) || 1)))} className={cls.input} />
         </label>
@@ -318,9 +314,9 @@ function VoucherPanel({ mode, onChange }: { mode: AdminMode; onChange: () => voi
           ))}
         </div>
       </div>
-      <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300">
+      <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-text">
         Founder badge
-        <input type="checkbox" checked={founder || p.grant.founder} disabled={p.grant.founder} onChange={(e) => setFounder(e.target.checked)} className="size-6 accent-[#ccff00]" />
+        <input type="checkbox" checked={founder || p.grant.founder} disabled={p.grant.founder} onChange={(e) => setFounder(e.target.checked)} className="size-6 accent-[var(--color-accent)]" />
       </label>
       <button type="button" onClick={() => void generate()} className={cls.volt}>
         <Copy aria-hidden="true" size={14} /> Generate & copy WhatsApp / IG message
@@ -349,19 +345,19 @@ function CodesPanel({ mode, codes, onChange }: { mode: AdminMode; codes: AdminCo
           <tbody>
             {codes.length === 0 && (
               <tr>
-                <td colSpan={4} className="py-3 text-zinc-400">
+                <td colSpan={4} className="py-3 text-text-muted">
                   No codes yet.
                 </td>
               </tr>
             )}
             {codes.map((c) => (
-              <tr key={c.code} className="border-t border-[#27272a]">
-                <td className="py-2 pr-2 font-mono tabular-nums text-white">{c.code}</td>
-                <td className="py-2 pr-2 text-zinc-300">
+              <tr key={c.code} className="border-t border-line">
+                <td className="py-2 pr-2 num text-text">{c.code}</td>
+                <td className="py-2 pr-2 text-text">
                   {c.grant.tier === "lifetime" ? "Lifetime" : `${c.grant.days} days`}
                   {c.grant.founder ? " + founder" : ""}
                 </td>
-                <td className="py-2 pr-2 text-right font-mono tabular-nums">
+                <td className="py-2 pr-2 text-right num">
                   {c.uses}/{c.maxUses}
                 </td>
                 <td className="py-2 text-right">
@@ -373,7 +369,7 @@ function CodesPanel({ mode, codes, onChange }: { mode: AdminMode; codes: AdminCo
                         .then(onChange)
                         .catch((e) => setError(errText(e)))
                     }
-                    className={`${cls.ghost} min-h-9 px-2 ${c.active ? "text-[#ccff00]" : "text-zinc-400"}`}
+                    className={`${cls.ghost} min-h-9 px-2 ${c.active ? "text-accent" : "text-text-muted"}`}
                   >
                     {c.active ? "Active" : "Off"}
                   </button>
@@ -415,7 +411,7 @@ function GrantPanel({ mode }: { mode: AdminMode }) {
         <Note>Needs Supabase in the build: upgrades land on the buyer&apos;s account.</Note>
       ) : (
         <form onSubmit={grant} className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1 text-xs text-zinc-400">
+          <label className="flex flex-col gap-1 text-xs text-text-muted">
             Buyer&apos;s Google email
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={cls.input} />
           </label>
@@ -459,22 +455,22 @@ function DeviceEntitlementPanel() {
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div>
           <dt className={cls.label}>Mode</dt>
-          <dd className="font-mono text-xs text-white">{r.mode}</dd>
+          <dd className="num text-xs text-text">{r.mode}</dd>
         </div>
         <div>
           <dt className={cls.label}>Tier</dt>
-          <dd className="font-mono text-xs text-white">{r.tier}</dd>
+          <dd className="num text-xs text-text">{r.tier}</dd>
         </div>
         <div>
           <dt className={cls.label}>PRO open</dt>
-          <dd className={`font-mono text-xs ${r.proActive ? "text-[#ccff00]" : "text-[#f59e0b]"}`}>{r.proActive ? "yes" : "no"}</dd>
+          <dd className={`num text-xs ${r.proActive ? "text-accent" : "text-caution"}`}>{r.proActive ? "yes" : "no"}</dd>
         </div>
         <div>
           <dt className={cls.label}>Founder</dt>
-          <dd className="font-mono text-xs tabular-nums text-white">{e.founderUnitCode ?? "-"}</dd>
+          <dd className="num text-xs tabular-nums text-text">{e.founderUnitCode ?? "-"}</dd>
         </div>
       </dl>
-      <p className="font-mono text-[11px] text-zinc-400">
+      <p className="text-xs text-text-muted">
         Signed licence:{" "}
         {!LICENSE_KEY_SET
           ? "signing off in this build"
@@ -492,7 +488,7 @@ function DeviceEntitlementPanel() {
             role="radio"
             aria-checked={e.devOverrideMode === s.mode}
             onClick={() => updateEntitlement({ devOverrideMode: s.mode })}
-            className={`min-h-11 rounded-ctl border font-mono text-[10px] font-bold uppercase ${e.devOverrideMode === s.mode ? "border-[#00f0ff] bg-[#00f0ff] text-black" : "border-[#27272a] text-zinc-400"}`}
+            className={`chip min-h-11 rounded-xl text-xs font-semibold ${e.devOverrideMode === s.mode ? "text-accent" : "text-text-muted"}`}
           >
             {s.label}
           </button>

@@ -64,7 +64,7 @@ export function FinishDialog({
       {completed === 0 ? (
         <p className="mt-4 text-sm text-text-muted">
           {t(
-            "No set has been marked done yet, so there is nothing to save. Tick at least one set, or discard the workout from the bottom of the page.",
+            "No sets done yet. Tick one, or discard the workout.",
           )}
         </p>
       ) : skipped > 0 ? (

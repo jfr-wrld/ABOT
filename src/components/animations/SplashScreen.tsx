@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { create } from "zustand";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
 import { AnimatedAbotMark, AnimatedWordmark } from "@/components/brand/AnimatedAbotMark";
 import { useHydration } from "@/store/hydration";
@@ -16,6 +17,9 @@ export const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as const;
  * stores are ready and the minimum time has passed, scaling up slightly as it fades so the app
  * appears to come forward from behind it.
  */
+/** True once the splash has left, so a page can hold its first animation until it is seen. */
+export const useSplashGone = create<{ gone: boolean }>()(() => ({ gone: false }));
+
 export function SplashScreen() {
   const t = useT();
   const hydrated = useHydration((s) => s.hydrated);
@@ -28,6 +32,12 @@ export function SplashScreen() {
   }, []);
 
   const show = !(hydrated && minDone);
+  useEffect(() => {
+    if (show) return;
+    // After its 0.4 s fade.
+    const id = setTimeout(() => useSplashGone.setState({ gone: true }), 400);
+    return () => clearTimeout(id);
+  }, [show]);
 
   return (
     <AnimatePresence>

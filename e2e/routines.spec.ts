@@ -20,7 +20,7 @@ test("empty name shows an inline error", async ({ page }) => {
   // A device with no routines opens on the templates; the empty state is one tab away.
   await expect(page.getByRole("tab", { name: "Templates" })).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { name: "My Routines" }).click();
-  await expect(page.getByText("No routines saved.")).toBeVisible();
+  await expect(page.getByText("No routines yet.")).toBeVisible();
   await page.getByRole("button", { name: "New routine" }).click();
   await page.getByRole("button", { name: "Create and add exercises" }).click();
   await expect(page.getByText("Give the routine a name")).toBeVisible();
@@ -29,7 +29,7 @@ test("empty name shows an inline error", async ({ page }) => {
 
 test("creates a routine with targets and starts it", async ({ page }) => {
   await createRoutine(page, "Push A", "Push / Pull / Legs");
-  await expect(page.getByText("No exercises in this routine yet.")).toBeVisible();
+  await expect(page.getByText("No exercises yet. Add the first one below.")).toBeVisible();
   await page.getByRole("button", { name: "Add exercise" }).click();
   await page.getByLabel("Search exercises").fill("Bench Press (Barbell)");
   await page.getByRole("dialog").getByRole("button", { name: /^Bench Press \(Barbell\)/ }).click();
@@ -52,9 +52,12 @@ test("creates a routine with targets and starts it", async ({ page }) => {
 test("duplicates and deletes a routine", async ({ page }) => {
   await createRoutine(page, "Legs");
   await page.goto("/routines");
+  // Edit, duplicate and delete sit behind the card's "···" menu.
+  await page.getByRole("button", { name: "More for Legs", exact: true }).click();
   await expect(page.getByRole("link", { name: "Edit Legs", exact: true })).toHaveAttribute("href", /^\/routines\/edit\?id=.+$/);
   await page.getByRole("button", { name: "Duplicate Legs", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toBeVisible();
+  await page.getByRole("button", { name: "More for Legs (copy)" }).click();
   await page.getByRole("button", { name: "Delete Legs (copy)" }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Legs (copy)" })).toHaveCount(0);
@@ -99,10 +102,13 @@ test("the routine editor builds a superset that carries into the workout", async
   // The card counts the superset, shows each lift as a photo with sets x reps, and the muscles.
   const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Arms" }) });
   await expect(card).toContainText("3 exercises · 9 sets · 1 superset");
+  await card.getByText("See exercises").click();
   const lifts = card.getByRole("list", { name: "Exercises" });
   for (const name of ["Bicep Curl (Barbell)", "Triceps Pushdown (Cable)", "Lateral Raise (Dumbbell)"]) await expect(lifts).toContainText(name);
-  await expect(lifts).toContainText("3 setsSS");
-  await expect(card.locator("[data-thumb]")).toHaveCount(3);
+  await expect(lifts).toContainText("SS3 sets");
+  // Opened, the card names its lifts, one a line, with no photo strip.
+  await expect(lifts.getByRole("listitem")).toHaveCount(3);
+  await expect(card.locator("[data-thumb]")).toHaveCount(0);
   await expect(card.getByRole("list", { name: "Muscles worked" })).toBeVisible();
   await page.getByRole("button", { name: "Start Arms" }).click();
   await page.waitForURL("**/workout");

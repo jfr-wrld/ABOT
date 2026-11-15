@@ -2,7 +2,7 @@
 
 import { founderLabel } from "@/lib/entitlements";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Download, Film, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "lucide-react";
+import { Camera, Download, Film, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "@/components/icons";
 import { useReducedMotionConfig } from "framer-motion";
 import { useStoryVideo } from "./useStoryVideo";
 import { FormatSwitch, VideoActions } from "./VideoActions";

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { CloudAlert, CloudCheck, CloudOff, CloudUpload, RefreshCw } from "lucide-react";
+import { CloudAlert, CloudCheck, CloudOff, CloudUpload, RefreshCw } from "@/components/icons";
 import { useSyncStore } from "@/store/useSyncStore";
 import { useNow } from "@/lib/useNow";
 import { syncStatus, type SyncTone } from "@/lib/syncStatus";

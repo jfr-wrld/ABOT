@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List } from "@/components/icons";
 import { useT } from "@/i18n";
 import { feedback } from "@/lib/feedback";
 
@@ -41,15 +41,17 @@ export function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (v:
         if (value !== v) feedback.tick();
         onChange(v);
       }}
+      // Segmented, the GoPay way: the current view is a raised tile with a lit icon, the other
+      // lies flat and dim in the sunken track.
       className={`flex size-11 items-center justify-center rounded-[9px] transition-colors ${
-        value === v ? "bg-surface text-text shadow-sm" : "text-text-muted hover:text-text"
+        value === v ? "tile bg-surface text-accent" : "text-text-muted hover:text-text"
       }`}
     >
-      <Icon aria-hidden="true" size={16} />
+      <Icon aria-hidden="true" size={18} variant={value === v ? "bold" : "linear"} />
     </button>
   );
   return (
-    <div role="group" aria-label={t("View")} className="flex shrink-0 gap-0.5 rounded-ctl bg-surface-2 p-0.5">
+    <div role="group" aria-label={t("View")} className="sunk flex shrink-0 gap-0.5 rounded-ctl bg-surface-2 p-0.5">
       {option("list", t("List view"), List)}
       {option("grid", t("Grid view"), LayoutGrid)}
     </div>

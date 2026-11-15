@@ -31,7 +31,9 @@ test("a finished workout is renamed and saved as a routine, which then suggests 
   // It is in My Routines after a reload, with its exercises.
   await expect(async () => {
     await page.goto("/routines");
-    await expect(page.getByRole("article").filter({ hasText: "Chest and Arms" }).getByText("Triceps Pushdown", { exact: false }).first()).toBeVisible({ timeout: 1500 });
+    const saved = page.getByRole("article").filter({ hasText: "Chest and Arms" });
+    await saved.getByText("See exercises").click({ timeout: 5000 });
+    await expect(saved.getByText("Triceps Pushdown", { exact: false }).first()).toBeVisible({ timeout: 1500 });
   }).toPass({ timeout: 10_000 });
 
   // A new empty workout: the routine due next is that one, so chest and triceps are today's

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Scale } from "lucide-react";
+import { ChevronRight, Scale } from "@/components/icons";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { formatWeight } from "@/lib/units";
 import { useT } from "@/i18n";

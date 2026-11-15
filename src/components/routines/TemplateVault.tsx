@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Copy, ListOrdered, Play, Timer, Zap } from "lucide-react";
+import { Check, Copy, ListOrdered, Play, Timer, Zap } from "@/components/icons";
 import type { MuscleGroup, Routine } from "@/types/workout";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -10,20 +10,16 @@ import { PHASE_LABEL, templateFitsPhase } from "@/lib/phase-engine";
 import { SEED_EXERCISES_BY_ID } from "@/data/exercises";
 import { ROUTINE_TEMPLATES, SPLITS, estimateMinutes, templateToRoutine, type RoutineTemplate, type Split } from "@/lib/seed-routines";
 import { Button } from "@/components/ui/Button";
-import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { LiftList } from "@/components/routines/RoutineCard";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { routineEditPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { muscleLabel } from "@/components/exercise/MuscleTags";
 import { feedback } from "@/lib/feedback";
 
-/** Photos on a card; the sixth slot shows "+N" when there are more. */
-const PREVIEW = 5;
-/** Six photos and their gaps fit a 320 px phone at this size. */
-const THUMB = 38;
 
 /** Ready-made programs: filter by split, start one now, or save an editable copy. */
-export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
+export function TemplateVault({ onStart, grid = false }: { onStart: (r: Routine) => void; grid?: boolean }) {
   const [split, setSplit] = useState<Split | "all">("all");
   const [saved, setSaved] = useState<Record<string, string>>({});
   const t = useT();
@@ -50,7 +46,7 @@ export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
                 if (split !== s.value) feedback.tick();
                 setSplit(s.value);
               }}
-              className={`tap h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold ${
+              className={`chip tap h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold ${
                 split === s.value
                   ? "border-accent bg-accent text-on-accent"
                   : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
@@ -62,10 +58,10 @@ export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
         </div>
       </div>
 
-      <ul className="flex flex-col divide-y divide-line border-b border-line" aria-label={t("Templates")}>
+      <ul className={grid ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"} aria-label={t("Templates")}>
         {shown.map((tpl) => (
           <li key={tpl.id}>
-            <TemplateCard template={tpl} savedId={saved[tpl.id]} onStart={() => onStart(templateToRoutine(tpl))} onSave={() => save(tpl)} />
+            <TemplateCard grid={grid} template={tpl} savedId={saved[tpl.id]} onStart={() => onStart(templateToRoutine(tpl))} onSave={() => save(tpl)} />
           </li>
         ))}
       </ul>
@@ -84,15 +80,16 @@ function topMuscles(tpl: RoutineTemplate, n = 3): MuscleGroup[] {
 
 /**
  * One template, read at a glance: split, time and size as icons with figures, the muscles as
- * lit figures, and the lifts as photos with their sets x reps underneath. Names stay available
- * to screen readers and as each photo's tooltip.
+ * lit figures, and the lifts folded under "See exercises".
  */
 function TemplateCard({
   template: tpl,
   savedId,
   onStart,
   onSave,
+  grid = false,
 }: {
+  grid?: boolean;
   template: RoutineTemplate;
   savedId?: string;
   onStart: () => void;
@@ -101,13 +98,45 @@ function TemplateCard({
   const t = useT();
   const phase = useSettingsStore((s) => (s.bodyPhase?.isActive ? s.bodyPhase.phaseType : null));
   const splitLabel = SPLITS.find((s) => s.value === tpl.split)?.label;
-  const shown = tpl.exercises.slice(0, PREVIEW);
-  const more = tpl.exercises.length - shown.length;
   const muscles = topMuscles(tpl);
+  if (grid) {
+    return (
+      <article aria-labelledby={`${tpl.id}-title`} className="flex h-full flex-col rounded-card border bg-surface p-3">
+        <ul aria-label={t("Muscles worked")} className="-ml-1 flex">
+          {muscles.map((m) => (
+            <li key={m} title={muscleLabel(m, t)}>
+              <MuscleIcon muscle={m} size={28} />
+              <span className="sr-only">{muscleLabel(m, t)}</span>
+            </li>
+          ))}
+        </ul>
+        <h3 id={`${tpl.id}-title`} className="mt-2 line-clamp-2 text-sm font-bold leading-snug text-text">
+          {tpl.name}
+        </h3>
+        <p className="num mt-0.5 text-xs text-text-muted">
+          {[splitLabel ? t(splitLabel) : "", `~${t("{n} min", { n: estimateMinutes(tpl) })}`].filter(Boolean).join(" · ")}
+        </p>
+        <div className="mt-auto flex gap-2 pt-3">
+          <Button variant="primary" onClick={onStart} aria-label={t("Start workout: {name}", { name: tpl.name })} className="min-h-10 min-w-0 flex-1 whitespace-nowrap">
+            <Play aria-hidden="true" size={16} /> {t("Start")}
+          </Button>
+          {savedId ? (
+            <Link href={routineEditPath(savedId)} aria-label={t("Saved, edit")} className="tap flex size-10 shrink-0 items-center justify-center rounded-lg raised text-accent">
+              <Check aria-hidden="true" size={16} />
+            </Link>
+          ) : (
+            <button type="button" onClick={onSave} aria-label={t("Save to My Routines: {name}", { name: tpl.name })} className="tap flex size-10 shrink-0 items-center justify-center rounded-lg raised text-text-muted hover:text-text">
+              <Copy aria-hidden="true" size={16} />
+            </button>
+          )}
+        </div>
+      </article>
+    );
+  }
   return (
     <article
       aria-labelledby={`${tpl.id}-title`}
-      className="py-4"
+      className="rounded-card border bg-surface p-4"
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -146,33 +175,13 @@ function TemplateCard({
         </ul>
       </header>
 
-      <ol aria-label={t("Exercises")} className="mt-3 grid grid-cols-6 justify-items-center gap-1 border-t border-line pt-3">
-        {shown.map((e) => {
-          const ex = SEED_EXERCISES_BY_ID[e.exerciseId];
-          return (
-            <li key={e.exerciseId} className="flex min-w-0 flex-col items-center gap-1" title={ex?.name}>
-              {ex ? (
-                <ExerciseThumb exercise={ex} size={THUMB} />
-              ) : (
-                <span style={{ width: THUMB, height: THUMB }} className="rounded-xl bg-surface-2" aria-hidden="true" />
-              )}
-              <span className="sr-only">{ex?.name ?? e.exerciseId}, </span>
-              <span className="num text-[10px] leading-none text-text-muted">
-                {e.sets}×{e.holdSec ? `${e.holdSec}s` : e.reps}
-                {e.superset && <span className="ml-0.5 text-text">SS</span>}
-              </span>
-            </li>
-          );
-        })}
-        {more > 0 && (
-          <li className="flex flex-col items-center gap-1">
-            <span style={{ width: THUMB, height: THUMB }} className="num flex items-center justify-center rounded-xl bg-surface-2 text-xs text-text-muted">
-              +{more}
-              <span className="sr-only"> {t.n(more, "more exercise", "more exercises")}</span>
-            </span>
-          </li>
-        )}
-      </ol>
+      <LiftList
+        items={tpl.exercises.map((e) => ({
+          name: SEED_EXERCISES_BY_ID[e.exerciseId]?.name ?? e.exerciseId,
+          detail: `${e.sets}×${e.holdSec ? `${e.holdSec}s` : e.reps}`,
+          superset: !!e.superset,
+        }))}
+      />
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Button variant="primary" onClick={onStart} aria-label={t("Start workout: {name}", { name: tpl.name })} className="whitespace-nowrap">

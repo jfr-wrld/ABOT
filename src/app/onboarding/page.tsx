@@ -10,7 +10,7 @@ import { markOnboardingSeen } from "@/lib/onboarding";
 import { AppScene, DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
 import { usePlatform } from "@/components/get-app/usePlatform";
 import { APK_URL } from "@/lib/get-app";
-import { Download } from "lucide-react";
+import { Download } from "@/components/icons";
 import { PlanSaved, PlanSetup, todaysPlanned } from "@/components/plan/PlanSetup";
 import { applyPlan, type AppliedPlan } from "@/lib/apply-plan";
 import { defaultAnswers } from "@/lib/training-plan";
@@ -47,17 +47,17 @@ const SLIDES = (t: T) =>
   [
     {
       title: t("Log a set in one tap"),
-      body: t("Type the weight and reps, tap the check. Last time's numbers sit beside each set, and records light up as you beat them."),
+      body: t("Type weight and reps, tap the check. Last time sits beside each set."),
       Visual: LogSetScene,
     },
     {
       title: t("Rest sits by your thumb"),
-      body: t("Tick a set and the rest countdown opens just above the dock, on every screen, with 15-second nudges and skip."),
+      body: t("Tick a set and rest starts counting down, on every screen."),
       Visual: RestScene,
     },
     {
       title: t("Your training stays on this phone"),
-      body: t("Every workout saves to this device and works offline. Back it up to a file or your account whenever you like."),
+      body: t("Saved on this phone, works offline. Back up anytime."),
       Visual: DeviceScene,
     },
   ];
@@ -65,7 +65,7 @@ const SLIDES = (t: T) =>
 /** Android browsers only: the one thing the web cannot do, and the app to get it. */
 const APP_SLIDE = (t: T) => ({
   title: t("ABOT hits harder as an app (beta)"),
-  body: t("Your set and rest countdown on the lock screen, an alarm that rings with the screen off, reminders that always arrive. Free, no account. It is in beta, so your feedback shapes it."),
+  body: t("Rest timer on the lock screen, an alarm with the screen off, reminders that arrive. Free beta."),
   Visual: AppScene,
 });
 
@@ -105,20 +105,35 @@ export default function OnboardingPage() {
 
   return (
     <main className="force-dark fixed inset-0 isolate z-30 flex h-dvh flex-col overflow-clip overscroll-none bg-bg px-5 pt-[calc(16px+env(safe-area-inset-top))]">
-      <div className="flex items-center justify-between">
-        <span className="text-accent">
-          <AbotMark size={28} title="ABOT" />
-        </span>
-        {!last && !planning && (
+      {/* Logo, then the steps as segments (the same as the plan setup that follows, so the intro
+          and the plan read as one run), then Skip in the app's glass. */}
+      {!planning && (
+        <div className="flex items-center gap-3">
+          <span className="text-accent">
+            <AbotMark size={28} title="ABOT" />
+          </span>
+          <ol aria-hidden="true" className="flex flex-1 gap-1">
+            {slides.map((_, i) => (
+              <li key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-ink/[0.12]">
+                <motion.span className="block h-full origin-left rounded-full bg-accent" initial={false} animate={{ scaleX: i <= index ? 1 : 0 }} transition={SPRING} />
+              </li>
+            ))}
+          </ol>
           <button
             type="button"
             onClick={() => finish("/")}
-            className="min-h-11 rounded-ctl px-3 text-sm font-semibold text-text-muted transition-colors hover:bg-ink/[0.05] hover:text-text"
+            className={`glass-icon flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-text ${last ? "invisible" : ""}`}
+            tabIndex={last ? -1 : undefined}
           >
             {t("Skip intro")}
           </button>
-        )}
-      </div>
+        </div>
+      )}
+      {planning && (
+        <span className="text-accent">
+          <AbotMark size={28} title="ABOT" />
+        </span>
+      )}
 
       {planning ? (
         saved ? (
@@ -140,7 +155,7 @@ export default function OnboardingPage() {
       <section
         aria-roledescription="carousel"
         aria-label={t("Introduction")}
-        className="relative mt-6 flex flex-1 flex-col overflow-hidden"
+        className="relative mt-4 flex min-h-0 flex-1 flex-col overflow-hidden"
         onKeyDown={(e) => {
           if (e.key === "ArrowRight") go(index + 1);
           if (e.key === "ArrowLeft") go(index - 1);
@@ -163,31 +178,27 @@ export default function OnboardingPage() {
             aria-label={t("{n} of {total}", { n: index + 1, total: slides.length })}
             className="flex flex-1 cursor-grab touch-pan-y flex-col active:cursor-grabbing"
           >
-            <motion.div custom={dir} variants={artVariants} className="flex min-h-64 items-center justify-center">
-              <slide.Visual />
+            {/* The scene fills the room above the words, standing on one soft light. */}
+            <motion.div custom={dir} variants={artVariants} className="relative flex min-h-0 flex-1 items-center justify-center py-4">
+              <div className="relative flex justify-center [@media(max-height:700px)]:[zoom:0.78] [@media(min-height:780px)]:[zoom:1.15]">
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -bottom-8 left-1/2 h-16 w-[120%] -translate-x-1/2 rounded-[50%] bg-[radial-gradient(closest-side,rgb(204_255_0/0.18),transparent)]"
+                />
+                <slide.Visual />
+              </div>
             </motion.div>
-            <motion.h1 variants={itemVariants} className="mt-8 text-3xl font-bold leading-tight tracking-tight">
+            <motion.h1 variants={itemVariants} className="mt-2 text-[28px] font-bold leading-tight tracking-tight">
               {slide.title}
             </motion.h1>
-            <motion.p variants={itemVariants} className="mt-3 max-w-[34ch] text-base leading-relaxed text-text-muted">
+            <motion.p variants={itemVariants} className="mt-2 max-w-[34ch] text-base leading-relaxed text-text-muted">
               {slide.body}
             </motion.p>
           </motion.div>
         </AnimatePresence>
       </section>
 
-      <div className="flex items-center justify-center gap-2 py-6" aria-hidden="true">
-        {slides.map((s, i) => (
-          <motion.span
-            key={i}
-            className="h-1.5 rounded-full"
-            animate={{ width: i === index ? 24 : 6, backgroundColor: i === index ? "#ccff00" : "rgb(255 255 255 / 0.2)" }}
-            transition={SPRING}
-          />
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-2 pb-[calc(16px+env(safe-area-inset-bottom))]">
+      <div className="flex flex-col gap-2 pb-[calc(16px+env(safe-area-inset-bottom))] pt-6">
         {last && appSlide ? (
           <>
             <a href={APK_URL} rel="noopener" className="tap flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent text-base font-bold text-on-accent">

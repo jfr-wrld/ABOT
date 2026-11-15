@@ -102,10 +102,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
           <SignInReturn />
           {/* Web build only: the APK leaves both out entirely (next.config.ts sets the flag). They
-              read the search params, which a prerendered page only has in the browser. */}
+              read the search params, which a prerendered page only has in the browser. Vercel Web
+              Analytics also needs a build on Vercel: /_vercel/insights exists only there. */}
           {process.env.ABOT_WEB_ANALYTICS === "1" && (
             <Suspense fallback={null}>
-              <WebAnalytics />
+              {process.env.VERCEL && <WebAnalytics />}
               <VisitCounter />
             </Suspense>
           )}

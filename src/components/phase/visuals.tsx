@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { motion, useReducedMotionConfig } from "framer-motion";
+import { motion, type LegacyAnimationControls as AnimationControls } from "framer-motion";
+import { usePlayEntrance } from "@/components/motion/Entrance";
 
 /**
  * Small drawn pieces for the body phase screens. Three macro colours only, all from the theme:
@@ -19,6 +20,8 @@ export function Ring({
   color = "var(--color-accent)",
   children,
   label,
+  segments,
+  controls,
 }: {
   value: number;
   max: number;
@@ -27,8 +30,19 @@ export function Ring({
   color?: string;
   children?: ReactNode;
   label?: string;
+  /** Draw the ring as this many short dashes, lit one by one, instead of one stroke (owner,
+   *  2026-11-15: a full stroke reads as a plain circle anywhere; dashes read as a count). */
+  segments?: number;
+  /** With `segments`: entrance controls ("still" / "show"); "show" lights the dashes one by one. */
+  controls?: AnimationControls;
 }) {
-  const reduce = useReducedMotionConfig();
+  const reduce = !usePlayEntrance();
+  if (segments)
+    return (
+      <DashRing value={value} max={max} size={size} stroke={stroke} color={color} label={label} segments={segments} controls={controls}>
+        {children}
+      </DashRing>
+    );
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const f = Math.max(0, Math.min(1, max > 0 ? value / max : 0));
@@ -60,6 +74,63 @@ export function Ring({
   );
 }
 
+function DashRing({
+  value,
+  max,
+  size,
+  stroke,
+  color,
+  label,
+  segments,
+  controls,
+  children,
+}: {
+  value: number;
+  max: number;
+  size: number;
+  stroke: number;
+  color: string;
+  label?: string;
+  segments: number;
+  controls?: AnimationControls;
+  children?: ReactNode;
+}) {
+  const r = (size - stroke) / 2;
+  const mid = size / 2;
+  const lit = Math.round(Math.max(0, Math.min(1, max > 0 ? value / max : 0)) * segments);
+  // Each dash covers 60% of its slice; the rest is the gap.
+  const slice = (2 * Math.PI) / segments;
+  const at = (a: number) => `${mid + r * Math.sin(a)} ${mid - r * Math.cos(a)}`;
+  return (
+    <span className="relative inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size }} role={label ? "img" : undefined} aria-label={label}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        {Array.from({ length: segments }, (_, i) => {
+          const a0 = i * slice + slice * 0.2;
+          const a1 = a0 + slice * 0.6;
+          return (
+            <motion.path
+              key={i}
+              d={`M ${at(a0)} A ${r} ${r} 0 0 1 ${at(a1)}`}
+              fill="none"
+              stroke={i < lit ? color : "var(--color-track)"}
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              style={controls ? { opacity: i < lit ? 0 : 1 } : { transition: `stroke 200ms ease ${i * 25}ms` }}
+              animate={controls}
+              variants={
+                controls && i < lit
+                  ? { still: { opacity: 1 }, show: { opacity: [0, 1], transition: { delay: 0.3 + i * 0.09, duration: 0.25 } } }
+                  : undefined
+              }
+            />
+          );
+        })}
+      </svg>
+      <span className="absolute inset-0 flex flex-col items-center justify-center">{children}</span>
+    </span>
+  );
+}
+
 /** Protein, carbs and fat as one bar split by their share of the calories. */
 export function MacroBar({ protein, carbs, fat, className = "h-2" }: { protein: number; carbs: number; fat: number; className?: string }) {
   const kcal = [protein * 4, carbs * 4, fat * 9];
@@ -85,7 +156,7 @@ export function MacroBar({ protein, carbs, fat, className = "h-2" }: { protein: 
 
 /** A donut of the three macros with the calories in the middle. */
 export function MacroDonut({ protein, carbs, fat, size = 132, children }: { protein: number; carbs: number; fat: number; size?: number; children?: ReactNode }) {
-  const reduce = useReducedMotionConfig();
+  const reduce = !usePlayEntrance();
   const stroke = 12;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -182,8 +253,8 @@ export function MacroLegend({ protein, carbs, fat, labels }: { protein: number; 
  * weeks pass (this week half-lit). The plate is ABOT's own mark, so the block reads as part of
  * the app rather than a generic progress ring.
  */
-export function BlockPlate({ weeks, done, current, size = 168, children }: { weeks: number; done: number; current: number | null; size?: number; children?: ReactNode }) {
-  const reduce = useReducedMotionConfig();
+export function BlockPlate({ weeks, done, current, size = 168, color = "var(--color-accent)", children }: { weeks: number; done: number; current: number | null; size?: number; color?: string; children?: ReactNode }) {
+  const reduce = !usePlayEntrance();
   const c = size / 2;
   const outer = c - 2;
   const inner = c * 0.56;
@@ -205,7 +276,7 @@ export function BlockPlate({ weeks, done, current, size = 168, children }: { wee
         {Array.from({ length: weeks }, (_, i) => {
           const lit = i < done;
           const now = current !== null && i === current;
-          const fill = lit ? "var(--color-accent)" : now ? "color-mix(in srgb, var(--color-accent) 45%, transparent)" : "var(--color-track)";
+          const fill = lit ? color : now ? `color-mix(in srgb, ${color} 45%, transparent)` : "var(--color-track)";
           return (
             <motion.path
               key={i}
@@ -227,7 +298,7 @@ export function BlockPlate({ weeks, done, current, size = 168, children }: { wee
 
 /** The shape of each phase's body-weight line: falling, rising, flat with a cycle, stepped load. */
 export function PhaseCurve({ phase, active, width = 120, height = 44 }: { phase: "CUTTING" | "BULKING" | "RECOMP" | "STRENGTH_PEAK"; active: boolean; width?: number; height?: number }) {
-  const reduce = useReducedMotionConfig();
+  const reduce = !usePlayEntrance();
   const paths = {
     CUTTING: "M4,8 C30,10 40,18 60,22 S95,34 116,38",
     BULKING: "M4,38 C30,36 40,28 60,24 S95,12 116,6",

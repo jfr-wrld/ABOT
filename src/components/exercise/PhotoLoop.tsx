@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play } from "@/components/icons";
 import { useReducedMotion } from "framer-motion";
 import type { Exercise } from "@/types/workout";
 import { isImageUrl, isOwnPhoto, localPhoto } from "@/lib/exercise-photo";
@@ -102,7 +102,7 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
             type="button"
             onClick={() => setPlaying((p) => !p)}
             aria-label={playing ? t("Pause photos") : t("Play photos")}
-            className="flex size-11 items-center justify-center rounded-full bg-black/50 text-text backdrop-blur hover:bg-black/70"
+            className="flex size-11 items-center justify-center rounded-full glass-btn text-white"
           >
             {playing ? <Pause aria-hidden="true" size={16} /> : <Play aria-hidden="true" size={16} />}
           </button>

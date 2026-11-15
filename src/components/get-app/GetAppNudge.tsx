@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Smartphone, X } from "lucide-react";
+import { Smartphone, X } from "@/components/icons";
 import { useGetApp } from "@/store/useGetApp";
 import { markSession, readMemory, shouldNudge, shownThisSession, writeMemory, type NudgeTrigger } from "@/lib/get-app";
 import { usePlatform } from "./usePlatform";

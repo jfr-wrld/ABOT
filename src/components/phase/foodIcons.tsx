@@ -1,3 +1,5 @@
+// Foods stay drawn in Lucide: Solar, the app's icon set, has no foods beyond a few drinks, and
+// one set per list reads better than a mix.
 import { Apple, Banana, Bean, Carrot, CookingPot, Beef, Coffee, Drumstick, Egg, EggFried, Fish, GlassWater, Milk, Nut, Salad, Soup, Sprout, Wheat, CupSoda, Cherry, type LucideIcon } from "lucide-react";
 import type { FoodCategory } from "@/lib/nutrition-guide";
 

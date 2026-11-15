@@ -67,6 +67,8 @@ const nextConfig: NextConfig = {
         },
       }),
   turbopack: {
+    // Android: Vercel Web Analytics is web only, so the APK gets an empty stand-in.
+    ...(nativeApp ? { resolveAlias: { "@vercel/analytics/next": "./src/lib/no-analytics.tsx" } } : {}),
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],

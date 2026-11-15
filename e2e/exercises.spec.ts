@@ -33,7 +33,7 @@ test("creates a custom exercise and opens its detail", async ({ page }) => {
   await expect(page.getByText("874 exercises", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: /Kroc Row Variation/ }).click();
   await expect(page.getByRole("heading", { name: "Kroc Row Variation" })).toBeVisible();
-  await expect(page.getByText("No completed working sets yet.")).toBeVisible();
+  await expect(page.getByText("No records yet.")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 

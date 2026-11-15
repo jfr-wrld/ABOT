@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowLeft, Cpu, Database, Dumbbell, Gauge, KeyRound, ListChecks, Lock, SlidersHorizontal, Smartphone, TrendingUp, Users, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Cpu, Crown, Database, Dumbbell, Gauge, KeyRound, ListChecks, Lock, SlidersHorizontal, Smartphone, TrendingUp, type IconComponent } from "@/components/icons";
 import { adminMode, listCodes, stats, type AdminCode, type AdminMode, type AdminStats } from "@/lib/admin-api";
 import { HydrationGate } from "@/components/ui/Loading";
 import { OverviewModule, DatabaseModule, DeviceModule } from "@/components/admin/SystemModules";
@@ -15,7 +15,7 @@ import { cls, errText } from "@/components/admin/ui";
 import { DEV_TOOLS } from "@/lib/dev-tools";
 
 /**
- * ABOT // MISSION CONTROL (docs/plans/ADMIN_ARCHITECTURE_SPEC.md). Global modules write to
+ * Mission Control (docs/plans/ADMIN_ARCHITECTURE_SPEC.md). Global modules write to
  * Supabase, where every write is checked against app_admins; Device modules edit this phone's
  * stores and IndexedDB. The PIN only hides the page: it ships inside the app like every page.
  */
@@ -29,10 +29,10 @@ const PIN = process.env.NEXT_PUBLIC_ABOT_ADMIN_PIN || (DEV_TOOLS ? "2026" : "");
 const UNLOCK_KEY = "abot.admin-unlocked";
 
 type ModuleId = "overview" | "growth" | "customers" | "money" | "licenses" | "algorithms" | "exercises" | "routines" | "database" | "device";
-const ALL_MODULES: { id: ModuleId; label: string; icon: LucideIcon }[] = [
+const ALL_MODULES: { id: ModuleId; label: string; icon: IconComponent }[] = [
   { id: "overview", label: "Overview", icon: Gauge },
   { id: "growth", label: "Growth", icon: TrendingUp },
-  { id: "customers", label: "Customers", icon: Users },
+  { id: "customers", label: "Customers", icon: Crown },
   { id: "money", label: "Monetization", icon: SlidersHorizontal },
   { id: "licenses", label: "Licenses", icon: KeyRound },
   { id: "algorithms", label: "Algorithms", icon: Cpu },
@@ -61,7 +61,7 @@ export default function AdminPage() {
   return (
     // Its own full-screen layer: the app shell is a 640 px phone column with a dock, and the
     // console needs the whole window on a laptop.
-    <main className="force-dark fixed inset-0 z-[60] overflow-y-auto overscroll-contain bg-[#09090b] text-text">
+    <main className="force-dark fixed inset-0 z-[60] overflow-y-auto overscroll-contain bg-bg text-text">
       {unlocked ? (
         <HydrationGate>
           <Console />
@@ -80,7 +80,7 @@ function PinGate({ onUnlock }: { onUnlock: () => void }) {
   const [wrong, setWrong] = useState(false);
   return (
     <form
-      className="mx-auto mt-10 flex w-full max-w-sm flex-col gap-3 rounded-card border border-[#27272a] bg-[#121215] p-5"
+      className="raised-card mx-auto mt-10 flex w-full max-w-sm flex-col gap-3 rounded-card bg-surface p-5"
       onSubmit={(e) => {
         e.preventDefault();
         if (pin !== PIN) return setWrong(true);
@@ -92,11 +92,11 @@ function PinGate({ onUnlock }: { onUnlock: () => void }) {
         onUnlock();
       }}
     >
-      <p className={cls.label}>ABOT // MISSION CONTROL</p>
+      <p className="text-base font-bold">Mission Control</p>
       <h1 className="flex items-center gap-2 text-lg font-extrabold">
-        <Lock aria-hidden="true" size={18} className="text-[#ccff00]" /> Founder passkey
+        <Lock aria-hidden="true" size={18} className="text-accent" /> Founder passkey
       </h1>
-      <label htmlFor="admin-pin" className="text-sm text-zinc-300">
+      <label htmlFor="admin-pin" className="text-sm text-text">
         PIN
       </label>
       <input
@@ -110,10 +110,10 @@ function PinGate({ onUnlock }: { onUnlock: () => void }) {
           setWrong(false);
         }}
         aria-invalid={wrong || undefined}
-        className={`${cls.input} text-center text-lg tracking-[0.4em]`}
+        className={`${cls.input} text-center text-lg tracking-wider`}
       />
       {wrong && (
-        <p role="alert" className="text-sm text-[#ef4444]">
+        <p role="alert" className="text-sm text-failure">
           Wrong PIN.
         </p>
       )}
@@ -168,19 +168,19 @@ function Console() {
 
   return (
     <div className="mx-auto grid min-h-dvh max-w-[1440px] content-start grid-cols-[minmax(0,1fr)] lg:grid-cols-[232px_minmax(0,1fr)]">
-      <aside className="sticky top-0 z-10 min-w-0 border-b border-[#27272a] bg-[#09090b]/95 pt-[env(safe-area-inset-top)] backdrop-blur lg:h-dvh lg:self-start lg:border-b-0 lg:border-r">
+      <aside className="sticky top-0 z-10 min-w-0 border-b border-line bg-bg/95 pt-[env(safe-area-inset-top)] backdrop-blur lg:h-dvh lg:self-start lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-2 px-4 py-3 lg:flex-col lg:items-start lg:py-5">
           <div>
-            <p className={cls.label}>ABOT // MISSION CONTROL</p>
-            <p className="mt-1 font-mono text-[11px] tabular-nums">
+            <p className="text-base font-bold">Mission Control</p>
+            <p className="mt-1 text-xs font-semibold">
               {!mode ? (
-                <span className="text-zinc-400">checking access...</span>
+                <span className="text-text-muted">checking access...</span>
               ) : mode.kind === "local" ? (
-                <span className="text-[#f59e0b]">● LOCAL MODE</span>
+                <span className="text-caution">● Local mode</span>
               ) : mode.admin ? (
-                <span className="text-[#ccff00]">● LIVE · {mode.email}</span>
+                <span className="text-accent">● Live · {mode.email}</span>
               ) : (
-                <span className="text-[#f59e0b]">● NOT AN ADMIN</span>
+                <span className="text-caution">● Not an admin</span>
               )}
             </p>
           </div>
@@ -196,14 +196,14 @@ function Console() {
               onClick={() => go(id)}
               aria-current={current === id ? "page" : undefined}
               className={`flex min-h-11 shrink-0 items-center gap-2 rounded-ctl px-3 text-left text-sm font-semibold transition-colors ${
-                current === id ? "bg-[#ccff00] text-black" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                current === id ? "bg-accent text-on-accent" : "text-text-muted hover:bg-white/5 hover:text-text"
               }`}
             >
               <Icon aria-hidden="true" size={16} />
               {label}
             </button>
           ))}
-          <Link href="/settings" className="mt-4 hidden min-h-11 items-center gap-2 rounded-ctl px-3 text-sm text-zinc-400 hover:text-white lg:flex">
+          <Link href="/settings" className="mt-4 hidden min-h-11 items-center gap-2 rounded-ctl px-3 text-sm text-text-muted hover:text-text lg:flex">
             <ArrowLeft aria-hidden="true" size={16} /> Back to Settings
           </Link>
         </nav>
@@ -212,14 +212,14 @@ function Console() {
       <section aria-label={MODULES.find((m) => m.id === current)!.label} className="min-w-0 px-4 pb-16 pt-4 lg:px-8 lg:pt-8">
         <h1 className="mb-4 text-2xl font-extrabold tracking-tight">{MODULES.find((m) => m.id === current)!.label}</h1>
         {error && (
-          <p role="alert" className="mb-4 rounded-ctl border border-[#ef4444]/60 px-3 py-2 text-sm text-[#ef4444]">
+          <p role="alert" className="mb-4 rounded-ctl border border-failure/60 px-3 py-2 text-sm text-failure">
             {error}
           </p>
         )}
         {mode && isGlobal && !globalOpen ? (
-          <div className="flex max-w-xl flex-col gap-3 rounded-card border border-[#27272a] bg-[#121215] p-4">
-            <p className="font-mono text-xs font-bold uppercase tracking-[0.12em] text-[#f59e0b]">Admin account needed</p>
-            <p className="text-sm text-zinc-300">
+          <div className="raised-card flex max-w-xl flex-col gap-3 rounded-card bg-surface p-4">
+            <p className="text-sm font-bold text-caution">Admin account needed</p>
+            <p className="text-sm text-text">
               {mode.kind === "server" && mode.email
                 ? `${mode.email} is not in app_admins. Add it once in the Supabase SQL editor: insert into public.app_admins (email) values ('${mode.email.toLowerCase()}');`
                 : "Sign in with the founder's Google account (Settings, Data & backup), then come back."}

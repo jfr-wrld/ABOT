@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 
 test("starts an empty workout and adds an exercise", async ({ page }) => {
   await startEmptyWorkout(page);
-  await expect(page.getByText("This workout has no exercises yet")).toBeVisible();
+  await expect(page.getByText("No exercises yet. Add one below.")).toBeVisible();
   await page.getByRole("button", { name: "Add exercise" }).click();
   await page.getByLabel("Search exercises").fill("zzzz");
   await expect(page.getByText("No exercise matches")).toBeVisible();

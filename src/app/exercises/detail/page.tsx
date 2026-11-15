@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { BackLink } from "@/components/navigation/BackLink";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CalendarClock, ChevronLeft, Dumbbell, Play, Plus, Repeat, Trophy, TrendingDown, TrendingUp, Pencil, Trash2 } from "lucide-react";
+import { CalendarClock, ChevronLeft, Dumbbell, Play, Plus, Repeat, Trophy, TrendingDown, TrendingUp, Pencil, Trash2 } from "@/components/icons";
 import { motion, useReducedMotionConfig } from "framer-motion";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
@@ -128,7 +128,7 @@ function Detail() {
                 type="button"
                 onClick={() => setEditOpen(true)}
                 aria-label={t("Edit exercise")}
-                className="flex size-11 items-center justify-center rounded-full bg-black/40 backdrop-blur hover:bg-black/60"
+                className="glass-btn flex size-11 items-center justify-center rounded-full text-white"
               >
                 <Pencil aria-hidden="true" size={18} />
               </button>
@@ -136,7 +136,7 @@ function Detail() {
                 type="button"
                 onClick={() => setDeleteOpen(true)}
                 aria-label={t("Delete exercise")}
-                className="flex size-11 items-center justify-center rounded-full bg-black/40 text-text backdrop-blur hover:bg-failure/30"
+                className="glass-btn flex size-11 items-center justify-center rounded-full text-white hover:text-failure"
               >
                 <Trash2 aria-hidden="true" size={18} />
               </button>
@@ -168,7 +168,7 @@ function Detail() {
                 {chartData.length < 2 ? (
                   <p className="py-6 text-center text-sm text-text-muted">
                     {chartData.length === 0
-                      ? t("No data yet. The line starts after your first finished workout with this exercise.")
+                      ? t("The line starts after your first workout with this.")
                       : t("One point so far. A second workout draws the line.")}
                   </p>
                 ) : (
@@ -210,7 +210,7 @@ function Detail() {
           <section {...tabPanelProps("ex-detail", "history")} aria-label={t("History")} className="outline-none">
             {recent.length === 0 ? (
               <p className="mt-2 panel px-4 py-6 text-center text-sm text-text-muted">
-                {t("Not logged yet. Add it to a workout and finish the workout to see sets here.")}
+                {t("Not logged yet.")}
               </p>
             ) : (
               <>
@@ -334,7 +334,7 @@ function Hero({ exercise, actions }: { exercise: Exercise; actions?: React.React
       <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-6 pt-3">
         <BackLink
           href="/exercises"
-          className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-black/50 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-black/70"
+          className="glass-btn -ml-2 inline-flex min-h-11 items-center gap-1 rounded-full pl-1.5 pr-3 text-sm font-semibold text-white"
         >
           <ChevronLeft aria-hidden="true" size={18} />
           {t("Exercises")}
@@ -402,7 +402,7 @@ function QuickStats({ exercise, done, unit }: { exercise: Exercise; done: Workou
         <div key={tile.label} className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
           <span
             aria-hidden="true"
-            className={`hidden size-9 shrink-0 items-center justify-center rounded-lg min-[360px]:flex ${tile.pr ? "bg-pr/10 text-pr" : "bg-surface-2 text-text-muted"}`}
+            className={`tile hidden size-9 shrink-0 items-center justify-center rounded-lg min-[360px]:flex ${tile.pr ? "bg-pr/10 text-pr" : "bg-surface-2 text-text-muted"}`}
           >
             {tile.icon}
           </span>
@@ -415,7 +415,7 @@ function QuickStats({ exercise, done, unit }: { exercise: Exercise; done: Workou
         </div>
       ))}
       <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
-        <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
+        <span aria-hidden="true" className="tile hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
           <CalendarClock size={16} />
         </span>
         <div className="min-w-0">

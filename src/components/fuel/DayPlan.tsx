@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { Check, Dumbbell, ListChecks, Minus, Plus, ShoppingBasket } from "lucide-react";
+import { Check, Dumbbell, ListChecks, Minus, Plus, ShoppingBasket } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { MacroBar } from "@/components/phase/visuals";
 import { FoodPhoto } from "./FoodPhoto";
@@ -46,7 +46,7 @@ export function DayPlan({ phase, fuel }: { phase: BodyPhaseType; fuel: FuelTarge
                 setPick(x.id);
                 setLogged(new Set());
               }}
-              className={`tap min-h-11 shrink-0 rounded-full border px-4 text-xs font-semibold ${
+              className={`chip tap min-h-11 shrink-0 rounded-full border px-4 text-xs font-semibold ${
                 x.id === template.id ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
               }`}
             >

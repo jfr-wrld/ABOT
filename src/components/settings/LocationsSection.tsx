@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { GymLocation } from "@/types/workout";
 import { InfoTip } from "@/components/ui/InfoTip";
-import { Check, LocateFixed, MapPin } from "lucide-react";
+import { Check, LocateFixed, MapPin } from "@/components/icons";
 import { currentPosition, openAppSettings, requestAccess } from "@/lib/native/permissions";
 import { isNativeApp } from "@/lib/native/files";
 import { findNearbyGyms, type NearbyGym } from "@/lib/nearby-gyms";
@@ -15,6 +15,7 @@ import { useT } from "@/i18n";
 import { NumberField } from "@/components/ui/NumberField";
 import { PLATE_SETS } from "@/lib/plate-calculator";
 import { equipmentUnit, gymSetup, setupPatch, standardSetup, type GymSetup } from "@/lib/gym-equipment";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 export function LocationsSection() {
   const { locations, add, update, setDefault } = useLocationStore();
@@ -32,11 +33,14 @@ export function LocationsSection() {
         }
         name={t("gyms")}
       >
-        {t("Machine and cable weights differ between gyms, so their records and previous sets are kept per gym.")}
+        {t("Machine weights differ by gym, so records are kept per gym.")}
       </InfoTip>
 
       {locations.length === 0 ? (
-        <p className="text-sm text-text-muted">{t("No gyms yet.")}</p>
+        <div className="flex flex-col gap-2 text-center">
+          <EmptyArt icon={MapPin} />
+          <p className="text-sm text-text-muted">{t("No gyms yet.")}</p>
+        </div>
       ) : (
         <ul className="flex flex-col gap-2">
           {locations.map((l) => (
@@ -178,7 +182,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
                   // 20 kg plates are no whole number of pounds: a switch starts from that unit's standard set.
                   update(gym.id, setupPatch(standardSetup(u), u));
                 }}
-                className={`min-h-11 rounded-lg text-sm font-semibold ${unit === u ? "bg-ink/[0.1] text-text" : "text-text-muted hover:text-text"}`}
+                className={`chip min-h-11 rounded-lg text-sm font-semibold ${unit === u ? "bg-ink/[0.1] text-text" : "text-text-muted hover:text-text"}`}
               >
                 {u === "kg" ? "kg" : "lb"}
               </button>
@@ -212,7 +216,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
                     type="button"
                     aria-pressed={on}
                     onClick={() => togglePlate(p)}
-                    className={`num my-1 min-h-11 min-w-20 rounded-lg px-3 text-sm font-semibold ${on ? "bg-accent text-on-accent" : "border border-line-strong text-text-muted"}`}
+                    className={`chip num my-1 min-h-11 min-w-20 rounded-lg px-3 text-sm font-semibold ${on ? "bg-accent text-on-accent" : "border border-line-strong text-text-muted"}`}
                   >
                     {label}
                   </button>

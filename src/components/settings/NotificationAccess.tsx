@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BellOff } from "lucide-react";
+import { BellOff } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { syncPermission, useReminderStore } from "@/store/useReminderStore";
 import { isNativeApp } from "@/lib/native/files";
@@ -54,7 +54,7 @@ export function NotificationAccess() {
         : t("Allow notifications for the rest-over alarm, the workout status and reminders.");
 
   return (
-    <section aria-labelledby="notify-access-heading" className="rounded-card border border-line-strong bg-surface-2 p-3">
+    <section aria-labelledby="notify-access-heading" className="raised-card rounded-card border bg-surface-2 p-3">
       <h2 id="notify-access-heading" className="flex items-center gap-2 text-sm font-semibold">
         <BellOff aria-hidden="true" size={16} className="text-text-muted" />
         {t("Notifications are off")}

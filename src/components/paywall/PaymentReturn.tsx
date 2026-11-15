@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
 import { syncEntitlementWithAccount } from "@/lib/entitlement-sync";
 import { CHECKOUT_OPENED, PAYMENT_STATUS_MESSAGE as MESSAGE, pendingOrder, rememberPendingOrder, waitForOrder, whenForeground, type PaymentShown as Shown } from "@/lib/checkout";

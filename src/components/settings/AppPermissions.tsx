@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Bell, Camera, Check, MapPin, type LucideIcon } from "lucide-react";
+import { Bell, Camera, Check, MapPin, type IconComponent } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { syncPermission, useReminderStore } from "@/store/useReminderStore";
 import { useT, type T } from "@/i18n";
@@ -11,7 +11,7 @@ import { isNativeApp } from "@/lib/native/files";
 
 type Kind = "notifications" | AccessKind;
 
-const ROWS: { kind: Kind; icon: LucideIcon }[] = [
+const ROWS: { kind: Kind; icon: IconComponent }[] = [
   { kind: "notifications", icon: Bell },
   { kind: "camera", icon: Camera },
   { kind: "location", icon: MapPin },

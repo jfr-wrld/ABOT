@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, Image as ImageIcon } from "lucide-react";
+import { Camera, Image as ImageIcon } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { AVATAR_TARGET, squareJpeg, type CropTarget } from "@/lib/photo";

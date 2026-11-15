@@ -23,7 +23,7 @@ test("the Coach Pill suggests one more rep after a clean session, and APPLY fill
   await addExercise(page, "Bench Press (Barbell)");
   const pill = page.getByRole("group", { name: "Coach: Volume target" });
   await expect(pill).toContainText("80 kg × 9");
-  await expect(pill).toContainText("(+1 rep)");
+  await expect(pill).toContainText("+1 rep");
   await expectNoHorizontalOverflow(page);
   await pill.getByRole("button", { name: "Apply 80 kg × 9 to the sets left" }).click();
   for (const n of [1, 2, 3]) {

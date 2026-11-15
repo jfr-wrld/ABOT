@@ -11,6 +11,7 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { toDisplay } from "@/lib/units";
 import { useT } from "@/i18n";
+import { HeartPulse } from "@/components/icons";
 import { BodyLink } from "@/components/profile/BodyLink";
 
 const STATUS_LINE: Record<HealthStatus, { text: string; on: boolean }> = {
@@ -112,11 +113,14 @@ export function HealthSyncCard() {
 
   return (
     <section aria-labelledby="health-heading" className="flex flex-col gap-4">
-      <div className="force-dark flex flex-col gap-3 rounded-card border border-line-strong bg-bg p-4 text-text">
-        <h2 id="health-heading" className="text-sm font-semibold">
+      <div className="raised-card flex flex-col gap-3 rounded-card bg-surface p-4">
+        <h2 id="health-heading" className="flex items-center gap-2.5 text-base font-bold">
+          <span aria-hidden="true" className="tile flex size-9 items-center justify-center rounded-full text-accent">
+            <HeartPulse size={18} />
+          </span>
           Health Connect
         </h2>
-        <p role="status" className="flex items-center gap-2 font-mono text-xs font-semibold tracking-[0.14em]">
+        <p role="status" className="flex items-center gap-2 text-sm font-semibold">
           {line ? (
             <>
               <span aria-hidden="true" className={`size-2 rounded-full ${line.on ? "bg-accent" : "border border-text-muted"}`} />

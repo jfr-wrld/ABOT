@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Trophy } from "lucide-react";
+import { Trophy } from "@/components/icons";
 import type { Exercise, PersonalRecord, PRKind } from "@/types/workout";
 import { buildPRTable, variantKey } from "@/lib/calc";
 import { formatWeight } from "@/lib/units";
@@ -55,7 +55,7 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
       </h2>
       {!mine ? (
         <p className="mt-2 text-sm text-text-muted">
-          {t("No completed working sets yet. Records appear after you log this exercise in a finished workout.")}
+          {t("No records yet. Log this exercise to see them.")}
         </p>
       ) : (
         // Bodyweight lifts: the best set in reps, alone. A 1RM or a set volume of the added load

@@ -5,7 +5,7 @@ import { withMyFood } from "@/lib/my-foods";
 import { TargetBreakdown } from "@/components/phase/TargetBreakdown";
 import type { BodyPhaseType } from "@/lib/phase-engine";
 import { useMemo, useState } from "react";
-import { Copy, Plus, Trash2, Zap } from "lucide-react";
+import { Copy, Plus, Trash2, Zap, Utensils } from "@/components/icons";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -20,6 +20,7 @@ import type { FoodLogEntry } from "@/types/workout";
 import { newId } from "@/lib/id";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 const MEALS: MealSlot[] = ["breakfast", "lunch", "pre", "post", "dinner", "snack"];
 const BY_ID = Object.fromEntries(FOODS.map((f) => [f.id, f]));
@@ -65,14 +66,15 @@ export function TodayLog({
       <h2 id="today-heading" className="sr-only">
         {t("Today")}
       </h2>
-      <div className="grid grid-cols-4 gap-1 rounded-card border border-line bg-surface p-3">
+      <div className="raised-card grid grid-cols-4 gap-1 rounded-card bg-surface p-3">
         {rings.map((r) => (
           <div key={r.key} className="flex flex-col items-center gap-1 text-center">
             <Ring
               value={r.value}
               max={r.max || 1}
               size={60}
-              stroke={6}
+              stroke={5}
+              segments={14}
               color={r.color}
               label={r.max ? t("{label}: {value} of {max} {unit}", { label: r.label, value: r.value, max: r.max, unit: r.unit }) : `${r.label}: ${r.value} ${r.unit}`}
             >
@@ -92,16 +94,18 @@ export function TodayLog({
       )}
 
       {fuel && phase && <TargetBreakdown fuel={fuel} phase={phase} trainingDay={trainingDay} />}
-      <div className="grid grid-cols-3 gap-2">
-        <Button variant="primary" onClick={onAddFood}>
+      {/* Food leads on its own row; the other two share the next, so no label has to wrap. */}
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="primary" onClick={onAddFood} className="col-span-2">
           <Plus aria-hidden="true" size={16} />
           {t("Food")}
         </Button>
-        <Button onClick={() => setQuick(true)}>
+        <Button onClick={() => setQuick(true)} className="whitespace-nowrap">
           <Zap aria-hidden="true" size={16} />
           {t("Quick add")}
         </Button>
         <Button
+          className="whitespace-nowrap"
           disabled={!hadYesterday}
           onClick={() => {
             const n = useFoodLog.getState().copyDay(yesterday, today, now);
@@ -114,9 +118,10 @@ export function TodayLog({
       </div>
 
       {entries.length === 0 ? (
-        <p className="rounded-card border border-line bg-surface p-5 text-center text-sm text-text-muted">
-          {t("Nothing logged today. Add a food, use a day plan, or copy yesterday.")}
-        </p>
+        <div className="flex flex-col gap-3 rounded-card border bg-surface p-5 text-center">
+          <EmptyArt icon={Utensils} />
+          <p className="text-sm text-text-muted">{t("Nothing logged today. Add a food, use a day plan, or copy yesterday.")}</p>
+        </div>
       ) : (
         MEALS.filter((m) => entries.some((e) => e.meal === m)).map((m) => {
           const rows = entries.filter((e) => e.meal === m);

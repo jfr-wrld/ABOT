@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, Search } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useLocationStore } from "@/store/useLocationStore";
@@ -17,6 +17,7 @@ import { feedback } from "@/lib/feedback";
 import { useNow } from "@/lib/useNow";
 import type { FocusLabel } from "@/lib/training-focus";
 import { useT } from "@/i18n";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 /** Rows drawn at first and per "Show more": a long log stays quick to open. */
 const PAGE = 30;
@@ -77,7 +78,7 @@ function AllWorkouts() {
             }}
             placeholder={t("Workout or exercise name")}
             autoComplete="off"
-            className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
+            className="h-11 min-w-0 flex-1 search-pill px-3 text-base placeholder:text-text-muted"
           />
           <ViewToggle value={view} onChange={setView} />
         </div>
@@ -94,7 +95,7 @@ function AllWorkouts() {
                   setFocus(f);
                   setShown(PAGE);
                 }}
-                className={`tap h-11 shrink-0 rounded-full border px-4 text-xs font-semibold ${
+                className={`chip tap h-11 shrink-0 rounded-full border px-4 text-xs font-semibold ${
                   focus === f ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
                 }`}
               >
@@ -128,7 +129,7 @@ function AllWorkouts() {
 
       {found.length === 0 ? (
         <div className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-xl border border-line bg-surface p-6 text-center">
-          <Dumbbell aria-hidden="true" size={22} className="text-text-muted" />
+          <EmptyArt icon={total === 0 ? Dumbbell : Search} />
           <p className="text-sm text-text-muted">{total === 0 ? t("No workouts yet.") : t("No workout matches. Try another name, or clear the filters.")}</p>
         </div>
       ) : (

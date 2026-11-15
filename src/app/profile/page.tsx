@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Camera, Pencil, Settings } from "lucide-react";
+import { Camera, Pencil, Settings } from "@/components/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -78,7 +78,7 @@ function ProfileScreen() {
         <Link
           href="/settings"
           aria-label={t("Settings")}
-          className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
+          className="glass-icon rounded-full flex size-11 items-center justify-center text-text"
         >
           <Settings aria-hidden="true" size={22} />
         </Link>
@@ -108,7 +108,7 @@ function ProfileScreen() {
           </button>
           <Link
             href={EDIT_PROFILE}
-            className="tap mt-3 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-line-strong bg-surface px-4 text-sm font-semibold text-text hover:bg-press active:bg-press-strong"
+            className="tap mt-3 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full raised px-4 text-sm font-semibold text-text"
           >
             <Pencil aria-hidden="true" size={15} />
             {t("Edit profile")}

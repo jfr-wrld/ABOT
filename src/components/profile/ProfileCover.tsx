@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ImagePlus, Trash2 } from "lucide-react";
+import { Check, ImagePlus, Trash2 } from "@/components/icons";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { CoverArt } from "./coverPresets";
@@ -31,7 +31,7 @@ export function ProfileCover({ weeks }: { weeks: number[] }) {
         onClick={() => setOpen(true)}
         aria-label={t("Change cover")}
         aria-haspopup="dialog"
-        className="absolute right-2 top-2 flex min-h-11 items-center gap-1.5 rounded-full bg-black/50 px-3.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-black/65"
+        className="absolute right-2 top-2 flex min-h-11 items-center gap-1.5 rounded-full glass-btn px-3.5 text-xs font-semibold text-white"
       >
         <ImagePlus aria-hidden="true" size={15} />
         {t("Cover")}

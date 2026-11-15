@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { motion, type Variants } from "framer-motion";
-import { CalendarDays, ChevronRight, Flame, Hammer } from "lucide-react";
+import { CalendarDays, ChevronRight, Flame, Hammer, TrendingUp } from "@/components/icons";
 import { PHASE_ICON } from "@/components/phase/PhaseCommandCard";
 import { usePhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -11,6 +11,7 @@ import { PHASE_LABEL } from "@/lib/phase-engine";
 import { toDisplay } from "@/lib/units";
 import type { MuscleGroup } from "@/types/workout";
 import { RangeTabs } from "@/components/progress/RangeTabs";
+import { usePlayEntrance } from "@/components/motion/Entrance";
 import { ProgressHero } from "@/components/progress/ProgressHero";
 import { useProgressData } from "@/components/progress/useProgressData";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
@@ -22,6 +23,7 @@ import { muscleSplit } from "@/lib/calc";
 import { relativeDay } from "@/lib/home";
 import { buildPeriodStoryData } from "@/lib/story-data";
 import { useT } from "@/i18n";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 /** Sections arrive in reading order, a beat apart, so the page settles top to bottom once. */
 const section: Variants = {
@@ -37,6 +39,8 @@ const PLATE = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
  * muscles, calendar. Charts and long lists live on those pages, not here.
  */
 export function ProgressPanel() {
+  // Sections arrive in order on the first visit; reopening Profile shows them in place.
+  const play = usePlayEntrance();
   const d = useProgressData();
   const setWeeks = useProgressRange((s) => s.setWeeks);
   const t = useT();
@@ -62,8 +66,9 @@ export function ProgressPanel() {
     <div className="flex flex-col gap-3">
       {d.completed.length === 0 ? (
         <section className="panel flex flex-col items-center gap-3 p-6 text-center">
+          <EmptyArt icon={TrendingUp} />
           <p className="text-sm text-text-muted">
-            {t("Nothing to chart yet. Finish a workout and your volume, streak, muscles and main lifts show up here.")}
+            {t("Nothing to chart yet. Finish a workout to see progress.")}
           </p>
           <Link
             href="/workout"
@@ -78,7 +83,7 @@ export function ProgressPanel() {
           message above, so they wait for the first workout. */}
       {d.completed.length > 0 && (
         <>
-      <motion.div custom={0} variants={section} initial="hidden" animate="show" className="flex items-center gap-2">
+      <motion.div custom={0} variants={section} initial={play ? "hidden" : false} animate="show" className="flex items-center gap-2">
         <div className="flex-1">
           <RangeTabs id="range" label={t("Range")} options={RANGES.map((n) => ({ value: n, label: t("{n} wk", { n }) }))} value={d.weeks} onChange={setWeeks} />
         </div>
@@ -91,13 +96,13 @@ export function ProgressPanel() {
         )}
       </motion.div>
 
-      <motion.div custom={1} variants={section} initial="hidden" animate="show">
+      <motion.div custom={1} variants={section} initial={play ? "hidden" : false} animate="show">
         <ProgressHero weeks={d.weeks} totals={d.totals} change={d.change} buckets={d.buckets} unit={d.unit} />
       </motion.div>
         </>
       )}
 
-      <motion.nav custom={2} variants={section} initial="hidden" animate="show" aria-label={t("Progress details")} className="flex flex-col gap-2">
+      <motion.nav custom={2} variants={section} initial={play ? "hidden" : false} animate="show" aria-label={t("Progress details")} className="flex flex-col gap-2">
         <SummaryTile
           href="/progress/trend"
           title={t("Weekly trend")}
@@ -143,7 +148,7 @@ export function ProgressPanel() {
 function SummaryTile({ href, title, icon, headline, line, aside }: { href: string; title: string; icon: ReactNode; headline: string; line: string; aside?: ReactNode }) {
   return (
     <Link href={href} className="tap panel flex min-h-[72px] items-center gap-3 px-3 py-3 hover:border-line-hover active:bg-surface-2">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-2">{icon}</span>
+      <span className="tile flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-2">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="field-label block">{title}</span>
         <span className="mt-0.5 block truncate text-sm font-bold">{headline}</span>

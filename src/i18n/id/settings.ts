@@ -25,12 +25,12 @@ export const settings: Record<string, string> = {
   "Sign out of ABOT?": "Keluar dari ABOT?",
   "Stay signed in": "Tetap masuk",
   "Your workouts stay on this phone and in your backup. New workouts are not backed up until you sign in again.":
-    "Latihanmu tetap ada di HP ini dan di backup. Latihan baru tidak di-backup sampai kamu masuk lagi.",
+    "Latihanmu tetap di HP ini. Latihan baru belum di-backup sampai kamu masuk lagi.",
 
   // General
   Language: "Bahasa",
-  "Phone follows your phone's language: Indonesian when it is set to Indonesian, English otherwise.":
-    "Ikuti HP memakai bahasa HP-mu: Indonesia kalau HP diatur ke bahasa Indonesia, selain itu Inggris.",
+  "Follows your phone's language.":
+    "Ikuti bahasa HP-mu.",
   Theme: "Tema",
   "System follows your phone's light or dark mode.": "Sistem mengikuti mode terang atau gelap di HP-mu.",
   "Weight unit": "Satuan berat",
@@ -43,18 +43,18 @@ export const settings: Record<string, string> = {
   // Workout settings
   "Default rest": "Istirahat bawaan",
   "default rest": "istirahat bawaan",
-  "The rest timer an exercise starts with when you add it. Each exercise can change its own.":
-    "Timer istirahat awal untuk gerakan yang baru kamu tambahkan. Tiap gerakan bisa mengubahnya sendiri.",
+  "Default rest for new exercises.":
+    "Istirahat awal untuk gerakan baru.",
   "Rest alert": "Alarm istirahat",
   "Three short pips at 3, 2, 1, then a beep and a vibration when rest reaches zero.": "Tiga bunyi pendek di 3, 2, 1, lalu bunyi dan getar saat istirahat habis.",
   "RPE column": "Kolom RPE",
-  "Rate of perceived exertion, 1 to 10: how hard each set felt. Shown in the logger next to weight and reps.":
-    "Tingkat usaha yang dirasakan, 1 sampai 10: seberat apa tiap set terasa. Tampil di pencatat, di samping berat dan rep.",
+  "How hard each set felt, 1 to 10.":
+    "Seberat apa tiap set terasa, 1 sampai 10.",
 
   // Gyms
   Gyms: "Gym",
   gyms: "gym",
-  "Machine and cable weights differ between gyms, so their records and previous sets are kept per gym.":
+  "Machine weights differ by gym, so records are kept per gym.":
     "Beban mesin dan kabel beda di tiap gym, jadi rekor dan set sebelumnya disimpan per gym.",
   "No gyms yet.": "Belum ada gym.",
   "Enter a gym name": "Masukkan nama gym",
@@ -72,9 +72,9 @@ export const settings: Record<string, string> = {
   "Delete {name}?": "Hapus {name}?",
   "Keep it": "Tetap simpan",
   "Workouts logged here keep their sets. Their machine records stay separate from your other gyms.":
-    "Latihan yang dicatat di sini tetap menyimpan set-nya. Rekor mesinnya tetap terpisah dari gym kamu yang lain.",
+    "Latihan di sini tetap tersimpan. Rekor mesinnya terpisah dari gym lain.",
   "Location is off for ABOT, so the gym cannot be pinned.": "Lokasi untuk ABOT mati, jadi gym tidak bisa ditandai.",
-  "Pinned within {m} m.": "Ditandai dengan akurasi {m} m.",
+  "Pinned within {m} m.": "Ditandai (±{m} m).",
   "Could not find where you are. Try again near a window or outdoors.":
     "Lokasimu tidak ketemu. Coba lagi di dekat jendela atau di luar ruangan.",
   "Picked by itself when a workout starts here.": "Dipilih otomatis saat latihan dimulai di sini.",
@@ -87,19 +87,19 @@ export const settings: Record<string, string> = {
   // Notifications and schedule
   "Status outside the app": "Status di luar aplikasi",
   "status outside the app": "status di luar aplikasi",
-  "While a workout runs, the status bar shows the rest countdown or the workout time, even with ABOT closed or the screen locked. Pull it down to add 30 seconds, skip rest or log the next set. It rings when rest is over.":
-    "Saat latihan berjalan, status bar menampilkan hitung mundur istirahat atau waktu latihan, meski ABOT ditutup atau layar terkunci. Tarik ke bawah untuk menambah 30 detik, melewati istirahat, atau mencatat set berikutnya. Berbunyi saat istirahat selesai.",
+  "Rest and workout time in the status bar, even when locked. Pull down to add 30 s, skip, or log a set.":
+    "Istirahat dan waktu latihan tampil di status bar, meski layar terkunci. Tarik ke bawah untuk +30 detik, lewati, atau catat set.",
   "Live timer in the status bar": "Timer langsung di status bar",
   "live timer": "timer langsung",
   "Show the timer": "Tampilkan timer",
-  "Rest only hides it between rests; it comes back for each rest countdown.": "Hanya istirahat menyembunyikannya di antara istirahat; muncul lagi di setiap hitung mundur istirahat.",
+  "Rest only hides it between rests; it comes back for each rest countdown.": "Hanya istirahat: muncul saat istirahat saja.",
   "Rest and workout": "Istirahat dan latihan",
   "Rest only": "Hanya istirahat",
   "Second line": "Baris kedua",
   "Next set": "Set berikutnya",
   "Total volume": "Volume total",
-  "While a workout runs and you leave ABOT, a notification shows the workout, when rest ends and your next set. Phones only give the Dynamic Island and live updates to installed native apps, so this is a notification.":
-    "Saat latihan berjalan dan kamu keluar dari ABOT, notifikasi menampilkan latihan, kapan istirahat selesai, dan set berikutnya. HP hanya memberi Dynamic Island dan live update ke aplikasi native yang terpasang, jadi ini berupa notifikasi.",
+  "Leave ABOT mid-workout and a notification shows your rest and next set.":
+    "Keluar dari ABOT saat latihan, notifikasi menampilkan istirahat dan set berikutnya.",
   "Notifications are off for ABOT; turn them on in Android settings.":
     "Notifikasi untuk ABOT mati; nyalakan di pengaturan Android.",
   "Notifications are blocked for ABOT; allow them in the browser or phone settings.":
@@ -111,7 +111,7 @@ export const settings: Record<string, string> = {
   "The alert could not be sent.": "Alarm tidak bisa dikirim.",
   "Test alert": "Tes alarm",
   "Android may ring the rest alarm a few minutes late. Allow alarms for ABOT to ring on the second.":
-    "Android bisa membunyikan alarm istirahat telat beberapa menit. Izinkan alarm untuk ABOT supaya berbunyi tepat waktu.",
+    "Alarm bisa telat. Izinkan alarm untuk ABOT agar tepat waktu.",
   "Allow on-time alarms": "Izinkan alarm tepat waktu",
   "Free session": "Sesi bebas",
   "Saved to {folder}. Open it with your calendar app.": "Disimpan ke {folder}. Buka dengan aplikasi kalendermu.",
@@ -139,15 +139,15 @@ export const settings: Record<string, string> = {
   "Allow notifications so ABOT can call you to the session.": "Izinkan notifikasi supaya ABOT bisa memanggilmu ke sesi.",
   "Allow notifications": "Izinkan notifikasi",
   "Notifications are off for ABOT. Turn them on in Android settings, under Apps, ABOT, Notifications.":
-    "Notifikasi untuk ABOT mati. Nyalakan di pengaturan Android, di Aplikasi, ABOT, Notifikasi.",
+    "Notifikasi mati. Nyalakan di Pengaturan > Aplikasi > ABOT > Notifikasi.",
   "Notifications are blocked for ABOT. Allow them in this site's browser settings, or use the calendar below.":
-    "Notifikasi untuk ABOT diblokir. Izinkan di pengaturan browser untuk situs ini, atau pakai kalender di bawah.",
+    "Notifikasi diblokir. Izinkan di pengaturan browser, atau pakai kalender di bawah.",
   "This browser cannot show notifications. Use the calendar below.":
     "Browser ini tidak bisa menampilkan notifikasi. Pakai kalender di bawah.",
   "Reminders arrive even when ABOT is closed. You can also add the schedule to your calendar.":
-    "Pengingat tetap datang walau ABOT ditutup. Kamu juga bisa menambahkan jadwal ke kalendermu.",
-  "Reminders appear while ABOT is open, even in a background tab. For alerts when it is closed, add the schedule to your phone's calendar.":
-    "Pengingat muncul selama ABOT terbuka, termasuk di tab latar. Supaya tetap dapat pengingat saat ditutup, tambahkan jadwal ke kalender HP-mu.",
+    "Pengingat tetap datang walau ABOT ditutup.",
+  "Reminders show while ABOT is open. Add them to your calendar for the rest.":
+    "Pengingat muncul selama ABOT terbuka. Tambahkan ke kalender agar tetap muncul saat ditutup.",
   "Add to calendar (.ics)": "Tambah ke kalender (.ics)",
 
   // App permissions
@@ -170,16 +170,16 @@ export const settings: Record<string, string> = {
   "Export failed: {error}.": "Ekspor gagal: {error}.",
   "This file could not be read. Pick it again.": "File ini tidak bisa dibaca. Pilih lagi.",
   "Saved data is not loaded, so nothing can be imported. Reload ABOT and try again.":
-    "Data tersimpan belum dimuat, jadi tidak ada yang bisa diimpor. Muat ulang ABOT dan coba lagi.",
+    "Data belum dimuat. Muat ulang ABOT lalu coba lagi.",
   "Import failed: {error}. Your data was not changed.": "Impor gagal: {error}. Datamu tidak berubah.",
   merged: "digabung",
   "replaced all data": "semua data diganti",
   "The backup was imported, but ABOT could not reload it ({error}). Reload the page to see it.":
-    "Backup sudah diimpor, tapi ABOT tidak bisa memuatnya ulang ({error}). Muat ulang halaman untuk melihatnya.",
+    "Backup sudah diimpor, tapi gagal dimuat ({error}). Muat ulang halaman.",
   "Backup file": "File backup",
   "backup file": "file backup",
   "A copy of every workout, routine, custom exercise, gym and setting on this device, and its workout photos if you include them.":
-    "Salinan semua latihan, rutinitas, gerakan buatan sendiri, gym dan pengaturan di perangkat ini, beserta foto latihannya kalau kamu sertakan.",
+    "Salinan semua latihan, rutinitas, gerakan, gym, dan pengaturan, plus foto kalau disertakan.",
   "Include {n} workout photo": "Sertakan {n} foto latihan",
   "Include {n} workout photos": "Sertakan {n} foto latihan",
   "about {mb} MB": "sekitar {mb} MB",
@@ -187,15 +187,17 @@ export const settings: Record<string, string> = {
   "{n} photos": "{n} foto",
   "Export backup": "Ekspor backup",
   "Import backup": "Impor backup",
+  "Choose file": "Pilih file",
+  "No file chosen": "Belum ada file",
   "contains {list}.": "berisi {list}.",
   "Merge into my data": "Gabungkan ke dataku",
   "Replace all my data": "Ganti semua dataku",
   "Merge adds what is missing and keeps your workout in progress. Replace makes this device match the file.":
-    "Gabungkan menambahkan yang belum ada dan menjaga latihan yang sedang berjalan. Ganti membuat perangkat ini sama persis dengan file.",
+    "Gabung: tambah yang belum ada. Ganti: samakan HP ini persis dengan file.",
   "Replace all data on this device?": "Ganti semua data di perangkat ini?",
   "Yes, replace everything": "Ya, ganti semuanya",
   "Every workout, routine and setting here is removed and replaced with the file. Export a backup first if you might need the current data.":
-    "Semua latihan, rutinitas, dan pengaturan di sini dihapus dan diganti isi file. Ekspor backup dulu kalau data sekarang mungkin masih kamu perlukan.",
+    "Semua data di sini diganti isi file. Ekspor backup dulu kalau masih perlu.",
   "Exported {n} workout to {folder}.": "{n} latihan diekspor ke {folder}.",
   "Exported {n} workouts to {folder}.": "{n} latihan diekspor ke {folder}.",
   "Exported {n} workout.": "{n} latihan diekspor.",
@@ -214,11 +216,11 @@ export const settings: Record<string, string> = {
   "{n} damaged rows will be skipped.": "{n} baris rusak akan dilewati.",
   "Protected: the browser will not clear ABOT data on its own.": "Terlindungi: browser tidak akan menghapus data ABOT sendiri.",
   "Not protected: the browser may clear ABOT data when the phone is low on space. Installing ABOT to the home screen usually fixes this. Keep a backup file too.":
-    "Tidak terlindungi: browser bisa menghapus data ABOT saat penyimpanan HP hampir penuh. Memasang ABOT ke layar utama biasanya mengatasi ini. Simpan juga file backup.",
+    "Belum aman: browser bisa menghapus data saat memori penuh. Pasang ABOT ke layar utama, dan simpan backup.",
   "This browser cannot protect stored data. Keep a backup file.":
     "Browser ini tidak bisa melindungi data tersimpan. Simpan file backup.",
   "Stored inside the app. It goes only if you clear ABOT's data or uninstall it. Keep a backup file too.":
-    "Tersimpan di dalam aplikasi. Data hanya hilang kalau kamu menghapus data ABOT atau mencopot aplikasinya. Simpan juga file backup.",
+    "Tersimpan di aplikasi, hilang hanya jika data dihapus atau app dicopot. Simpan juga backup.",
   "Storage on this device": "Penyimpanan di perangkat ini",
   "Data is only kept until this tab is closed (the browser blocked storage).":
     "Data hanya disimpan sampai tab ini ditutup (browser memblokir penyimpanan).",
@@ -228,33 +230,33 @@ export const settings: Record<string, string> = {
   // FAQ and About
   "Does ABOT work without internet?": "Apakah ABOT bisa dipakai tanpa internet?",
   "Yes. Workouts, routines and records are saved on your phone. Only exercise photos, the full catalog download and backup need a connection.":
-    "Bisa. Latihan, rutinitas, dan rekor disimpan di HP-mu. Hanya foto gerakan, unduhan katalog lengkap, dan backup yang butuh koneksi.",
+    "Bisa. Semua tersimpan di HP. Hanya foto, katalog lengkap, dan backup yang butuh internet.",
   "Do I need an account?": "Apakah aku perlu akun?",
   "No. Sign in with Google only if you want a backup in the cloud or the same data on two phones.":
-    "Tidak. Masuk dengan Google hanya kalau kamu mau backup di cloud atau data yang sama di dua HP.",
+    "Tidak. Masuk Google hanya untuk backup cloud atau sinkron dua HP.",
   "How are personal records counted?": "Bagaimana rekor pribadi dihitung?",
   "Once per lift per workout, for the heaviest weight, the best estimated 1RM and the most volume in a set. The first time you log a lift is your baseline, not a record.":
-    "Sekali per gerakan per latihan, untuk beban terberat, perkiraan 1RM terbaik, dan volume terbanyak dalam satu set. Pertama kali kamu mencatat sebuah gerakan jadi patokan awal, bukan rekor.",
+    "Untuk beban terberat, 1RM terbaik, dan volume terbesar per set. Catatan pertama jadi patokan, bukan rekor.",
   "Why did the rest alarm not ring?": "Kenapa alarm istirahat tidak berbunyi?",
   "Notifications must be on for ABOT: Settings, Notifications, then Test alert. If it rings late, allow on-time alarms there, and keep battery saver from stopping ABOT.":
-    "Notifikasi untuk ABOT harus aktif: Pengaturan, Notifikasi, lalu Tes alarm. Kalau bunyinya telat, izinkan alarm tepat waktu di sana, dan jangan biarkan penghemat baterai menghentikan ABOT.",
+    "Nyalakan notifikasi ABOT di Pengaturan > Notifikasi, lalu Tes alarm. Kalau telat, izinkan alarm tepat waktu dan matikan penghemat baterai untuk ABOT.",
   "How does ABOT pick my gym?": "Bagaimana ABOT memilih gym-ku?",
   "Pin each gym in Settings, Workout, Gyms while you are there. A workout started within about 300 m of a pinned gym picks it, if location is allowed.":
-    "Tandai tiap gym di Pengaturan, Latihan, Gym saat kamu sedang di sana. Latihan yang dimulai dalam jarak sekitar 300 m dari gym yang ditandai akan memilihnya, kalau akses lokasi diizinkan.",
+    "Tandai gym di Pengaturan > Latihan > Gym saat kamu di sana. Latihan dalam 300 m otomatis memakai gym itu.",
   "How do I share a workout to Instagram Stories?": "Bagaimana cara membagikan latihan ke Instagram Stories?",
   "Open a finished workout, tap Share story, pick a layout and an optional photo, then Share to Instagram and choose Stories. Your username comes from Profile.":
-    "Buka latihan yang sudah selesai, ketuk Bagikan story, pilih tata letak dan foto (opsional), lalu Bagikan ke Instagram dan pilih Stories. Username-mu diambil dari Profil.",
+    "Buka latihan selesai, ketuk Bagikan story, pilih tampilan, lalu bagikan ke Instagram Stories.",
   "How do I move my data to a new phone?": "Bagaimana memindahkan data ke HP baru?",
   "Sign in with Google on both phones, or export a backup file in Settings, Data, and import it on the new phone.":
-    "Masuk dengan Google di kedua HP, atau ekspor file backup di Pengaturan, Data, lalu impor di HP baru.",
+    "Masuk Google di kedua HP, atau ekspor backup lalu impor di HP baru.",
   "How do I delete my data?": "Bagaimana menghapus dataku?",
   "In Settings, Data & backup, Delete my data. Choose this phone only, or this phone and your account, which also deletes the cloud copy.":
-    "Di Pengaturan, Data & backup, Hapus dataku. Pilih HP ini saja, atau HP ini dan akunmu, yang juga menghapus salinan di cloud.",
+    "Di Pengaturan > Data & backup > Hapus dataku. Pilih HP ini saja, atau sekaligus akun dan cloud.",
   "A strength training log that works offline.": "Catatan latihan beban yang jalan tanpa internet.",
   "Version {version}": "Versi {version}",
   "Your data": "Datamu",
-  "Your training stays on this phone. Signing in copies it to your own backup space so you can restore it. Nothing is sold, and no one else sees it.":
-    "Latihanmu tetap di HP ini. Kalau masuk, datanya disalin ke ruang backup milikmu sendiri supaya bisa dipulihkan. Tidak ada yang dijual, dan tidak ada orang lain yang melihatnya.",
+  "Your training stays on this phone. Sign in to back it up. Nothing is sold.":
+    "Latihanmu tetap di HP ini. Masuk untuk backup. Data tidak dijual dan tidak dilihat orang lain.",
   Credits: "Kredit",
   "Exercise data and photos: free-exercise-db (public domain).": "Data dan foto gerakan: free-exercise-db (domain publik).",
   "Muscle map shapes: react-muscle-highlighter (MIT License).": "Bentuk peta otot: react-muscle-highlighter (MIT License).",
@@ -263,18 +265,18 @@ export const settings: Record<string, string> = {
   // Backup & Sync
   "Backup & Sync": "Backup & Sinkronisasi",
   "backup and sync": "backup dan sinkronisasi",
-  "Optional. Sign in to copy your training to your own cloud space and keep your phones in step. ABOT works the same without it. Signing out keeps everything on this device.":
-    "Opsional. Masuk untuk menyalin latihanmu ke ruang cloud milikmu sendiri dan menyamakan data di semua HP-mu. ABOT tetap jalan sama tanpa ini. Keluar tetap menyimpan semuanya di perangkat ini.",
+  "Optional. Sign in to back up and sync your phones. Signing out keeps your data here.":
+    "Opsional. Masuk untuk backup dan sinkron antar-HP. Keluar tidak menghapus data di HP ini.",
   "Cloud sync is not set up for this build. Your training is saved on this device; use Export backup below to keep a copy.":
-    "Sinkronisasi cloud belum disiapkan di versi ini. Latihanmu tersimpan di perangkat ini; pakai Ekspor backup di bawah untuk menyimpan salinan.",
+    "Sinkron cloud belum aktif di versi ini. Data aman di HP ini; ekspor backup di bawah.",
   "Sign in with Google to Backup & Sync": "Masuk dengan Google untuk Backup & Sinkronisasi",
   "Opening Google": "Membuka Google",
   "Signed in as": "Masuk sebagai",
   "your Google account": "akun Google-mu",
   "{n} older version was replaced by newer edits from another device and kept on this phone.":
-    "{n} versi lama diganti oleh perubahan lebih baru dari perangkat lain dan disimpan di HP ini.",
+    "{n} versi lama diganti data terbaru dari perangkat lain.",
   "{n} older versions were replaced by newer edits from another device and kept on this phone.":
-    "{n} versi lama diganti oleh perubahan lebih baru dari perangkat lain dan disimpan di HP ini.",
+    "{n} versi lama diganti data terbaru dari perangkat lain.",
   "Sync now": "Sinkronkan sekarang",
   "Backup & sync settings": "Pengaturan backup & sinkronisasi",
   "Backing up this phone now.": "Sedang mem-backup HP ini.",
@@ -296,7 +298,7 @@ export const settings: Record<string, string> = {
   "Google sign-in was cancelled. Nothing changed on this phone.": "Masuk dengan Google dibatalkan. Tidak ada yang berubah di HP ini.",
   "Couldn't reach Google. Check your connection and try again.": "Tidak bisa terhubung ke Google. Cek koneksimu dan coba lagi.",
   "Google sign-in didn't finish. Your training is still on this phone; try again in a moment.":
-    "Masuk dengan Google belum selesai. Latihanmu masih ada di HP ini; coba lagi sebentar lagi.",
+    "Masuk Google gagal. Data tetap aman; coba lagi.",
   "Couldn't reach your backup. ABOT tries again when the connection is back.":
     "Tidak bisa terhubung ke backup-mu. ABOT akan mencoba lagi saat koneksi kembali.",
   "Your sign-in has expired. Sign out and sign in again to keep backing up.":
@@ -380,14 +382,14 @@ export const settings: Record<string, string> = {
 
   // Intro, sign-in, permissions step
   "Log a set in one tap": "Catat set dengan sekali ketuk",
-  "Type the weight and reps, tap the check. Last time's numbers sit beside each set, and records light up as you beat them.":
-    "Ketik berat dan rep, lalu ketuk centang. Angka sesi lalu ada di samping tiap set, dan rekor menyala saat kamu memecahkannya.",
+  "Type weight and reps, tap the check. Last time sits beside each set.":
+    "Isi berat dan rep, ketuk centang. Angka sesi lalu ada di samping tiap set.",
   "Rest sits by your thumb": "Istirahat dekat jempolmu",
-  "Tick a set and the rest countdown opens just above the dock, on every screen, with 15-second nudges and skip.":
-    "Centang satu set dan hitung mundur istirahat muncul tepat di atas dock, di setiap layar, dengan tombol tambah atau kurang 15 detik dan lewati.",
+  "Tick a set and rest starts counting down, on every screen.":
+    "Centang set, timer istirahat langsung jalan di semua layar.",
   "Your training stays on this phone": "Latihanmu tetap di HP ini",
-  "Every workout saves to this device and works offline. Back it up to a file or your account whenever you like.":
-    "Setiap latihan tersimpan di perangkat ini dan jalan tanpa internet. Backup ke file atau akunmu kapan saja.",
+  "Saved on this phone, works offline. Back up anytime.":
+    "Tersimpan di HP ini dan bisa offline. Backup kapan saja.",
   "Skip intro": "Lewati intro",
   Introduction: "Perkenalan",
   "{n} of {total}": "{n} dari {total}",
@@ -395,7 +397,7 @@ export const settings: Record<string, string> = {
   Next: "Lanjut",
   "Back up and sync": "Backup dan sinkronisasi",
   "ABOT works fully without an account. Signing in will copy your workouts to your own cloud space, so a new phone can restore them.":
-    "ABOT bisa dipakai penuh tanpa akun. Kalau masuk, latihanmu disalin ke ruang cloud milikmu sendiri, jadi HP baru bisa memulihkannya.",
+    "ABOT bisa dipakai tanpa akun. Masuk untuk backup, agar bisa dipulihkan di HP baru.",
   "Export backup in Settings": "Ekspor backup di Pengaturan",
   "Sign in with Google": "Masuk dengan Google",
   "Cloud sync is not set up for this build. Keep a copy with": "Sinkronisasi cloud belum disiapkan di versi ini. Simpan salinan lewat",
@@ -409,7 +411,7 @@ export const settings: Record<string, string> = {
   Loading: "Memuat",
   "Loading saved workouts from this device": "Memuat latihan tersimpan dari perangkat ini",
   "ABOT keeps your changes in memory and retries when you come back to the app. Export a backup from Settings to keep a copy now.":
-    "ABOT menyimpan perubahanmu di memori dan mencoba lagi saat kamu kembali ke aplikasi. Ekspor backup dari Pengaturan untuk menyimpan salinan sekarang.",
+    "Perubahanmu disimpan sementara dan dicoba lagi nanti. Ekspor backup dari Pengaturan untuk jaga-jaga.",
   // Errors from data and photo helpers, translated where they are shown
   "This file is not valid JSON": "File ini bukan JSON yang valid",
   "This is not an ABOT backup": "Ini bukan file backup ABOT",
@@ -428,20 +430,20 @@ export const settings: Record<string, string> = {
   "Turn on in Android settings": "Nyalakan di pengaturan Android",
   // Tactile feedback
   "Sounds & vibration": "Suara & getar",
-  "A tick on steppers and chips, a latch when a set is done, a chord for a new record, plus a sound when a workout starts and finishes, each with a short vibration. Synthesised on the phone; music keeps playing.":
-    "Bunyi tik di tombol +/- dan chip, bunyi kunci saat set selesai, akor untuk rekor baru, plus bunyi saat latihan dimulai dan selesai, masing-masing dengan getar singkat. Dibuat langsung di HP; musik tetap berjalan.",
+  "Soft clicks and vibration as you log. Your music keeps playing.":
+    "Bunyi dan getar halus saat mencatat. Musikmu tetap jalan.",
   // Import from Hevy or Strong
   "Import from Hevy or Strong": "Impor dari Hevy atau Strong",
   "importing from Hevy or Strong": "impor dari Hevy atau Strong",
   "In Hevy or Strong, export your workout data as a CSV file, then pick it here. The file is read on this phone and never uploaded. Your current data stays; workouts already here are skipped.":
-    "Di Hevy atau Strong, ekspor data workout sebagai file CSV, lalu pilih di sini. File dibaca di HP ini dan tidak pernah diunggah. Data yang ada tetap aman; workout yang sudah ada dilewati.",
+    "Ekspor CSV dari Hevy atau Strong, lalu pilih di sini. Dibaca di HP ini saja; latihan yang sudah ada dilewati.",
   "CSV file": "File CSV",
   "{app} export": "Ekspor {app}",
   "{from} to {to}": "{from} sampai {to}",
   "Weights in this file are in": "Satuan berat di file ini",
   "The file does not say. Pick the unit the other app was set to.": "File tidak menyebutkannya. Pilih satuan yang dipakai di aplikasi asal.",
   "and {n} more": "dan {n} lainnya",
-  "Nothing new to import": "Tidak ada yang baru untuk diimpor",
+  "Nothing new to import": "Tidak ada yang baru",
   "Imported {n} workout. Your records now count it.": "{n} workout diimpor. Rekor kamu sudah menghitungnya.",
   "Imported {n} workouts. Your records now count them.": "{n} workout diimpor. Rekor kamu sudah menghitungnya.",
   "{n} exercise name matched to the library.": "{n} nama latihan cocok dengan pustaka.",
@@ -456,7 +458,7 @@ export const settings: Record<string, string> = {
   "Import {n} workouts": "Impor {n} workout",
   "This file is empty": "File ini kosong",
   "This CSV does not look like a workout export. It needs date, exercise name and weight or reps columns.":
-    "CSV ini tidak terlihat seperti ekspor workout. Perlu kolom tanggal, nama latihan, dan berat atau repetisi.",
+    "CSV ini bukan ekspor latihan. Perlu kolom tanggal, nama gerakan, dan berat atau rep.",
   "No workouts were found in this file": "Tidak ada workout di file ini",
   // Health apps (Health Connect)
   "Health apps": "Aplikasi kesehatan",
@@ -468,7 +470,7 @@ export const settings: Record<string, string> = {
   "Health Connect needs an update": "Health Connect perlu diperbarui",
   "Android app only": "Hanya di aplikasi Android",
   "Health Connect is only in the Android app": "Health Connect hanya ada di aplikasi Android",
-  "Only finished workouts are synced": "Hanya workout yang sudah selesai yang disinkronkan",
+  "Only finished workouts are synced": "Hanya latihan selesai yang disinkron",
   "No access was given. Tap Connect again, or allow ABOT in Health Connect.": "Akses belum diberikan. Ketuk Hubungkan lagi, atau izinkan ABOT di Health Connect.",
   "Health Connect did not answer: {error}": "Health Connect tidak merespons: {error}",
   'Sent "{name}" ({kcal} kcal) to Health Connect.': '"{name}" ({kcal} kkal) terkirim ke Health Connect.',
@@ -485,25 +487,25 @@ export const settings: Record<string, string> = {
   "Connect Google / Huawei / Samsung Health": "Hubungkan Google / Huawei / Samsung Health",
   "Checking...": "Memeriksa...",
   "Finished workouts go to Health Connect as weightlifting with their calories, where Google Fit, Samsung Health and Huawei Health can read them. Weight and sleep come back. All on this phone.":
-    "Workout yang selesai masuk ke Health Connect sebagai angkat beban beserta kalorinya, lalu bisa dibaca Google Fit, Samsung Health, dan Huawei Health. Berat badan dan tidur dibaca balik. Semua tetap di HP ini.",
+    "Latihan selesai dikirim ke Health Connect, terbaca di Google Fit, Samsung Health, dan Huawei Health. Berat dan tidur ikut masuk.",
   "Health sync needs the ABOT Android app. Here you can still share any workout as a .tcx file from its summary.":
-    "Sinkron kesehatan butuh aplikasi Android ABOT. Di sini kamu tetap bisa membagikan workout sebagai file .tcx dari ringkasannya.",
+    "Sinkron kesehatan butuh app Android. Di sini bisa bagikan file .tcx dari ringkasan.",
   "How to link Huawei or Samsung Health": "Cara menghubungkan Huawei atau Samsung Health",
   "Auto-sync completed workouts": "Sinkron otomatis workout selesai",
   "Each workout is sent to Health Connect when you tap Finish. Sending it again later updates it, it never adds a copy.":
-    "Setiap workout dikirim ke Health Connect saat kamu menekan Selesai. Mengirim ulang akan memperbarui datanya, tidak membuat salinan.",
+    "Latihan dikirim ke Health Connect saat kamu ketuk Selesai, tanpa duplikat.",
   "Body weight ({unit})": "Berat badan ({unit})",
-  "Used for the calorie estimate. A newer weigh-in from Health Connect replaces it.": "Dipakai untuk estimasi kalori. Data timbang yang lebih baru dari Health Connect akan menggantikannya.",
+  "Used for the calorie estimate. A newer weigh-in from Health Connect replaces it.": "Untuk hitung kalori. Diperbarui dari Health Connect.",
   "Last sleep from Health Connect: {time}. The recovery map uses it.": "Tidur terakhir dari Health Connect: {time}. Peta pemulihan memakainya.",
   "Test sync now": "Tes sinkron sekarang",
   "Link other health apps": "Hubungkan aplikasi kesehatan lain",
   "Me > Privacy management > Health Connect, then turn on sharing so it can read ABOT's workouts.":
-    "Saya > Manajemen privasi > Health Connect, lalu aktifkan berbagi agar bisa membaca workout ABOT.",
+    "Saya > Privasi > Health Connect, lalu aktifkan berbagi.",
   "Settings > Health Connect, then allow it to read exercise and calories.": "Pengaturan > Health Connect, lalu izinkan membaca olahraga dan kalori.",
   "Apple Health needs an iPhone app, which ABOT does not have yet. Strava and Garmin take the .tcx file from a workout's summary.":
-    "Apple Health butuh aplikasi iPhone, yang belum dimiliki ABOT. Strava dan Garmin bisa menerima file .tcx dari ringkasan workout.",
+    "Apple Health belum didukung. Strava dan Garmin bisa pakai file .tcx dari ringkasan latihan.",
   "Your account no longer holds this license (refunded or revoked), so it was removed from this phone.":
-    "Akunmu tidak lagi memegang lisensi ini (dikembalikan dananya atau dicabut), jadi lisensi dihapus dari HP ini.",
+    "Lisensi ini sudah tidak ada di akunmu (refund atau dicabut), jadi dihapus dari HP ini.",
   "Buy {plan}": "Beli {plan}",
   "Sign in to buy": "Masuk untuk membeli",
   "Opening payment...": "Membuka pembayaran...",
@@ -518,7 +520,7 @@ export const settings: Record<string, string> = {
   "Could not reach the payment service. Check the connection and try again.": "Layanan pembayaran tidak terjangkau. Periksa koneksi lalu coba lagi.",
   "Checking your payment...": "Memeriksa pembayaranmu...",
   "Payment received. ABOT Pro is active on your account.": "Pembayaran diterima. ABOT Pro aktif di akunmu.",
-  "Waiting for your payment. Finish it in the payment app or bank; PRO turns on by itself once it settles.": "Menunggu pembayaranmu. Selesaikan di aplikasi pembayaran atau bank; PRO aktif sendiri setelah pembayaran masuk.",
+  "Waiting for your payment. Finish it in the payment app or bank; PRO turns on by itself once it settles.": "Menunggu pembayaran. Selesaikan di app pembayaran; PRO aktif otomatis setelah lunas.",
   "The payment did not go through. Nothing was charged; you can try again.": "Pembayaran tidak berhasil. Tidak ada yang ditagih; kamu bisa coba lagi.",
   "The payment window closed before it was paid. You can start a new one.": "Batas waktu pembayaran habis sebelum dibayar. Kamu bisa memulai yang baru.",
   "This payment was refunded, so its license was removed.": "Pembayaran ini dikembalikan, jadi lisensinya dihapus.",
@@ -573,8 +575,8 @@ export const settings: Record<string, string> = {
   "By signing in you agree to the": "Dengan masuk, kamu menyetujui",
   "and the": "dan",
   // Moving to the release-signed build.
-  "A safer ABOT is out": "ABOT versi lebih aman sudah rilis",
-  "ABOT is now signed with its own private key, so no one else can publish an update that looks like it. This one time, the new version cannot install over this one.": "ABOT sekarang ditandatangani dengan kunci privatnya sendiri, jadi tidak ada orang lain yang bisa menerbitkan update palsu. Kali ini saja, versi baru tidak bisa dipasang di atas versi ini.",
+  "A safer ABOT is out": "ABOT lebih aman sudah rilis",
+  "ABOT is now signed with its own private key, so no one else can publish an update that looks like it. This one time, the new version cannot install over this one.": "ABOT kini memakai kunci tanda tangan sendiri agar tak bisa dipalsukan. Sekali ini, versi baru tidak bisa dipasang di atas versi ini.",
   "Back up your data to a file. With cloud sync on, signing in again brings your workouts back too.": "Backup datamu ke file. Kalau cloud sync aktif, login lagi juga mengembalikan workout-mu.",
   "Uninstall ABOT from the phone's settings.": "Uninstall ABOT dari pengaturan HP.",
   "Install the new version, then restore the backup in Settings > Data.": "Pasang versi baru, lalu pulihkan backup di Pengaturan > Data.",
@@ -604,15 +606,15 @@ export const settings: Record<string, string> = {
   "Your training": "Latihanmu",
   "{title} file": "File {title}",
   "This file is too large for a workout export.": "File ini terlalu besar untuk sebuah ekspor latihan.",
-  "The workouts were imported, but ABOT could not reload them ({error}). Reload the page to see them.": "Latihan sudah diimpor, tapi ABOT gagal memuatnya ulang ({error}). Muat ulang halaman untuk melihatnya.",
+  "The workouts were imported, but ABOT could not reload them ({error}). Reload the page to see them.": "Latihan sudah diimpor, tapi gagal dimuat ({error}). Muat ulang halaman.",
   "Export and body weight": "Ekspor dan berat badan",
   "Delete my data": "Hapus dataku",
   "This phone only": "HP ini saja",
   "Your account and its cloud copy stay. Sign in again to bring your training back.": "Akun dan salinan cloud-nya tetap ada. Masuk lagi untuk mengembalikan latihanmu.",
   "Workouts, routines, photos and settings on this phone.": "Latihan, rutinitas, foto, dan pengaturan di HP ini.",
   "This phone and my account": "HP ini dan akunku",
-  "Also deletes the cloud copy, the sign-in and any PRO bought on the account. It cannot be restored.": "Juga menghapus salinan cloud, akun masuk, dan PRO yang dibeli di akun itu. Tidak bisa dikembalikan.",
-  "Start over on this phone, or close your ABOT account. Export a backup first if you might want it back.": "Mulai dari nol di HP ini, atau tutup akun ABOT-mu. Ekspor backup dulu kalau mungkin masih butuh.",
+  "Also deletes the cloud copy, the sign-in and any PRO bought on the account. It cannot be restored.": "Juga menghapus cloud, akun, dan PRO yang dibeli. Tidak bisa dikembalikan.",
+  "Start over on this phone, or close your ABOT account. Export a backup first if you might want it back.": "Mulai dari nol di HP ini, atau tutup akun. Ekspor backup dulu kalau masih perlu.",
   "Deleting…": "Menghapus…",
   "Delete everything": "Hapus semuanya",
   "Delete from phone": "Hapus dari HP",
@@ -643,7 +645,7 @@ export const settings: Record<string, string> = {
   "Other size ({unit})": "Ukuran lain ({unit})",
   "Add size": "Tambah ukuran",
   "This browser cannot show notifications. Reminders can still go to your calendar.": "Browser ini tidak bisa menampilkan notifikasi. Pengingat tetap bisa masuk ke kalendermu.",
-  "Notifications are off for ABOT, so the rest alarm, the workout status and reminders cannot show.": "Notifikasi ABOT mati, jadi alarm istirahat, status latihan, dan pengingat tidak bisa muncul.",
+  "Notifications are off for ABOT, so the rest alarm, the workout status and reminders cannot show.": "Notifikasi ABOT mati. Alarm dan pengingat tidak bisa muncul.",
   "Notifications are blocked for ABOT. Allow them in this site's browser settings.": "Notifikasi ABOT diblokir. Izinkan di pengaturan situs ini di browser.",
   "Allow notifications for the rest-over alarm, the workout status and reminders.": "Izinkan notifikasi untuk alarm akhir istirahat, status latihan, dan pengingat.",
   "Notifications are off": "Notifikasi mati",
@@ -668,7 +670,7 @@ export const settings: Record<string, string> = {
   "Tomorrow": "Besok",
   "Your week": "Minggumu",
   "Set up your training week": "Atur minggu latihanmu",
-  "Pick your days and where you train. ABOT makes the workouts, fills My Routines and reminds you.": "Pilih hari dan tempat latihan. ABOT menyusun latihannya, mengisi My Routines, dan mengingatkanmu.",
+  "Pick your days and where you train. ABOT makes the workouts, fills My Routines and reminds you.": "Pilih hari dan tempat latihan. ABOT menyusun latihan dan mengingatkanmu.",
   "Set up my week": "Atur mingguku",
   "{n} days at {time}": "{n} hari, jam {time}",
   "Set up your week": "Atur minggumu",
@@ -720,24 +722,24 @@ export const settings: Record<string, string> = {
   "Rest day": "Hari istirahat",
   "Recovery is where the muscle grows.": "Otot tumbuh saat istirahat.",
   "Nothing planned for this day.": "Belum ada latihan di hari ini.",
-  "No workout this day.": "Tidak ada latihan di hari ini.",
+  "No workout this day.": "Tidak ada latihan.",
   "Train anyway: {name}": "Tetap latihan: {name}",
   "Train anyway": "Tetap latihan",
-  "Or set up your week: ABOT makes the workouts and reminds you.": "Atau atur minggumu: ABOT menyusun latihannya dan mengingatkanmu.",
+  "Or plan your week and ABOT reminds you.": "Atau atur minggumu: ABOT menyusun latihannya dan mengingatkanmu.",
   "Next: {name}": "Berikutnya: {name}",
   // Route error screen
   "Something went wrong": "Ada yang salah",
   "This screen could not be shown": "Layar ini tidak bisa ditampilkan",
-  "Your data is still on this phone. If this started after an import, restore a backup you trust in Settings > Data.": "Datamu masih ada di HP ini. Kalau ini terjadi setelah import, pulihkan backup yang kamu percaya di Pengaturan > Data.",
+  "Your data is still on this phone. If this started after an import, restore a backup you trust in Settings > Data.": "Datamu masih aman di HP ini. Kalau terjadi setelah impor, pulihkan backup di Pengaturan > Data.",
   "Open Settings > Data": "Buka Pengaturan > Data",
-  "{n} workout has an impossible date (before 1990 or in the future) and will be skipped.": "{n} workout punya tanggal yang tidak mungkin (sebelum 1990 atau di masa depan) dan akan dilewati.",
-  "{n} workouts have an impossible date (before 1990 or in the future) and will be skipped.": "{n} workout punya tanggal yang tidak mungkin (sebelum 1990 atau di masa depan) dan akan dilewati.",
+  "{n} workout has an impossible date (before 1990 or in the future) and will be skipped.": "{n} latihan bertanggal tidak valid dan dilewati.",
+  "{n} workouts have an impossible date (before 1990 or in the future) and will be skipped.": "{n} latihan bertanggal tidak valid dan dilewati.",
   // Get the app
   "ABOT hits harder as an app": "ABOT lebih mantap sebagai app",
-  "Your set and rest countdown on the lock screen, an alarm that rings with the screen off, reminders that always arrive. Free, no account.": "Set dan hitung mundur istirahat di layar kunci, alarm yang berbunyi walau layar mati, pengingat yang selalu sampai. Gratis, tanpa akun.",
+  "Rest timer on the lock screen, an alarm with the screen off, reminders that arrive. Free.": "Timer istirahat di layar kunci, alarm saat layar mati, pengingat yang pasti sampai. Gratis.",
   "Download for Android": "Unduh untuk Android",
   "Keep using the web": "Lanjut pakai versi web",
-  "First workout done. In the Android app your next set and rest timer sit on the lock screen, so you never unlock between sets.": "Workout pertama selesai. Di app Android, set berikutnya dan timer istirahat ada di layar kunci, jadi tidak perlu buka kunci HP di sela set.",
+  "First workout done. In the Android app your next set and rest timer sit on the lock screen, so you never unlock between sets.": "Latihan pertama selesai! Di app Android, timer istirahat ada di layar kunci.",
   "Add ABOT to your Home Screen: full screen, offline, one tap away.": "Simpan ABOT di Layar Utama: layar penuh, offline, sekali ketuk.",
   "The app rings your rest timer with the screen off.": "App-nya membunyikan timer istirahat walau layar mati.",
   "How": "Caranya",
@@ -757,23 +759,23 @@ export const settings: Record<string, string> = {
   "Open ABOT. From now on it updates itself in the app.": "Buka ABOT. Selanjutnya app memperbarui dirinya sendiri.",
   "Your data comes along: make a backup here in": "Datamu ikut pindah: buat backup di sini lewat",
   "Settings > Data": "Pengaturan > Data",
-  "then restore it in the app. Each build is signed with ABOT's own key, and Android only installs updates signed the same way.": "lalu pulihkan di app. Setiap build ditandatangani kunci milik ABOT, dan Android hanya memasang update dengan tanda tangan yang sama.",
+  "then restore it in the app. Each build is signed with ABOT's own key, and Android only installs updates signed the same way.": "lalu pulihkan di app. Android hanya memasang update dengan tanda tangan yang sama.",
   "QR code to download ABOT for Android": "QR code untuk mengunduh ABOT untuk Android",
   "Scan with your Android phone": "Scan dengan HP Android-mu",
   "The phone downloads the app straight away. Android {v} or newer, free.": "HP langsung mengunduh app-nya. Android {v} ke atas, gratis.",
   "Copied": "Tersalin",
   "Copy link": "Salin link",
-  "There is no iPhone app yet. Add ABOT to your Home Screen and it opens full screen, like an app, and works offline.": "Belum ada app iPhone. Simpan ABOT di Layar Utama dan ABOT terbuka layar penuh seperti app, dan bisa offline.",
+  "There is no iPhone app yet. Add ABOT to your Home Screen and it opens full screen, like an app, and works offline.": "Belum ada app iPhone. Tambahkan ABOT ke Layar Utama agar terbuka seperti app.",
   "In Safari, tap Share.": "Di Safari, ketuk Bagikan.",
   "Choose Add to Home Screen.": "Pilih Tambah ke Layar Utama.",
   "Tap Add. ABOT is now on your Home Screen.": "Ketuk Tambah. ABOT sekarang ada di Layar Utama.",
   "Locked": "Terkunci",
   "Set 3 of 4 · rest": "Set 3 dari 4 · istirahat",
-  "A browser tab goes quiet when the screen locks. The Android app rings the rest alarm with the screen off.": "Tab browser diam saat layar terkunci. App Android membunyikan alarm istirahat walau layar mati.",
+  "A browser tab goes quiet when the screen locks. The Android app rings the rest alarm with the screen off.": "Browser diam saat layar terkunci. App Android tetap berbunyi.",
   "Add ABOT to your Home Screen": "Simpan ABOT di Layar Utama",
   "Full screen and offline, one tap away": "Layar penuh dan offline, sekali ketuk",
   "Lock-screen workout, rest alarm, reminders": "Workout di layar kunci, alarm istirahat, pengingat",
-  "Browsers drop reminders when the tab is closed or asleep. The Android app gets them to you on time, even when ABOT is closed.": "Browser melewatkan pengingat saat tab ditutup atau tertidur. App Android mengirimkannya tepat waktu, walau ABOT tertutup.",
+  "Browsers drop reminders when the tab is closed or asleep. The Android app gets them to you on time, even when ABOT is closed.": "Browser bisa melewatkan pengingat. App Android selalu tepat waktu.",
   "Your workout on the lock screen": "Workout di layar kunci",
   "Next set, rest countdown and +30s / Skip buttons without unlocking.": "Set berikutnya, hitung mundur istirahat, dan tombol +30s / Lewati tanpa membuka kunci.",
   "Rest alarm with the screen off": "Alarm istirahat walau layar mati",
@@ -788,9 +790,9 @@ export const settings: Record<string, string> = {
   "Skip": "Lewati",
   "ABOT for Android (beta)": "ABOT untuk Android (beta)",
   "ABOT hits harder as an app (beta)": "ABOT lebih mantap sebagai app (beta)",
-  "Your set and rest countdown on the lock screen, an alarm that rings with the screen off, reminders that always arrive. Free, no account. It is in beta, so your feedback shapes it.": "Set dan hitung mundur istirahat di layar kunci, alarm yang berbunyi walau layar mati, pengingat yang selalu sampai. Gratis, tanpa akun. Masih beta, jadi masukanmu ikut membentuknya.",
+  "Rest timer on the lock screen, an alarm with the screen off, reminders that arrive. Free beta.": "Timer istirahat di layar kunci, alarm saat layar mati, pengingat yang pasti sampai. Gratis, versi beta.",
   "Beta: you are one of the first testers": "Beta: kamu termasuk penguji pertama",
-  "Something broken, confusing or missing? Tell us from the app: Settings > Send beta feedback, or write to": "Ada yang rusak, membingungkan, atau kurang? Kabari kami dari app: Pengaturan > Kirim masukan beta, atau tulis ke",
+  "Something broken, confusing or missing? Tell us from the app: Settings > Send beta feedback, or write to": "Ada yang rusak atau kurang? Kirim masukan dari Pengaturan, atau email ke",
   "Send beta feedback": "Kirim masukan beta",
   "What broke, confused you or is missing": "Apa yang rusak, membingungkan, atau kurang",
   "Beta · lock-screen workout, rest alarm, reminders": "Beta · workout di layar kunci, alarm istirahat, pengingat",
@@ -813,4 +815,20 @@ export const settings: Record<string, string> = {
   "Pro · beta": "Pro · beta",
   "Free": "Gratis",
   "Founder pass": "Founder pass",
+  "Icons: Solar by 480 Design (CC BY 4.0); foods in Lucide (ISC).": "Ikon: Solar oleh 480 Design (CC BY 4.0); makanan dari Lucide (ISC).",
+  "Today: {name} at {time}": "Hari ini: {name} jam {time}",
+  "Missed yesterday: {name}": "Terlewat kemarin: {name}",
+  "{n} new records in {name}": "{n} rekor baru di {name}",
+  "Backup failed. Tap to try again.": "Backup gagal. Ketuk untuk coba lagi.",
+  "{n} workouts are not backed up": "{n} latihan belum di-backup",
+  "You're all caught up.": "Semua sudah dibaca.",
+  "New": "Baru",
+  "Earlier": "Sebelumnya",
+  "Switch to dark mode": "Ganti ke mode gelap",
+  "Switch to light mode": "Ganti ke mode terang",
+  "Notifications, {n} new": "Notifikasi, {n} baru",
+  "Schedule": "Jadwal",
+  "Updates": "Update",
+  "Backup": "Backup",
+  "Filter notifications": "Filter notifikasi",
 };

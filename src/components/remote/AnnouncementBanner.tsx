@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { Megaphone, X } from "lucide-react";
+import { Megaphone, X } from "@/components/icons";
 import { useRemoteConfig } from "@/lib/remote-config";
 import { useT } from "@/i18n";
 
@@ -42,7 +42,7 @@ export function AnnouncementBanner() {
             // Hidden for this visit only.
           }
         }}
-        className="flex size-11 shrink-0 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white"
+        className="glass-icon rounded-full flex size-11 shrink-0 items-center justify-center text-text"
       >
         <X aria-hidden="true" size={16} />
       </button>

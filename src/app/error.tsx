@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { useT } from "@/i18n";
 

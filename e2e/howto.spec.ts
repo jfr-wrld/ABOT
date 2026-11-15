@@ -46,7 +46,7 @@ test("How to in the card menu opens the same sheet", async ({ page }) => {
   await page.getByRole("button", { name: "How to do Squat (Barbell)" }).click();
   const sheet = page.getByRole("dialog", { name: "Squat (Barbell)" });
   await expect(sheet.getByText("Brace the core before each rep")).toBeVisible();
-  await expect(sheet.getByText("No completed working sets yet.")).toBeVisible();
+  await expect(sheet.getByText("No records yet.")).toBeVisible();
   await sheet.getByRole("button", { name: "Close" }).click();
   await expect(sheet).toHaveCount(0);
 });

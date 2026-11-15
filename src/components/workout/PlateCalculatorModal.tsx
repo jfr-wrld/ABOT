@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Minus, Plus, TriangleAlert } from "lucide-react";
+import { Minus, Plus, TriangleAlert } from "@/components/icons";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { useLocationStore } from "@/store/useLocationStore";
@@ -255,7 +255,7 @@ function Calculator({
                   feedback.tick();
                   save({ ...setup, plates: on ? setup.plates.filter((x) => x !== p) : [...setup.plates, p] });
                 }}
-                className={`num flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-colors ${
+                className={`chip num flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-colors ${
                   on ? "border-line-strong bg-surface-2 text-text" : "border-line bg-transparent text-text-muted line-through"
                 }`}
               >

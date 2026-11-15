@@ -21,7 +21,7 @@ export function WorkoutMuscles({ session, byId }: { session: WorkoutSession; byI
   const names = muscles.primary.map((m) => muscleText(MUSCLE_GROUP_LABELS[m], t));
 
   return (
-    <div className="rounded-xl border border-ink/10 bg-surface px-1 py-2.5">
+    <div className="tile rounded-xl border border-ink/10 bg-surface px-1 py-2.5">
       <dt className="sr-only">{t("Muscles worked")}</dt>
       <dd>
         <button

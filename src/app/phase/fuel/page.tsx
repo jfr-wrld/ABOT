@@ -2,7 +2,7 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Search } from "lucide-react";
+import { Bookmark, Search } from "@/components/icons";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Rise } from "@/components/motion/Entrance";
@@ -128,7 +128,7 @@ function Foods({ phase }: { phase: import("@/lib/phase-engine").BodyPhaseType | 
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("Search: tempe, nasi, pisang…")}
           autoComplete="off"
-          className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 pl-9 pr-3 text-base placeholder:text-text-muted"
+          className="h-11 w-full search-pill pl-9 pr-4 text-base placeholder:text-text-muted"
         />
       </label>
       {!q && (

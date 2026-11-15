@@ -114,7 +114,7 @@ export function Choice<T extends string | number>({
         {options.map((o) => (
           <label
             key={String(o.value)}
-            className={`flex min-h-11 cursor-pointer items-center justify-center rounded-ctl border px-2 text-center text-sm font-semibold ${
+            className={`chip flex min-h-11 cursor-pointer items-center justify-center rounded-ctl border px-2 text-center text-sm font-semibold ${
               value === o.value ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted"
             }`}
           >

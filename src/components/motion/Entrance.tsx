@@ -1,9 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { animate, motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
 
-const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
+const SPRING = { type: "spring", stiffness: 380, damping: 30 } as const;
+
+/**
+ * Whether the page on screen is opened for the first time this session (PageTransition sets it).
+ * Entrances play once: the second time a page opens it is simply there, already in place, so
+ * moving between tabs never waits on the same animation again (owner, 2026-11-15).
+ */
+const FirstVisit = createContext(true);
+export const FirstVisitProvider = FirstVisit.Provider;
+
+/** Whether this page's entrance plays: its first visit this session, and motion allowed. */
+export function usePlayEntrance(): boolean {
+  const reduce = useReducedMotionConfig();
+  return useContext(FirstVisit) && !reduce;
+}
 
 /**
  * Entrance animations started from an effect. Pages mount inside AnimatePresence with
@@ -13,10 +27,11 @@ const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
  */
 export function useEntrance(): ReturnType<typeof useAnimationControls> {
   const controls = useAnimationControls();
-  const reduce = useReducedMotionConfig();
+  const play = usePlayEntrance();
   useEffect(() => {
-    void controls.start(reduce ? "still" : "show");
-  }, [controls, reduce]);
+    // "still" lands at once: a default tween there would still fade the page in on every visit.
+    void (play ? controls.start("show") : controls.start("still", { duration: 0 }));
+  }, [controls, play]);
   return controls;
 }
 
@@ -25,7 +40,7 @@ export function Rise({
   order,
   children,
   className = "",
-  step = 0.06,
+  step = 0.04,
 }: {
   order: number;
   children: React.ReactNode;
@@ -49,7 +64,7 @@ export function Rise({
 export function CountFromZero({
   value,
   format,
-  delay = 0.25,
+  delay = 0.15,
   className = "",
 }: {
   value: number;
@@ -57,16 +72,16 @@ export function CountFromZero({
   delay?: number;
   className?: string;
 }) {
-  const reduce = useReducedMotionConfig();
+  const play = usePlayEntrance();
   const [shown, setShown] = useState(0);
   useEffect(() => {
-    if (reduce) return;
-    const c = animate(0, value, { duration: 0.9, delay, ease: [0.22, 1, 0.36, 1], onUpdate: setShown });
+    if (!play) return;
+    const c = animate(0, value, { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1], onUpdate: setShown });
     return () => c.stop();
-  }, [value, reduce, delay]);
+  }, [value, play, delay]);
   return (
     <span className={className}>
-      <span aria-hidden="true">{format(reduce ? value : shown)}</span>
+      <span aria-hidden="true">{format(play ? shown : value)}</span>
       <span className="sr-only">{format(value)}</span>
     </span>
   );

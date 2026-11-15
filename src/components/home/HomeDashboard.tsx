@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, RotateCcw, Settings, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { AnimatePresence, motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
+import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Bell, RotateCcw, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -40,6 +40,7 @@ import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
 import type { Weekday } from "@/lib/notifications/schedule";
 import { historyPath } from "@/lib/routes";
 import { isoTime } from "@/lib/safe-date";
+import { Ring } from "@/components/phase/visuals";
 import { useT, type T } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { routineFocus, trainingFocus } from "@/lib/training-focus";
@@ -48,6 +49,13 @@ import { asRoutine, comeback, dismissWelcomeBack, welcomeBackDismissed } from "@
 import { currentStreak, type StreakMoment as StreakMomentData } from "@/lib/streak-moment";
 import { StreakMoment } from "@/components/streak/StreakMoment";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
+import { EmptyArt } from "@/components/ui/EmptyArt";
+import { routineSummary } from "@/lib/routine-summary";
+import { LiftList } from "@/components/routines/RoutineCard";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { useInbox } from "@/components/notifications/useInbox";
+import { MuscleMap } from "@/components/anatomy/MuscleMap";
+import { useSplashGone } from "@/components/animations/SplashScreen";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-card border border-line bg-surface p-3";
@@ -60,7 +68,6 @@ const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
  * finished workouts on this device.
  */
 export function HomeDashboard() {
-  const t = useT();
   const sessions = useWorkoutStore((s) => s.sessions);
   const active = useWorkoutStore((s) => s.active);
   const routines = useRoutineStore((s) => s.routines);
@@ -79,17 +86,14 @@ export function HomeDashboard() {
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 pt-4">
       <header className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h1>
+        {/* Theme switch, the mark in the middle, notifications (owner, 2026-11-15). Settings
+            moved to the gear on Profile. */}
+        <div className="grid grid-cols-[auto_1fr_auto] items-center">
+          <ThemeToggle />
+          <h1 className="justify-self-center">
             <AbotWordmark />
           </h1>
-          <Link
-            href="/settings"
-            aria-label={t("Settings")}
-            className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
-          >
-            <Settings aria-hidden="true" size={22} />
-          </Link>
+          <NotificationsBell />
         </div>
         <AnnouncementBanner />
         <WeekRail
@@ -105,13 +109,9 @@ export function HomeDashboard() {
 
       {!active && <WelcomeBack now={now} />}
 
-      <Rise step={0.07} order={1}>
-        {active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />}
-      </Rise>
-
-      <Rise step={0.07} order={2}>
-        <NumbersRow now={now} />
-      </Rise>
+      {/* Stacked like a wallet (owner, 2026-11-15, after GoPay): the week's numbers on a Volt card
+          behind, the day's card laid over its lower edge in front. */}
+      <WalletStack back={<NumbersRow now={now} />} front={active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />} />
 
       <Rise step={0.07} order={2}>
         <PhaseCommandCard now={now} />
@@ -121,6 +121,71 @@ export function HomeDashboard() {
         <RecentWorkouts unit={weightUnit} byId={byId} now={now} />
       </Rise>
     </main>
+  );
+}
+
+/** The stack plays once per session, so coming back to Home does not deal the cards again. */
+const STACKED_KEY = "abot.home.stacked";
+
+/**
+ * The week's numbers and the day's card as a wallet stack: the Volt card behind, the day's card
+ * laid 36px over its lower edge, so the back card's bottom corners stay hidden under the front
+ * card's straight sides. On the first visit of a session the cards are dealt: the back card drops
+ * into place, then the front one slides up over it and settles.
+ */
+function WalletStack({ back, front }: { back: ReactNode; front: ReactNode }) {
+  const reduce = useReducedMotionConfig();
+  const backCard = useAnimationControls();
+  const frontCard = useAnimationControls();
+  // Pages mount with AnimatePresence initial={false}, which skips `initial`: start from inline
+  // styles and drive the cards from an effect, as useEntrance does.
+  const [deal] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      if (sessionStorage.getItem(STACKED_KEY)) return false;
+      sessionStorage.setItem(STACKED_KEY, "1");
+    } catch {
+      // Without storage the cards are dealt on each visit.
+    }
+    return true;
+  });
+  const play = deal && !reduce;
+  // Dealt once the splash has gone, so the stack is seen being built, not behind it.
+  const splashGone = useSplashGone((s) => s.gone);
+  useEffect(() => {
+    if (play && !splashGone) return;
+    void backCard.start({ y: 0, scale: 1, opacity: 1, transition: play ? { type: "spring", stiffness: 260, damping: 22, delay: 0.05 } : { duration: 0 } });
+    void frontCard.start({ y: 0, rotate: 0, opacity: 1, transition: play ? { type: "spring", stiffness: 240, damping: 20, delay: 0.25 } : { duration: 0 } });
+  }, [backCard, frontCard, play, splashGone]);
+  return (
+    <div className="flex flex-col">
+      <motion.div className="relative z-0" style={play ? { y: -26, scale: 0.92, opacity: 0 } : undefined} animate={backCard}>
+        {back}
+      </motion.div>
+      <motion.div className="wallet-front relative z-10 -mt-9" style={play ? { y: 70, rotate: -2, opacity: 0 } : undefined} animate={frontCard}>
+        {front}
+      </motion.div>
+    </div>
+  );
+}
+
+/** The bell at the top right of Home, with a dot and count while something is new. */
+function NotificationsBell() {
+  const t = useT();
+  const { unreadCount } = useInbox();
+  return (
+    <Link
+      href="/notifications"
+      aria-label={unreadCount > 0 ? t("Notifications, {n} new", { n: unreadCount }) : t("Notifications")}
+      className="glass-icon relative flex size-11 items-center justify-center rounded-full text-text"
+    >
+      <Bell aria-hidden="true" size={22} variant="bold" />
+      {unreadCount > 0 && (
+        <span aria-hidden="true" className="num absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-bold text-on-accent ring-2 ring-bg">
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </span>
+      )}
+    </Link>
   );
 }
 
@@ -282,7 +347,7 @@ function WeekRail({
                 type="button"
                 aria-pressed={on}
                 onClick={() => onSelect(d.start)}
-                className={`tap flex w-full flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${on ? "bg-surface ring-1 ring-line" : "hover:bg-surface/60"}`}
+                className={`tap flex w-full flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${on ? "tile border border-line bg-surface" : "hover:bg-surface/60"}`}
               >
                 <span aria-hidden="true" className={`field-label ${d.isToday ? "!text-text" : ""}`}>
                   {date.toLocaleDateString(t.locale, { weekday: "narrow" })}
@@ -293,7 +358,7 @@ function WeekRail({
                 <span aria-hidden="true" className="relative flex size-10 items-center justify-center">
                   {c.kind === "trained" ? (
                     <motion.span
-                      className={`flex size-full items-center justify-center rounded-lg border bg-accent-tint ${d.isToday ? "border-accent" : "border-accent/40"}`}
+                      className={`tile flex size-full items-center justify-center rounded-lg border bg-accent-tint ${d.isToday ? "border-accent" : "border-accent/40"}`}
                       style={{ scale: 0.4, opacity: 0 }}
                       animate={controls}
                       variants={{
@@ -304,12 +369,15 @@ function WeekRail({
                       {c.focus ? <MuscleIcon muscle={c.focus.muscle} size={28} /> : <Check size={16} strokeWidth={3} className="text-accent" />}
                     </motion.span>
                   ) : c.kind === "planned" ? (
-                    // A training day still to come: a ring where the muscle will light up.
-                    <motion.span
-                      className={`size-3.5 rounded-full border-2 ${d.isToday ? "border-accent" : "border-accent/60"}`}
-                      animate={d.isToday && !reduce ? { scale: [1, 1.25, 1] } : undefined}
-                      transition={{ duration: 2.4, repeat: 2, ease: "easeInOut" }}
-                    />
+                    // A training day still to come: a ring where the muscle will light up, set into a
+                    // small sunken well like an empty slot.
+                    <span className="sunk flex size-full items-center justify-center rounded-lg bg-surface-2">
+                      <motion.span
+                        className={`size-3.5 rounded-full border-2 ${d.isToday ? "border-accent" : "border-accent/60"}`}
+                        animate={d.isToday && !reduce ? { scale: [1, 1.25, 1] } : undefined}
+                        transition={{ duration: 2.4, repeat: 2, ease: "easeInOut" }}
+                      />
+                    </span>
                   ) : (
                     <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-ink/20"}`} />
                   )}
@@ -332,6 +400,34 @@ function WeekRail({
 }
 
 /* ---------------------------------------------------------------- hero */
+
+/** The muscles a routine works, as a small front and back map beside its name. */
+function HeroMuscles({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
+  const muscles = routineSummary(routine, byId).muscles;
+  if (muscles.length === 0) return null;
+  return (
+    <div className="w-24 shrink-0 [&_figcaption]:hidden">
+      <MuscleMap primary={muscles} width={96} />
+    </div>
+  );
+}
+
+/** The routine's lifts folded under "See exercises", as on the routine cards. */
+function HeroLifts({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
+  const t = useT();
+  const sum = routineSummary(routine, byId);
+  return (
+    <div className="relative -mt-3">
+      <LiftList
+        items={sum.lines.map((l) => ({
+          name: byId[l.exerciseId]?.name ?? t("Removed exercise"),
+          detail: l.reps ? `${l.sets}×${l.reps}` : t("{n} sets", { n: l.sets }),
+          superset: !!l.superset,
+        }))}
+      />
+    </div>
+  );
+}
 
 /** A routine as the faces of its lifts: up to five photos and a "+N". */
 function ThumbRow({ exerciseIds, byId, size = 44 }: { exerciseIds: string[]; byId: Record<string, Exercise>; size?: number }) {
@@ -462,25 +558,27 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
           : t("Next up");
       body = (
         <>
-          <div className="relative min-w-0">
-            <p className="field-label">{label}</p>
-            <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
-              {routine.name}
-            </h2>
-            <p className="num mt-1 flex items-center gap-3 text-sm text-text-muted">
-              <span className="inline-flex items-center gap-1">
-                <Timer aria-hidden="true" size={14} />
-                {t("{n} min", { n: routineMinutes(routine) })}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Layers aria-hidden="true" size={14} />
-                {t.n(routine.exercises.length, "{n} exercise", "{n} exercises")}
-              </span>
-            </p>
+          {/* The day and the routine on the left, the muscles it works as a small map on the right. */}
+          <div className="relative flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="field-label">{label}</p>
+              <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
+                {routine.name}
+              </h2>
+              <p className="num mt-1 flex items-center gap-3 text-sm text-text-muted">
+                <span className="inline-flex items-center gap-1">
+                  <Timer aria-hidden="true" size={14} />
+                  {t("{n} min", { n: routineMinutes(routine) })}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Layers aria-hidden="true" size={14} />
+                  {t.n(routine.exercises.length, "{n} exercise", "{n} exercises")}
+                </span>
+              </p>
+            </div>
+            <HeroMuscles routine={routine} byId={byId} />
           </div>
-          <div className="relative">
-            <ThumbRow exerciseIds={routine.exercises.map((e) => e.exerciseId)} byId={byId} />
-          </div>
+          <HeroLifts routine={routine} byId={byId} />
           <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <Button variant="primary" onClick={() => start(routine)} aria-label={t("Start {name}", { name: routine.name })} className="min-h-12 text-base">
               <Play aria-hidden="true" size={18} />
@@ -506,11 +604,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
               {day.isToday ? (nextLine ?? t("Recovery is where the muscle grows.")) : day.isFuture ? t("Nothing planned for this day.") : t("No workout this day.")}
             </p>
           </div>
-          {upcoming && (
-            <div className="relative">
-              <ThumbRow exerciseIds={upcoming.exercises.map((e) => e.exerciseId)} byId={byId} size={36} />
-            </div>
-          )}
+          {upcoming && <HeroLifts routine={upcoming} byId={byId} />}
           <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             {upcoming ? (
               <Button onClick={() => start(upcoming)} aria-label={t("Train anyway: {name}", { name: upcoming.name })} className="min-h-12 text-base">
@@ -526,7 +620,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
             <Link
               href="/plan"
               aria-label={t("Adjust your plan")}
-              className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
+              className="raised flex size-12 items-center justify-center rounded-xl"
             >
               <SlidersHorizontal aria-hidden="true" size={18} />
             </Link>
@@ -541,7 +635,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
             <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
               {t("Free session")}
             </h2>
-            <p className="mt-1 text-sm text-text-muted">{t("Or set up your week: ABOT makes the workouts and reminds you.")}</p>
+            <p className="mt-1 text-sm text-text-muted">{t("Or plan your week and ABOT reminds you.")}</p>
           </div>
           <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <Button variant="primary" onClick={empty} className="min-h-12 text-base">
@@ -551,7 +645,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
             <Link
               href="/workout"
               aria-label={t("Create a routine")}
-              className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
+              className="raised flex size-12 items-center justify-center rounded-xl"
             >
               <Plus aria-hidden="true" size={20} />
             </Link>
@@ -666,30 +760,17 @@ function NumbersRow({ now }: { now: number }) {
   const speed = sleepFactor(sleep, now);
   const target = freq.target ?? 7;
   const perWeek = freq.target !== null;
-  const fraction = Math.min(1, freq.done / Math.max(1, target));
   const change = volume.changePct;
 
   return (
-    <section aria-label={t("This week")} className="grid grid-cols-3 divide-x divide-line border-y border-line">
+    <>
+    <section aria-label={t("This week")} className="wallet-card grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card pb-9">
       <div className="flex min-w-0 items-center gap-2 p-3">
-        <svg viewBox="0 0 36 36" className="hidden size-9 shrink-0 -rotate-90 min-[380px]:block" aria-hidden="true">
-          <circle cx="18" cy="18" r="14" fill="none" stroke="var(--color-track)" strokeWidth="4" />
-          <motion.circle
-            cx="18"
-            cy="18"
-            r="14"
-            fill="none"
-            stroke="var(--color-accent)"
-            strokeWidth="4"
-            strokeLinecap="round"
-            style={{ pathLength: 0, opacity: fraction > 0 ? 1 : 0 }}
-            animate={controls}
-            variants={{
-              still: { pathLength: fraction },
-              show: { pathLength: fraction, transition: { duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] } },
-            }}
-          />
-        </svg>
+        {/* One dash per planned session (owner, 2026-11-15): a whole ring reads as a plain circle,
+            dashes read as "2 of 4". They light one by one when the card is dealt. */}
+        <span aria-hidden="true" className="hidden shrink-0 min-[380px]:block">
+          <Ring value={Math.min(freq.done, target)} max={target} size={36} stroke={4} segments={target} controls={controls} />
+        </span>
         <div className="min-w-0">
           <p aria-hidden="true" className="num text-lg font-bold leading-tight tabular-nums">
             {freq.done}
@@ -728,7 +809,8 @@ function NumbersRow({ now }: { now: number }) {
         aria-label={t("Muscle recovery: {ready} of {total} muscles ready. Open the map.", { ready, total: REGIONS.length })}
         className="flex min-w-0 items-center gap-2 p-3 text-left transition-colors hover:bg-ink/[0.03]"
       >
-        <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent min-[380px]:flex">
+        <span aria-hidden="true" className="tile hidden size-9 shrink-0 items-center justify-center rounded-full min-[380px]:flex"
+          style={{ color: "var(--color-phase-bulk)", backgroundColor: "color-mix(in oklab, var(--color-phase-bulk) 16%, transparent)" }}>
           <Activity size={16} />
         </span>
         <span aria-hidden="true" className="min-w-0">
@@ -740,6 +822,8 @@ function NumbersRow({ now }: { now: number }) {
         </span>
       </button>
 
+    </section>
+    {/* Outside the Volt card: inside it the sheet would inherit the card's re-pointed colours. */}
       <Sheet open={open} onClose={() => setOpen(false)} title={t("Muscle recovery")}>
         <RecoveryMap data={recovery} now={now} />
         {speed !== 1 && sleep && (
@@ -751,11 +835,11 @@ function NumbersRow({ now }: { now: number }) {
         )}
         <p className="mt-3 text-xs text-text-muted">
           {t(
-            "Each working set adds fatigue: 15% to the main muscles, 7.5% to the helpers, more at a high RPE. It fades by itself: big muscles are fresh again in 72 hours, small ones in 48.",
+            "Each set tires the muscles it works. Big muscles recover in 72 hours, small ones in 48.",
           )}
         </p>
       </Sheet>
-    </section>
+    </>
   );
 }
 
@@ -789,12 +873,12 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
         )}
       </div>
       {recent.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 border-y border-line py-6 text-center">
-          <Dumbbell aria-hidden="true" size={22} className="text-text-muted" />
+        <div className="flex flex-col items-center gap-2 rounded-card border bg-surface py-6 text-center">
+          <EmptyArt icon={Dumbbell} />
           <p className="text-sm text-text-muted">{t("No workouts yet.")}</p>
         </div>
       ) : (
-        <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col divide-y divide-line border-y border-line"}>
+        <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col divide-y divide-line overflow-hidden rounded-card border bg-surface"}>
           {recent.map((s, i) => (
             <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} grid={view === "grid"} />
           ))}
@@ -912,7 +996,7 @@ export function RecentCard({
       }}
     >
       <motion.div whileTap={{ scale: 0.98 }} transition={PRESS_SPRING}>
-        <Link href={historyPath(s.id)} className="flex items-center gap-3 py-3 transition-colors hover:bg-ink/[0.03]">
+        <Link href={historyPath(s.id)} className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-ink/[0.03]">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <span className="min-w-0 truncate text-base font-semibold">{s.name}</span>

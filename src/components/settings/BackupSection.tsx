@@ -1,5 +1,6 @@
 "use client";
 
+import { FilePickButton } from "@/components/ui/FilePickButton";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
@@ -141,14 +142,7 @@ export function BackupSection() {
         <label htmlFor="import-file" className="mb-1 block text-sm font-semibold">
           {t("Import backup")}
         </label>
-        <input
-          ref={fileInput}
-          id="import-file"
-          type="file"
-          accept=".json,application/json"
-          onChange={(e) => onFile(e.target.files?.[0])}
-          className="block w-full text-sm text-text-muted file:mr-3 file:min-h-11 file:rounded-ctl file:border file:border-line-strong file:bg-surface-2 file:px-4 file:text-sm file:font-semibold file:text-text hover:file:bg-[var(--color-press-strong)]"
-        />
+        <FilePickButton id="import-file" accept=".json,application/json" onFile={onFile} inputRef={fileInput} />
       </div>
 
       {error && (

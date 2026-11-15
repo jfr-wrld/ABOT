@@ -1,7 +1,8 @@
 "use client";
 
+import { GoogleMark } from "@/components/brand/GoogleMark";
 import { useEffect } from "react";
-import { Cloud, CloudOff, RefreshCw } from "lucide-react";
+import { Cloud, CloudOff, RefreshCw } from "@/components/icons";
 import { useSyncStore } from "@/store/useSyncStore";
 import { useNow } from "@/lib/useNow";
 import { Button } from "@/components/ui/Button";
@@ -35,7 +36,7 @@ export function SyncSection() {
         name={t("backup and sync")}
       >
         {t(
-          "Optional. Sign in to copy your training to your own cloud space and keep your phones in step. ABOT works the same without it. Signing out keeps everything on this device.",
+          "Optional. Sign in to back up and sync your phones. Signing out keeps your data here.",
         )}
       </InfoTip>
 
@@ -51,8 +52,9 @@ export function SyncSection() {
             variant="primary"
             onClick={() => void s.signIn()}
             disabled={s.phase === "signing_in"}
-            className="mt-3 w-full"
+            className="mt-3 w-full gap-2.5"
           >
+            <GoogleMark size={22} />
             {s.phase === "signing_in" ? t("Opening Google") : t("Sign in with Google to Backup & Sync")}
           </Button>
         </>

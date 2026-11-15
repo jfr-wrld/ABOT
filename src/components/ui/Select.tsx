@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "@/components/icons";
 
 export interface SelectOption<V extends string | number> {
   value: V;

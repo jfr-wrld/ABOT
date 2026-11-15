@@ -15,8 +15,9 @@ and plain copy ("ABOT Pro", "Templates", "Upper day at 17:30").
 | `text` | `#f4f4f5` | `#18181b` | 16:1 on both. |
 | `text-muted` | `#a1a1aa` | `#52525b` | 7.7:1. |
 | `accent` | `#ccff00` Volt, black text | fill `#65a30d`, text `#3f6212` | The brand colour (owner's choice): the primary action, the current tab, progress. Neon text on white fails contrast, so light pages use a darker lime. |
-| `pr` | `#00f0ff` cyan | `#155e75` | Records only. |
-| `warmup` | `#facc15` | `#a16207` | |
+| `pr` | `#f5c542` gold | `#8a5d00` | Records only: the medal colour (owner, 2026-11-15). |
+| `warmup` | `#7dd3fc` sky | `#0369a1` | Warm-up sets, kept clear of the record gold. |
+| `caution` | `#fb923c` | `#c2410c` | The coach calling a step back (deload, one set fewer). |
 | `dropset` | `#c084fc` | `#7e22ce` | |
 | `failure` | `#f87171` | `#b91c1c` | |
 
@@ -47,12 +48,64 @@ values in either theme, in `globals.css`.
 
 ## Surfaces
 
-One card per screen for the one primary thing (Home's day hero or the running workout, the
-routine to start today, the phase check-in). Everything else is a list with hairline dividers:
-the week numbers, recent workouts, routines, templates and the phase sections. Radius by role:
-`rounded-card` (16px) for cards and sheets, `rounded-ctl` for controls, pills only for chips.
-The plate outlines behind Home's hero and the intro are gone; the plate shape stays where it
-carries data (weeks, sets) and as the avatar.
+Cards, the GoPay way (owner, 2026-11-15, reversing the "fewer cards" step): each section sits on
+its own raised card (`rounded-card border bg-surface`, shaded as in "Raised" below) on the page
+background: Home's day hero, the week's numbers and recent workouts (one card, rows divided by
+hairlines), each routine and template, and each section of the phase page. Radius by role:
+`rounded-card` (16px) for cards and sheets, `rounded-ctl` for controls, pills only for chips. The
+plate outlines behind Home's hero and the intro stay gone.
+
+## Icons
+
+Solar by 480 Design (CC BY 4.0, credited in About), owner's choice 2026-11-15 over Lucide's thin
+default lines. Meaningful icons are Bold (solid; the owner found the two-tone version odd), which
+sits well in the raised tiles, mixed with Linear (outline). Small UI glyphs (arrows, chevrons, close, plus, minus, check,
+grips) are Linear so they stay light, and so is any icon drawn at 18 px or less, where the two
+solid shape would close up into a blot. The dock draws the current tab Bold and the others in Linear. The Workout tab is a clipboard (your
+routines), so it never reads as the dumbbell on the centre button (train now). Import from `@/components/icons` only; a new icon goes into `scripts/make-icons.mjs`, which
+writes `src/components/icons/solar.generated.tsx` from the `@iconify-json/solar` dev dependency
+(nothing is fetched at run time). Foods stay in Lucide, since Solar has almost none.
+
+## Empty states
+
+An empty state leads with `EmptyArt`: the subject's icon on a raised tile that floats with a
+slight tilt while a ring breathes out behind it (3.2 s loop, CSS only, still with reduced motion
+or Visual effects: Light), then one plain sentence and, where there is one, the next action.
+
+## Home header, notifications, the dock's centre
+
+- **Header** (owner, 2026-11-15): a dark/light switch on the left (sun and moon turning; it saves
+  Light or Dark, System stays in Settings), the ABOT mark centred, and a bell on the right with a
+  green count of what is new. Settings opens from the gear on Profile.
+- **Notifications** (`/notifications`, `src/lib/inbox.ts`): worked out on the phone, nothing sent.
+  Today's planned session and a missed one, new records and the weekly streak, the admin's
+  announcement, and backup or sync trouble. New ones lead with a dot; opening the page marks
+  them seen on this device.
+- **Dock centre** (`TodayButton`): a raised green disc with a glassy sheen and a Play mark, set
+  in a notch between the two pairs of tabs. A tap opens today's workout in a sheet (muscle map,
+  lifts, Start). When today's workout is finished, a tick lands once, then Play returns for the
+  next one.
+
+## Home's wallet stack
+
+The week's numbers and the day's card stack like a wallet (owner, 2026-11-15, after GoPay): the
+numbers on a Volt card behind (`wallet-card`: dark figures, rings and icons on the accent, flat
+icon tiles), the day's card laid 36px over its lower edge so the back card's corners stay hidden,
+casting a deep shadow up onto it. On the first visit of a session, once the splash has gone, the
+cards are dealt: the back one settles, then the front one slides up over it.
+
+## Glass buttons
+
+Buttons that stand on their own (back, settings, options, close) are round liquid glass in the
+page's theme (`glass-icon`): translucent, a highlight along the top, a shade inside the bottom
+edge, a soft shadow, sinking 1px when pressed. Over a photo or video they use `glass-btn`, the
+same build always dark. Small buttons inside a row (favourite stars in a list, set numbers,
+"last time" values) and text links stay flat so a busy screen stays calm.
+
+## Search
+
+Every search field is a soft grey pill (`search-pill`) set slightly into the page, with no
+outline until focused, as in GoPay.
 
 ## Settings
 
@@ -124,7 +177,7 @@ app the page beeps while ABOT is on screen and the system notification rings whi
 ## Where the accent lands
 
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the
-running rest timer, and the current tab icon. Cyan appears only where a record was set.
+running rest timer, and the current tab icon. Gold appears only where a record was set.
 
 ## Labels
 
@@ -154,7 +207,7 @@ animation". So Home tells the week in pictures, each with one job:
 - **Days ring**: sessions this week as a ring that draws itself, against the schedule when one is
   set, else out of 7 days.
 - **Body map**: front and back, muscles worked in the last 48 hours lit (resting), with "4/6 ready".
-- **Recent workouts**: name, Cyan PR pill (only when a lift beat an earlier record), a relative day
+- **Recent workouts**: name, Gold PR pill (only when a lift beat an earlier record), a relative day
   (Today, Yesterday, Wed), the lifts as small photos, and duration, volume and sets as icons with
   mono figures. Cards slide in in order and give to 98% under the thumb.
 
@@ -197,13 +250,8 @@ Owner brief 2026-11-08:
   empty it shows the set before it as the number to beat ("last 60 kg × 8"). Right: the clock
   with the live dot, and sets done ("7/16 sets"). The share of sets done runs as a Volt hairline
   along the bottom edge, the same mark the rest countdown uses.
-- **Wave while it runs** (owner brief 2026-11-10, "seperti wave Siri"; revised the same day: at
-  the bottom, solid, rising and falling). Along the bar's bottom edge, three filled swells (a Volt
-  back wave, a brighter Volt front wave running the other way, a faint light crest) drift sideways
-  at their own speeds while their height rises and falls from the floor, like a level breathing.
-  Paused, they sink to a thin floor: the bar reads as live or stopped at a glance. It is
-  transform-only CSS, so it costs the phone almost nothing; Lite effects and reduced motion hold
-  it still.
+- **No wave** (owner, 2026-11-15): the swells that used to run along the bar's bottom edge are
+  gone; the bar is calm glass, and the Volt hairline of sets done is the only moving mark.
 - **Shortcuts in the bar** (owner brief 2026-11-10). A tap opens the bar upward, the same shape
   growing (Dynamic Island), into four 56 px targets: Pause or Resume, Done set (Volt, the one
   primary; it ticks the set with the numbers the bar shows, so what you read is what is saved),
@@ -253,7 +301,7 @@ Owner brief 2026-11-08:
   menu (delete lives there, off the thumb's path). Four icon tiles count up (duration, volume,
   sets, records), a body map lights the muscles worked, and each exercise card shows its photo,
   gear, share of the workout's volume as a bar, and its sets with a bar for load against the
-  heaviest set: records in Cyan, the best set by e1RM marked; tap to fold. A bottom action bar
+  heaviest set: records in Gold, the best set by e1RM marked; tap to fold. A bottom action bar
   holds Repeat (starts the same lifts with the same numbers) and Share story. Records count once
   per lift and only when they beat an earlier one, the same rule as the PR pill on Home.
 
@@ -261,12 +309,12 @@ Owner brief 2026-11-08:
 
 Owner brief 2026-11-08: a moment of completion, then the numbers, with motion.
 - **Completion mark**: the plate outline is traced shut, fills faintly, a check is drawn, and
-  twelve small plates burst outward, Cyan when a record fell, Volt otherwise (about 1.4 s). One
+  twelve small plates burst outward, Gold when a record fell, Volt otherwise (about 1.4 s). One
   short buzz on phones that vibrate, only if rest alerts are on and the page was reached by a tap.
 - Four icon tiles count up (duration, volume, sets, exercises).
 - **Volume vs last time**: the previous session of the same routine (or name) as two bars and a
   change pill (Volt when up).
-- **Records** pop in as Cyan cards, one per lift, one chip per record-setting set with the kinds
+- **Records** pop in as Gold cards, one per lift, one chip per record-setting set with the kinds
   it broke (WEIGHT, E1RM, VOLUME). **New lifts** (first time logged) are listed as the baseline,
   not as records: there was nothing to beat. Same rule as Home and the workout detail.
 - A body map of the muscles worked; a bottom bar with Share to IG Story, See every set, Home.
@@ -311,7 +359,7 @@ Owner brief 2026-11-08: revamp it with pictures, icons and motion.
   Offline it shows the photo bundled with the app; with no photo at all, the animated figure.
   Then the name, and muscle and gear with their icons. How to's Motion tab also opens on Photos,
   with Animation one tap away.
-- Four tiles count up: best e1RM (Cyan) or most reps for bodyweight, heaviest, workouts, last done.
+- Four tiles count up: best e1RM (Gold) or most reps for bodyweight, heaviest, workouts, last done.
 - Summary keeps the body map and records; the e1RM line draws itself and carries a trend chip
   (first to latest point, Volt when up). History cards show a relative day and a load bar per set.
 - A bottom bar: Start a workout with this, or, with a workout running, Add to workout (then
@@ -340,7 +388,20 @@ switches being thrown.
   filter button bend the page at their rim like a lens (`src/lib/liquid-glass.ts`,
   `useLiquidGlass`), with a light blur and tint so labels stay readable and a specular edge
   brighter at the top left. The lens is clearer and bends harder, so it magnifies the tab under
-  it. Safari and Firefox keep the frosted glass; Visual effects: Light makes all of it solid.
+  it. The workout bar has it too, with its backdrop darkened rather than tinted so its figures
+  stay high-contrast. Safari and Firefox keep the frosted glass; Visual effects: Light makes all
+  of it solid.
+- Raised, the GoPay way (owner, 2026-11-15): every button, chip, card and icon tile has a face
+  that shades from light at the top to a touch darker at the bottom (`--neo-face`,
+  `--neo-card-face`), a grey shade inside its bottom edge in place of a solid side, a fine top
+  highlight and a soft shadow fading out under it (`--raise-btn`, `--raise-chip`, `--raise-card`,
+  `--raise-accent`). The faces are translucent overlays, so tinted cards keep their tint. A pressed
+  button sinks 1px with an inner shadow (`--raise-pressed`); a selected chip (aria-pressed,
+  aria-checked, or a label around a checked radio) stays pressed in; search fields and number
+  fields sit sunken (`--sink`). Controls built outside Button use `raised`, `raised-danger`,
+  `raised-card`, `chip`; icon tiles and stat boxes use `tile`; search fields use `sunk`. Left flat
+  on purpose: exercise photos, the dashed "Add set", glass surfaces, buttons over photos, the week
+  rail's selected day, bottom sheets, and segmented controls with a sliding marker.
 - Shadow: the dock only, as the elevation of the one floating layer.
 
 ## Motion
@@ -368,7 +429,7 @@ Added at the owner's request (2026-11-08), each with its job:
   context; if a Next upgrade moves that module, drop the exit and keep the enter.
 - **Intro** (`app/onboarding`, `components/onboarding/Illustrations.tsx`): three slides, each with
   an original illustration built from ABOT's own parts and acting out its sentence on a 3.6s loop:
-  a fingertip taps a set's check, the row lights, the band of light passes and a Cyan PR pops; a
+  a fingertip taps a set's check, the row lights, the band of light passes and a Gold PR pops; a
   phone with the rest capsule counting down above the dock, the thumb's reach traced as a dashed
   Volt arc; a barbell sleeve inside a phone loaded plate by plate (side view) and clamped, with the
   signal gone. The illustration travels further than the text between slides (90 vs 64 px), so

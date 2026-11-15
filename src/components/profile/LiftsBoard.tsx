@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { Trophy } from "@/components/icons";
 import type { Exercise, WeightUnit, WorkoutSession } from "@/types/workout";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { Sparkline } from "@/components/phase/visuals";
@@ -69,7 +69,7 @@ export function LiftsBoard({
                 if (bucket !== b) feedback.tick();
                 setBucket(b);
               }}
-              className={`tap min-h-11 shrink-0 rounded-full border px-3.5 text-xs font-semibold ${
+              className={`chip tap min-h-11 shrink-0 rounded-full border px-3.5 text-xs font-semibold ${
                 bucket === b ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
               }`}
             >
