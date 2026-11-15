@@ -167,7 +167,7 @@ const lines = [
   'import { solarIcon } from "./solar";',
   "",
 ];
-for (const [app, [base, style]] of Object.entries(MAP).sort(([a], [b]) => a.localeCompare(b))) {
+for (const [app, [base]] of Object.entries(MAP).sort(([a], [b]) => a.localeCompare(b))) {
   const want = usage.get(app);
   const both = want.has("both") || (want.has("bold") && want.has("linear"));
   // Not drawn anywhere yet: keep its default style, so a new use shows the right shape.

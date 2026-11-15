@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { motion, useReducedMotionConfig } from "framer-motion";
+import { motion, useReducedMotionConfig, type LegacyAnimationControls as AnimationControls } from "framer-motion";
 
 /**
  * Small drawn pieces for the body phase screens. Three macro colours only, all from the theme:
@@ -20,6 +20,7 @@ export function Ring({
   children,
   label,
   segments,
+  controls,
 }: {
   value: number;
   max: number;
@@ -31,9 +32,16 @@ export function Ring({
   /** Draw the ring as this many short dashes, lit one by one, instead of one stroke (owner,
    *  2026-11-15: a full stroke reads as a plain circle anywhere; dashes read as a count). */
   segments?: number;
+  /** With `segments`: entrance controls ("still" / "show"); "show" lights the dashes one by one. */
+  controls?: AnimationControls;
 }) {
   const reduce = useReducedMotionConfig();
-  if (segments) return <DashRing value={value} max={max} size={size} stroke={stroke} color={color} label={label} segments={segments}>{children}</DashRing>;
+  if (segments)
+    return (
+      <DashRing value={value} max={max} size={size} stroke={stroke} color={color} label={label} segments={segments} controls={controls}>
+        {children}
+      </DashRing>
+    );
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const f = Math.max(0, Math.min(1, max > 0 ? value / max : 0));
@@ -65,7 +73,27 @@ export function Ring({
   );
 }
 
-function DashRing({ value, max, size, stroke, color, label, segments, children }: { value: number; max: number; size: number; stroke: number; color: string; label?: string; segments: number; children?: ReactNode }) {
+function DashRing({
+  value,
+  max,
+  size,
+  stroke,
+  color,
+  label,
+  segments,
+  controls,
+  children,
+}: {
+  value: number;
+  max: number;
+  size: number;
+  stroke: number;
+  color: string;
+  label?: string;
+  segments: number;
+  controls?: AnimationControls;
+  children?: ReactNode;
+}) {
   const r = (size - stroke) / 2;
   const mid = size / 2;
   const lit = Math.round(Math.max(0, Math.min(1, max > 0 ? value / max : 0)) * segments);
@@ -79,14 +107,20 @@ function DashRing({ value, max, size, stroke, color, label, segments, children }
           const a0 = i * slice + slice * 0.2;
           const a1 = a0 + slice * 0.6;
           return (
-            <path
+            <motion.path
               key={i}
               d={`M ${at(a0)} A ${r} ${r} 0 0 1 ${at(a1)}`}
               fill="none"
               stroke={i < lit ? color : "var(--color-track)"}
               strokeWidth={stroke}
               strokeLinecap="round"
-              style={{ transition: `stroke 200ms ease ${i * 25}ms` }}
+              style={controls ? { opacity: i < lit ? 0 : 1 } : { transition: `stroke 200ms ease ${i * 25}ms` }}
+              animate={controls}
+              variants={
+                controls && i < lit
+                  ? { still: { opacity: 1 }, show: { opacity: [0, 1], transition: { delay: 0.3 + i * 0.09, duration: 0.25 } } }
+                  : undefined
+              }
             />
           );
         })}

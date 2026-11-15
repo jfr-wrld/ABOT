@@ -40,6 +40,7 @@ import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
 import type { Weekday } from "@/lib/notifications/schedule";
 import { historyPath } from "@/lib/routes";
 import { isoTime } from "@/lib/safe-date";
+import { Ring } from "@/components/phase/visuals";
 import { useT, type T } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { routineFocus, trainingFocus } from "@/lib/training-focus";
@@ -759,30 +760,16 @@ function NumbersRow({ now }: { now: number }) {
   const speed = sleepFactor(sleep, now);
   const target = freq.target ?? 7;
   const perWeek = freq.target !== null;
-  const fraction = Math.min(1, freq.done / Math.max(1, target));
   const change = volume.changePct;
 
   return (
     <section aria-label={t("This week")} className="wallet-card grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card pb-9">
       <div className="flex min-w-0 items-center gap-2 p-3">
-        <svg viewBox="0 0 36 36" className="hidden size-9 shrink-0 -rotate-90 min-[380px]:block" aria-hidden="true">
-          <circle cx="18" cy="18" r="14" fill="none" stroke="var(--color-track)" strokeWidth="4" />
-          <motion.circle
-            cx="18"
-            cy="18"
-            r="14"
-            fill="none"
-            stroke="var(--color-accent)"
-            strokeWidth="4"
-            strokeLinecap="round"
-            style={{ pathLength: 0, opacity: fraction > 0 ? 1 : 0 }}
-            animate={controls}
-            variants={{
-              still: { pathLength: fraction },
-              show: { pathLength: fraction, transition: { duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] } },
-            }}
-          />
-        </svg>
+        {/* One dash per planned session (owner, 2026-11-15): a whole ring reads as a plain circle,
+            dashes read as "2 of 4". They light one by one when the card is dealt. */}
+        <span aria-hidden="true" className="hidden shrink-0 min-[380px]:block">
+          <Ring value={Math.min(freq.done, target)} max={target} size={36} stroke={4} segments={target} controls={controls} />
+        </span>
         <div className="min-w-0">
           <p aria-hidden="true" className="num text-lg font-bold leading-tight tabular-nums">
             {freq.done}
