@@ -273,7 +273,7 @@ function Hero({
         <div className="flex items-center justify-between">
           <BackLink
             href="/"
-            className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-surface/60 pl-1.5 pr-3 text-sm font-semibold backdrop-blur hover:bg-surface/70"
+            className="glass-icon rounded-full inline-flex min-h-11 items-center gap-1 pl-1.5 pr-3 text-sm font-semibold"
           >
             <ChevronLeft aria-hidden="true" size={18} />
             {t("Home")}
@@ -283,7 +283,7 @@ function Hero({
             onClick={onMenu}
             aria-label={t("Workout options")}
             aria-haspopup="dialog"
-            className="-mr-2 flex size-11 items-center justify-center rounded-full bg-surface/60 backdrop-blur hover:bg-surface/70"
+            className="glass-icon rounded-full flex size-11 items-center justify-center"
           >
             <MoreHorizontal aria-hidden="true" size={20} />
           </button>

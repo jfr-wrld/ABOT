@@ -62,7 +62,7 @@ export function ActiveWorkoutHeader({
           onClick={() => setMenuOpen(true)}
           aria-label={t("Workout options")}
           aria-haspopup="dialog"
-          className="flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
+          className="glass-icon rounded-full flex size-11 shrink-0 items-center justify-center text-text"
         >
           <MoreHorizontal aria-hidden="true" size={20} />
         </button>

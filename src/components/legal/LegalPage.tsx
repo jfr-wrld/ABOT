@@ -29,7 +29,7 @@ export function LegalPage({ which, docs }: { which: "privacy" | "terms"; docs: R
       <div className="flex items-center justify-between gap-2">
         <BackLink
           href="/"
-          className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-ctl pr-3 pl-1 text-sm text-text-muted hover:bg-surface hover:text-text"
+          className="glass-icon rounded-full inline-flex min-h-11 items-center gap-1 pr-3 pl-1 text-sm text-text"
         >
           <ChevronLeft aria-hidden="true" size={18} />
           ABOT

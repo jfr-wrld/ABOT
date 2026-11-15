@@ -88,7 +88,7 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
           <h2 id={titleId} className="flex items-center gap-2 font-mono text-xs font-bold tracking-[0.14em] text-accent">
             <KeyRound aria-hidden="true" size={16} /> {t("Redeem license code")}
           </h2>
-          <button type="button" onClick={onClose} aria-label={t("Close")} className="-mr-2 -mt-2 flex size-11 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={onClose} aria-label={t("Close")} className="glass-icon rounded-full flex size-11 items-center justify-center text-text">
             <X aria-hidden="true" size={20} />
           </button>
         </div>

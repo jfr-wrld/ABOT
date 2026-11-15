@@ -93,7 +93,7 @@ export function PlanSetup({
             type="button"
             onClick={() => setStep(step - 1)}
             aria-label={t("Back")}
-            className="-ml-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.05] hover:text-text"
+            className="glass-icon rounded-full flex size-11 items-center justify-center text-text"
           >
             <ArrowLeft aria-hidden="true" size={20} />
           </button>

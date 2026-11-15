@@ -58,7 +58,7 @@ function PhaseScreen() {
         title={t(PHASE_LABEL[m.phase.phaseType])}
         back={{ href: "/", label: t("Home") }}
         action={
-          <Link href="/phase/setup" aria-label={t("Edit body phase")} className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-ink/[0.05] hover:text-text">
+          <Link href="/phase/setup" aria-label={t("Edit body phase")} className="glass-icon rounded-full flex size-11 items-center justify-center text-text">
             <Settings2 aria-hidden="true" size={20} />
           </Link>
         }

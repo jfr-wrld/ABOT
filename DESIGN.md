@@ -71,6 +71,14 @@ An empty state leads with `EmptyArt`: the subject's icon on a raised tile that f
 slight tilt while a ring breathes out behind it (3.2 s loop, CSS only, still with reduced motion
 or Visual effects: Light), then one plain sentence and, where there is one, the next action.
 
+## Glass buttons
+
+Buttons that stand on their own (back, settings, options, close) are round liquid glass in the
+page's theme (`glass-icon`): translucent, a highlight along the top, a shade inside the bottom
+edge, a soft shadow, sinking 1px when pressed. Over a photo or video they use `glass-btn`, the
+same build always dark. Small buttons inside a row (favourite stars in a list, set numbers,
+"last time" values) and text links stay flat so a busy screen stays calm.
+
 ## Search
 
 Every search field is a soft grey pill (`search-pill`) set slightly into the page, with no

@@ -78,7 +78,7 @@ function ProfileScreen() {
         <Link
           href="/settings"
           aria-label={t("Settings")}
-          className="-mr-2 flex size-11 items-center justify-center rounded-ctl text-text-muted hover:bg-surface hover:text-text"
+          className="glass-icon rounded-full flex size-11 items-center justify-center text-text"
         >
           <Settings aria-hidden="true" size={22} />
         </Link>

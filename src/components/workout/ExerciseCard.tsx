@@ -239,7 +239,7 @@ function ExerciseCardView({
           onClick={() => setMenuOpen(true)}
           aria-label={t("Options for {name}", { name })}
           aria-haspopup="dialog"
-          className="-ml-2 -mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-ctl text-text-muted hover:bg-surface-2 hover:text-text"
+          className="glass-icon rounded-full flex size-11 shrink-0 items-center justify-center text-text"
         >
           <MoreHorizontal aria-hidden="true" size={20} />
         </button>

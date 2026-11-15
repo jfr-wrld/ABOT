@@ -127,7 +127,7 @@ export function AbotProModal() {
           <span className="rounded-[4px] border border-accent/50 px-2 py-0.5 font-mono text-[10px] font-bold tracking-[0.16em] text-accent">
             ABOT Pro TELEMETRY SYSTEM
           </span>
-          <button type="button" onClick={done} aria-label={t("Close")} className="flex size-11 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={done} aria-label={t("Close")} className="glass-icon rounded-full flex size-11 items-center justify-center text-text">
             <X aria-hidden="true" size={22} />
           </button>
         </div>
