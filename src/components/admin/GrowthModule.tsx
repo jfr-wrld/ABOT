@@ -185,7 +185,7 @@ function VisitorsPanel({ mode }: { mode: AdminMode }) {
     try {
       setData(await visits(30));
     } catch (e) {
-      setError(missingFunctionMessage(e, "admin_visits", "20261116_admin_customers_visits.sql"));
+      setError(missingFunctionMessage(e, "20261116_admin_customers_visits.sql"));
     } finally {
       setBusy(false);
     }
@@ -194,7 +194,7 @@ function VisitorsPanel({ mode }: { mode: AdminMode }) {
   useEffect(() => {
     if (!live) return;
     void visits(30)
-      .then(setData, (e) => setError(missingFunctionMessage(e, "admin_visits", "20261116_admin_customers_visits.sql")))
+      .then(setData, (e) => setError(missingFunctionMessage(e, "20261116_admin_customers_visits.sql")))
       .finally(() => setBusy(false));
   }, [live]);
 

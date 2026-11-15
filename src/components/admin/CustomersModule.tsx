@@ -38,7 +38,7 @@ export function CustomersModule({ mode }: { mode: AdminMode }) {
     try {
       setData(await customers());
     } catch (e) {
-      setError(missingFunctionMessage(e, "admin_customers", MIGRATION));
+      setError(missingFunctionMessage(e, MIGRATION));
     } finally {
       setBusy(false);
     }
@@ -47,7 +47,7 @@ export function CustomersModule({ mode }: { mode: AdminMode }) {
   useEffect(() => {
     if (!live) return;
     void customers()
-      .then(setData, (e) => setError(missingFunctionMessage(e, "admin_customers", MIGRATION)))
+      .then(setData, (e) => setError(missingFunctionMessage(e, MIGRATION)))
       .finally(() => setBusy(false));
   }, [live]);
 
@@ -91,13 +91,13 @@ export function CustomersModule({ mode }: { mode: AdminMode }) {
         {error && <Note tone="error">{error}</Note>}
       </Panel>
 
-      <Panel id="c-list" title={`Customers (${data?.list.length ?? 0})`} scope="global" wide>
+      <Panel id="c-list" title={data ? `Customers (${data.list.length})` : "Customers"} scope="global" wide>
         <label htmlFor="c-search" className="sr-only">
           Search by email
         </label>
         <input id="c-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by email" className={cls.input} />
 
-        {data && shown.length === 0 ? (
+        {!data ? null : shown.length === 0 ? (
           <p className="text-sm text-zinc-400">{data.list.length === 0 ? "Nobody has paid or holds PRO yet." : "No email matches."}</p>
         ) : (
           <>

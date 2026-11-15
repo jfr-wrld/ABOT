@@ -39,9 +39,13 @@ describe("customers", () => {
     expect(sourceLabel(null)).toBe("-");
   });
 
-  it("explains a missing migration", () => {
+  it("explains a missing migration, naming whichever function is missing", () => {
+    const file = "20261116_admin_customers_visits.sql";
     const e = new Error("Could not find the function public.admin_customers without parameters in the schema cache");
-    expect(missingFunctionMessage(e, "admin_customers", "20261116_admin_customers_visits.sql")).toBe("admin_customers() is missing: apply supabase/migrations/20261116_admin_customers_visits.sql.");
-    expect(missingFunctionMessage(new Error("admins only"), "admin_customers", "x.sql")).toBe("admins only");
+    expect(missingFunctionMessage(e, file)).toBe("admin_customers() is missing: apply supabase/migrations/20261116_admin_customers_visits.sql.");
+    const paths = new Error("Could not find the function public.admin_visit_paths(p_days) in the schema cache");
+    expect(missingFunctionMessage(paths, file)).toBe("admin_visit_paths() is missing: apply supabase/migrations/20261116_admin_customers_visits.sql.");
+    expect(missingFunctionMessage(new Error("permission denied for function admin_customers"), file)).toBe("permission denied for function admin_customers");
+    expect(missingFunctionMessage(new Error("admins only"), file)).toBe("admins only");
   });
 });

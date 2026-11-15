@@ -469,6 +469,15 @@ insert into public.payment_orders (order_id, user_id, plan, amount_idr, status, 
   ('ABOT-ANNUAL-PAID-901', '00000000-0000-0000-0000-00000000000d', 'annual', 249000, 'paid', 'qris', now() - interval '2 days', now() - interval '2 days'),
   ('ABOT-ANNUAL-EXP-902', '00000000-0000-0000-0000-00000000000d', 'annual', 249000, 'expired', null, null, now() - interval '1 day'),
   ('ABOT-ANNUAL-SIM-903', '00000000-0000-0000-0000-00000000000d', 'annual', 249000, 'paid', 'simulated', now(), now());
+-- The admin's test buttons: an expired outcome leaves payment_type empty but logs a simulated event.
+insert into public.payment_orders (order_id, user_id, plan, amount_idr, status, created_at) values
+  ('ABOT-ANNUAL-SIMX-904', '00000000-0000-0000-0000-00000000000b', 'annual', 249000, 'expired', now());
+insert into public.payment_events (order_id, transaction_status, transaction_id, payload) values
+  ('ABOT-ANNUAL-SIMX-904', 'simulated_expire', 'sim-ABOT-ANNUAL-SIMX-904', '{"simulated": true}');
+-- E holds PRO from a VIP code only, with no orders.
+insert into auth.users values ('00000000-0000-0000-0000-00000000000e', 'e@example.com', now());
+insert into public.user_entitlements (user_id, tier, pro_expires_at, source) values
+  ('00000000-0000-0000-0000-00000000000e', 'pro', now() + interval '30 days', 'code:VIP-E');
 set role anon;
 set request.jwt.claim.sub = '';
 set request.jwt.claim.email = '';
@@ -515,9 +524,12 @@ begin
   if c.tier <> 'free' or c.source is not null then raise exception 'd entitlement wrong: %', c; end if;
   select * into c from public.admin_customers() where email = 'boss2@example.com';
   if c.last_plan <> 'founders' or c.founder_seat is null then raise exception 'founders seat missing: %', c; end if;
-  select sum(amount_idr) into real_revenue from public.payment_orders where status = 'paid' and payment_type <> 'simulated';
+  select * into c from public.admin_customers() where email = 'e@example.com';
+  if not found or c.paid_orders <> 0 or c.source <> 'code:VIP-E' or c.last_status is not null then raise exception 'code-only row wrong: %', c; end if;
+  select sum(amount_idr) into real_revenue from public.payment_orders where status = 'paid' and coalesce(payment_type, '') <> 'simulated' and not exists (select 1 from public.payment_events ev where ev.order_id = payment_orders.order_id and ev.transaction_status like 'simulated\_%');
   select * into t from public.admin_order_totals();
-  if t.revenue_idr <> real_revenue or t.failed < 1 then raise exception 'totals wrong: %', t; end if;
+  if t.revenue_idr <> real_revenue or t.failed <> (select count(*) from public.payment_orders o where status in ('failed', 'expired') and not exists (select 1 from public.payment_events ev where ev.order_id = o.order_id and ev.transaction_status like 'simulated\_%')) then raise exception 'totals wrong (simulated expiry counted?): %', t; end if;
+  if exists (select 1 from public.admin_customers() where last_status = 'expired' and email = 'boss@example.com') then raise exception 'simulated expiry shown as the admin''s last order'; end if;
 end $$;
 
 reset role;

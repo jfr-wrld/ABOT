@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { firstVisitToday, jakartaDay, reportVisit } from "./visit-counter";
+import { firstVisitToday, jakartaDay, pickDayStore, reportVisit, restRpc } from "./visit-counter";
 
 const memory = () => {
   const m = new Map<string, string>();
@@ -37,5 +37,26 @@ describe("visit counter", () => {
     await reportVisit("/admin/x", rpc, s, now);
     expect(rpc).toHaveBeenCalledTimes(2);
     await expect(reportVisit("/", async () => { throw new Error("offline"); }, s, now)).resolves.toBeUndefined();
+  });
+
+  it("keeps the day in memory when the browser refuses to store it", () => {
+    const readOnly = { getItem: () => null, setItem: () => { throw new Error("quota"); } };
+    const store = pickDayStore(() => readOnly as unknown as Storage);
+    expect(firstVisitToday(store, "2026-11-15")).toBe(true);
+    expect(firstVisitToday(store, "2026-11-15")).toBe(false);
+    const ok = memory();
+    expect(pickDayStore(() => ok as unknown as Storage)).toBe(ok);
+    expect(firstVisitToday(pickDayStore(() => { throw new Error("blocked"); }), "2026-11-17")).toBe(true);
+  });
+
+  it("calls the RPC with a plain fetch and the public key, no Supabase client", async () => {
+    const fetcher = vi.fn(async () => new Response(null, { status: 204 }));
+    await restRpc("https://x.supabase.co", "anon-key", fetcher as unknown as typeof fetch)("track_visit", { p_path: "/", p_first_today: true });
+    expect(fetcher).toHaveBeenCalledWith("https://x.supabase.co/rest/v1/rpc/track_visit", {
+      method: "POST",
+      keepalive: true,
+      headers: { apikey: "anon-key", Authorization: "Bearer anon-key", "Content-Type": "application/json" },
+      body: JSON.stringify({ p_path: "/", p_first_today: true }),
+    });
   });
 });

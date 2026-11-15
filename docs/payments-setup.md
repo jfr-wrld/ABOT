@@ -110,11 +110,11 @@ select u.email, e.tier, e.pro_expires_at, e.is_founder, e.source from public.use
 ## Going live
 
 1. Turn the test buttons off: run `update public.app_remote_config set payments_sandbox = false;`.
-1. Production Server Key: run `supabase secrets set MIDTRANS_SERVER_KEY=Mid-server-xxxx MIDTRANS_IS_PRODUCTION=true`.
-2. Set the same Notification and Redirect URLs in the **Production** dashboard.
-3. Redeploy both functions so they pick up the new secrets.
-4. Clear the Sandbox orders, so Mission Control's Customers tab counts only real money. Do it right
-   after step 1 and before the first real payment. Look first:
+2. Production Server Key: run `supabase secrets set MIDTRANS_SERVER_KEY=Mid-server-xxxx MIDTRANS_IS_PRODUCTION=true`.
+3. Set the same Notification and Redirect URLs in the **Production** dashboard.
+4. Redeploy both functions so they pick up the new secrets.
+5. Clear the Sandbox orders, so Mission Control's Customers tab counts only real money. Do it right
+   after step 2 and before the first real payment. Look first:
    `select order_id, user_id, plan, status, payment_type, created_at from public.payment_orders order by created_at;`
    Then, in the SQL editor, PRO that a Sandbox order granted goes back to free and the orders go:
    ```sql

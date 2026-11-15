@@ -86,7 +86,8 @@ export function sourceLabel(source: string | null): string {
 }
 
 /** Supabase's answer when a migration has not been applied yet, turned into the fix. */
-export function missingFunctionMessage(e: unknown, fn: string, file: string): string {
+export function missingFunctionMessage(e: unknown, file: string): string {
   const text = e instanceof Error ? e.message : String(e);
-  return text.includes(fn) ? `${fn}() is missing: apply supabase/migrations/${file}.` : text;
+  const missing = /Could not find the function public\.(\w+)/.exec(text);
+  return missing ? `${missing[1]}() is missing: apply supabase/migrations/${file}.` : text;
 }

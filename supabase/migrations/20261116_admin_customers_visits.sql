@@ -5,7 +5,9 @@
 -- day (visitors) and how many page views. Nothing identifies a visitor. Only the functions below
 -- touch the table: track_visit() for the web app, admin_visits() and admin_visit_paths() for admins.
 -- admin_customers() and admin_order_totals() list who paid and what PRO they hold, admins only.
--- Orders made by the admin's own test buttons (payment_type 'simulated') are left out everywhere.
+-- Orders settled by the admin's own test buttons are left out everywhere: a simulated payment sets
+-- payment_type 'simulated', and every simulated outcome (paid, failed, expired, refunded) logs a
+-- payment_events row whose status starts with 'simulated_'.
 
 create table if not exists public.web_visits (
   day date not null,
@@ -112,7 +114,9 @@ begin
   if not public.is_abot_admin() then raise exception 'admins only' using errcode = '42501'; end if;
   return query
   with real_orders as (
-    select o.* from public.payment_orders o where coalesce(o.payment_type, '') <> 'simulated'
+    select o.* from public.payment_orders o
+    where coalesce(o.payment_type, '') <> 'simulated'
+      and not exists (select 1 from public.payment_events ev where ev.order_id = o.order_id and ev.transaction_status like 'simulated\_%')
   ),
   seats as (
     select o.order_id, row_number() over (order by o.paid_at, o.order_id)::integer as seat
@@ -164,7 +168,8 @@ begin
          count(*) filter (where o.status in ('failed', 'expired')),
          count(*) filter (where o.status = 'refunded')
   from public.payment_orders o
-  where coalesce(o.payment_type, '') <> 'simulated';
+  where coalesce(o.payment_type, '') <> 'simulated'
+    and not exists (select 1 from public.payment_events ev where ev.order_id = o.order_id and ev.transaction_status like 'simulated\_%');
 end;
 $$;
 revoke all on function public.admin_order_totals() from public, anon;
