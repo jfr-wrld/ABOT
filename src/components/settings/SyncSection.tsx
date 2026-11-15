@@ -1,5 +1,6 @@
 "use client";
 
+import { GoogleMark } from "@/components/brand/GoogleMark";
 import { useEffect } from "react";
 import { Cloud, CloudOff, RefreshCw } from "@/components/icons";
 import { useSyncStore } from "@/store/useSyncStore";
@@ -51,8 +52,9 @@ export function SyncSection() {
             variant="primary"
             onClick={() => void s.signIn()}
             disabled={s.phase === "signing_in"}
-            className="mt-3 w-full"
+            className="mt-3 w-full gap-2.5"
           >
+            <GoogleMark size={22} />
             {s.phase === "signing_in" ? t("Opening Google") : t("Sign in with Google to Backup & Sync")}
           </Button>
         </>

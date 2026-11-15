@@ -1,5 +1,6 @@
 "use client";
 
+import { GoogleMark } from "@/components/brand/GoogleMark";
 import { safeReturnPath } from "@/lib/safe-path";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -106,8 +107,9 @@ function GoogleSignIn({ from }: { from: string | null }) {
             type="button"
             disabled
             aria-describedby="google-status"
-            className="flex min-h-12 w-full items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 text-base font-semibold text-text disabled:opacity-60"
+            className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-ink/[0.12] bg-surface-2 text-base font-semibold text-text disabled:opacity-60"
           >
+            <GoogleMark />
             {t("Sign in with Google")}
           </button>
           <p id="google-status" className="mt-3 text-sm text-text-muted">
@@ -152,8 +154,9 @@ function GoogleSignIn({ from }: { from: string | null }) {
         variant="primary"
         onClick={() => void s.signIn(away)}
         disabled={s.phase === "signing_in"}
-        className="min-h-12 w-full text-base"
+        className="min-h-12 w-full gap-2.5 text-base"
       >
+        <GoogleMark />
         {s.phase === "signing_in" ? t("Opening Google") : t("Sign in with Google")}
       </Button>
       {s.phase === "error" && s.lastError ? (
