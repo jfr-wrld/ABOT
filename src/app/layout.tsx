@@ -23,6 +23,7 @@ import { LoadingStatus } from "@/components/ui/Loading";
 import { AudioUnlock } from "@/components/layout/AudioUnlock";
 import { EntitlementsProvider } from "@/components/paywall/EntitlementsProvider";
 import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
+import { Analytics } from "@vercel/analytics/next";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -100,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
           <SignInReturn />
         </MotionProvider>
+        <Analytics />
       </body>
     </html>
   );
