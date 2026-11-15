@@ -1,3 +1,4 @@
+import { bindLicenseUser } from "@/store/useLicense";
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
 import { applyGrant, type EntitlementState } from "./entitlements";
@@ -65,9 +66,9 @@ export type RestoreResult =
   | { kind: "restored"; next: EntitlementState }
   /** The account no longer holds the licence this phone had from it (refund or revocation). */
   | { kind: "revoked"; next: EntitlementState }
-  /** The account holds nothing this phone does not already have. */
-  | { kind: "up-to-date" }
-  | { kind: "none" }
+  /** The account holds nothing this phone does not already have (next: only a fresh licence token). */
+  | { kind: "up-to-date"; next?: EntitlementState }
+  | { kind: "none"; next?: EntitlementState }
   | { kind: "error" };
 
 /** The change takes paid time away: lifetime lost, or pro ending sooner or gone. */
@@ -77,6 +78,45 @@ function isLoss(before: EntitlementState, after: EntitlementState): boolean {
   if (after.tier === "lifetime") return false;
   if (after.tier === "free") return true;
   return Date.parse(after.proExpiresAt ?? "0") < Date.parse(before.proExpiresAt ?? "0");
+}
+
+/** The state with the server's signed licence token in it; the same object when nothing changes. */
+export function withLicenseToken(state: EntitlementState, token: string | null): EntitlementState {
+  return token === null || state.licenseToken === token ? state : { ...state, licenseToken: token };
+}
+
+/** A fresh signed licence from the license Edge Function, or null (not deployed, offline, no key). */
+async function fetchLicenseToken(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string | null> {
+  // Three tries: right after a payment a cold function start can fail once.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const { data, error } = await supabase.functions.invoke("license", { body: {} });
+      const token = (data as { token?: unknown } | null)?.token;
+      if (!error && typeof token === "string") return token;
+    } catch {
+      // Tried again below.
+    }
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+  }
+  return null;
+}
+
+/**
+ * What a restore changes, from the account's row and a fresh signed token (null when none came).
+ * The signed token is what release builds trust; the row is what the screen shows. A fresh token
+ * always replaces the stored one, so a token pasted from another account does not survive a sync;
+ * a revoked licence drops its old token even when no fresh one arrived.
+ */
+export function decideRestore(local: EntitlementState, data: AccountEntitlement | null, token: string | null, now = Date.now()): RestoreResult {
+  const merged = mergeAccountEntitlement(local, data, now);
+  if (merged !== local) {
+    const revoked = isLoss(local, merged);
+    const next = token === null && revoked ? { ...merged, licenseToken: null } : withLicenseToken(merged, token);
+    return { kind: revoked ? "revoked" : "restored", next };
+  }
+  const next = withLicenseToken(local, token);
+  if (next === local) return data ? { kind: "up-to-date" } : { kind: "none" };
+  return data ? { kind: "up-to-date", next } : { kind: "none", next };
 }
 
 /** Reads the signed-in account's licence and says what it would change here. */
@@ -95,9 +135,8 @@ export async function restoreEntitlementFromAccount(local: EntitlementState): Pr
       .eq("user_id", session.session.user.id)
       .maybeSingle();
     if (error) return { kind: "error" };
-    const next = mergeAccountEntitlement(local, (data as AccountEntitlement | null) ?? null);
-    if (next !== local) return { kind: isLoss(local, next) ? "revoked" : "restored", next };
-    return data ? { kind: "up-to-date" } : { kind: "none" };
+    bindLicenseUser(session.session.user.id);
+    return decideRestore(local, (data as AccountEntitlement | null) ?? null, await fetchLicenseToken(supabase));
   } catch {
     return { kind: "error" };
   }
@@ -121,5 +160,5 @@ export async function syncEntitlementWithAccount(local: EntitlementState): Promi
     return null;
   }
   const r = await restoreEntitlementFromAccount(local);
-  return r.kind === "restored" || r.kind === "revoked" ? r.next : null;
+  return "next" in r && r.next ? r.next : null;
 }

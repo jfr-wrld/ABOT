@@ -5,7 +5,7 @@ const now = Date.parse("2026-11-09T00:00:00Z");
 
 describe("resolveEntitlement", () => {
   it("founders beta opens every PRO feature for a free user", () => {
-    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "FOUNDERS_BETA", now)).toEqual({ mode: "FOUNDERS_BETA", tier: "free", isBetaUnlocked: true, proActive: true });
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "FOUNDERS_BETA", now)).toEqual({ mode: "FOUNDERS_BETA", tier: "free", isBetaUnlocked: true, proActive: true, renewNeeded: false });
   });
 
   it("commercial mode locks free users and opens pro and lifetime", () => {
@@ -62,5 +62,42 @@ describe("release builds trust only the account's licence", () => {
   it("counts the account's licence, and still opens everything during the beta", () => {
     expect(resolveEntitlement({ ...base, tier: "lifetime", licenseSource: "account" }, "COMMERCIAL_LIVE", Date.now(), false).proActive).toBe(true);
     expect(resolveEntitlement(base, "FOUNDERS_BETA", Date.now(), false).proActive).toBe(true);
+  });
+});
+
+describe("resolveEntitlement with signed licences (release builds)", () => {
+  const now = Date.parse("2026-11-15T00:00:00Z");
+  const edited = { ...DEFAULT_ENTITLEMENT, tier: "lifetime" as const, licenseSource: "account" as const };
+  const lic = (tier: "free" | "pro" | "lifetime", proUntil: string | null = null) => ({ sub: "u1", tier, proUntil, exp: now + 86400000 });
+
+  it("ignores an edited tier when a public key is built in and no licence checks out", () => {
+    expect(resolveEntitlement(edited, "COMMERCIAL_LIVE", now, false, null, true).proActive).toBe(false);
+  });
+
+  it("opens from a verified licence, and a pro licence ends at pro_until", () => {
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "COMMERCIAL_LIVE", now, false, lic("lifetime"), true)).toMatchObject({ tier: "lifetime", proActive: true });
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "COMMERCIAL_LIVE", now, false, lic("pro", "2026-12-01T00:00:00Z"), true)).toMatchObject({ tier: "pro", proActive: true });
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "COMMERCIAL_LIVE", now, false, lic("pro", "2026-11-01T00:00:00Z"), true)).toMatchObject({ tier: "free", proActive: false });
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "COMMERCIAL_LIVE", now, false, { ...lic("lifetime"), exp: now - 1 }, true).proActive).toBe(false);
+  });
+
+  it("keeps the account rule when no public key is built in", () => {
+    expect(resolveEntitlement(edited, "COMMERCIAL_LIVE", now, false, null, false).proActive).toBe(true);
+  });
+
+  it("a live floor keeps an edited cache from reopening the beta, in release builds only", () => {
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "FOUNDERS_BETA", now, false, null, true, "COMMERCIAL_LIVE")).toMatchObject({ mode: "COMMERCIAL_LIVE", proActive: false });
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "FOUNDERS_BETA", now, true, null, true, "COMMERCIAL_LIVE").mode).toBe("FOUNDERS_BETA");
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "FOUNDERS_BETA", now, false, null, true, null).mode).toBe("FOUNDERS_BETA");
+  });
+});
+
+describe("a paid licence that needs renewing", () => {
+  const now = Date.parse("2026-11-15T00:00:00Z");
+  const accountLifetime = { ...DEFAULT_ENTITLEMENT, tier: "lifetime" as const, licenseSource: "account" as const };
+  it("says so instead of looking like a free account", () => {
+    expect(resolveEntitlement(accountLifetime, "COMMERCIAL_LIVE", now, false, null, true)).toMatchObject({ tier: "free", proActive: false, renewNeeded: true });
+    expect(resolveEntitlement(DEFAULT_ENTITLEMENT, "COMMERCIAL_LIVE", now, false, null, true).renewNeeded).toBe(false);
+    expect(resolveEntitlement(accountLifetime, "COMMERCIAL_LIVE", now, false, null, false).renewNeeded).toBe(false);
   });
 });

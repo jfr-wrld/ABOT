@@ -1,6 +1,8 @@
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
 import { normalizeRemoteConfig, useRemoteConfig, type RemoteConfig } from "./remote-config";
+import { parseCustomers, parseTotals, type Customer, type OrderTotals } from "./customers";
+import { summarizeGrowth, summarizeVisits, type GrowthSummary, type VisitSummary } from "./growth";
 import { readLocalCodes, writeLocalCodes, type Grant, type LocalCode } from "./redeem-service";
 
 /**
@@ -121,6 +123,31 @@ export async function stats(mode: AdminMode, codes: AdminCode[]): Promise<AdminS
   fail(error);
   const r = (Array.isArray(data) ? data[0] : data) as Record<string, number> | null;
   return { totalUsers: Number(r?.total_users ?? 0), founders: Number(r?.founders ?? 0), activePro: Number(r?.active_pro ?? 0), activeCodes };
+}
+
+/** Sign-ups and syncing accounts per day (admin_growth, supabase/migrations/20261115_admin_growth.sql). */
+export async function growth(days = 30): Promise<GrowthSummary> {
+  const { data, error } = await (await getSupabase()).rpc("admin_growth", { p_days: days });
+  fail(error);
+  return summarizeGrowth(data);
+}
+
+/** ABOT's own web visit totals (admin_visits, admin_visit_paths; migration 20261116). */
+export async function visits(days = 30): Promise<VisitSummary> {
+  const supabase = await getSupabase();
+  const [perDay, paths] = await Promise.all([supabase.rpc("admin_visits", { p_days: days }), supabase.rpc("admin_visit_paths", { p_days: days })]);
+  fail(perDay.error);
+  fail(paths.error);
+  return summarizeVisits(perDay.data, paths.data);
+}
+
+/** Who paid and what PRO they hold (admin_customers, admin_order_totals; migration 20261116). */
+export async function customers(): Promise<{ list: Customer[]; totals: OrderTotals }> {
+  const supabase = await getSupabase();
+  const [list, totals] = await Promise.all([supabase.rpc("admin_customers"), supabase.rpc("admin_order_totals")]);
+  fail(list.error);
+  fail(totals.error);
+  return { list: parseCustomers(list.data), totals: parseTotals(totals.data) };
 }
 
 /** Manual upgrade by email. False: no ABOT account with that email (they sign in once first). */

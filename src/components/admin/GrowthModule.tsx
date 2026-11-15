@@ -1,0 +1,272 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { ExternalLink, RefreshCw } from "@/components/icons";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { growth, visits, type AdminMode } from "@/lib/admin-api";
+import { missingFunctionMessage } from "@/lib/customers";
+import { fetchDownloads, type DownloadSummary, type GrowthSummary, type VisitSummary } from "@/lib/growth";
+import { Metric, Note, Panel, cls, errText } from "./ui";
+
+/**
+ * Growth: web visitors (ABOT's own counter, admin_visits), accounts (admin_growth) and APK
+ * downloads (GitHub Releases). Numbers are read when the module opens and on
+ * Refresh, never in the background.
+ */
+
+const num = (n: number | null | undefined) => (n === null || n === undefined ? "-" : n.toLocaleString("en-US"));
+const shortDay = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
+export function GrowthModule({ mode }: { mode: AdminMode }) {
+  return (
+    <>
+      <VisitorsPanel mode={mode} />
+      <AccountsPanel mode={mode} />
+      <DownloadsPanel />
+    </>
+  );
+}
+
+function growthError(e: unknown): string {
+  const text = errText(e);
+  return /admin_growth/.test(text) ? "admin_growth() is missing: apply supabase/migrations/20261115_admin_growth.sql." : text;
+}
+
+function RefreshButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} disabled={busy} className={cls.ghost} aria-label="Refresh">
+      <RefreshCw aria-hidden="true" size={14} className={busy ? "animate-spin" : undefined} />
+    </button>
+  );
+}
+
+function AccountsPanel({ mode }: { mode: AdminMode }) {
+  const [data, setData] = useState<GrowthSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const live = mode.kind === "server" && mode.admin;
+  const [busy, setBusy] = useState(live);
+
+  const load = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setData(await growth(30));
+    } catch (e) {
+      setError(growthError(e));
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    void growth(30)
+      .then(setData, (e) => setError(growthError(e)))
+      .finally(() => setBusy(false));
+  }, [live]);
+
+  return (
+    <Panel id="g-accounts" title="New accounts" scope="global" wide actions={live ? <RefreshButton busy={busy} onClick={() => void load()} /> : undefined}>
+      {!live ? (
+        <Note>Account numbers need Supabase in the build and an admin sign-in.</Note>
+      ) : (
+        <>
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Metric label="Today" value={num(data?.signupsToday)} tone="volt" />
+            <Metric label="Last 7 days" value={num(data?.signups7)} />
+            <Metric label="Last 30 days" value={num(data?.signupsTotal)} />
+            <Metric label="Synced today" value={num(data?.activeToday)} />
+          </dl>
+          {data && data.days.length > 0 && (
+            <figure className="flex flex-col gap-2">
+              <div className="h-56 w-full" role="img" aria-label={`Sign-ups per day over the last ${data.days.length} days, ${data.signupsTotal} in all, and accounts that synced each day, at most ${data.activePeak}.`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.days} margin={{ top: 8, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
+                    <CartesianGrid vertical={false} stroke="var(--color-line)" />
+                    <XAxis dataKey="day" tickFormatter={shortDay} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "var(--color-line)" }} minTickGap={16} />
+                    <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                      contentStyle={{ background: "var(--color-surface-2)", border: "1px solid var(--color-line)", color: "var(--color-text)", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "var(--color-text)" }}
+                      labelFormatter={(v) => shortDay(String(v))}
+                    />
+                    <Bar dataKey="signups" name="Sign-ups" fill="var(--color-accent)" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="active" name="Synced" fill="var(--color-text-muted)" fillOpacity={0.55} radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-accent" /> Sign-ups
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-text-muted/55" /> Accounts that synced
+                </span>
+                <span>Days in Jakarta time.</span>
+              </figcaption>
+            </figure>
+          )}
+          <Note>Only people who sign in with Google have an account. Anyone using ABOT without signing in shows up in downloads and web visitors, not here.</Note>
+          {error && <Note tone="error">{error}</Note>}
+        </>
+      )}
+    </Panel>
+  );
+}
+
+function DownloadsPanel() {
+  const [data, setData] = useState<DownloadSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(true);
+
+  const load = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setData(await fetchDownloads());
+    } catch (e) {
+      setError(errText(e));
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchDownloads()
+      .then(setData, (e) => setError(errText(e)))
+      .finally(() => setBusy(false));
+  }, []);
+
+  return (
+    <Panel id="g-downloads" title="APK downloads" scope="global" actions={<RefreshButton busy={busy} onClick={() => void load()} />}>
+      <dl className="grid grid-cols-2 gap-2">
+        <Metric label="From the web link" value={num(data?.fromLink)} tone="volt" />
+        <Metric label="In-app updates" value={num(data?.updates)} />
+      </dl>
+      {data && data.releases.length > 0 && (
+        <table className="w-full font-mono text-xs tabular-nums">
+          <caption className="sr-only">Downloads per build, newest first</caption>
+          <thead>
+            <tr className="text-left text-text-muted">
+              <th scope="col" className="py-1 font-normal">Build</th>
+              <th scope="col" className="py-1 font-normal">Released</th>
+              <th scope="col" className="py-1 text-right font-normal">Link</th>
+              <th scope="col" className="py-1 text-right font-normal">Updates</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.releases.slice(0, 8).map((r) => (
+              <tr key={r.tag} className="border-t border-line text-text">
+                <td className="py-1.5">{r.build}</td>
+                <td className="py-1.5 text-text-muted">{r.publishedAt ? new Date(r.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "-"}</td>
+                <td className="py-1.5 text-right">{num(r.fromLink)}</td>
+                <td className="py-1.5 text-right">{num(r.updates)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <Note>GitHub counts downloads, not people: a phone that downloads twice counts twice. Updates come from people who already have the app.</Note>
+      {error && <Note tone="error">{error}</Note>}
+    </Panel>
+  );
+}
+
+function VisitorsPanel({ mode }: { mode: AdminMode }) {
+  const live = mode.kind === "server" && mode.admin;
+  const [data, setData] = useState<VisitSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(live);
+
+  const load = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setData(await visits(30));
+    } catch (e) {
+      setError(missingFunctionMessage(e, "20261116_admin_customers_visits.sql"));
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    void visits(30)
+      .then(setData, (e) => setError(missingFunctionMessage(e, "20261116_admin_customers_visits.sql")))
+      .finally(() => setBusy(false));
+  }, [live]);
+
+  return (
+    <Panel id="g-visitors" title="Web visitors" scope="global" wide actions={live ? <RefreshButton busy={busy} onClick={() => void load()} /> : undefined}>
+      {!live ? (
+        <Note>Visitor numbers need Supabase in the build and an admin sign-in.</Note>
+      ) : (
+        <>
+          <dl className="grid grid-cols-3 gap-2">
+            <Metric label="Today" value={num(data?.today)} tone="volt" />
+            <Metric label="Last 7 days" value={num(data?.last7)} />
+            <Metric label="Last 30 days" value={num(data?.last30)} />
+          </dl>
+          {data && data.days.length > 0 && (
+            <figure className="flex flex-col gap-2">
+              <div className="h-48 w-full" role="img" aria-label={`Web visitors per day over the last ${data.days.length} days, ${data.last30} in all, and page views per day.`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.days} margin={{ top: 8, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
+                    <CartesianGrid vertical={false} stroke="var(--color-line)" />
+                    <XAxis dataKey="day" tickFormatter={shortDay} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "var(--color-line)" }} minTickGap={16} />
+                    <YAxis allowDecimals={false} tick={{ fill: "var(--color-text-muted)", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                      contentStyle={{ background: "var(--color-surface-2)", border: "1px solid var(--color-line)", color: "var(--color-text)", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "var(--color-text)" }}
+                      labelFormatter={(v) => shortDay(String(v))}
+                    />
+                    <Bar dataKey="visitors" name="Visitors" fill="var(--color-accent)" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="views" name="Page views" fill="var(--color-text-muted)" fillOpacity={0.55} radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-accent" /> Visitors
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-text-muted/55" /> Page views
+                </span>
+                <span>Days in Jakarta time.</span>
+              </figcaption>
+            </figure>
+          )}
+          {data && data.topPaths.length > 0 && (
+            <table className="w-full text-sm tabular-nums">
+              <caption className="sr-only">Most viewed pages, last 30 days</caption>
+              <thead>
+                <tr className="text-left text-xs text-text-muted">
+                  <th scope="col" className="py-1 font-normal">Page</th>
+                  <th scope="col" className="py-1 text-right font-normal">Visitors</th>
+                  <th scope="col" className="py-1 text-right font-normal">Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.topPaths.map((p) => (
+                  <tr key={p.path} className="border-t border-line text-text">
+                    <td className="py-1.5">{p.path === "other" ? "Other pages" : p.path}</td>
+                    <td className="py-1.5 text-right">{num(p.visitors)}</td>
+                    <td className="py-1.5 text-right">{num(p.views)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <Note>A browser counts once per day, so someone who comes back on three days counts three times. The Android app sends nothing.</Note>
+          {error && <Note tone="error">{error}</Note>}
+        </>
+      )}
+      <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" className={`${cls.ghost} self-start`}>
+        Countries and referrers in Vercel <ExternalLink aria-hidden="true" size={14} />
+      </a>
+    </Panel>
+  );
+}

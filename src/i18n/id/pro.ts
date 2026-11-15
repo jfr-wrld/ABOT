@@ -17,6 +17,7 @@ export const pro: Record<string, string> = {
   once: "sekali bayar",
   "Best value · save {pct}%": "Paling hemat · hemat {pct}%",
   "Limited edition": "Edisi terbatas",
+  "Your Pro license needs a quick check. Go online, sign in with the same account, and open ABOT again.": "Lisensi Pro-mu perlu dicek ulang. Sambungkan internet, masuk dengan akun yang sama, lalu buka ABOT lagi.",
   "Founders beta: every Pro feature is free for now.": "Aktif: Founders Beta Pass. Semua fitur PRO terbuka gratis.",
   "Founder pass verified on this device.": "Founder pass terverifikasi di perangkat ini.",
   "Verify Founder Pass": "Verifikasi Founder Pass",
