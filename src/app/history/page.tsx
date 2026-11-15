@@ -31,7 +31,6 @@ import { countSets, estimate1RM, formatDuration, isWorkingSet, sessionDurationSe
 import { formatVolume } from "@/lib/units";
 import {
   EQUIPMENT_LABELS,
-  MUSCLE_GROUP_LABELS,
   type Exercise,
   type SessionExercise,
   type WeightUnit,
@@ -39,7 +38,6 @@ import {
 } from "@/types/workout";
 import { exercisePath } from "@/lib/routes";
 import { useT } from "@/i18n";
-import { muscleText } from "@/lib/home";
 import { variationLabel } from "@/data/variations";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
@@ -90,7 +88,7 @@ function SessionDetail() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <Hero session={session} byId={byId} cover={photos.photos[0]?.url} onMenu={() => setMenu(true)} />
+      <Hero session={session} byId={byId} muscles={muscles} cover={photos.photos[0]?.url} onMenu={() => setMenu(true)} />
 
       <div className="flex flex-col gap-3 px-4 pt-4">
         {/* The four figures in one strip, so the photos and the lifts start higher. */}
@@ -107,33 +105,6 @@ function SessionDetail() {
           <WorkoutPhotos state={photos} sessionName={session.name} />
         </Rise>
 
-
-        {muscles.primary.length > 0 && (
-          <Rise order={3}>
-            <section aria-labelledby="muscles-heading" className="panel flex items-center gap-3 p-3">
-              <div className="w-36 shrink-0 [&_figcaption]:hidden">
-                <MuscleMap primary={muscles.primary} secondary={muscles.secondary} width={144} />
-              </div>
-              <div className="min-w-0">
-                <h2 id="muscles-heading" className="field-label">
-                  {t("Muscles worked")}
-                </h2>
-                <ul className="mt-2 flex flex-wrap gap-1">
-                  {muscles.primary.slice(0, 5).map((m) => (
-                    <li key={m} className="rounded-full border border-accent/40 bg-accent-tint px-2 py-0.5 text-xs font-semibold">
-                      {muscleText(MUSCLE_GROUP_LABELS[m], t)}
-                    </li>
-                  ))}
-                  {muscles.secondary.slice(0, 3).map((m) => (
-                    <li key={m} className="rounded-full border border-ink/10 px-2 py-0.5 text-xs text-text-muted">
-                      {muscleText(MUSCLE_GROUP_LABELS[m], t)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </section>
-          </Rise>
-        )}
 
         {session.exercises.map((ex, i) => (
           <Rise key={ex.id} order={4 + Math.min(i, 6)}>
@@ -236,11 +207,13 @@ function SessionDetail() {
 function Hero({
   session,
   byId,
+  muscles,
   cover,
   onMenu,
 }: {
   session: WorkoutSession;
   byId: Record<string, Exercise>;
+  muscles: ReturnType<typeof workedMuscles>;
   cover?: string;
   onMenu: () => void;
 }) {
@@ -288,20 +261,22 @@ function Hero({
             <MoreHorizontal aria-hidden="true" size={20} />
           </button>
         </div>
-        <Rise order={0}>
-          <ul aria-hidden="true" className="flex gap-1.5">
-            {defs.slice(0, 5).map((d, i) => (
-              <li key={`${d.id}-${i}`}>
-                <ExerciseThumb exercise={d} size={40} />
-              </li>
-            ))}
-          </ul>
-          <p className="num mt-2 text-xs text-text-muted">
-            {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })} ·{" "}
-            {date.toLocaleTimeString(t.locale, { hour: "2-digit", minute: "2-digit" })}
-          </p>
-          <h1 className="mt-0.5 text-2xl font-bold leading-tight tracking-tight">{session.name}</h1>
-          <GymTag session={session} />
+        {/* The day, the name and the gym on the left; on the right, the muscles it worked as a
+            small map, which replaced the photo strip and the separate muscles card. */}
+        <Rise order={0} className="flex items-end gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="num text-xs text-text-muted">
+              {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })} ·{" "}
+              {date.toLocaleTimeString(t.locale, { hour: "2-digit", minute: "2-digit" })}
+            </p>
+            <h1 className="mt-0.5 text-2xl font-bold leading-tight tracking-tight">{session.name}</h1>
+            <GymTag session={session} />
+          </div>
+          {muscles.primary.length > 0 && (
+            <div className="w-28 shrink-0 [&_figcaption]:hidden">
+              <MuscleMap primary={muscles.primary} secondary={muscles.secondary} width={112} />
+            </div>
+          )}
         </Rise>
       </div>
     </header>
