@@ -90,7 +90,7 @@ export interface StoryOptions {
   /** How dark the tint over the photo is, 0.2 to 0.85. */
   overlay: number;
   grayscale: boolean;
-  /** ABOT // BLACK PRO: leave out the ABOT mark and name. */
+  /** ABOT Pro: leave out the ABOT mark and name. */
   hideWatermark?: boolean;
   /** Founder pass holders: "FOUNDER // #0421" stamped in the top corner. */
   founderBadge?: string | null;

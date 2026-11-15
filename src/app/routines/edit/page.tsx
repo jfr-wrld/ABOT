@@ -114,7 +114,7 @@ function Editor() {
               placeholder="Push / Pull / Legs"
               className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
             />
-            {/* The Template Vault's splits, one tap each, so saved routines group the same way. */}
+            {/* The Templates's splits, one tap each, so saved routines group the same way. */}
             <div role="group" aria-label={t("Folder by split")} className="-mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
               {SPLITS.map((sp) => (
                 <button
@@ -390,7 +390,7 @@ function Editor() {
   );
 }
 
-/** What the routine adds up to as it is built: the numbers a Template Vault card shows. */
+/** What the routine adds up to as it is built: the numbers a Templates card shows. */
 function RoutineOverview({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
   const t = useT();
   const sum = routineSummary(routine, byId);

@@ -178,7 +178,6 @@ export const exercises: Record<string, string> = {
   "New routine": "Rutinitas baru",
   Routines: "Rutinitas",
   "My Routines": "Rutinitasku",
-  "Template Vault": "Koleksi Template",
   "No routines saved. Create one, add its exercises and target sets, and you can start the same workout in one tap next time.":
     "Belum ada rutinitas. Buat satu, isi gerakan dan target set-nya, lalu lain kali kamu bisa mulai latihan yang sama dengan sekali ketuk.",
   "No folder": "Tanpa folder",

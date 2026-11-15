@@ -117,7 +117,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
       : unlocked.tier === "lifetime"
         ? t("Lifetime license. No end date.")
         : unlocked.kind === "extended"
-          ? t("BLACK PRO now runs until {date}", { date: longDate(unlocked.until) })
+          ? t("Pro now runs until {date}", { date: longDate(unlocked.until) })
           : unlocked.until
             ? t("Active until {date}", { date: longDate(unlocked.until) })
             : t("Active on your account");
@@ -392,7 +392,7 @@ type T = ReturnType<typeof useT>;
 function titleOf(u: Unlocked, t: T): string {
   if (u.kind === "upgraded") return t("Upgraded to lifetime");
   if (u.kind === "extended") return t("+{n} days added", { n: u.days });
-  return u.tier === "lifetime" ? t("Lifetime unlocked") : t("BLACK PRO unlocked");
+  return u.tier === "lifetime" ? t("Lifetime unlocked") : t("Pro unlocked");
 }
 
 /** "+365 days added", the number counting up from zero as the title lands. */

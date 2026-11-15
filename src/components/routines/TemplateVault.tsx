@@ -126,8 +126,8 @@ function TemplateCard({
               <span className="sr-only"> {t("exercises")}</span>
             </span>
           </div>
-          <h3 id={`${tpl.id}-title`} className="num mt-2 line-clamp-2 text-sm font-bold tracking-tight text-text">
-            {tpl.code}
+          <h3 id={`${tpl.id}-title`} className="mt-2 line-clamp-2 text-base font-bold leading-tight text-text">
+            {tpl.name}
           </h3>
           {phase && templateFitsPhase(tpl, phase) && (
             <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-accent-tint px-2 py-0.5 text-[10px] font-bold text-accent">

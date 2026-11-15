@@ -43,7 +43,7 @@ export function BillingSection() {
   const simulator = e.devOverrideMode !== "AUTO" && e.devOverrideMode !== "FORCE_BETA" ? SIMULATOR.find((m) => m.mode === e.devOverrideMode) : undefined;
 
   const badge = { pro: t("Active"), lifetime: t("Active"), beta: t("Beta access"), core: t("PRO locked") }[s.plan];
-  const primary = { core: t("Get Black Pro"), beta: t("Get Black Pro"), pro: t("Manage plan"), lifetime: t("View plan details") }[s.plan];
+  const primary = { core: t("Get ABOT Pro"), beta: t("Get ABOT Pro"), pro: t("Manage plan"), lifetime: t("View plan details") }[s.plan];
   const note =
     s.plan === "beta"
       ? t("Every PRO feature is open while the founders beta runs.")

@@ -15,7 +15,7 @@ export interface RoutineLine {
 
 export interface RoutineSummary {
   focus: Focus | null;
-  /** Rough length in minutes, rounded to 5, by the same rule as the Template Vault. */
+  /** Rough length in minutes, rounded to 5, by the same rule as the Templates. */
   minutes: number;
   /** Most worked muscles by planned sets, most first, at most three. */
   muscles: MuscleGroup[];
@@ -24,7 +24,7 @@ export interface RoutineSummary {
 }
 
 /**
- * What a saved routine holds, read the way a Template Vault card reads a template: its focus,
+ * What a saved routine holds, read the way a Templates card reads a template: its focus,
  * its rough length, the muscles it works and each lift as sets x reps.
  */
 export function routineSummary(r: Routine, byId: Record<string, Exercise>): RoutineSummary {

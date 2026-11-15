@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 /* Gym analog: chalk and iron for everything, the plate colours for meaning (red 25, blue 20,
-   yellow 15, green 10), gold only for records. The accent is the primary action, nothing else.
+   yellow 15, green 10), gold only for records. Red (the 25 kg plate) is the brand colour: the
+   primary action, the current tab and progress.
    Light (chalk) is the default; dark (iron) is the same system inverted. Reasons: DESIGN.md. */
 @theme {
   --color-bg: #f1eee7; /* chalk */
@@ -13,17 +14,17 @@
   --color-line-strong: #8a8478;
   --color-text: #1d1b17; /* iron */
   --color-text-muted: #5b564c;
-  --color-accent: #1d1b17; /* the primary action: rubber black, chalk text */
-  --color-accent-solid: #1d1b17;
-  --color-on-accent: #faf8f3;
-  --color-accent-tint: rgb(29 27 23 / 0.06);
+  --color-accent: #c8102e; /* red 25 kg plate: the primary action, the current tab, progress */
+  --color-accent-solid: #c8102e;
+  --color-on-accent: #ffffff;
+  --color-accent-tint: rgb(200 16 46 / 0.08);
   --color-pr: #8a6300; /* gold: records only */
   --color-warmup: #2e6b30; /* green 10 kg plate: the light warm-up sets */
   --color-dropset: #1f4fa3; /* blue 20 kg plate */
-  --color-failure: #b3261e; /* red 25 kg plate */
+  --color-failure: #b54708; /* burnt orange: red now means "go" */
   --color-ink: #000000;
-  --color-accent-text: #1d1b17;
-  --color-accent-dim: #c9c3b5; /* earlier weeks in bar charts */
+  --color-accent-text: #b00e28;
+  --color-accent-dim: #ecc6c9; /* earlier weeks in bar charts */
   --color-press: #e3dfd5;
   --color-press-strong: #d9d4c9;
   --color-track: #e1ddd3; /* empty part of rings and bars */
@@ -43,7 +44,7 @@
   --radius-ctl: 10px;
   --radius-card: 16px;
 
-  --shadow-volt: 0 0 0 1px rgb(29 27 23 / 0.35);
+  --shadow-volt: 0 0 0 1px rgb(200 16 46 / 0.45);
 }
 
 /* Iron (Settings > General > Theme: Dark). Same token names. */
@@ -58,16 +59,16 @@
   --color-line-strong: #7a7468;
   --color-text: #ece8df; /* chalk */
   --color-text-muted: #a8a296;
-  --color-accent: #ece8df; /* the primary action: chalk on iron */
-  --color-accent-solid: #ece8df;
-  --color-on-accent: #121110;
-  --color-accent-tint: rgb(236 232 223 / 0.08);
-  --color-accent-text: #ece8df;
-  --color-accent-dim: #4a463e;
+  --color-accent: #c8102e; /* red 25 kg plate */
+  --color-accent-solid: #c8102e;
+  --color-on-accent: #ffffff;
+  --color-accent-tint: rgb(200 16 46 / 0.16);
+  --color-accent-text: #ff7a7f;
+  --color-accent-dim: #5a1c22;
   --color-pr: #e8b931; /* gold: records only */
   --color-warmup: #74b878; /* green 10 kg plate: the light warm-up sets */
   --color-dropset: #7ea6e6; /* blue 20 kg plate */
-  --color-failure: #ef6b5e; /* red 25 kg plate */
+  --color-failure: #f08c45; /* burnt orange */
   --color-ink: #ffffff;
   --color-press: #262420;
   --color-press-strong: #2f2c27;
@@ -80,7 +81,7 @@
   --color-zinc-600: #5c574e;
   --color-zinc-700: #3f3c35;
   --color-zinc-800: #2e2c27;
-  --shadow-volt: 0 0 0 1px rgb(236 232 223 / 0.35);
+  --shadow-volt: 0 0 0 1px rgb(255 122 127 / 0.5);
 }
 
 /* Dark in every theme: over photos and video, the live capsule, the intro, Story Studio. */
@@ -95,16 +96,16 @@
   --color-line-strong: #7a7468;
   --color-text: #ece8df; /* chalk */
   --color-text-muted: #a8a296;
-  --color-accent: #ece8df; /* the primary action: chalk on iron */
-  --color-accent-solid: #ece8df;
-  --color-on-accent: #121110;
-  --color-accent-tint: rgb(236 232 223 / 0.08);
-  --color-accent-text: #ece8df;
-  --color-accent-dim: #4a463e;
+  --color-accent: #c8102e; /* red 25 kg plate */
+  --color-accent-solid: #c8102e;
+  --color-on-accent: #ffffff;
+  --color-accent-tint: rgb(200 16 46 / 0.16);
+  --color-accent-text: #ff7a7f;
+  --color-accent-dim: #5a1c22;
   --color-pr: #e8b931; /* gold: records only */
   --color-warmup: #74b878; /* green 10 kg plate: the light warm-up sets */
   --color-dropset: #7ea6e6; /* blue 20 kg plate */
-  --color-failure: #ef6b5e; /* red 25 kg plate */
+  --color-failure: #f08c45; /* burnt orange */
   --color-ink: #ffffff;
   --color-press: #262420;
   --color-press-strong: #2f2c27;
@@ -117,8 +118,14 @@
   --color-zinc-600: #5c574e;
   --color-zinc-700: #3f3c35;
   --color-zinc-800: #2e2c27;
-  --shadow-volt: 0 0 0 1px rgb(236 232 223 / 0.35);
+  --shadow-volt: 0 0 0 1px rgb(255 122 127 / 0.5);
   color: var(--color-text);
+}
+
+/* Red text on iron needs a lighter red than the button fill to stay readable (4.5:1+). */
+[data-theme="dark"] .text-accent,
+.force-dark .text-accent {
+  color: var(--color-accent-text);
 }
 
 /* Superset labels: the group colour (--ss) as text. On white the pastel group colours fall under

@@ -32,9 +32,9 @@ export function priceIdr(plan: WebPlan, row: PriceRow): number {
 }
 
 export const PLAN_LABEL: Record<WebPlan, string> = {
-  annual: "ABOT BLACK PRO 1 year",
-  lifetime: "ABOT BLACK PRO lifetime",
-  founders: "ABOT BLACK PRO lifetime (founder)",
+  annual: "ABOT Pro 1 year",
+  lifetime: "ABOT Pro lifetime",
+  founders: "ABOT Pro lifetime (founder)",
 };
 
 /** Cryptographic random in [0, 1): order ids are not guessable from Math.random's state. */

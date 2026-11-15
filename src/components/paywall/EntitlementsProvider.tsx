@@ -16,7 +16,7 @@ import { ProCelebration } from "./ProCelebration";
 
 /**
  * Once saved settings have loaded: stamps the Founder pass on installs made during the beta,
- * and keeps the one ABOT // BLACK PRO sheet that any feature can open with openPaywall().
+ * and keeps the one ABOT Pro sheet that any feature can open with openPaywall().
  */
 export function EntitlementsProvider() {
   const hydrated = useHydration((s) => s.hydrated);

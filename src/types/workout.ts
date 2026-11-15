@@ -292,7 +292,7 @@ export interface UserSettings {
   healthAutoSync: boolean;
   /** Last night's sleep from Health Connect; scales the recovery map. */
   lastSleep: { minutes: number; endAt: number } | null;
-  /** ABOT // BLACK PRO tier, founder pass and the monetization simulator (lib/entitlements). */
+  /** ABOT Pro tier, founder pass and the monetization simulator (lib/entitlements). */
   entitlement: EntitlementState;
   /** Cut, lean bulk, recomp or strength peak, with its targets (lib/phase-engine); null for none. */
   bodyPhase: ActivePhaseConfig | null;

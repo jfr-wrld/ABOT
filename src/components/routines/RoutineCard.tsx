@@ -17,7 +17,7 @@ const PREVIEW = 5;
 const THUMB = 38;
 
 /**
- * A saved routine, read like a Template Vault card: focus, time and size up top, the muscles as
+ * A saved routine, read like a Templates card: focus, time and size up top, the muscles as
  * lit figures, each lift as a photo with sets x reps, then Start and the edit actions.
  */
 export function RoutineCard({

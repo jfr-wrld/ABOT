@@ -6,7 +6,7 @@ import { useEntitlements, usePaywallStore, updateEntitlement, autoClaimFounder }
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { PRESS_SPRING } from "@/components/ui/Button";
-import { PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, plansFor, rupiah, type PlanId } from "@/lib/entitlements";
+import { founderLabel, PRO_FEATURE_LABEL, PRO_MATRIX as MATRIX, annualSaving, planPrice, plansFor, rupiah, type PlanId } from "@/lib/entitlements";
 import { CHECKOUT_MESSAGE, checkoutBlock, openPaymentTab, startMidtransCheckout } from "@/lib/checkout";
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { isNativeApp } from "@/lib/native/files";
@@ -17,7 +17,7 @@ import { useT } from "@/i18n";
 import { DEV_TOOLS } from "@/lib/dev-tools";
 
 /**
- * ABOT // BLACK PRO: the upgrade screen, full height, always dark. During the founders beta it
+ * ABOT Pro: the upgrade screen, full height, always dark. During the founders beta it
  * says PRO is already open and lets the lifter simulate a plan; in commercial mode the button
  * opens the Midtrans checkout (lib/checkout) when payments are switched on. Midtrans sells one-off
  * payments, so the monthly plan is hidden while it is the checkout, and founders get lifetime at
@@ -125,7 +125,7 @@ export function AbotProModal() {
         />
         <div className="relative flex items-center justify-between">
           <span className="rounded-[4px] border border-accent/50 px-2 py-0.5 font-mono text-[10px] font-bold tracking-[0.16em] text-accent">
-            ABOT // BLACK TELEMETRY SYSTEM
+            ABOT Pro TELEMETRY SYSTEM
           </span>
           <button type="button" onClick={done} aria-label={t("Close")} className="flex size-11 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white">
             <X aria-hidden="true" size={22} />
@@ -134,9 +134,9 @@ export function AbotProModal() {
 
         <header className="relative">
           <h2 id={titleId} className="text-3xl font-extrabold leading-[1.05] tracking-tight">
-            {t("Precision engineered for serious lifters.")}
+            {t("ABOT Pro")}
           </h2>
-          <p className="mt-2 font-mono text-xs tracking-[0.12em] text-zinc-400">ABOT // BLACK PRO</p>
+          <p className="mt-2 font-mono text-xs tracking-[0.12em] text-zinc-400">ABOT Pro</p>
         </header>
 
         {feature && (
@@ -147,15 +147,15 @@ export function AbotProModal() {
         )}
 
         <table className="relative w-full border-collapse text-left text-xs">
-          <caption className="sr-only">{t("ABOT Core against ABOT // BLACK PRO")}</caption>
+          <caption className="sr-only">{t("ABOT Free against ABOT Pro")}</caption>
           <thead>
-            <tr className="font-mono text-[10px] tracking-[0.12em] text-zinc-400">
+            <tr className="text-xs text-text-muted">
               <th scope="col" className="pb-2 font-semibold" />
               <th scope="col" className="w-20 pb-2 text-center font-semibold">
-                {t("Core (free)")}
+                {t("Free")}
               </th>
               <th scope="col" className="w-24 pb-2 text-center font-semibold text-accent">
-                BLACK PRO
+                Pro
               </th>
             </tr>
           </thead>
@@ -211,7 +211,7 @@ export function AbotProModal() {
                     {p.id === "annual"
                       ? t("Save {pct}% · about {month} a month", { pct: saving, month: rupiah(p.idr / 12) })
                       : p.id === "lifetime" && isFounder
-                        ? t("Founder 50% off privilege applied")
+                        ? t("Founder price: 50% off")
                         : t(p.note)}
                   </span>
                 </span>
@@ -242,7 +242,7 @@ export function AbotProModal() {
             <>
               {/* A paid licence outranks the beta: say what was bought, and until when. */}
               <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold leading-relaxed tracking-[0.08em] text-accent">
-                {tier === "lifetime" ? t("Active: lifetime license") : t("Active: ABOT // BLACK PRO")}
+                {tier === "lifetime" ? t("Active: lifetime license") : t("Active: ABOT Pro")}
                 {tier === "pro" && proExpiresAt && (
                   <span className="mt-1 block text-zinc-300">{t("Until {date}", { date: new Date(proExpiresAt).toLocaleDateString(t.locale, { day: "numeric", month: "long", year: "numeric" }) })}</span>
                 )}
@@ -254,8 +254,8 @@ export function AbotProModal() {
           ) : isBetaUnlocked ? (
             <>
               <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold leading-relaxed tracking-[0.08em] text-accent">
-                ⚡ {t("Active: Founders Beta Pass. All PRO features unlocked free.")}
-                {founderUnitCode && <span className="mt-1 block text-zinc-300">{founderUnitCode}</span>}
+                ⚡ {t("Founders beta: every Pro feature is free for now.")}
+                {founderUnitCode && <span className="mt-1 block text-zinc-300">{founderLabel(founderUnitCode)}</span>}
               </p>
               <button
                 type="button"
@@ -303,7 +303,7 @@ export function AbotProModal() {
             }}
             className="min-h-11 rounded-ctl border border-dashed border-accent/50 font-mono text-xs font-bold tracking-[0.1em] text-accent hover:bg-accent/10"
           >
-            {t("Redeem VIP / activation code")}
+            {t("Redeem a code")}
           </button>
         </div>
       </div>

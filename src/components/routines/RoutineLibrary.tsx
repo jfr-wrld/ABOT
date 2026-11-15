@@ -129,7 +129,7 @@ export function RoutineLibrary() {
           label={t("Routines")}
           tabs={[
             { value: "mine", label: t("My Routines") },
-            { value: "vault", label: t("Template Vault") },
+            { value: "vault", label: t("Templates") },
           ]}
           value={tab}
           onChange={setTab}

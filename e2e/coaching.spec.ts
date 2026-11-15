@@ -65,10 +65,10 @@ test("the balance radar reads push-heavy training and says what to add", async (
   await page.goto("/progress/muscles");
   const card = page.getByRole("region", { name: "Muscle balance" });
   await card.scrollIntoViewIfNeeded();
-  await expect(card.getByRole("status")).toContainText(/SYMMETRY SCORE: \d+\/100 \[(OPTIMAL|BALANCED|IMBALANCED|CRITICAL)\]/);
+  await expect(card.getByRole("status")).toContainText(/Balance score: \d+\/100 · (Optimal|Balanced|Imbalanced|Critical)/);
   await expect(card.getByRole("status")).toContainText("Skip-leg-day pattern");
   await expect(card.getByRole("img", { name: /^Balance radar\. Push 6/ })).toBeVisible();
   await card.getByRole("button", { name: "90 days" }).click();
-  await expect(card.getByRole("status")).toContainText("SYMMETRY SCORE");
+  await expect(card.getByRole("status")).toContainText("Balance score");
   await expectNoHorizontalOverflow(page);
 });

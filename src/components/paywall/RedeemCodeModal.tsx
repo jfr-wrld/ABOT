@@ -32,7 +32,7 @@ export async function redeemAndApply(input: string): Promise<{ ok: true; grant: 
 }
 
 /**
- * Enter a VIP, influencer or promo code. A valid one unlocks at once, with the record chord and
+ * Enter a Promo or gift code. A valid one unlocks at once, with the record chord and
  * a Volt confirmation; a wrong one says so without clearing what was typed.
  */
 export function RedeemCodeModal() {
@@ -97,7 +97,7 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
           <div role="status" className="flex flex-col items-center gap-3 rounded-ctl border border-accent bg-accent/10 px-4 py-6 text-center motion-safe:animate-[pulse_1.2s_ease-out_1]">
             <Zap aria-hidden="true" size={32} className="fill-accent text-accent" />
             <p className="font-mono text-sm font-black leading-relaxed tracking-[0.1em] text-accent">
-              {t("License activated: ABOT // BLACK PRO")}
+              {t("License activated: ABOT Pro")}
               <span className="block text-white">[{access}]</span>
             </p>
             {granted.founder && <p className="font-mono text-[11px] tracking-[0.1em] text-zinc-300">{t("Founder badge unlocked")}</p>}
@@ -108,7 +108,7 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-3">
             <label htmlFor="redeem-code" className="text-sm text-zinc-300">
-              {t("VIP, influencer or promo code")}
+              {t("Promo or gift code")}
             </label>
             <motion.input
               animate={controls}

@@ -239,7 +239,7 @@ function PaymentTestPanel({ mode }: { mode: AdminMode }) {
 /* --------------------------------------------------------------- licenses */
 
 const PRESETS: { id: string; label: string; kind: string; grant: Grant }[] = [
-  { id: "life", label: "Lifetime Black Pro", kind: "LIFE", grant: { tier: "lifetime", days: null, founder: false } },
+  { id: "life", label: "Lifetime Pro", kind: "LIFE", grant: { tier: "lifetime", days: null, founder: false } },
   { id: "year", label: "1-year Pro", kind: "PRO", grant: { tier: "pro", days: 365, founder: false } },
   { id: "trial", label: "30-day influencer trial", kind: "VIP", grant: { tier: "pro", days: 30, founder: false } },
   { id: "founder", label: "Founder unit pass", kind: "FOUNDER", grant: { tier: "pro", days: 365, founder: true } },
@@ -271,7 +271,7 @@ function VoucherPanel({ mode, onChange }: { mode: AdminMode; onChange: () => voi
     const grant = { ...p.grant, founder: p.grant.founder || founder };
     try {
       await createCode(mode, code, grant, Math.max(1, uses), p.label);
-      const message = t("⚡ Your ABOT // BLACK PRO VIP access code: {code}. Open ABOT > Settings > Redeem code to unlock every Telemetry Pro feature!", { code });
+      const message = t("Your ABOT Pro code: {code}. Open ABOT > Settings > Redeem code to turn on every Pro feature.", { code });
       let copied = false;
       try {
         await navigator.clipboard.writeText(message);

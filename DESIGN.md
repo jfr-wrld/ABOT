@@ -14,9 +14,9 @@ itself: chalk, iron, rubber and the colours stamped on plates.
 | `surface` | `#faf8f3` | `#1b1a17` | One step off the background for the one thing that needs a card. |
 | `text` | `#1d1b17` iron | `#ece8df` chalk | 15:1 and 14:1. |
 | `text-muted` | `#5b564c` | `#a8a296` | 6.9:1 and 7:1 on surface. |
-| `accent` | `#1d1b17` rubber black, chalk text | `#ece8df` chalk, iron text | The primary action only: Start, Finish, the done check, the current tab. Nothing else gets it, so the next action is obvious. |
+| `accent` | `#c8102e` red 25 kg plate, white text | same fill; red text `#ff7a7f` on iron | The brand colour (owner, 2026-11-15, after an all-black step 1 read as monochrome): the primary action, the current tab, progress rings. White on it is 5.9:1. |
 | `pr` | `#8a6300` gold | `#e8b931` | Records only: the medal colour. |
-| `failure` | `#b3261e` | `#ef6b5e` | Red 25 kg plate. Failure sets and destructive actions. |
+| `failure` | `#b54708` | `#f08c45` | Burnt orange: red is now the brand, so failure sets and destructive actions move off it. |
 | `dropset` | `#1f4fa3` | `#7ea6e6` | Blue 20 kg plate. |
 | `warmup` | `#2e6b30` | `#74b878` | Green 10 kg plate: warm-ups are the light plates. |
 

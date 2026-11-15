@@ -167,7 +167,7 @@ export async function audioReady(): Promise<boolean> {
 }
 
 /**
- * BLACK PRO unlocked: about three seconds timed to the celebration screen.
+ * Pro unlocked: about three seconds timed to the celebration screen.
  * 0.00 s a charging whoosh while the ring draws and the plate falls; 0.42 s the impact (low thud,
  * metal clank) and the app's own lock (600 then 900 Hz); 0.72 s a G-C-E pickup into a C major
  * chord over a low C as the title lands; 1.15 s four high sparkles with the feature cards;

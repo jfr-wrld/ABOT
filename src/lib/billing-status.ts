@@ -12,10 +12,10 @@ export interface BillingStatus {
 
 /** Names shown on the plan card; product names, not translated. */
 export const PLAN_NAME: Record<PlanKind, string> = {
-  core: "CORE",
-  pro: "BLACK PRO",
-  lifetime: "LIFETIME",
-  beta: "FOUNDERS BETA",
+  core: "ABOT Free",
+  pro: "ABOT Pro",
+  lifetime: "ABOT Pro, lifetime",
+  beta: "Founders beta",
 };
 
 const startOfDay = (ms: number) => new Date(ms).setHours(0, 0, 0, 0);

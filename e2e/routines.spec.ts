@@ -18,7 +18,7 @@ async function createRoutine(page: import("@playwright/test").Page, name: string
 test("empty name shows an inline error", async ({ page }) => {
   await page.goto("/routines");
   // A device with no routines opens on the templates; the empty state is one tab away.
-  await expect(page.getByRole("tab", { name: "Template Vault" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: "Templates" })).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { name: "My Routines" }).click();
   await expect(page.getByText("No routines saved.")).toBeVisible();
   await page.getByRole("button", { name: "New routine" }).click();
@@ -125,7 +125,7 @@ test("removing one of a two-exercise superset in the editor dissolves it", async
 
 test("the Workout tab leads with today's routine and says when each was last done", async ({ page }) => {
   await page.goto("/workout");
-  await page.getByRole("tab", { name: "Template Vault" }).click();
+  await page.getByRole("tab", { name: "Templates" }).click();
   await page.getByRole("button", { name: /^Save to My Routines: Push A/ }).first().click();
   await page.getByRole("button", { name: /^Save to My Routines: Pull A/ }).first().click();
   await page.goto("/workout");

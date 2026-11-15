@@ -1,5 +1,5 @@
 /**
- * ABOT // BLACK PRO entitlements, resolved on the device. In release builds a paid tier counts
+ * ABOT Pro entitlements, resolved on the device. In release builds a paid tier counts
  * only when it came from the account (the server); see resolveEntitlement.
  *
  * - The app runs in one monetization mode, set at build time (NEXT_PUBLIC_ABOT_MONETIZATION):
@@ -233,3 +233,8 @@ export function rupiah(n: number): string {
 }
 
 /* Checkout (Midtrans through Supabase Edge Functions) lives in lib/checkout.ts. */
+
+/** "FOUNDER // #0421" (the stored code) as people read it: "Founder #0421". */
+export function founderLabel(code: string | null | undefined): string {
+  return code ? code.replace(/^FOUNDER\s*\/\/\s*/i, "Founder ") : "";
+}

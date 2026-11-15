@@ -251,7 +251,7 @@ export const TERMS: Record<LegalLang, LegalDoc> = {
         ],
       },
       {
-        heading: "ABOT // BLACK PRO",
+        heading: "ABOT Pro",
         blocks: [
           {
             list: [
@@ -322,7 +322,7 @@ export const TERMS: Record<LegalLang, LegalDoc> = {
         ],
       },
       {
-        heading: "ABOT // BLACK PRO",
+        heading: "ABOT Pro",
         blocks: [
           {
             list: [

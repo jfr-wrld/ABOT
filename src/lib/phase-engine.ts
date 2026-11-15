@@ -332,7 +332,7 @@ export function peakRestSec(ex: Pick<Exercise, "category"> | undefined, p: Activ
 
 /** Title made at setup: "LEAN BULK // 8 WEEKS". */
 export function phaseTitle(type: BodyPhaseType, weeks: number): string {
-  return `${PHASE_LABEL[type].toUpperCase()} // ${weeks} WEEKS`;
+  return `${PHASE_LABEL[type]} · ${weeks} weeks`;
 }
 
 /** Bounds a stored or imported phase; null when it is not one. */
