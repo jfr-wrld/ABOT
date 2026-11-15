@@ -54,6 +54,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_ABOT_ADMIN_PIN: ${{ vars.NEXT_PUBLIC_ABOT_ADMIN_PIN }}
+          # Signed licences (docs/payments-setup.md, Signed licences): public key and the live floor.
+          NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY }}
+          NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR: ${{ vars.NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR }}
 
       - name: Build the release APK (unsigned) and the debug APK for the smoke test
         working-directory: android
@@ -135,11 +138,13 @@ jobs:
           cp "abot-1.0.$N.apk" abot.apk
           gh release create "abot-$N" "abot-1.0.$N.apk" abot.apk --repo "$GITHUB_REPOSITORY" \
             --title "ABOT 1.0.$N" --notes "$NOTES" --target "$GITHUB_SHA" --latest
-          # Keep the ten newest abot- releases, and no apk- release at all: the apk- channel was
-          # signed with the old debug key, which is public in this repository's history, so it is
-          # retired (security audit 2026-11-13). Phones on it uninstall and install abot-.
-          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' \
-            | grep '^abot-' | sort -t- -k2 -n -r | tail -n +11 \
+          # Keep the hundred newest abot- releases: a deleted release takes its download counts with
+          # it, and Mission Control's Growth tab adds them up (it was ten until 2026-11-15, which
+          # lost the launch-week numbers). No apk- release at all: the apk- channel was signed with
+          # the old debug key, which is public in this repository's history, so it is retired
+          # (security audit 2026-11-13). Phones on it uninstall and install abot-.
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 300 --json tagName --jq '.[].tagName' \
+            | grep '^abot-' | sort -t- -k2 -n -r | tail -n +101 \
             | xargs -r -I{} gh release delete {} --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' \
             | grep '^apk-' \

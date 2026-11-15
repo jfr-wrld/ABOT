@@ -23,7 +23,8 @@ import { LoadingStatus } from "@/components/ui/Loading";
 import { AudioUnlock } from "@/components/layout/AudioUnlock";
 import { EntitlementsProvider } from "@/components/paywall/EntitlementsProvider";
 import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
-import { Analytics } from "@vercel/analytics/next";
+import { WebAnalytics } from "@/components/layout/WebAnalytics";
+import { VisitCounter } from "@/components/layout/VisitCounter";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -100,11 +101,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           <BottomNav />
           <SignInReturn />
+          {/* Web build only: the APK leaves both out entirely (next.config.ts sets the flag). They
+              read the search params, which a prerendered page only has in the browser. Vercel Web
+              Analytics also needs a build on Vercel: /_vercel/insights exists only there. */}
+          {process.env.ABOT_WEB_ANALYTICS === "1" && (
+            <Suspense fallback={null}>
+              {process.env.VERCEL && <WebAnalytics />}
+              <VisitCounter />
+            </Suspense>
+          )}
         </MotionProvider>
-        {/* Web on Vercel only: page views go to Vercel Web Analytics on this site's own origin
-            (/_vercel/insights), which exists only there. The Android build leaves it out
-            (zero-network rule), and so does any build off Vercel, where the script would 404. */}
-        {process.env.VERCEL && process.env.ABOT_TARGET !== "android" && <Analytics />}
       </body>
     </html>
   );

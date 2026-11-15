@@ -160,6 +160,8 @@ function RestoreFromAccount() {
     if (r.kind === "restored" || r.kind === "revoked") {
       updateEntitlement(r.next);
       feedback.tick();
+    } else if (r.kind === "up-to-date" && r.next) {
+      updateEntitlement(r.next);
     }
     setResult(r.kind);
     setBusy(false);

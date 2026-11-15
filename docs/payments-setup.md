@@ -107,12 +107,60 @@ select u.email, e.tier, e.pro_expires_at, e.is_founder, e.source from public.use
 - **"(FunctionsFetchError)" after the message:** the browser got no readable answer. Usually "Verify JWT" is still on for `midtrans-checkout` (the gateway rejects the browser's preflight), or the function name is not exactly `midtrans-checkout`.
 - **Notification arrived before a fix:** the Midtrans dashboard can resend it.
 
+## Signed licences
+
+Release builds with a licence public key open PRO only from a token the `license` Edge Function
+signed, checked offline in the app (`src/lib/license-token.ts`). Editing the stored tier on a phone
+or in a browser then opens nothing. A token works offline for 30 days and every signed-in start
+renews it. Without the public key a build keeps the older rule, so nobody loses PRO because a
+variable is missing. Mission Control → Overview → Live config says which rule a build uses.
+
+1. Make a key pair once (nothing is written to disk):
+
+   ```bash
+   node scripts/make-license-keys.mjs
+   ```
+
+2. Run the `supabase secrets set LICENSE_PRIVATE_JWK='…'` line it prints. Keep the private key
+   nowhere else.
+3. Deploy the function:
+
+   ```bash
+   supabase functions deploy license --no-verify-jwt
+   ```
+
+4. Put the public key it printed in `NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY`: in Vercel (Project →
+   Settings → Environment Variables) and in the repository's Actions variables (for the APK). Redeploy.
+
+Before step 4, sign in on the web app and check that `license` answers (Supabase → Edge Functions →
+license → Logs shows a 200), then set the variable. A build with the key and no working function
+shows paying users "Your Pro license needs a quick check" until it can fetch a token. After the
+redeploy, Mission Control → Licenses → Entitlement on this device should say the licence is verified. A new key pair later works the same way and invalidates old tokens
+until each phone is online.
+
+When ABOT sells for real, also set `NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR=COMMERCIAL_LIVE` in the same
+two places. The mode then stays live even if someone edits the cached remote config back to beta.
+Leave it unset during the Founders beta.
+
 ## Going live
 
 1. Turn the test buttons off: run `update public.app_remote_config set payments_sandbox = false;`.
-1. Production Server Key: run `supabase secrets set MIDTRANS_SERVER_KEY=Mid-server-xxxx MIDTRANS_IS_PRODUCTION=true`.
-2. Set the same Notification and Redirect URLs in the **Production** dashboard.
-3. Redeploy both functions so they pick up the new secrets.
+2. Production Server Key: run `supabase secrets set MIDTRANS_SERVER_KEY=Mid-server-xxxx MIDTRANS_IS_PRODUCTION=true`.
+3. Set the same Notification and Redirect URLs in the **Production** dashboard.
+4. Redeploy both functions so they pick up the new secrets.
+5. Clear the Sandbox orders, so Mission Control's Customers tab counts only real money. Do it right
+   after step 2 and before the first real payment. Look first:
+   `select order_id, user_id, plan, status, payment_type, created_at from public.payment_orders order by created_at;`
+   Then, in the SQL editor, PRO that a Sandbox order granted goes back to free and the orders go:
+   ```sql
+   begin;
+   update public.user_entitlements set tier = 'free', pro_expires_at = null, source = 'sandbox-cleared'
+     where source in (select 'midtrans:' || order_id from public.payment_orders);
+   delete from public.payment_events;
+   delete from public.payment_orders;
+   commit;
+   ```
+   Accounts that got PRO from a code or a manual grant keep it.
 
 The seat cap is in `app_remote_config.founder_seats`, for example `update public.app_remote_config set founder_seats = 300;`. A pending founder order holds a seat for 30 minutes, and its Midtrans payment page closes after the same 30 minutes. Seats are taken under a database lock, so two buyers cannot both get the last one. If a founders payment still settles past the cap (Midtrans grace, a manual settlement), the buyer gets lifetime and the order is marked `over_cap` for you to review or refund: `select order_id, user_id, paid_at from public.payment_orders where over_cap;`. Mission Control shows it as OVER CAP.
 

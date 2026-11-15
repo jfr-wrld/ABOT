@@ -17,8 +17,12 @@ signed build under that fixed name too) and fetches nothing; the QR code is a st
 Remotion is design-time only: `tools/motion-studio/` (its own package) previews the story and streak
 painters in Remotion Studio; it is never shipped in the app, which makes its MP4s itself (`src/lib/video-export.ts`).
 Free Remotion licence (individual / at most 3 people), so renders pass no licence key.
-Also approved, web only: Vercel Web Analytics (`<Analytics />` in `src/app/layout.tsx`, page views to the
-site's own `/_vercel/insights`, only in builds on Vercel); the Android build (`ABOT_TARGET=android`) leaves it out.
+Also approved (2026-11-15): Vercel Web Analytics on the web build only, never the APK (`src/components/layout/WebAnalytics.tsx`):
+cookieless page views to the site's own `/_vercel/insights`, path only, `/admin` dropped. The web build also calls Supabase
+`track_visit()` per page view (`src/components/layout/VisitCounter.tsx`): daily totals per known page, nothing identifying. Mission Control's Growth module reads
+APK download counts from the GitHub Releases API and sign-ups from Supabase (`admin_growth()`), admins only.
+Payments also cover the `license` Edge Function (2026-11-15): a signed-in app fetches an ES256-signed licence token on
+the same occasions it reads `user_entitlements`; release builds with `NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY` open PRO only from it (`src/lib/license-token.ts`).
 Also approved: turning a TikTok share link (vt.tiktok.com) into its full video link, one request to TikTok
 only when the user saves that link as an exercise video (`src/lib/tiktok-resolve.ts`).
 

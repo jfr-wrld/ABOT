@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowLeft, Cpu, Database, Dumbbell, Gauge, KeyRound, ListChecks, Lock, SlidersHorizontal, Smartphone, type IconComponent } from "@/components/icons";
+import { ArrowLeft, Cpu, Crown, Database, Dumbbell, Gauge, KeyRound, ListChecks, Lock, SlidersHorizontal, Smartphone, TrendingUp, type IconComponent } from "@/components/icons";
 import { adminMode, listCodes, stats, type AdminCode, type AdminMode, type AdminStats } from "@/lib/admin-api";
 import { HydrationGate } from "@/components/ui/Loading";
 import { OverviewModule, DatabaseModule, DeviceModule } from "@/components/admin/SystemModules";
 import { LicensesModule, MonetizationModule } from "@/components/admin/BusinessModules";
+import { GrowthModule } from "@/components/admin/GrowthModule";
+import { CustomersModule } from "@/components/admin/CustomersModule";
 import { AlgorithmsModule } from "@/components/admin/AlgorithmsModule";
 import { ExercisesModule, RoutinesModule } from "@/components/admin/ContentModules";
 import { cls, errText } from "@/components/admin/ui";
@@ -26,9 +28,11 @@ import { DEV_TOOLS } from "@/lib/dev-tools";
 const PIN = process.env.NEXT_PUBLIC_ABOT_ADMIN_PIN || (DEV_TOOLS ? "2026" : "");
 const UNLOCK_KEY = "abot.admin-unlocked";
 
-type ModuleId = "overview" | "money" | "licenses" | "algorithms" | "exercises" | "routines" | "database" | "device";
+type ModuleId = "overview" | "growth" | "customers" | "money" | "licenses" | "algorithms" | "exercises" | "routines" | "database" | "device";
 const ALL_MODULES: { id: ModuleId; label: string; icon: IconComponent }[] = [
   { id: "overview", label: "Overview", icon: Gauge },
+  { id: "growth", label: "Growth", icon: TrendingUp },
+  { id: "customers", label: "Customers", icon: Crown },
   { id: "money", label: "Monetization", icon: SlidersHorizontal },
   { id: "licenses", label: "Licenses", icon: KeyRound },
   { id: "algorithms", label: "Algorithms", icon: Cpu },
@@ -160,10 +164,10 @@ function Console() {
   // Development: a signed-in non-admin can still use the Device modules; Global ones say why they
   // are closed. Release builds: nothing opens without a server-confirmed admin account.
   const globalOpen = mode !== null && ((DEV_TOOLS && mode.kind === "local") || (mode.kind === "server" && mode.admin));
-  const isGlobal = !DEV_TOOLS || current === "money" || current === "licenses" || current === "algorithms";
+  const isGlobal = !DEV_TOOLS || current === "growth" || current === "customers" || current === "money" || current === "licenses" || current === "algorithms";
 
   return (
-    <div className="mx-auto grid min-h-dvh max-w-[1440px] grid-cols-[minmax(0,1fr)] lg:grid-cols-[232px_minmax(0,1fr)]">
+    <div className="mx-auto grid min-h-dvh max-w-[1440px] content-start grid-cols-[minmax(0,1fr)] lg:grid-cols-[232px_minmax(0,1fr)]">
       <aside className="sticky top-0 z-10 min-w-0 border-b border-line bg-bg/95 pt-[env(safe-area-inset-top)] backdrop-blur lg:h-dvh lg:self-start lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-2 px-4 py-3 lg:flex-col lg:items-start lg:py-5">
           <div>
@@ -224,6 +228,8 @@ function Console() {
         ) : mode ? (
           <div className="grid gap-4 xl:grid-cols-2">
             {current === "overview" && <OverviewModule mode={mode} numbers={numbers} />}
+            {current === "growth" && <GrowthModule mode={mode} />}
+            {current === "customers" && <CustomersModule mode={mode} />}
             {current === "money" && <MonetizationModule mode={mode} />}
             {current === "licenses" && <LicensesModule mode={mode} codes={codes} onChange={() => void reload(mode)} />}
             {current === "algorithms" && <AlgorithmsModule mode={mode} />}
