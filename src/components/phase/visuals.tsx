@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { motion, type LegacyAnimationControls as AnimationControls } from "framer-motion";
+import { motion } from "framer-motion";
 import { usePlayEntrance } from "@/components/motion/Entrance";
 
 /**
@@ -21,7 +21,7 @@ export function Ring({
   children,
   label,
   segments,
-  controls,
+  entrance,
 }: {
   value: number;
   max: number;
@@ -33,13 +33,14 @@ export function Ring({
   /** Draw the ring as this many short dashes, lit one by one, instead of one stroke (owner,
    *  2026-11-15: a full stroke reads as a plain circle anywhere; dashes read as a count). */
   segments?: number;
-  /** With `segments`: entrance controls ("still" / "show"); "show" lights the dashes one by one. */
-  controls?: AnimationControls;
+  /** With `segments`: the dashes lit on mount fade in one by one (the page's first visit). A dash
+   *  lit later, when the value grows, shows at once. */
+  entrance?: boolean;
 }) {
   const reduce = !usePlayEntrance();
   if (segments)
     return (
-      <DashRing value={value} max={max} size={size} stroke={stroke} color={color} label={label} segments={segments} controls={controls}>
+      <DashRing value={value} max={max} size={size} stroke={stroke} color={color} label={label} segments={segments} entrance={entrance}>
         {children}
       </DashRing>
     );
@@ -82,7 +83,7 @@ function DashRing({
   color,
   label,
   segments,
-  controls,
+  entrance,
   children,
 }: {
   value: number;
@@ -92,7 +93,7 @@ function DashRing({
   color: string;
   label?: string;
   segments: number;
-  controls?: AnimationControls;
+  entrance?: boolean;
   children?: ReactNode;
 }) {
   const r = (size - stroke) / 2;
@@ -115,13 +116,13 @@ function DashRing({
               stroke={i < lit ? color : "var(--color-track)"}
               strokeWidth={stroke}
               strokeLinecap="round"
-              style={controls ? { opacity: i < lit ? 0 : 1 } : { transition: `stroke 200ms ease ${i * 25}ms` }}
-              animate={controls}
-              variants={
-                controls && i < lit
-                  ? { still: { opacity: 1 }, show: { opacity: [0, 1], transition: { delay: 0.3 + i * 0.09, duration: 0.25 } } }
-                  : undefined
-              }
+              // A dash lit at mount fades in on the first visit; one lit later just shows. (The old
+              // version hid lit dashes until a one-time "show", so a count that arrived after
+              // mount stayed invisible.)
+              style={{ transition: `stroke 200ms ease ${i * 25}ms` }}
+              initial={entrance && i < lit ? { opacity: 0 } : false}
+              animate={{ opacity: 1 }}
+              transition={{ delay: entrance ? 0.3 + i * 0.09 : 0, duration: 0.25 }}
             />
           );
         })}

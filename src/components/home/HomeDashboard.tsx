@@ -14,7 +14,7 @@ import { useReminderStore } from "@/store/useReminderStore";
 import { Button, PRESS_SPRING } from "@/components/ui/Button";
 import { AbotWordmark } from "@/components/brand/AbotMark";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
-import { CountFromZero, Rise, useEntrance } from "@/components/motion/Entrance";
+import { CountFromZero, Rise, useEntrance, usePlayEntrance } from "@/components/motion/Entrance";
 import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
 import { PhaseCommandCard } from "@/components/phase/PhaseCommandCard";
 import { GetAppBanner } from "@/components/get-app/GetAppBanner";
@@ -767,7 +767,7 @@ const shortVolume = (n: number, locale: string) => (n >= 100_000 ? `${Math.round
  */
 function NumbersRow({ now }: { now: number }) {
   const t = useT();
-  const controls = useEntrance();
+  const playEntrance = usePlayEntrance();
   const sessions = useWorkoutStore((s) => s.sessions);
   const schedule = useReminderStore((s) => s.schedule);
   const { weightUnit: unit, firstDayOfWeek } = useSettingsStore();
@@ -793,7 +793,7 @@ function NumbersRow({ now }: { now: number }) {
         {/* One dash per planned session (owner, 2026-11-15): a whole ring reads as a plain circle,
             dashes read as "2 of 4". They light one by one when the card is dealt. */}
         <span aria-hidden="true" className="hidden shrink-0 min-[380px]:block">
-          <Ring value={Math.min(freq.done, target)} max={target} size={36} stroke={4} segments={target} controls={controls} />
+          <Ring value={Math.min(freq.done, target)} max={target} size={36} stroke={4} segments={target} entrance={playEntrance} />
         </span>
         <div className="min-w-0">
           <p aria-hidden="true" className="num text-lg font-bold leading-tight tabular-nums">

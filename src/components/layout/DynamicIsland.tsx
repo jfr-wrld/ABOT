@@ -60,7 +60,11 @@ function Island() {
   useLiveWorkoutNotification();
   useStartSound(hydrated);
   // The intro and sign-in have no dock, so there is nothing to sit above.
-  const shown = hydrated && active !== null && pathname !== "/onboarding" && pathname !== "/login" && pathname !== "/permissions" && !pathname.startsWith("/workout/summary");
+  // Home's workout card already names the exercise and the set (owner, 2026-11-15), so the bar
+  // steps aside there, except while a rest counts down: the card has no countdown or its buttons.
+  const onHome = pathname === "/" && !timer;
+  const shown =
+    hydrated && active !== null && !onHome && pathname !== "/onboarding" && pathname !== "/login" && pathname !== "/permissions" && !pathname.startsWith("/workout/summary");
 
   // Pages pad their bottom by this much more, so the bar never covers the last row.
   useEffect(() => {

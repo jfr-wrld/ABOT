@@ -8,7 +8,12 @@ test("the workout bar names the set and opens into shortcuts", async ({ page }) 
   await logSet(page, 1, "60", "8");
   await page.getByRole("button", { name: "Skip rest" }).click();
 
+  // Home's workout card names the set itself, so the bar steps aside there (outside rest).
   await page.goto("/");
+  await expect(page.getByRole("link", { name: /Workout in progress/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Workout running/ })).toHaveCount(0);
+
+  await page.goto("/exercises");
   const bar = page.getByRole("button", { name: /^Workout running/ });
   await expect(bar).toHaveAccessibleName(/Bench Press \(Barbell\), Set 2 of 3 · last 60 kg × 8$/);
   await expect(bar).toContainText("1/3 sets");
