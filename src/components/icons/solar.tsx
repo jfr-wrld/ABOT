@@ -21,7 +21,10 @@ type Shape = { body: string; w: number; h: number };
  * One Solar icon as a component. The SVG bodies come from the generated module, built at
  * development time from the icon set's own files, so nothing is fetched at run time.
  */
-export function solarIcon(name: string, fallback: IconVariant, bold: Shape, linear: Shape) {
+export function solarIcon(name: string, fallback: IconVariant, boldShape: Shape | null, linearShape: Shape | null) {
+  // Only the styles the app draws ship (scripts/make-icons.mjs); a missing one borrows the other.
+  const bold = (boldShape ?? linearShape) as Shape;
+  const linear = (linearShape ?? boldShape) as Shape;
   const Icon = forwardRef<SVGSVGElement, IconProps>(function Icon(
     { size = 24, variant, color, style, className, ...props },
     ref,
