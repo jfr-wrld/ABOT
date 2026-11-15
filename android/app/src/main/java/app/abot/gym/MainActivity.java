@@ -18,6 +18,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(HealthConnectPlugin.class);
         registerPlugin(AppUpdatePlugin.class);
         super.onCreate(savedInstanceState);
+        // A full load of a deep route (/permissions/) shows that route, not Home.
+        getBridge().setWebViewClient(new RoutePageClient(getBridge()));
         // The rest timer beeps from a timer, not a tap; the WebView would otherwise mute it.
         getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
         openWorkoutIfAsked(getIntent());
