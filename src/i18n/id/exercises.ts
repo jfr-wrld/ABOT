@@ -33,7 +33,7 @@ export const exercises: Record<string, string> = {
   Equipment: "Alat",
   "All equipment": "Semua alat",
   "No exercise matches these filters. Clear a filter, or add it as a new exercise with the button above.":
-    "Tidak ada gerakan yang cocok. Hapus salah satu filter, atau tambahkan sebagai gerakan baru lewat tombol di atas.",
+    "Tidak ada yang cocok. Hapus filter, atau buat gerakan baru.",
   custom: "buatanmu",
   catalog: "katalog",
   "best {weight} kg × {reps}": "terbaik {weight} kg × {reps}",
@@ -49,7 +49,7 @@ export const exercises: Record<string, string> = {
   "Added {n} exercises from the catalog.": "{n} gerakan dari katalog sudah ditambahkan.",
   "Remove the catalog?": "Hapus katalog?",
   "Frees about 1 MB. Catalog exercises you have already logged stay in your library and history. You can load the catalog again later.":
-    "Menghemat sekitar 1 MB. Gerakan katalog yang sudah kamu catat tetap ada di koleksi dan riwayatmu. Katalog bisa dimuat lagi nanti.",
+    "Hemat 1 MB. Gerakan yang sudah dicatat tetap ada. Katalog bisa dimuat lagi.",
 
   // Exercise form
   "Enter a name of at least two characters": "Isi nama minimal dua huruf",
@@ -81,10 +81,10 @@ export const exercises: Record<string, string> = {
   "One point so far. A second workout draws the line.": "Baru satu titik. Latihan kedua akan membentuk garisnya.",
   "{value} {unit} (best set {best})": "{value} {unit} (set terbaik {best})",
   "Not logged yet. Add it to a workout and finish the workout to see sets here.":
-    "Belum pernah dicatat. Tambahkan ke latihan dan selesaikan latihannya untuk melihat set di sini.",
+    "Belum pernah dicatat.",
   "Delete {name}?": "Hapus {name}?",
   "Past workouts keep their sets but will show “Removed exercise” for this one. Routines using it keep a dead reference until you edit them.":
-    "Latihan lama tetap menyimpan set-nya, tapi gerakan ini akan tampil sebagai “Gerakan dihapus”. Rutinitas yang memakainya tetap menyimpan rujukan kosong sampai kamu ubah.",
+    "Riwayat tetap ada, tapi gerakan ini tampil sebagai “Gerakan dihapus”. Rutinitas yang memakainya perlu kamu ubah.",
   "Not set": "Belum diisi",
   "also {muscles}": "juga {muscles}",
   "Most reps": "Rep terbanyak",
@@ -106,7 +106,7 @@ export const exercises: Record<string, string> = {
   "Personal records": "Rekor pribadi",
   "at {gym}": "di {gym}",
   "No completed working sets yet. Records appear after you log this exercise in a finished workout.":
-    "Belum ada set kerja yang selesai. Rekor muncul setelah kamu mencatat gerakan ini di latihan yang sudah selesai.",
+    "Belum ada rekor. Catat gerakan ini untuk melihatnya.",
   "Best 1RM (est.)": "1RM terbaik (perkiraan)",
   "Heaviest across all gyms: {weight} × {reps}": "Terberat di semua gym: {weight} × {reps}",
 
@@ -132,7 +132,7 @@ export const exercises: Record<string, string> = {
   "Start position": "Posisi awal",
   "End position": "Posisi akhir",
   "Paste a YouTube, YouTube Shorts or TikTok video link, or a direct .mp4, .webm or .gif file.":
-    "Tempel link video YouTube, YouTube Shorts, atau TikTok, atau link langsung ke file .mp4, .webm, atau .gif.",
+    "Tempel link YouTube, Shorts, TikTok, atau file .mp4, .webm, .gif.",
   "No tutorial video set for this exercise.": "Belum ada video tutorial untuk gerakan ini.",
   "Video needs a connection. It plays once you are online.": "Video butuh koneksi. Video diputar begitu kamu online.",
   "Video tutorial: {name}": "Video tutorial: {name}",
@@ -158,7 +158,7 @@ export const exercises: Record<string, string> = {
   Folder: "Folder",
   "(optional)": "(opsional)",
   "No exercises in this routine yet. Add the first one below; each starts with three planned sets.":
-    "Rutinitas ini belum punya gerakan. Tambahkan yang pertama di bawah; tiap gerakan dimulai dengan tiga set rencana.",
+    "Belum ada gerakan. Tambahkan di bawah.",
   "Remove {name} from routine": "Hapus {name} dari rutinitas",
   "Remove {name} from superset": "Keluarkan {name} dari superset",
   "Superset with…": "Superset dengan…",
@@ -168,10 +168,10 @@ export const exercises: Record<string, string> = {
   BW: "BB",
   "{name} target weight in {unit}": "{name} target beban dalam {unit}",
   "{name} target reps": "{name} target rep",
-  "Changes save as you type.": "Perubahan tersimpan otomatis saat kamu mengetik.",
+  "Changes save as you type.": "Tersimpan otomatis.",
   "Back to routines": "Kembali ke rutinitas",
   "Do one set of each back to back. Rest starts after the last exercise of the superset.":
-    "Kerjakan satu set tiap gerakan berturut-turut. Istirahat dimulai setelah gerakan terakhir di superset.",
+    "Satu set tiap gerakan, berurutan. Istirahat setelah yang terakhir.",
 
   // Routine library and templates
   "Give the routine a name, like Push A or Leg day": "Beri nama rutinitasnya, misalnya Push A atau Leg day",
@@ -179,7 +179,7 @@ export const exercises: Record<string, string> = {
   Routines: "Rutinitas",
   "My Routines": "Rutinitasku",
   "No routines saved. Create one, add its exercises and target sets, and you can start the same workout in one tap next time.":
-    "Belum ada rutinitas. Buat satu, isi gerakan dan target set-nya, lalu lain kali kamu bisa mulai latihan yang sama dengan sekali ketuk.",
+    "Belum ada rutinitas. Simpan satu agar bisa mulai dengan sekali ketuk.",
   "No folder": "Tanpa folder",
   "All routines": "Semua rutinitas",
   "No exercises yet": "Belum ada gerakan",
@@ -196,7 +196,7 @@ export const exercises: Record<string, string> = {
   Create: "Buat",
   routine: "rutinitas",
   "Workouts you already logged from it are kept. Only the template is deleted.":
-    "Latihan yang sudah kamu catat dari rutinitas ini tetap ada. Hanya templatenya yang dihapus.",
+    "Latihan yang sudah dicatat tetap ada.",
   "A workout is already in progress": "Masih ada latihan yang berjalan",
   "Go to current workout": "Ke latihan sekarang",
   "Finish or discard the current workout before starting {name}.":
@@ -256,7 +256,7 @@ export const exercises: Record<string, string> = {
   "This browser cannot hand images to other apps. Download the PNG instead.":
     "Browser ini tidak bisa mengirim gambar ke aplikasi lain. Unduh PNG-nya saja.",
   // Story layout tooltips (STORY_PRESETS blurbs; the layout names stay English)
-  "Muscle map lit by sets worked": "Peta otot yang menyala sesuai set yang dikerjakan",
+  "Muscle map lit by sets worked": "Peta otot dari set yang dikerjakan",
   "Every set itemised like a till slip": "Setiap set dirinci seperti struk kasir",
   "Each lift a plate on the bar, sized by its volume": "Tiap gerakan jadi pelat di barbel, ukurannya sesuai volume",
   "Swiss poster in black on Volt": "Poster gaya Swiss, hitam di atas Volt",
@@ -269,7 +269,7 @@ export const exercises: Record<string, string> = {
   "Time training per week, last {n} weeks (minutes)": "Waktu latihan per minggu, {n} minggu terakhir (menit)",
   min: "mnt",
   "Nothing to chart yet. Finish a workout and your volume, streak, muscles and main lifts show up here.":
-    "Belum ada yang bisa digrafikkan. Selesaikan satu latihan, nanti volume, streak, otot, dan gerakan utamamu muncul di sini.",
+    "Belum ada grafik. Selesaikan satu latihan untuk melihat progres.",
   "Go to Workout": "Ke Latihan",
   Range: "Rentang",
   "{n} wk": "{n} mgg",
@@ -298,7 +298,7 @@ export const exercises: Record<string, string> = {
   "{n} records": "{n} rekor",
   "Working sets; secondary muscles count half.": "Set kerja; otot pendukung dihitung setengah.",
   "No working sets in this range. Sets you tick during a workout are counted here by muscle.":
-    "Belum ada set kerja di rentang ini. Set yang kamu centang saat latihan dihitung di sini per otot.",
+    "Belum ada set di rentang ini.",
   "+{n} more": "+{n} lagi",
   "Volume, last {n} weeks": "Volume, {n} minggu terakhir",
   "Nothing logged in the {n} weeks before, so no comparison yet.":
@@ -311,9 +311,9 @@ export const exercises: Record<string, string> = {
   "Folder by split": "Folder menurut split",
   "Routine overview": "Ringkasan rutinitas",
   "A TikTok share link needs a connection to open. Try again online.": "Link share TikTok butuh koneksi untuk dibuka. Coba lagi saat online.",
-  "Could not open this TikTok link. Check the connection, or open it and copy the full link (tiktok.com/@…/video/…).": "Link TikTok ini gagal dibuka. Cek koneksi, atau buka link-nya lalu salin link lengkapnya (tiktok.com/@…/video/…).",
+  "Could not open this TikTok link. Check the connection, or open it and copy the full link (tiktok.com/@…/video/…).": "Link TikTok gagal dibuka. Cek koneksi, atau salin link lengkapnya (tiktok.com/@…/video/…).",
   "Opening the TikTok link…": "Membuka link TikTok…",
-  "Hundreds more exercises from the public domain free-exercise-db, on top of the library ABOT ships with. Downloads about 1 MB once and then works offline; ones ABOT already has are skipped.": "Ratusan gerakan lagi dari free-exercise-db (domain publik), di luar library bawaan ABOT. Unduh sekitar 1 MB sekali, setelah itu bisa dipakai offline; gerakan yang sudah ada di ABOT dilewati.",
+  "Hundreds more exercises from the public domain free-exercise-db, on top of the library ABOT ships with. Downloads about 1 MB once and then works offline; ones ABOT already has are skipped.": "Ratusan gerakan tambahan dari free-exercise-db. Unduh 1 MB sekali, lalu bisa offline.",
   "Clear filters": "Hapus filter",
   "Create “{name}”": "Buat “{name}”",
   "Custom": "Buatan sendiri",
@@ -331,7 +331,7 @@ export const exercises: Record<string, string> = {
   "Add {n} exercises": "Tambah {n} gerakan",
   "Clear": "Hapus",
   "Filter by equipment": "Filter per alat",
-  "No exercise matches “{query}”.": "Tidak ada gerakan yang cocok dengan “{query}”.",
+  "No exercise matches “{query}”.": "Tidak ada “{query}”.",
   "Recent": "Terakhir dipakai",
   "Select {name}": "Pilih {name}",
   "A–Z": "A–Z",
@@ -370,7 +370,7 @@ export const exercises: Record<string, string> = {
   "Making video… {n}%": "Membuat video… {n}%",
   "Making video": "Membuat video",
   "Share video": "Bagikan video",
-  "This browser cannot hand videos to other apps. Save it and post it from your gallery.": "Browser ini tidak bisa memberikan video ke aplikasi lain. Simpan lalu unggah dari galerimu.",
+  "This browser cannot hand videos to other apps. Save it and post it from your gallery.": "Simpan video, lalu unggah dari galeri.",
   "Make video": "Buat video",
   "The video could not be made on this device.": "Video tidak bisa dibuat di perangkat ini.",
   "This browser cannot share videos. Save it and post it from your gallery.": "Browser ini tidak bisa membagikan video. Simpan lalu unggah dari galerimu.",
