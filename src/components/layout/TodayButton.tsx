@@ -12,6 +12,8 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useReminderStore } from "@/store/useReminderStore";
 import { useAllExercises } from "@/store/useExerciseStore";
+import { setProgress } from "@/lib/live-set";
+import { Ring } from "@/components/phase/visuals";
 import { nextProtocol } from "@/lib/home";
 import { routineSummary } from "@/lib/routine-summary";
 import { useNow } from "@/lib/useNow";
@@ -70,6 +72,9 @@ export function TodayButton() {
   // While a workout runs the disc is about that workout (owner, 2026-11-15): a stopwatch in place
   // of the dumbbell, and a tap goes straight back to it rather than through the day's sheet.
   const live = useWorkoutStore((s) => (s.active ? s.active.name : null));
+  // Sets done of all the workout's sets, as numbers (a new object here would re-render forever).
+  const setsDone = useWorkoutStore((s) => (s.active ? setProgress(s.active).done : 0));
+  const setsTotal = useWorkoutStore((s) => (s.active ? setProgress(s.active).total : 0));
   const [open, setOpen] = useState(false);
   // "done" first when today's workout is finished and the tick has not played yet today.
   const [phase, setPhase] = useState<"plan" | "done">("plan");
@@ -96,6 +101,17 @@ export function TodayButton() {
 
   return (
     <>
+      {/* The workout's sets around the disc, one dash each, lit as they are done; it sits in the
+          dock's notch, between the disc and the cut edge. Past 30 sets the dashes would be specks,
+          so it becomes one arc. */}
+      {live && setsTotal > 0 && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-[24px]"
+        >
+          <Ring value={setsDone} max={setsTotal} size={72} stroke={3} segments={setsTotal <= 30 ? setsTotal : undefined} />
+        </span>
+      )}
       <button
         type="button"
         onClick={() => {
@@ -103,7 +119,7 @@ export function TodayButton() {
           if (live) router.push("/workout");
           else setOpen(true);
         }}
-        aria-label={label}
+        aria-label={live && setsTotal > 0 ? `${label}. ${t("{done} of {total} sets done", { done: setsDone, total: setsTotal })}` : label}
         aria-haspopup={live ? undefined : "dialog"}
         className={`today-fab ${live ? "today-fab-live" : ""} absolute left-1/2 top-0 z-10 flex size-[60px] -translate-x-1/2 -translate-y-[18px] items-center justify-center overflow-hidden rounded-full`}
       >

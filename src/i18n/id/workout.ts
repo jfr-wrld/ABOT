@@ -187,6 +187,7 @@ export const workout: Record<string, string> = {
   "This week": "Minggu ini",
   "Training time": "Waktu latihan",
   "Continue workout: {name}": "Lanjutkan latihan: {name}",
+  "{done} of {total} sets done": "{done} dari {total} set selesai",
   "Bring the week to the front": "Tampilkan minggu ini di depan",
   "Bring the workout to the front": "Tampilkan latihan di depan",
   "Bring today's plan to the front": "Tampilkan rencana hari ini di depan",
