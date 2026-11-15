@@ -38,7 +38,8 @@ function contentSecurityPolicy(): string {
 
 const nextConfig: NextConfig = {
   // Vercel Web Analytics runs on the web build only: the APK has no /_vercel/insights to call.
-  env: { ABOT_WEB_ANALYTICS: nativeApp ? "0" : "1" },
+  // ABOT_NATIVE: the deep-link fix for Capacitor full loads (src/lib/native/deep-link.ts).
+  env: { ABOT_WEB_ANALYTICS: nativeApp ? "0" : "1", ABOT_NATIVE: nativeApp ? "1" : "0" },
   ...(nativeApp ? { output: "export" as const, trailingSlash: true } : {}),
   // Partial prerendering needs a server; the static export goes without it.
   cacheComponents: !nativeApp,
