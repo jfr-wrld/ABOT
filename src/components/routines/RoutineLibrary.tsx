@@ -158,7 +158,7 @@ export function RoutineLibrary() {
 
           {folderNames.map((folder) => (
             <section key={folder || "__none"} aria-labelledby={`folder-${folder || "none"}`}>
-              <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold text-text-muted">
+              <h2 id={`folder-${folder || "none"}`} className="section-title">
                 {folder || (folderNames.length > 1 ? t("No folder") : t("All routines"))}
               </h2>
               <ul className={`mt-2 ${view === "grid" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}`}>

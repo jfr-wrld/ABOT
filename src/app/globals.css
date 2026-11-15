@@ -398,6 +398,32 @@
   color: var(--color-text-muted);
 }
 
+/* A section's heading above its card or list (Recent workouts, Settings groups, month groups):
+   larger, bold and in full colour, so it reads apart from the small grey labels inside cards. */
+@utility section-title {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+}
+
+/* The link beside a section heading (See all, All weigh-ins): smaller and in the accent, so it
+   reads as something to tap, not as a second heading. */
+@utility section-link {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  /* The text shade of the accent: the darker lime on light pages, readable at AA. */
+  color: var(--color-accent-text);
+  text-underline-offset: 4px;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 /* One pass of light across a set row the moment it is marked done. */
 @keyframes sweep {
   from {

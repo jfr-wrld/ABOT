@@ -218,7 +218,7 @@ function Weigh({ m, now }: { m: PhaseTelemetry; now: number }) {
         <h2 id="weigh-heading" className="field-label">
           {today ? t("Today's weigh-in") : t("Weigh in")}
         </h2>
-        <Link href="/profile/body" className="-my-3 -mr-2 flex min-h-11 items-center rounded-ctl px-2 text-xs font-semibold text-text-muted hover:text-text">
+        <Link href="/profile/body" className="section-link -my-3 -mr-2 flex min-h-11 items-center rounded-ctl px-2">
           {t("All weigh-ins")}
         </Link>
       </div>

@@ -133,7 +133,7 @@ function AllWorkouts() {
         <div className="flex flex-col gap-4 px-4 pt-3">
           {byMonth(page).map((g) => (
             <section key={g.month} aria-labelledby={`m-${g.month}`} className="flex flex-col gap-2">
-              <h2 id={`m-${g.month}`} className="field-label">
+              <h2 id={`m-${g.month}`} className="section-title">
                 {new Date(g.month).toLocaleDateString(t.locale, { month: "long", year: "numeric" })}
               </h2>
               <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-card border bg-surface">

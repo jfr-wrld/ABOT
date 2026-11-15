@@ -51,8 +51,8 @@ export function LiftsBoard({
   return (
     <section aria-labelledby="lifts-heading" className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 id="lifts-heading" className="field-label flex items-center gap-1.5">
-          <Trophy aria-hidden="true" size={12} className="text-pr" />
+        <h2 id="lifts-heading" className="section-title flex items-center gap-1.5">
+          <Trophy aria-hidden="true" size={18} className="text-pr" />
           {t("Top lifts")}
         </h2>
         <span className="text-[11px] text-text-muted">{t("Best estimated 1RM")}</span>

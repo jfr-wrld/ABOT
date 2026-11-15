@@ -1102,15 +1102,13 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
   return (
     <section aria-labelledby="recent-heading" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
-        {/* The heading reads as a heading (larger, bold, full colour); See all reads as a link
-            (smaller, in the accent, like "Set up week" above). Both were the same small grey. */}
-        <h2 id="recent-heading" className="text-lg font-bold tracking-tight">
+        <h2 id="recent-heading" className="section-title">
           {t("Recent workouts")}
         </h2>
         {recent.length > 0 && (
           <Link
             href="/history/all"
-            className="-mr-2 flex min-h-11 items-center gap-0.5 rounded-ctl px-2 text-sm font-semibold text-accent hover:underline underline-offset-4"
+            className="section-link -mr-2 flex min-h-11 items-center gap-0.5 rounded-ctl px-2"
           >
             {t("See all")}
             <ChevronRight aria-hidden="true" size={14} />

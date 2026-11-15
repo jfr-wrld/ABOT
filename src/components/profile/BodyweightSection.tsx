@@ -251,7 +251,7 @@ export function BodyweightSection({ now }: { now: number }) {
         </ul>
       )}
       {entries.length > RECENT && (
-        <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="min-h-11 w-full border-t border-line text-sm font-semibold text-text-muted hover:text-text">
+        <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="section-link min-h-11 w-full border-t border-line">
           {all ? t("Show fewer") : t("See all {n}", { n: entries.length })}
         </button>
       )}

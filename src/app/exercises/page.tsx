@@ -243,7 +243,7 @@ function LibraryScreen() {
                     </span>
                   )}
                   {sec.key === "favorites" && <Star aria-hidden="true" size={16} className="text-accent" fill="currentColor" />}
-                  <span className="text-sm font-bold">{sec.title}</span>
+                  <span className="section-title">{sec.title}</span>
                 </span>
                 <span className="num text-xs text-text-muted">{sections.find((x) => x.key === sec.key)?.items.length ?? sec.items.length}</span>
               </h2>

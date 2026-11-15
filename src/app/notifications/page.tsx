@@ -104,7 +104,7 @@ function Group({ title, items, now, unread = false }: { title: string; items: In
   const t = useT();
   return (
     <section aria-label={title}>
-      <h2 className="field-label mb-2">{title}</h2>
+      <h2 className="section-title mb-2">{title}</h2>
       <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-card border bg-surface">
         {items.map((i) => {
           const { Icon, tone } = ICON[i.kind];
