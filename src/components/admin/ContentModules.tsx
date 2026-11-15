@@ -55,7 +55,7 @@ export function ExercisesModule() {
                 role="radio"
                 aria-checked={filter === f}
                 onClick={() => setFilter(f)}
-                className={`min-h-11 rounded-ctl border px-2 font-mono text-[10px] font-bold uppercase tabular-nums ${filter === f ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-400"}`}
+                className={`chip num min-h-11 rounded-xl px-2 text-xs font-semibold capitalize ${filter === f ? "text-accent" : "text-text-muted"}`}
               >
                 {f}
                 {f !== "all" && <span className="block">{counts[f]}</span>}
@@ -66,7 +66,7 @@ export function ExercisesModule() {
         <div className="-mx-4 max-h-[420px] overflow-auto px-4">
           <table className="w-full min-w-[560px] text-left text-xs">
             <caption className="sr-only">Exercises</caption>
-            <thead className={`${cls.label} sticky top-0 bg-[#121215]`}>
+            <thead className={`${cls.label} sticky top-0 bg-surface`}>
               <tr>
                 <th className="py-2 pr-2">Name</th>
                 <th className="py-2 pr-2">Primary</th>
@@ -77,20 +77,20 @@ export function ExercisesModule() {
             </thead>
             <tbody>
               {rows.slice(0, 300).map((e) => (
-                <tr key={e.id} className="border-t border-[#27272a]">
+                <tr key={e.id} className="border-t border-line">
                   <td className="py-1.5 pr-2">
                     {e.isCustom ? (
-                      <button type="button" onClick={() => setEditing(e)} className="min-h-9 text-left text-white underline-offset-4 hover:underline">
+                      <button type="button" onClick={() => setEditing(e)} className="min-h-9 text-left text-text underline-offset-4 hover:underline">
                         {e.name}
                       </button>
                     ) : (
-                      <span className="text-zinc-200">{e.name}</span>
+                      <span className="text-text">{e.name}</span>
                     )}
                   </td>
-                  <td className="py-1.5 pr-2 text-zinc-400">{e.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}</td>
-                  <td className="py-1.5 pr-2 text-zinc-400">{EQUIPMENT_LABELS[e.equipment]}</td>
-                  <td className="py-1.5 pr-2 font-mono text-zinc-400">{e.loadMode}</td>
-                  <td className={`py-1.5 text-right font-mono uppercase ${source(e) === "custom" ? "text-[#00f0ff]" : "text-zinc-400"}`}>{source(e)}</td>
+                  <td className="py-1.5 pr-2 text-text-muted">{e.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(", ")}</td>
+                  <td className="py-1.5 pr-2 text-text-muted">{EQUIPMENT_LABELS[e.equipment]}</td>
+                  <td className="py-1.5 pr-2 num text-text-muted">{e.loadMode}</td>
+                  <td className={`py-1.5 text-right num ${source(e) === "custom" ? "text-[#00f0ff]" : "text-text-muted"}`}>{source(e)}</td>
                 </tr>
               ))}
             </tbody>
@@ -148,11 +148,11 @@ function ExerciseEditor({
           onSave({ name: name.trim(), primaryMuscles: [primary], secondaryMuscles: secondary.filter((m) => m !== primary), equipment, isBodyweight: bodyweight }, initial?.id);
         }}
       >
-        <label className="flex flex-col gap-1 text-xs text-zinc-400 sm:col-span-2">
+        <label className="flex flex-col gap-1 text-xs text-text-muted sm:col-span-2">
           Name
           <input required value={name} onChange={(e) => setName(e.target.value)} className={cls.input} />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-zinc-400">
+        <label className="flex flex-col gap-1 text-xs text-text-muted">
           Equipment
           <select value={equipment} onChange={(e) => setEquipment(e.target.value as Equipment)} className={cls.input}>
             {EQUIPMENT.map((q) => (
@@ -162,7 +162,7 @@ function ExerciseEditor({
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-zinc-400">
+        <label className="flex flex-col gap-1 text-xs text-text-muted">
           Primary muscle
           <select value={primary} onChange={(e) => setPrimary(e.target.value as MuscleGroup)} className={cls.input}>
             {MUSCLES.map((m) => (
@@ -183,7 +183,7 @@ function ExerciseEditor({
                   type="button"
                   aria-pressed={on}
                   onClick={() => setSecondary((s) => (on ? s.filter((x) => x !== m) : [...s, m]))}
-                  className={`min-h-9 rounded-full border px-3 text-xs ${on ? "border-[#00f0ff] text-[#00f0ff]" : "border-[#27272a] text-zinc-400"}`}
+                  className={`min-h-9 rounded-full border px-3 text-xs ${on ? "border-[#00f0ff] text-[#00f0ff]" : "border-line text-text-muted"}`}
                 >
                   {MUSCLE_GROUP_LABELS[m]}
                 </button>
@@ -191,7 +191,7 @@ function ExerciseEditor({
             })}
           </div>
         </fieldset>
-        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-zinc-300 sm:col-span-2">
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm text-text sm:col-span-2">
           Bodyweight (weight is added load)
           <input type="checkbox" checked={bodyweight} onChange={(e) => setBodyweight(e.target.checked)} className="size-6 accent-[#00f0ff]" />
         </label>
@@ -200,8 +200,8 @@ function ExerciseEditor({
         </button>
       </form>
       {initial && (
-        <div className="flex flex-col gap-2 border-t border-[#27272a] pt-3">
-          <label className="flex flex-col gap-1 text-xs text-zinc-400">
+        <div className="flex flex-col gap-2 border-t border-line pt-3">
+          <label className="flex flex-col gap-1 text-xs text-text-muted">
             Type DELETE to remove {initial.name}
             <input value={confirm} onChange={(e) => setConfirm(e.target.value)} className={cls.input} />
           </label>
@@ -228,15 +228,15 @@ export function RoutinesModule() {
         {routines.length === 0 && <Note>No routines on this device.</Note>}
         <ul className="flex flex-col gap-2">
           {routines.map((r) => (
-            <li key={r.id} className="grid items-center gap-2 rounded-ctl border border-[#27272a] bg-[#09090b] p-2 sm:grid-cols-[1fr_1fr_auto]">
+            <li key={r.id} className="grid items-center gap-2 rounded-ctl border border-line bg-bg p-2 sm:grid-cols-[1fr_1fr_auto]">
               <input aria-label={`Name of ${r.name}`} defaultValue={r.name} onBlur={(e) => e.target.value.trim() && update(r.id, { name: e.target.value.trim() })} className={cls.input} />
               <input aria-label={`Folder of ${r.name}`} defaultValue={r.folder ?? ""} placeholder="Folder" onBlur={(e) => update(r.id, { folder: e.target.value.trim() || undefined })} className={cls.input} />
               <span className="flex items-center gap-1">
-                <span className="w-16 text-right font-mono text-[11px] tabular-nums text-zinc-400">{r.exercises.length} ex</span>
+                <span className="w-16 text-right num text-[11px] tabular-nums text-text-muted">{r.exercises.length} ex</span>
                 <button type="button" onClick={() => duplicate(r.id)} className={cls.ghost}>
                   Copy
                 </button>
-                <button type="button" aria-label={`Delete ${r.name}`} onClick={() => remove(r.id)} className={`${cls.ghost} text-[#ef4444]`}>
+                <button type="button" aria-label={`Delete ${r.name}`} onClick={() => remove(r.id)} className={`${cls.ghost} text-failure`}>
                   <Trash2 aria-hidden="true" size={14} />
                 </button>
               </span>
@@ -248,10 +248,10 @@ export function RoutinesModule() {
       <Panel id="r-tpl" title={`Built-in templates (${ROUTINE_TEMPLATES.length})`} scope="device">
         <ul className="flex max-h-[420px] flex-col gap-1 overflow-auto">
           {ROUTINE_TEMPLATES.map((tpl) => (
-            <li key={tpl.id} className="flex items-center justify-between gap-2 border-t border-[#27272a] py-1.5 text-xs">
+            <li key={tpl.id} className="flex items-center justify-between gap-2 border-t border-line py-1.5 text-xs">
               <span className="min-w-0">
-                <span className="block truncate text-zinc-200">{tpl.name}</span>
-                <span className="font-mono text-[10px] uppercase text-zinc-400">{SPLITS.find((s) => s.value === tpl.split)?.label}</span>
+                <span className="block truncate text-text">{tpl.name}</span>
+                <span className="num text-[10px] text-text-muted">{SPLITS.find((s) => s.value === tpl.split)?.label}</span>
               </span>
               <button
                 type="button"
@@ -285,10 +285,10 @@ function GymsPanel() {
     <Panel id="r-gyms" title="Gyms, bars and plate inventory" scope="device">
       <ul className="flex flex-col gap-3">
         {gyms.map((g) => (
-          <li key={g.id} className="flex flex-col gap-2 rounded-ctl border border-[#27272a] bg-[#09090b] p-3">
+          <li key={g.id} className="flex flex-col gap-2 rounded-ctl border border-line bg-bg p-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-sm text-white">
-                {g.name} {g.isDefault && <span className="font-mono text-[10px] uppercase text-[#00f0ff]">default</span>}
+              <span className="truncate text-sm text-text">
+                {g.name} {g.isDefault && <span className="num text-[10px] text-[#00f0ff]">default</span>}
               </span>
               <span className="flex gap-1">
                 {!g.isDefault && (
@@ -296,13 +296,13 @@ function GymsPanel() {
                     Default
                   </button>
                 )}
-                <button type="button" aria-label={`Delete ${g.name}`} onClick={() => remove(g.id)} className={`${cls.ghost} text-[#ef4444]`}>
+                <button type="button" aria-label={`Delete ${g.name}`} onClick={() => remove(g.id)} className={`${cls.ghost} text-failure`}>
                   <Trash2 aria-hidden="true" size={14} />
                 </button>
               </span>
             </div>
             <div className="grid grid-cols-[96px_1fr] gap-2">
-              <label className="flex flex-col gap-1 text-[11px] text-zinc-400">
+              <label className="flex flex-col gap-1 text-[11px] text-text-muted">
                 Bar kg
                 <input
                   inputMode="decimal"
@@ -311,7 +311,7 @@ function GymsPanel() {
                   className={cls.input}
                 />
               </label>
-              <label className="flex flex-col gap-1 text-[11px] text-zinc-400">
+              <label className="flex flex-col gap-1 text-[11px] text-text-muted">
                 Plates kg (comma separated)
                 <input
                   defaultValue={g.plateInventoryKg.join(", ")}

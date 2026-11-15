@@ -138,7 +138,7 @@ export const DYNAMIC_KEYS: string[] = [
   ...Object.values(SORT_LABEL),
   ...Object.values(PAYMENT_STATUS_MESSAGE),
   // ProCelebration PERKS
-  "Auto-overload coach", "72h recovery inspector", "Hands-free voice logger", "Story presets, no watermark",
+  "Auto-overload coach", "Muscle recovery details", "Hands-free voice logger", "Story presets, no watermark",
   // Body phases: names, blurbs, activity levels, calibration lines, coach labels, retention risk
   ...Object.values(PHASE_LABEL),
   ...Object.values(PHASE_BLURB),

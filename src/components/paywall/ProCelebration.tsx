@@ -26,7 +26,7 @@ const TICKS = 60;
 const HIT = 0.42;
 const PERKS = [
   { icon: Brain, text: "Auto-overload coach" },
-  { icon: Activity, text: "72h recovery inspector" },
+  { icon: Activity, text: "Muscle recovery details" },
   { icon: Mic, text: "Hands-free voice logger" },
   { icon: Sparkles, text: "Story presets, no watermark" },
 ] as const;
@@ -103,7 +103,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
             >
               <AbotMark size={112} />
             </motion.span>
-            <span className="font-mono text-xs font-bold tracking-[0.22em] text-accent">{t("Tap to unlock")}</span>
+            <span className="text-sm font-semibold text-accent">{t("Tap to unlock")}</span>
           </button>
         )}
       </div>
@@ -278,9 +278,9 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
         </div>
 
         <motion.p
-          className="mt-8 font-mono text-[11px] font-bold text-accent"
-          initial={{ opacity: 0, letterSpacing: reduce ? "0.22em" : "0.9em" }}
-          animate={{ opacity: 1, letterSpacing: "0.22em" }}
+          className="mt-8 text-sm font-semibold text-accent"
+          initial={{ opacity: 0, y: reduce ? 0 : 6 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: after(HIT + 0.3), duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           {t("Payment received")}
@@ -300,7 +300,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           {unlocked.kind === "extended" ? <DaysAdded days={unlocked.days} reduce={!!reduce} /> : titleOf(unlocked, t)}
         </motion.h2>
         <motion.p
-          className="mt-2.5 text-center text-sm text-zinc-300"
+          className="mt-2.5 text-center text-sm text-text-muted"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: after(HIT + 0.55), duration: 0.35 }}
@@ -315,7 +315,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
             {PERKS.map(({ icon: Icon, text }, i) => (
               <motion.li
                 key={text}
-                className="flex items-center gap-2 rounded-ctl border border-accent/20 bg-[#121215]/90 px-3 py-2.5 text-xs font-semibold leading-tight text-white"
+                className="raised-card flex items-center gap-2 rounded-card bg-surface px-3 py-2.5 text-xs font-semibold leading-tight text-text"
                 initial={{ opacity: 0, rotateX: reduce ? 0 : -80, y: reduce ? 0 : 10 }}
                 animate={{ opacity: 1, rotateX: 0, y: 0 }}
                 transition={{ delay: after(HIT + 0.7 + i * 0.09), duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -338,7 +338,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           ref={button}
           type="button"
           onClick={close}
-          className="mt-8 min-h-14 w-full max-w-sm rounded-ctl bg-accent font-mono text-sm font-extrabold tracking-[0.1em] text-black hover:brightness-95"
+          className="mt-8 min-h-14 w-full max-w-sm rounded-xl bg-accent text-base font-bold text-on-accent hover:brightness-105"
           initial={{ opacity: 0, y: reduce ? 0 : 16 }}
           animate={{
             opacity: 1,
@@ -417,18 +417,18 @@ function DateRoll({ from, until, delay, reduce }: { from: string; until: string;
   const t = useT();
   return (
     <motion.div
-      className="mt-7 flex w-full max-w-sm items-center gap-2 rounded-ctl border border-accent/25 bg-[#121215]/90 p-3"
+      className="raised-card mt-7 flex w-full max-w-sm items-center gap-2 rounded-card bg-surface p-3"
       initial={{ opacity: 0, y: reduce ? 0 : 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-[10px] font-bold tracking-[0.14em] text-zinc-500">{t("Was until")}</p>
-        <p className="relative mt-0.5 inline-block text-sm font-semibold text-zinc-400">
+        <p className="text-xs font-semibold text-text-muted">{t("Was until")}</p>
+        <p className="relative mt-0.5 inline-block text-sm font-semibold text-text-muted">
           {from}
           <motion.span
             aria-hidden="true"
-            className="absolute inset-x-0 top-1/2 h-[2px] origin-left bg-zinc-400"
+            className="absolute inset-x-0 top-1/2 h-[2px] origin-left bg-text-muted"
             initial={{ scaleX: reduce ? 1 : 0 }}
             animate={{ scaleX: 1 }}
             transition={{ delay: reduce ? 0 : delay + 0.35, duration: 0.35 }}
@@ -445,9 +445,9 @@ function DateRoll({ from, until, delay, reduce }: { from: string; until: string;
         <ArrowRight size={18} />
       </motion.span>
       <div className="min-w-0 flex-1 text-right">
-        <p className="font-mono text-[10px] font-bold tracking-[0.14em] text-accent">{t("Now until")}</p>
+        <p className="text-xs font-semibold text-accent">{t("Now until")}</p>
         <motion.p
-          className="mt-0.5 text-sm font-extrabold text-white"
+          className="mt-0.5 text-sm font-extrabold text-text"
           initial={{ opacity: 0, scale: reduce ? 1 : 1.4 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: reduce ? 0 : delay + 0.7, type: "spring", stiffness: 320, damping: 16 }}

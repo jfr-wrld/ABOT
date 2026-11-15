@@ -130,7 +130,7 @@ export function StreakMoment({
       <div className="relative flex flex-1 flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] text-center">
         <Flame reduce={reduce} loops={loops} />
 
-        <h1 id="streak-title" className="mt-4 font-mono text-xs font-bold tracking-[0.22em] text-accent">
+        <h1 id="streak-title" className="mt-4 text-sm font-semibold text-accent">
           {!sessionId ? t("Your week streak") : first ? t("Streak started") : t("Streak extended")}
         </h1>
 
@@ -168,7 +168,7 @@ export function StreakMoment({
                     />
                   )}
                 </motion.svg>
-                <span className={`font-mono text-[10px] ${current ? "font-bold text-accent" : "text-text-muted"}`}>
+                <span className={`num text-[11px] ${current ? "font-bold text-accent" : "text-text-muted"}`}>
                   {current ? t("This wk") : `-${weeks.length - 1 - i}`}
                 </span>
                 <span className="sr-only">{on ? t("trained") : t("rest")}</span>

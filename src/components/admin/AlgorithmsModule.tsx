@@ -67,10 +67,10 @@ export function AlgorithmsModule({ mode }: { mode: AdminMode }) {
               {Object.entries(fields).map(([k, s]) => {
                 const changed = values[k] !== defaults[k];
                 return (
-                  <label key={k} className="flex flex-col gap-1 text-xs text-zinc-400">
+                  <label key={k} className="flex flex-col gap-1 text-xs text-text-muted">
                     <span className="flex justify-between gap-2">
                       <span>{s.label}</span>
-                      <span className={`font-mono tabular-nums ${changed ? "text-[#ccff00]" : "text-zinc-600"}`}>
+                      <span className={`num ${changed ? "text-accent" : "text-text-muted"}`}>
                         {changed ? "edited" : `default ${defaults[k]}`}
                       </span>
                     </span>
@@ -86,7 +86,7 @@ export function AlgorithmsModule({ mode }: { mode: AdminMode }) {
                         aria-label={s.label}
                         className={cls.input}
                       />
-                      <span aria-hidden={!s.unit} className="w-12 shrink-0 font-mono text-[11px] text-zinc-400">{s.unit ?? ""}</span>
+                      <span aria-hidden={!s.unit} className="w-12 shrink-0 num text-[11px] text-text-muted">{s.unit ?? ""}</span>
                     </span>
                   </label>
                 );
@@ -96,22 +96,22 @@ export function AlgorithmsModule({ mode }: { mode: AdminMode }) {
         );
       })}
       <Panel id="t-preview" title="Preview and push" scope="global" wide>
-        <dl className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-2 num text-xs tabular-nums sm:grid-cols-4">
           <div>
             <dt className={cls.label}>MET at 170 kg/min, RPE 8</dt>
-            <dd className="text-lg text-white">{p.met}</dd>
+            <dd className="text-lg text-text">{p.met}</dd>
           </div>
           <div>
             <dt className={cls.label}>kcal, 60 min, fallback kg</dt>
-            <dd className="text-lg text-white">{p.kcal}</dd>
+            <dd className="text-lg text-text">{p.kcal}</dd>
           </div>
           <div>
             <dt className={cls.label}>Chest after 4 sets</dt>
-            <dd className="text-lg text-white">{p.fourSets}%</dd>
+            <dd className="text-lg text-text">{p.fourSets}%</dd>
           </div>
           <div>
             <dt className={cls.label}>Chest ready in</dt>
-            <dd className="text-lg text-white">{p.chestReady} h</dd>
+            <dd className="text-lg text-text">{p.chestReady} h</dd>
           </div>
         </dl>
         <div className="flex flex-wrap gap-2">
