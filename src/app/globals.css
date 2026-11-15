@@ -719,6 +719,48 @@ input.bg-well:not(:focus) {
   mask-image: radial-gradient(circle 38px at 50% 12px, transparent 37px, #000 38px);
 }
 
+/* Home's week numbers as the back card of a wallet stack: Volt, raised, its figures, rings and
+   icons in the dark on-accent colour. It re-points the colour tokens inside it, so the stats keep
+   their own markup. The day's card overlaps its lower edge (pb-5 leaves the room). */
+.wallet-card {
+  --color-text: var(--color-on-accent);
+  --color-text-muted: color-mix(in oklab, var(--color-on-accent) 68%, var(--color-accent));
+  --color-line: color-mix(in oklab, var(--color-on-accent) 16%, transparent);
+  --color-track: color-mix(in oklab, var(--color-on-accent) 18%, transparent);
+  --color-accent-text: var(--color-on-accent);
+  --color-phase-bulk: var(--color-on-accent);
+  color: var(--color-on-accent);
+  background-color: var(--color-accent);
+  background-image: radial-gradient(120% 90% at 0% 0%, rgb(255 255 255 / 0.35), rgb(255 255 255 / 0) 55%), var(--neo-accent-face);
+  border: 1px solid var(--color-accent-edge);
+  box-shadow: var(--raise-accent);
+}
+/* Icon tiles on the Volt card lie flat: one raised surface is enough there. */
+.wallet-card .tile {
+  background-image: none;
+  box-shadow: none;
+}
+/* The day's card laid over it casts a deep shadow up onto the Volt card, so the stack reads. */
+.wallet-front > .rounded-card {
+  box-shadow:
+    0 -10px 22px -4px rgb(0 0 0 / 0.75),
+    0 -2px 6px 0 rgb(0 0 0 / 0.45),
+    var(--raise-card);
+}
+:where([data-theme="light"]) .wallet-front > .rounded-card {
+  box-shadow:
+    0 -10px 22px -4px rgb(40 60 0 / 0.45),
+    0 -2px 6px 0 rgb(40 60 0 / 0.25),
+    var(--raise-card);
+}
+/* Inside it, "accent" marks (the ring, the trend arrow) draw in the dark ink too. */
+.wallet-card .text-accent {
+  color: var(--color-on-accent);
+}
+.wallet-card [stroke="var(--color-accent)"] {
+  stroke: var(--color-on-accent);
+}
+
 /* Real liquid glass where the browser draws SVG backdrop filters (useLiquidGlass sets
    data-liquid and each surface's --liquid-filter): the page behind is barely blurred but bent at
    the rim like a lens, colour lifted, with a specular edge brighter at the top left than the

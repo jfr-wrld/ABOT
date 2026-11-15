@@ -86,6 +86,14 @@ or Visual effects: Light), then one plain sentence and, where there is one, the 
   lifts, Start). When today's workout is finished, a tick lands once, then Play returns for the
   next one.
 
+## Home's wallet stack
+
+The week's numbers and the day's card stack like a wallet (owner, 2026-11-15, after GoPay): the
+numbers on a Volt card behind (`wallet-card`: dark figures, rings and icons on the accent, flat
+icon tiles), the day's card laid 36px over its lower edge so the back card's corners stay hidden,
+casting a deep shadow up onto it. On the first visit of a session, once the splash has gone, the
+cards are dealt: the back one settles, then the front one slides up over it.
+
 ## Glass buttons
 
 Buttons that stand on their own (back, settings, options, close) are round liquid glass in the

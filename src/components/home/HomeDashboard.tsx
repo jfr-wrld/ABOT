@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
+import { AnimatePresence, motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
 import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Bell, RotateCcw, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
@@ -54,6 +54,7 @@ import { LiftList } from "@/components/routines/RoutineCard";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useInbox } from "@/components/notifications/useInbox";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
+import { useSplashGone } from "@/components/animations/SplashScreen";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-card border border-line bg-surface p-3";
@@ -107,13 +108,9 @@ export function HomeDashboard() {
 
       {!active && <WelcomeBack now={now} />}
 
-      <Rise step={0.07} order={1}>
-        {active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />}
-      </Rise>
-
-      <Rise step={0.07} order={2}>
-        <NumbersRow now={now} />
-      </Rise>
+      {/* Stacked like a wallet (owner, 2026-11-15, after GoPay): the week's numbers on a Volt card
+          behind, the day's card laid over its lower edge in front. */}
+      <WalletStack back={<NumbersRow now={now} />} front={active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />} />
 
       <Rise step={0.07} order={2}>
         <PhaseCommandCard now={now} />
@@ -123,6 +120,51 @@ export function HomeDashboard() {
         <RecentWorkouts unit={weightUnit} byId={byId} now={now} />
       </Rise>
     </main>
+  );
+}
+
+/** The stack plays once per session, so coming back to Home does not deal the cards again. */
+const STACKED_KEY = "abot.home.stacked";
+
+/**
+ * The week's numbers and the day's card as a wallet stack: the Volt card behind, the day's card
+ * laid 36px over its lower edge, so the back card's bottom corners stay hidden under the front
+ * card's straight sides. On the first visit of a session the cards are dealt: the back card drops
+ * into place, then the front one slides up over it and settles.
+ */
+function WalletStack({ back, front }: { back: ReactNode; front: ReactNode }) {
+  const reduce = useReducedMotionConfig();
+  const backCard = useAnimationControls();
+  const frontCard = useAnimationControls();
+  // Pages mount with AnimatePresence initial={false}, which skips `initial`: start from inline
+  // styles and drive the cards from an effect, as useEntrance does.
+  const [deal] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      if (sessionStorage.getItem(STACKED_KEY)) return false;
+      sessionStorage.setItem(STACKED_KEY, "1");
+    } catch {
+      // Without storage the cards are dealt on each visit.
+    }
+    return true;
+  });
+  const play = deal && !reduce;
+  // Dealt once the splash has gone, so the stack is seen being built, not behind it.
+  const splashGone = useSplashGone((s) => s.gone);
+  useEffect(() => {
+    if (play && !splashGone) return;
+    void backCard.start({ y: 0, scale: 1, opacity: 1, transition: play ? { type: "spring", stiffness: 260, damping: 22, delay: 0.05 } : { duration: 0 } });
+    void frontCard.start({ y: 0, rotate: 0, opacity: 1, transition: play ? { type: "spring", stiffness: 240, damping: 20, delay: 0.25 } : { duration: 0 } });
+  }, [backCard, frontCard, play, splashGone]);
+  return (
+    <div className="flex flex-col">
+      <motion.div className="relative z-0" style={play ? { y: -26, scale: 0.92, opacity: 0 } : undefined} animate={backCard}>
+        {back}
+      </motion.div>
+      <motion.div className="wallet-front relative z-10 -mt-9" style={play ? { y: 70, rotate: -2, opacity: 0 } : undefined} animate={frontCard}>
+        {front}
+      </motion.div>
+    </div>
   );
 }
 
@@ -721,7 +763,7 @@ function NumbersRow({ now }: { now: number }) {
   const change = volume.changePct;
 
   return (
-    <section aria-label={t("This week")} className="grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card border bg-surface">
+    <section aria-label={t("This week")} className="wallet-card grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card pb-9">
       <div className="flex min-w-0 items-center gap-2 p-3">
         <svg viewBox="0 0 36 36" className="hidden size-9 shrink-0 -rotate-90 min-[380px]:block" aria-hidden="true">
           <circle cx="18" cy="18" r="14" fill="none" stroke="var(--color-track)" strokeWidth="4" />
