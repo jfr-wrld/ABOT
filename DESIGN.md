@@ -37,8 +37,11 @@ values in either theme, in `globals.css`.
 
 ## Type
 
-- **Plus Jakarta Sans** for text, **JetBrains Mono** for figures (owner's choice, 2026-11-15: the
-  original faces, after trying Barlow and Anton).
+- **Plus Jakarta Sans** for text (the original face, owner's choice 2026-11-15).
+- **Saira Semi Condensed** for figures (`num`, `font-mono`), with tabular digits: narrow and
+  firm like a gym scoreboard, so "102.5" fits a set cell and reads at a glance between sets. It
+  replaces JetBrains Mono, a code font that made every number look like a terminal.
+- JetBrains Mono remains only in the story cards that print receipts.
 - Small labels (`field-label`) stay in the body face, sentence case, muted.
 - Page titles use the body face; Anton remains only in the Matchday story card.
 

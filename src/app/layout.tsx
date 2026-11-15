@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans, Saira_Semi_Condensed } from "next/font/google";
 import localFont from "next/font/local";
 import { Suspense } from "react";
 import "./globals.css";
@@ -27,7 +27,11 @@ import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
 const sans = Plus_Jakarta_Sans({ variable: "--font-sans-face", subsets: ["latin"], display: "swap" });
-const mono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], display: "swap" });
+// Saira Semi Condensed for every figure (kg, reps, timers): narrow and firm like a gym
+// scoreboard, so "102.5" fits a set cell and reads at a glance between sets.
+const numbers = Saira_Semi_Condensed({ variable: "--font-numbers", subsets: ["latin"], weight: ["500", "600", "700"], display: "swap" });
+// JetBrains Mono stays only for the story cards that print receipts.
+const mono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], display: "swap", preload: false });
 // Story Studio's theme faces (src/fonts, OFL): declared on every page but not preloaded, so a
 // phone downloads one only when a story card draws with it. next/font needs literal options.
 const anton = localFont({ src: "../fonts/anton-latin.woff2", variable: "--font-anton", weight: "400", display: "swap", preload: false });
@@ -64,7 +68,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${sans.variable} ${mono.variable} ${storyFaces} h-full antialiased`}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${sans.variable} ${numbers.variable} ${mono.variable} ${storyFaces} h-full antialiased`}>
       <head>
         {/* Theme before the first paint, so a light page never flashes dark. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />

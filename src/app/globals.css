@@ -32,7 +32,7 @@
   --color-row: rgb(0 0 0 / 0.3); /* set rows and chips set into a card */
 
   --font-sans: var(--font-sans-face), "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+  --font-mono: var(--font-numbers), "Saira Semi Condensed", system-ui, sans-serif; /* figures: tabular via .num */
 
   --radius-ctl: 10px;
   --radius-card: 16px;
