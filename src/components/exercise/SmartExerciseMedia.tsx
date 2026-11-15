@@ -29,7 +29,7 @@ export function SmartExerciseMedia({ exercise, videoOnly = false }: { exercise: 
   if (videoOnly) {
     return (
       <section aria-label={t("Exercise media")} className="panel p-2">
-        <h2 className="label-caps px-1 pb-2 pt-1">{t("Video")}</h2>
+        <h2 className="field-label px-1 pb-2 pt-1">{t("Video")}</h2>
         <VideoPanel exercise={exercise} />
       </section>
     );

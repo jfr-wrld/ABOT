@@ -198,7 +198,7 @@ function ExerciseCardView({
         {exercise && <ExerciseThumb exercise={exercise} size={44} />}
         <div className="min-w-0 flex-1">
           {superset && (
-            <p className="label-caps ss-text !text-[10px]" style={{ "--ss": ssColor } as React.CSSProperties}>
+            <p className="field-label ss-text !text-[10px]" style={{ "--ss": ssColor } as React.CSSProperties}>
               {superset.size > 2 ? t("Giant set") : t("Superset")} {"//"}{" "}
               <span className="num">{`${superset.letter}${superset.order}`}</span>
             </p>
@@ -281,7 +281,7 @@ function ExerciseCardView({
       )}
 
       <div
-        className="label-caps mt-3 grid gap-1 px-[5px]"
+        className="field-label mt-3 grid gap-1 px-[5px]"
         style={{ gridTemplateColumns: setGridColumns(showRpe, logType) }}
         aria-hidden="true"
       >

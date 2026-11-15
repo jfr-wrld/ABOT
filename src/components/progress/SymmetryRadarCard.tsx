@@ -102,7 +102,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
           // "Quads / Anterior" on two lines, so it fits beside the web.
           const [first, second] = label(a).split(" / ");
           return (
-            <text key={a} x={x} y={second ? y - 6 : y} textAnchor={anchor} dominantBaseline="middle" className="fill-zinc-300 font-mono text-[10px] uppercase tracking-[0.08em]">
+            <text key={a} x={x} y={second ? y - 6 : y} textAnchor={anchor} dominantBaseline="middle" className="fill-zinc-300 font-mono text-[10px] tracking-[0.08em]">
               {first}
               {second && (
                 <tspan x={x} dy="11">
@@ -141,7 +141,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
                 </p>
               ))
             )}
-            <p className="mt-1.5 text-[10px] uppercase tracking-[0.1em] text-zinc-400">
+            <p className="mt-1.5 text-[10px] tracking-[0.1em] text-zinc-400">
               {t("Push : Pull")} {r.pushPull === null ? "-" : `1 : ${(1 / r.pushPull).toFixed(2)}`} · {t("Quad : Ham")}{" "}
               {r.quadHam === null ? "-" : `1 : ${r.quadHam.toFixed(2)}`} · {t("Legs")} {r.lowerShare === null ? "-" : `${Math.round(r.lowerShare * 100)}%`}
             </p>

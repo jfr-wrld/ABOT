@@ -124,7 +124,7 @@ export function AbotProModal() {
           }}
         />
         <div className="relative flex items-center justify-between">
-          <span className="rounded-[4px] border border-accent/50 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
+          <span className="rounded-[4px] border border-accent/50 px-2 py-0.5 font-mono text-[10px] font-bold tracking-[0.16em] text-accent">
             ABOT // BLACK TELEMETRY SYSTEM
           </span>
           <button type="button" onClick={done} aria-label={t("Close")} className="flex size-11 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white">
@@ -133,14 +133,14 @@ export function AbotProModal() {
         </div>
 
         <header className="relative">
-          <h2 id={titleId} className="text-3xl font-extrabold uppercase leading-[1.05] tracking-tight">
+          <h2 id={titleId} className="text-3xl font-extrabold leading-[1.05] tracking-tight">
             {t("Precision engineered for serious lifters.")}
           </h2>
-          <p className="mt-2 font-mono text-xs uppercase tracking-[0.12em] text-zinc-400">ABOT // BLACK PRO</p>
+          <p className="mt-2 font-mono text-xs tracking-[0.12em] text-zinc-400">ABOT // BLACK PRO</p>
         </header>
 
         {feature && (
-          <p className="relative flex items-center gap-2 rounded-ctl border border-accent/40 bg-accent/[0.06] px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-accent">
+          <p className="relative flex items-center gap-2 rounded-ctl border border-accent/40 bg-accent/[0.06] px-3 py-2 font-mono text-[11px] font-bold tracking-[0.1em] text-accent">
             <Zap aria-hidden="true" size={14} className="shrink-0 fill-accent" />
             {t("Unlock feature: {name}", { name: t(PRO_FEATURE_LABEL[feature]) })}
           </p>
@@ -149,7 +149,7 @@ export function AbotProModal() {
         <table className="relative w-full border-collapse text-left text-xs">
           <caption className="sr-only">{t("ABOT Core against ABOT // BLACK PRO")}</caption>
           <thead>
-            <tr className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-400">
+            <tr className="font-mono text-[10px] tracking-[0.12em] text-zinc-400">
               <th scope="col" className="pb-2 font-semibold" />
               <th scope="col" className="w-20 pb-2 text-center font-semibold">
                 {t("Core (free)")}
@@ -182,7 +182,7 @@ export function AbotProModal() {
         </table>
 
         <fieldset className="relative flex flex-col gap-2">
-          <legend className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">{t("Choose a plan")}</legend>
+          <legend className="mb-2 font-mono text-[10px] tracking-[0.14em] text-zinc-400">{t("Choose a plan")}</legend>
           {PLANS.map((p) => {
             const price = planPrice(p, isFounder);
             const selected = plan === p.id;
@@ -206,7 +206,7 @@ export function AbotProModal() {
                   {selected && <span className="size-2.5 rounded-full bg-accent" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">{t(p.name)}</span>
+                  <span className="block font-mono text-[11px] font-bold tracking-[0.1em] text-white">{t(p.name)}</span>
                   <span className="block text-xs text-zinc-400">
                     {p.id === "annual"
                       ? t("Save {pct}% · about {month} a month", { pct: saving, month: rupiah(p.idr / 12) })
@@ -218,17 +218,17 @@ export function AbotProModal() {
                 <span className="shrink-0 text-right font-mono tabular-nums">
                   {price.was && <span className="block text-[11px] text-zinc-400 line-through">{rupiah(price.was.idr)}</span>}
                   <span className="block text-sm font-bold text-white">{rupiah(price.idr)}</span>
-                  <span className="block text-[10px] uppercase text-zinc-400">
+                  <span className="block text-[10px] text-zinc-400">
                     {p.per === "month" ? t("per month") : p.per === "year" ? t("per year") : t("once")} · ${price.usd.toFixed(2)}
                   </span>
                 </span>
                 {best && (
-                  <span className="absolute -top-2.5 right-3 rounded-[4px] bg-accent px-1.5 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-black">
+                  <span className="absolute -top-2.5 right-3 rounded-[4px] bg-accent px-1.5 font-mono text-[9px] font-black tracking-[0.12em] text-black">
                     {t("Best value · save {pct}%", { pct: saving })}
                   </span>
                 )}
                 {p.id === "lifetime" && (
-                  <span className="absolute -top-2.5 right-3 rounded-[4px] border border-accent/60 bg-black px-1.5 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-accent">
+                  <span className="absolute -top-2.5 right-3 rounded-[4px] border border-accent/60 bg-black px-1.5 font-mono text-[9px] font-black tracking-[0.12em] text-accent">
                     {t("Limited edition")}
                   </span>
                 )}
@@ -241,7 +241,7 @@ export function AbotProModal() {
           {paid ? (
             <>
               {/* A paid licence outranks the beta: say what was bought, and until when. */}
-              <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.08em] text-accent">
+              <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold leading-relaxed tracking-[0.08em] text-accent">
                 {tier === "lifetime" ? t("Active: lifetime license") : t("Active: ABOT // BLACK PRO")}
                 {tier === "pro" && proExpiresAt && (
                   <span className="mt-1 block text-zinc-300">{t("Until {date}", { date: new Date(proExpiresAt).toLocaleDateString(t.locale, { day: "numeric", month: "long", year: "numeric" }) })}</span>
@@ -253,7 +253,7 @@ export function AbotProModal() {
             </>
           ) : isBetaUnlocked ? (
             <>
-              <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.08em] text-accent">
+              <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold leading-relaxed tracking-[0.08em] text-accent">
                 ⚡ {t("Active: Founders Beta Pass. All PRO features unlocked free.")}
                 {founderUnitCode && <span className="mt-1 block text-zinc-300">{founderUnitCode}</span>}
               </p>
@@ -301,7 +301,7 @@ export function AbotProModal() {
               done();
               showRedeem();
             }}
-            className="min-h-11 rounded-ctl border border-dashed border-accent/50 font-mono text-xs font-bold uppercase tracking-[0.1em] text-accent hover:bg-accent/10"
+            className="min-h-11 rounded-ctl border border-dashed border-accent/50 font-mono text-xs font-bold tracking-[0.1em] text-accent hover:bg-accent/10"
           >
             {t("Redeem VIP / activation code")}
           </button>
@@ -320,7 +320,7 @@ function BuyButton({ busy, onClick, label }: { busy: boolean; onClick: () => voi
       onClick={onClick}
       disabled={busy}
       aria-busy={busy}
-      className="min-h-14 rounded-ctl bg-accent font-mono text-sm font-black uppercase tracking-[0.1em] text-black hover:brightness-95 disabled:opacity-60"
+      className="min-h-14 rounded-ctl bg-accent font-mono text-sm font-black tracking-[0.1em] text-black hover:brightness-95 disabled:opacity-60"
     >
       {busy ? t("Opening payment...") : label}
     </button>

@@ -142,7 +142,7 @@ function WelcomeBack({ now }: { now: number }) {
   return (
     <section aria-labelledby="welcome-back" className={`${TILE} flex flex-col gap-3 p-4`}>
       <div>
-        <p className="label-caps text-accent">{t("Welcome back")}</p>
+        <p className="field-label text-accent">{t("Welcome back")}</p>
         <h2 id="welcome-back" className="mt-1 text-lg font-bold tracking-tight">
           {t("Pick up where you left off")}
         </h2>
@@ -233,7 +233,7 @@ function WeekRail({
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="label-caps truncate">{month}</p>
+        <p className="field-label truncate">{month}</p>
         <div className="-my-2 -mr-2 flex shrink-0 items-center">
           {streak > 0 && (
             // The streak plays its flame again on a tap, the same screen as after Finish.
@@ -284,7 +284,7 @@ function WeekRail({
                 onClick={() => onSelect(d.start)}
                 className={`tap flex w-full flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${on ? "bg-surface ring-1 ring-line" : "hover:bg-surface/60"}`}
               >
-                <span aria-hidden="true" className={`label-caps ${d.isToday ? "!text-text" : ""}`}>
+                <span aria-hidden="true" className={`field-label ${d.isToday ? "!text-text" : ""}`}>
                   {date.toLocaleDateString(t.locale, { weekday: "narrow" })}
                 </span>
                 <span aria-hidden="true" className={`num text-xs font-bold leading-none ${d.isToday || on ? "text-text" : "text-text-muted"}`}>
@@ -409,7 +409,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
     body = (
       <>
         <div className="relative min-w-0">
-          <p className="label-caps flex items-center gap-1.5">
+          <p className="field-label flex items-center gap-1.5">
             <Check aria-hidden="true" size={13} strokeWidth={3} className="text-accent" />
             {t("Done")} · {whenLabel(t, day.start, now, null)}
           </p>
@@ -463,7 +463,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
       body = (
         <>
           <div className="relative min-w-0">
-            <p className="label-caps">{label}</p>
+            <p className="field-label">{label}</p>
             <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
               {routine.name}
             </h2>
@@ -498,7 +498,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
       body = (
         <>
           <div className="relative min-w-0">
-            <p className="label-caps">{whenLabel(t, day.start, now, null)}</p>
+            <p className="field-label">{whenLabel(t, day.start, now, null)}</p>
             <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
               {t("Rest day")}
             </h2>
@@ -537,7 +537,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
       body = (
         <>
           <div className="relative">
-            <p className="label-caps">{t("Next up")}</p>
+            <p className="field-label">{t("Next up")}</p>
             <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
               {t("Free session")}
             </h2>
@@ -633,7 +633,7 @@ function ActiveCard() {
       href="/workout"
       className="block rounded-xl border border-accent/40 bg-accent-tint p-4 transition-colors hover:border-accent/70"
     >
-      <span className="label-caps flex items-center gap-1.5 !text-accent">
+      <span className="field-label flex items-center gap-1.5 !text-accent">
         <motion.span
           aria-hidden="true"
           className="size-1.5 rounded-full bg-accent"
@@ -721,7 +721,7 @@ function NumbersRow({ now }: { now: number }) {
             {freq.done}
             <span className="text-xs font-semibold text-text-muted">/{target}</span>
           </p>
-          <p aria-hidden="true" className="label-caps truncate">
+          <p aria-hidden="true" className="field-label truncate">
             {perWeek ? t("Planned") : t("Days")}
           </p>
           <span className="sr-only">
@@ -735,7 +735,7 @@ function NumbersRow({ now }: { now: number }) {
           <CountFromZero delay={0.2} value={Math.round(toDisplay(volume.kg, unit))} format={(n) => shortVolume(n, t.locale)} />
           <span className="text-[11px] font-semibold text-text-muted">{unit}</span>
         </p>
-        <p className="label-caps flex items-center gap-1 truncate">
+        <p className="field-label flex items-center gap-1 truncate">
           {t("Volume")}
           {change !== null && (
             <span className={`num inline-flex items-center gap-0.5 normal-case ${change >= 0 ? "!text-text" : ""}`}>
@@ -762,7 +762,7 @@ function NumbersRow({ now }: { now: number }) {
             {ready}
             <span className="text-xs font-semibold text-text-muted">/{REGIONS.length}</span>
           </span>
-          <span className="label-caps block truncate">{t("ready")}</span>
+          <span className="field-label block truncate">{t("ready")}</span>
         </span>
       </button>
 
@@ -798,7 +798,7 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
   return (
     <section aria-labelledby="recent-heading" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="recent-heading" className="label-caps">
+        <h2 id="recent-heading" className="field-label">
           {t("Recent workouts")}
         </h2>
         {recent.length > 0 && (

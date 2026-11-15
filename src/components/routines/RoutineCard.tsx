@@ -90,7 +90,7 @@ export function SummaryMeta({ sum, count }: { sum: RoutineSummary; count: number
   return (
     <div className="flex items-center gap-3">
       {sum.focus && (
-        <span className="rounded-full border border-ink/10 px-2 py-px text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+        <span className="rounded-full border border-ink/10 px-2 py-px text-[10px] font-semibold text-text-muted">
           {t(sum.focus.label)}
         </span>
       )}

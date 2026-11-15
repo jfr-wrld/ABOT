@@ -311,7 +311,7 @@ function WeekPreview({ a, firstDay, onSplit }: { a: PlanAnswers; firstDay: 0 | 1
               >
                 <span className="flex items-center gap-2 text-sm font-semibold">
                   {t(SPLIT_LABEL[s])}
-                  {i === 0 && <span className="label-caps rounded bg-accent px-1.5 py-0.5 !text-[10px] !text-on-accent">{t("Recommended")}</span>}
+                  {i === 0 && <span className="field-label rounded bg-accent px-1.5 py-0.5 !text-[10px] !text-on-accent">{t("Recommended")}</span>}
                 </span>
                 {a.split === s && <span className="mt-0.5 text-xs text-text-muted">{t(SPLIT_BLURB[s])}</span>}
               </button>

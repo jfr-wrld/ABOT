@@ -294,7 +294,7 @@ function MusclesWorked({ exercise }: { exercise: Exercise }) {
         <MuscleMap primary={exercise.primaryMuscles} secondary={exercise.secondaryMuscles} width={144} />
       </div>
       <div className="min-w-0">
-        <h2 id="muscles-heading" className="label-caps">
+        <h2 id="muscles-heading" className="field-label">
           {t("Muscles worked")}
         </h2>
         <p className="mt-2 flex items-start gap-2 text-sm">
@@ -407,7 +407,7 @@ function QuickStats({ exercise, done, unit }: { exercise: Exercise; done: Workou
             {tile.icon}
           </span>
           <div className="min-w-0">
-            <dt className="label-caps">{tile.label}</dt>
+            <dt className="field-label">{tile.label}</dt>
             <dd className={`num truncate text-base font-bold tabular-nums min-[360px]:text-lg ${tile.pr ? "text-pr" : ""}`}>
               <CountFromZero value={tile.value} format={tile.format} />
             </dd>
@@ -419,7 +419,7 @@ function QuickStats({ exercise, done, unit }: { exercise: Exercise; done: Workou
           <CalendarClock size={16} />
         </span>
         <div className="min-w-0">
-          <dt className="label-caps">{t("Last done")}</dt>
+          <dt className="field-label">{t("Last done")}</dt>
           <dd className="num truncate text-base font-bold min-[360px]:text-lg">{last ? relativeDay(last, now, t) : t("Never")}</dd>
         </div>
       </div>

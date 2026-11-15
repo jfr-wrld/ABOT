@@ -103,7 +103,7 @@ export function FinishDialog({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-ctl bg-bg px-3 py-2">
-      <dt className="label-caps">{label}</dt>
+      <dt className="field-label">{label}</dt>
       <dd className="text-lg font-bold num">{value}</dd>
     </div>
   );

@@ -94,7 +94,7 @@ export function PhotoLoop({ exercise, className = "" }: { exercise: Exercise; cl
                 <span key={i} className={`h-1.5 rounded-full transition-[width,background-color] ${frame === i ? "w-4 bg-accent" : "w-1.5 bg-ink/40"}`} />
               ))}
             </span>
-            <span data-testid="hero-phase" className="label-caps !text-text">
+            <span data-testid="hero-phase" className="field-label !text-text">
               {frame === 0 ? t("Start") : t("End")}
             </span>
           </span>

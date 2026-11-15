@@ -100,7 +100,7 @@ export function RoutineLibrary() {
       <div className="flex flex-col gap-4 px-4 pt-3">
         {next && (
           <section aria-labelledby="today-routine" className="rounded-card border border-accent/40 bg-accent-tint p-4">
-            <p className="label-caps">{whyText(next.why, t)}</p>
+            <p className="field-label">{whyText(next.why, t)}</p>
             <h2 id="today-routine" className="mt-1 truncate text-xl font-bold tracking-tight">
               {next.routine.name}
             </h2>
@@ -146,7 +146,7 @@ export function RoutineLibrary() {
 
           {folderNames.map((folder) => (
             <section key={folder || "__none"} aria-labelledby={`folder-${folder || "none"}`}>
-              <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold uppercase text-text-muted">
+              <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold text-text-muted">
                 {folder || (folderNames.length > 1 ? t("No folder") : t("All routines"))}
               </h2>
               <ul className="mt-2 flex flex-col gap-3">

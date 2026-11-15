@@ -114,11 +114,11 @@ app the page beeps while ABOT is on screen and the system notification rings whi
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the
 running rest timer, and the current tab icon. Cyan appears only where a record was set.
 
-## Typography (old, superseded by "Type" above)
+## Labels
 
-The earlier Plus Jakarta Sans plus JetBrains Mono pairing is replaced. `num` now gives Barlow's
-tabular figures; `label-caps` still exists until step 2 of the redesign replaces it with
-sentence-case labels.
+Column and stat labels use `field-label`: Barlow 12px semibold, sentence case, muted. The old
+`label-caps` (10px code-font capitals with wide tracking) is gone, as are ad-hoc `uppercase`
+and wide `tracking-*` classes outside the story cards and admin.
 
 ## Layout
 

@@ -185,7 +185,7 @@ export function ExercisePicker({
           {recent.length > 0 && <Shortlist title={t("Recent")} items={recent} rowProps={rowProps} />}
           {suggestions.length > 0 && (
             <section aria-label={suggestionsTitle} className="mt-3">
-              <h3 className="label-caps px-2">{suggestionsTitle}</h3>
+              <h3 className="field-label px-2">{suggestionsTitle}</h3>
               <ul className="mt-1 flex flex-col">
                 {suggestions.map(({ exercise: e, note }) => (
                   <li key={e.id}>
@@ -195,7 +195,7 @@ export function ExercisePicker({
               </ul>
             </section>
           )}
-          {(favs.length > 0 || recent.length > 0 || suggestions.length > 0) && <h3 className="label-caps mt-3 px-2">{t("All exercises")}</h3>}
+          {(favs.length > 0 || recent.length > 0 || suggestions.length > 0) && <h3 className="field-label mt-3 px-2">{t("All exercises")}</h3>}
         </>
       )}
 
@@ -246,7 +246,7 @@ type RowProps = { exercise: Exercise; onPick: (e: Exercise) => void; onToggle?: 
 function Shortlist({ title, items, rowProps }: { title: string; items: Exercise[]; rowProps: (e: Exercise) => RowProps }) {
   return (
     <section aria-label={title} className="mt-3">
-      <h3 className="label-caps px-2">{title}</h3>
+      <h3 className="field-label px-2">{title}</h3>
       <ul className="mt-1 flex flex-col">
         {items.map((e) => (
           <li key={e.id}>

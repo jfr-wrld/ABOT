@@ -26,7 +26,7 @@ export function BuildTag() {
           router.push("/admin");
         }
       }}
-      className="mx-auto min-h-11 px-3 font-mono text-[10px] uppercase tabular-nums tracking-[0.14em] text-text-muted"
+      className="mx-auto min-h-11 px-3 font-mono text-[10px] tabular-nums tracking-[0.14em] text-text-muted"
     >
       {`ABOT ${version ? `v${version}` : "web"} // TELEMETRY BUILD`}
     </button>

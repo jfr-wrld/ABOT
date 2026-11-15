@@ -135,7 +135,7 @@ function AllWorkouts() {
         <div className="flex flex-col gap-4 px-4 pt-3">
           {byMonth(page).map((g) => (
             <section key={g.month} aria-labelledby={`m-${g.month}`} className="flex flex-col gap-2">
-              <h2 id={`m-${g.month}`} className="label-caps">
+              <h2 id={`m-${g.month}`} className="field-label">
                 {new Date(g.month).toLocaleDateString(t.locale, { month: "long", year: "numeric" })}
               </h2>
               <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col gap-2"}>

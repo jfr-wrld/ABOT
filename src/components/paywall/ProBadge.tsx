@@ -16,7 +16,7 @@ export function ProBadge({ suffix, className = "" }: { suffix?: string; classNam
   const text = isBetaUnlocked ? `PRO // ${t("BETA")}` : suffix ? `PRO // ${suffix}` : "PRO";
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-[4px] border border-accent/60 bg-black px-1.5 py-px font-mono text-[9px] font-bold uppercase leading-4 tracking-[0.12em] text-accent ${className}`}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-[4px] border border-accent/60 bg-black px-1.5 py-px font-mono text-[9px] font-bold leading-4 tracking-[0.12em] text-accent ${className}`}
     >
       {!proActive && <Lock aria-hidden="true" size={9} />}
       {text}
@@ -33,14 +33,14 @@ export function ProLock({ feature, text, className = "" }: { feature: ProFeature
   const t = useT();
   return (
     <div className={`force-dark flex flex-col items-start gap-2 rounded-ctl border border-accent/30 bg-black/90 p-3 text-text ${className}`}>
-      <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-accent">
+      <p className="flex items-center gap-2 font-mono text-[11px] tracking-[0.1em] text-accent">
         <Lock aria-hidden="true" size={12} /> {t("Locked: ABOT // BLACK")}
       </p>
       <p className="text-xs text-zinc-300">{text}</p>
       <button
         type="button"
         onClick={() => openPaywall(feature)}
-        className="min-h-11 rounded-ctl border border-accent px-3 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-accent hover:bg-accent/10"
+        className="min-h-11 rounded-ctl border border-accent px-3 font-mono text-[11px] font-bold tracking-[0.12em] text-accent hover:bg-accent/10"
       >
         {t("Unlock with ABOT // BLACK")}
       </button>

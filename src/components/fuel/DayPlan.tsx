@@ -32,7 +32,7 @@ export function DayPlan({ phase, fuel }: { phase: BodyPhaseType; fuel: FuelTarge
   return (
     <div className="flex flex-col gap-5">
       <section aria-labelledby="plan-heading" className="flex flex-col gap-3">
-        <h2 id="plan-heading" className="label-caps">
+        <h2 id="plan-heading" className="field-label">
           {t("Day plan")}
         </h2>
         <div role="group" aria-label={t("Choose a day plan")} className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
@@ -139,7 +139,7 @@ function MealPrep({ day }: { day: ReturnType<typeof planDay> }) {
   const kg = (g: number) => (g >= 1000 ? `${(g / 1000).toLocaleString(t.locale, { maximumFractionDigits: 1 })} kg` : `${g} g`);
   return (
     <section aria-labelledby="prep-heading" className="flex flex-col gap-3">
-      <h2 id="prep-heading" className="label-caps">
+      <h2 id="prep-heading" className="field-label">
         {t("Meal prep")}
       </h2>
       <div className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface p-3">
@@ -163,7 +163,7 @@ function MealPrep({ day }: { day: ReturnType<typeof planDay> }) {
         </h3>
         {aisles.map((a) => (
           <div key={a} className="mt-3">
-            <p className="label-caps">{t(AISLE_LABEL[a])}</p>
+            <p className="field-label">{t(AISLE_LABEL[a])}</p>
             <ul className="mt-1">
               {list
                 .filter((l) => l.aisle === a)

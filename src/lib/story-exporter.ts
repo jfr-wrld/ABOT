@@ -323,7 +323,7 @@ function text(s: Scene, str: string, x: number, y: number, o: TextOpts): number 
   return width;
 }
 
-/** Mono uppercase label: the canvas twin of the app's `label-caps`. */
+/** Mono uppercase label: the canvas twin of the app's `field-label`. */
 function caps(s: Scene, str: string, x: number, y: number, o: Partial<TextOpts> = {}): number {
   return text(s, str.toUpperCase(), x, y, { size: 26, family: "mono", color: MUTED, tracking: 3, ...o });
 }

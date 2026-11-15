@@ -105,7 +105,7 @@ export function ActiveWorkoutHeader({
       {/* Three figures and, right of Sets, the muscles worked so far as a small map. */}
       <dl className="mt-3 grid grid-cols-[1.15fr_1fr_0.75fr_auto] gap-2">
         <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
-          <dt className="label-caps flex items-center gap-1.5">
+          <dt className="field-label flex items-center gap-1.5">
             {t("Duration")}
             {paused && <span className="rounded bg-accent px-1.5 text-[11px] font-bold normal-case tracking-normal text-on-accent">{t("Paused")}</span>}
           </dt>
@@ -149,7 +149,7 @@ function Stat({ label, value, small }: { label: string; value: string; small?: s
   const m = small !== undefined ? [value, value, small] : /^(.*) (kg|lbs)$/.exec(value);
   return (
     <div className="min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
-      <dt className="label-caps truncate">{label}</dt>
+      <dt className="field-label truncate">{label}</dt>
       <dd className="num flex min-h-11 items-baseline truncate pt-2 text-lg font-bold tracking-tight text-text">
         {m ? (
           <>

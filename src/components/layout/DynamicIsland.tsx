@@ -202,7 +202,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
       >
         <motion.span {...fade} className="flex min-w-0 flex-1 items-center gap-3 pl-5 pr-5">
           <span className="flex min-w-0 flex-1 flex-col items-start" aria-hidden="true">
-            <span className="label-caps max-w-full truncate">{detail}</span>
+            <span className="field-label max-w-full truncate">{detail}</span>
             <span className="max-w-full truncate text-sm font-semibold">{headline}</span>
           </span>
           <span className="flex shrink-0 flex-col items-end" aria-hidden="true">
@@ -379,7 +379,7 @@ function HandoffCapsule({ session, handoff, onWorkoutPage }: { session: WorkoutS
     <motion.span {...fade} className="flex min-w-0 flex-1 items-center gap-3 pl-5 pr-5">
       <Zap aria-hidden="true" size={18} className="shrink-0 fill-accent text-accent" />
       <span className="flex min-w-0 flex-col items-start" aria-hidden="true">
-        <span className="label-caps">
+        <span className="field-label">
           {t("Up next")} <span className="num">{`${label.letter}${label.order}`}</span> · {t("No rest")}
         </span>
         <span className="flex w-full min-w-0 items-baseline gap-2 text-sm font-semibold">
@@ -470,7 +470,7 @@ function RestCapsule() {
     >
       <motion.div {...fade} className="flex w-full items-center gap-1 pl-5 pr-1.5">
         <div className="flex min-w-0 flex-1 items-baseline gap-2" aria-hidden="true">
-          <span className="label-caps">{done ? t("Rest over") : t("Rest")}</span>
+          <span className="field-label">{done ? t("Rest over") : t("Rest")}</span>
           <span className="num text-xl font-extrabold text-accent">{done ? t("Go") : formatClock(remainingSec)}</span>
         </div>
         {/* The step is written on the buttons, so it is clear how much each tap changes. */}

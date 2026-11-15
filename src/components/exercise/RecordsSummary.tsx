@@ -37,7 +37,7 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
     if (!r) return null;
     return (
       <div key={kind} className="rounded-ctl bg-bg px-2 py-2">
-        <dt className="label-caps">{label}</dt>
+        <dt className="field-label">{label}</dt>
         <dd className="text-base font-bold num">{value(r)}</dd>
         <dd className="text-xs text-text-muted">
           {[sub(r), new Date(r.achievedAt).toLocaleDateString(t.locale, { day: "numeric", month: "short" })].filter(Boolean).join(" · ")}

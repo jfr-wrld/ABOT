@@ -33,7 +33,7 @@ export function ProgressHero({
   const t = useT();
   return (
     <section aria-labelledby="hero-title" className="panel overflow-hidden p-4">
-      <h2 id="hero-title" className="label-caps">
+      <h2 id="hero-title" className="field-label">
         {t("Volume, last {n} weeks", { n: weeks })}
       </h2>
       <p className="mt-1 flex items-baseline gap-2">
@@ -91,7 +91,7 @@ function Delta({ value, weeks }: { value: number | null; weeks: number }) {
 function Tile({ label, value, format, change }: { label: string; value: number; format: (n: number) => string; change: number | null }) {
   return (
     <div>
-      <dt className="label-caps">{label}</dt>
+      <dt className="field-label">{label}</dt>
       <dd className="mt-0.5">
         <CountUp value={value} format={format} className="num block text-lg font-bold" />
         {change !== null && (

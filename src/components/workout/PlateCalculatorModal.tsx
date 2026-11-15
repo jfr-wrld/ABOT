@@ -134,7 +134,7 @@ function Calculator({
           <Minus aria-hidden="true" size={18} />
         </button>
         <label className="flex min-w-0 flex-1 flex-col items-center">
-          <span className="label-caps">{t("Target")}</span>
+          <span className="field-label">{t("Target")}</span>
           <span className="flex items-baseline gap-1">
             <input
               type="number"
@@ -166,7 +166,7 @@ function Calculator({
       <div className="force-dark rounded-card border border-line bg-bg p-3">
         <SleeveVisual load={load} unit={unit} />
         <div className="mt-2 flex items-baseline justify-between gap-3">
-          <span className="label-caps">{t("Per side")}</span>
+          <span className="field-label">{t("Per side")}</span>
           <span className="num text-sm font-semibold text-text">
             {fmt(load.perSideWeight)} {unit}
           </span>
@@ -214,7 +214,7 @@ function Calculator({
 
       {/* Bar */}
       <fieldset>
-        <legend className="label-caps mb-2">{t("Bar")}</legend>
+        <legend className="field-label mb-2">{t("Bar")}</legend>
         <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("Bar")}>
           {bars.map((b) => (
             <label
@@ -238,7 +238,7 @@ function Calculator({
 
       {/* Plates */}
       <fieldset>
-        <legend className="label-caps mb-1">{t("Plates available")}</legend>
+        <legend className="field-label mb-1">{t("Plates available")}</legend>
         <p className="mb-2 text-xs text-text-muted">
           {gym ? t("Saved to {gym}.", { gym: gym.name }) : t("Remembered on this phone.")} {t("Switch off what your gym does not have.")}
         </p>

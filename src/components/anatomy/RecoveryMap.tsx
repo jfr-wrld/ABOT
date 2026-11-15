@@ -178,7 +178,7 @@ export function RecoveryMap({
             type="button"
             aria-pressed={view === v}
             onClick={() => choose(v)}
-            className={`min-h-11 rounded-[calc(var(--radius-ctl)-4px)] text-xs font-semibold uppercase tracking-[0.12em] transition-colors ${
+            className={`min-h-11 rounded-[calc(var(--radius-ctl)-4px)] text-xs font-semibold tracking-[0.12em] transition-colors ${
               view === v ? "bg-accent text-black" : "text-text-muted hover:bg-ink/[0.06] hover:text-text"
             }`}
           >
@@ -204,7 +204,7 @@ export function RecoveryMap({
       <div role="status" aria-live="polite" className="min-h-[60px] rounded-ctl border border-line-strong bg-surface px-3 py-2">
         {sel && selected ? (
           <>
-            <p className="label-caps !text-text">
+            <p className="field-label !text-text">
               {name(selected)} <span className="text-text-muted">{"//"}</span>{" "}
               <span className="tabular-nums">{t("Recovery {pct}%", { pct: recovery(selected) })}</span>
             </p>
@@ -222,7 +222,7 @@ export function RecoveryMap({
       </div>
       )}
 
-      <p className="label-caps -mb-1.5 !text-[10px]" id={`${uid}-key`}>
+      <p className="field-label -mb-1.5 !text-[10px]" id={`${uid}-key`}>
         {t("Fatigue")}
       </p>
       <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs" aria-labelledby={`${uid}-key`}>

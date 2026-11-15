@@ -390,7 +390,7 @@ function FilterSheet({
     >
       <div className="flex flex-col gap-5">
         <section role="radiogroup" aria-label={t("Order")}>
-          <h3 className="label-caps mb-2">{t("Order")}</h3>
+          <h3 className="field-label mb-2">{t("Order")}</h3>
           <div className="grid grid-cols-2 gap-2">
             {SORTS.map((v) => (
               <button key={v} type="button" role="radio" aria-checked={sort === v} onClick={() => setSort(v)} className={chip(sort === v)}>
@@ -400,7 +400,7 @@ function FilterSheet({
           </div>
         </section>
         <section role="radiogroup" aria-label={t("Equipment")}>
-          <h3 className="label-caps mb-2">{t("Equipment")}</h3>
+          <h3 className="field-label mb-2">{t("Equipment")}</h3>
           <div className="grid grid-cols-2 gap-2">
             {(["", ...EQUIPMENT] as (Equipment | "")[]).map((eq) => (
               <button key={eq || "all"} type="button" role="radio" aria-checked={equipment === eq} onClick={() => setEquipment(eq)} className={chip(equipment === eq)}>
@@ -411,7 +411,7 @@ function FilterSheet({
           </div>
         </section>
         <section role="radiogroup" aria-label={t("View")}>
-          <h3 className="label-caps mb-2">{t("View")}</h3>
+          <h3 className="field-label mb-2">{t("View")}</h3>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" role="radio" aria-checked={view === "list"} onClick={() => setView("list")} className={chip(view === "list")}>
               <List aria-hidden="true" size={18} />

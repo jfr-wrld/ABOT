@@ -103,7 +103,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
             >
               <AbotMark size={112} />
             </motion.span>
-            <span className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-accent">{t("Tap to unlock")}</span>
+            <span className="font-mono text-xs font-bold tracking-[0.22em] text-accent">{t("Tap to unlock")}</span>
           </button>
         )}
       </div>
@@ -278,7 +278,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
         </div>
 
         <motion.p
-          className="mt-8 font-mono text-[11px] font-bold uppercase text-accent"
+          className="mt-8 font-mono text-[11px] font-bold text-accent"
           initial={{ opacity: 0, letterSpacing: reduce ? "0.22em" : "0.9em" }}
           animate={{ opacity: 1, letterSpacing: "0.22em" }}
           transition={{ delay: after(HIT + 0.3), duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -338,7 +338,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           ref={button}
           type="button"
           onClick={close}
-          className="mt-8 min-h-14 w-full max-w-sm rounded-ctl bg-accent font-mono text-sm font-extrabold uppercase tracking-[0.1em] text-black hover:brightness-95"
+          className="mt-8 min-h-14 w-full max-w-sm rounded-ctl bg-accent font-mono text-sm font-extrabold tracking-[0.1em] text-black hover:brightness-95"
           initial={{ opacity: 0, y: reduce ? 0 : 16 }}
           animate={{
             opacity: 1,
@@ -423,7 +423,7 @@ function DateRoll({ from, until, delay, reduce }: { from: string; until: string;
       transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">{t("Was until")}</p>
+        <p className="font-mono text-[10px] font-bold tracking-[0.14em] text-zinc-500">{t("Was until")}</p>
         <p className="relative mt-0.5 inline-block text-sm font-semibold text-zinc-400">
           {from}
           <motion.span
@@ -445,7 +445,7 @@ function DateRoll({ from, until, delay, reduce }: { from: string; until: string;
         <ArrowRight size={18} />
       </motion.span>
       <div className="min-w-0 flex-1 text-right">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-accent">{t("Now until")}</p>
+        <p className="font-mono text-[10px] font-bold tracking-[0.14em] text-accent">{t("Now until")}</p>
         <motion.p
           className="mt-0.5 text-sm font-extrabold text-white"
           initial={{ opacity: 0, scale: reduce ? 1 : 1.4 }}

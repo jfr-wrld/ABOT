@@ -85,7 +85,7 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
     >
       <div className="flex flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-2">
-          <h2 id={titleId} className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-accent">
+          <h2 id={titleId} className="flex items-center gap-2 font-mono text-xs font-bold tracking-[0.14em] text-accent">
             <KeyRound aria-hidden="true" size={16} /> {t("Redeem license code")}
           </h2>
           <button type="button" onClick={onClose} aria-label={t("Close")} className="-mr-2 -mt-2 flex size-11 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white">
@@ -96,12 +96,12 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
         {granted ? (
           <div role="status" className="flex flex-col items-center gap-3 rounded-ctl border border-accent bg-accent/10 px-4 py-6 text-center motion-safe:animate-[pulse_1.2s_ease-out_1]">
             <Zap aria-hidden="true" size={32} className="fill-accent text-accent" />
-            <p className="font-mono text-sm font-black uppercase leading-relaxed tracking-[0.1em] text-accent">
+            <p className="font-mono text-sm font-black leading-relaxed tracking-[0.1em] text-accent">
               {t("License activated: ABOT // BLACK PRO")}
               <span className="block text-white">[{access}]</span>
             </p>
-            {granted.founder && <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-zinc-300">{t("Founder badge unlocked")}</p>}
-            <button type="button" onClick={onClose} className="mt-1 min-h-11 rounded-ctl bg-accent px-6 font-mono text-xs font-black uppercase tracking-[0.12em] text-black">
+            {granted.founder && <p className="font-mono text-[11px] tracking-[0.1em] text-zinc-300">{t("Founder badge unlocked")}</p>}
+            <button type="button" onClick={onClose} className="mt-1 min-h-11 rounded-ctl bg-accent px-6 font-mono text-xs font-black tracking-[0.12em] text-black">
               {t("Done")}
             </button>
           </div>
@@ -121,7 +121,7 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
               spellCheck={false}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "redeem-error" : undefined}
-              className="min-h-14 w-full rounded-ctl border border-[#27272a] bg-[#121215] px-3 text-center font-mono text-lg uppercase tabular-nums tracking-widest text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none"
+              className="min-h-14 w-full rounded-ctl border border-[#27272a] bg-[#121215] px-3 text-center font-mono text-lg tabular-nums text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none"
             />
             {error && (
               <p id="redeem-error" role="alert" className="text-sm text-failure">
@@ -131,7 +131,7 @@ function RedeemDialog({ onClose, t }: { onClose: () => void; t: ReturnType<typeo
             <button
               type="submit"
               disabled={busy || !code.trim()}
-              className="min-h-12 rounded-ctl bg-accent font-mono text-sm font-black uppercase tracking-[0.12em] text-black disabled:opacity-40"
+              className="min-h-12 rounded-ctl bg-accent font-mono text-sm font-black tracking-[0.12em] text-black disabled:opacity-40"
             >
               {busy ? t("Checking...") : t("Activate")}
             </button>

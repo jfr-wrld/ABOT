@@ -51,7 +51,7 @@ export function LiftsBoard({
   return (
     <section aria-labelledby="lifts-heading" className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 id="lifts-heading" className="label-caps flex items-center gap-1.5">
+        <h2 id="lifts-heading" className="field-label flex items-center gap-1.5">
           <Trophy aria-hidden="true" size={12} className="text-pr" />
           {t("Top lifts")}
         </h2>

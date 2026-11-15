@@ -201,7 +201,7 @@ function Editor() {
 
               {ss ? (
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <span className="label-caps ss-text" style={{ "--ss": SUPERSET_COLORS[ss.color] } as React.CSSProperties}>
+                  <span className="field-label ss-text" style={{ "--ss": SUPERSET_COLORS[ss.color] } as React.CSSProperties}>
                     {ss.size > 2 ? t("Giant set") : t("Superset")} {"//"} <span className="num">{`${ss.letter}${ss.order}`}</span>
                   </span>
                   <button
@@ -238,7 +238,7 @@ function Editor() {
               </div>
 
               <div
-                className="mt-3 grid gap-1.5 px-1 label-caps"
+                className="mt-3 grid gap-1.5 px-1 field-label"
                 style={{ gridTemplateColumns: "44px minmax(0,1fr) 72px 64px" }}
                 aria-hidden="true"
               >

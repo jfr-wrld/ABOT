@@ -112,7 +112,7 @@ function TemplateCard({
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-3">
-            <span className="rounded-full border border-ink/10 px-2 py-px text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+            <span className="rounded-full border border-ink/10 px-2 py-px text-[10px] font-semibold text-text-muted">
               {splitLabel && t(splitLabel)}
             </span>
             <span className="num inline-flex items-center gap-1 text-xs text-text-muted" title={t("Estimated time")}>
@@ -130,7 +130,7 @@ function TemplateCard({
             {tpl.code}
           </h3>
           {phase && templateFitsPhase(tpl, phase) && (
-            <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-accent-tint px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
+            <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-accent-tint px-2 py-0.5 text-[10px] font-bold text-accent">
               <Zap aria-hidden="true" size={11} />
               {t("Fits your {phase}", { phase: t(PHASE_LABEL[phase]).toLowerCase() })}
             </p>

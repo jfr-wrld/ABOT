@@ -335,13 +335,13 @@
   letter-spacing: -0.01em;
 }
 
-/* Small column and stat labels. */
-@utility label-caps {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 14px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+/* Small column and stat labels: the body face at 12px, sentence case, muted. They used to be
+   uppercase code-font capitals, the stock "AI dashboard" label (redesign step 2). */
+@utility field-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
   color: var(--color-text-muted);
 }
 

@@ -26,7 +26,7 @@ export function FounderPassCard() {
         <span key={p} aria-hidden="true" className={`absolute ${p} size-1.5 rounded-full bg-zinc-600`} />
       ))}
       {/* Pass name and join date on one line, the unit number under them: the plate reads in one glance. */}
-      <div className="flex items-baseline justify-between gap-3 font-mono text-[10px] uppercase">
+      <div className="flex items-baseline justify-between gap-3 font-mono text-[10px]">
         <p className="font-bold tracking-[0.18em] text-accent">FOUNDER PASS</p>
         {joined && <p className="shrink-0 tabular-nums tracking-[0.08em] text-zinc-300">{t("Since {date}", { date: joined })}</p>}
       </div>
@@ -36,7 +36,7 @@ export function FounderPassCard() {
 
       {/* Development builds only: release builds leave the simulator out (see lib/dev-tools). */}
       {DEV_TOOLS && <div className="mt-2">
-        <p id="sim-label" className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">
+        <p id="sim-label" className="font-mono text-[10px] tracking-[0.14em] text-zinc-400">
           {t("Monetization simulator")}
         </p>
         <div role="radiogroup" aria-labelledby="sim-label" className="mt-1 grid grid-cols-3 gap-1 rounded-ctl border border-[#27272a] bg-black p-0.5">
@@ -52,7 +52,7 @@ export function FounderPassCard() {
                   feedback.tick();
                   setDevOverride(s.mode);
                 }}
-                className={`min-h-11 rounded-[calc(var(--radius-ctl)-4px)] px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] transition-colors ${
+                className={`min-h-11 rounded-[calc(var(--radius-ctl)-4px)] px-1 font-mono text-[10px] font-bold tracking-[0.06em] transition-colors ${
                   on ? "bg-accent text-black" : "text-zinc-400 hover:text-white"
                 }`}
               >

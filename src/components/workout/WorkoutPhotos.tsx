@@ -139,7 +139,7 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
   return (
     <section aria-labelledby="photos-heading" className="panel p-3">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 id="photos-heading" className="label-caps">
+        <h2 id="photos-heading" className="field-label">
           {t("Photos")}
         </h2>
         {photos.length > 0 && (

@@ -103,7 +103,7 @@ export function WhatsNew() {
           </div>
         </div>
         <section aria-labelledby="whats-new" className="flex flex-col gap-3">
-          <h3 id="whats-new" className="label-caps">
+          <h3 id="whats-new" className="field-label">
             {t("What's new")}
           </h3>
           <ol className="flex flex-col gap-3">
