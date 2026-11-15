@@ -154,14 +154,23 @@ async function main() {
   check("all three rows read On", onCount === 3, `${onCount} rows`);
 
   // 5. Turned down for good in Android: back in ABOT the row offers Settings, which opens
-  //    ABOT's notification page.
-  shell(`pm revoke ${PKG} android.permission.POST_NOTIFICATIONS`);
-  shell(`pm set-permission-flags ${PKG} android.permission.POST_NOTIFICATIONS user-set user-fixed`);
+  //    ABOT's notification page. In that order, like a lifter: ABOT goes to the background
+  //    first (Android saves its state), then the permission is turned off, which stops ABOT's
+  //    process; coming back recreates it on the page it left (MainActivity).
   shell("input keyevent KEYCODE_HOME");
   await sleep(1200);
+  shell(`pm revoke ${PKG} android.permission.POST_NOTIFICATIONS`);
+  shell(`pm set-permission-flags ${PKG} android.permission.POST_NOTIFICATIONS user-set user-fixed`);
+  await sleep(800);
   await openApp();
   page = await attach();
   watchPage(page);
+  // The revoke killed ABOT, and onboarding is done, so it starts on Home: open the permissions
+  // page again, as in step 2.
+  await page.getByRole("button", { name: "Start an empty workout" }).first().waitFor({ timeout: 15000 });
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- a test script driving the WebView, not app code
+  await page.evaluate(() => window.location.assign("/permissions/?next=%2F"));
+  await page.getByRole("heading", { name: "Allow access" }).waitFor({ timeout: 15000 });
   // The row offers Allow or Settings; either way the tap must land in Android's settings, since
   // Android will not show its dialog again.
   const row = page.getByRole("button", { name: /^(Allow notifications|Notifications is off\. Open Android settings)$/ });
