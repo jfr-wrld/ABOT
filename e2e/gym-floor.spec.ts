@@ -52,7 +52,8 @@ test("a swap in a routine workout asks: today only, or update the routine", asyn
 
   await page.goto("/routines");
   await page.getByRole("tab", { name: "My Routines" }).click();
-  await mine.getByRole("link", { name: "Edit Push A: Strength" }).click();
+  await mine.getByRole("button", { name: "More for Push A: Strength" }).click();
+  await page.getByRole("link", { name: "Edit Push A: Strength" }).click();
   await expect(page.getByText("Bench Press (Dumbbell)", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("Bench Press (Barbell)", { exact: true })).toHaveCount(0);
 });

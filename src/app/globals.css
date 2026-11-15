@@ -687,16 +687,6 @@ input.bg-well:not(:focus) {
   }
 }
 
-/* Home's hero card: knurling (a barbell grip's crosshatch) in the accent, fading out from the
-   top right corner, so the day's card stands out without a picture. */
-.hero-knurl {
-  background-image:
-    repeating-linear-gradient(45deg, color-mix(in oklab, var(--color-accent) 26%, transparent) 0 1px, transparent 1px 7px),
-    repeating-linear-gradient(-45deg, color-mix(in oklab, var(--color-accent) 26%, transparent) 0 1px, transparent 1px 7px);
-  -webkit-mask-image: radial-gradient(circle at 100% 0, #000 0, transparent 70%);
-  mask-image: radial-gradient(circle at 100% 0, #000 0, transparent 70%);
-}
-
 /* The dock's centre button (TodayButton): the primary button's green, raised like it, with a
    glassy sheen across the top half and a bright rim. It sits in a real notch cut out of the dock
    (`dock-notch`), so the dock's glass and outline stop around it. A press sinks it 1px. */

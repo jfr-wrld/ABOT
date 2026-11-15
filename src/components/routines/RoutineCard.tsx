@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Copy, ListOrdered, Pencil, Play, Timer, Trash2 } from "@/components/icons";
+import { ChevronDown, Copy, ListOrdered, MoreHorizontal, Pencil, Play, Timer, Trash2 } from "@/components/icons";
 import type { Exercise, Routine } from "@/types/workout";
 import { routineSummary, type RoutineSummary } from "@/lib/routine-summary";
 import { supersetLabels } from "@/lib/superset";
 import { Button } from "@/components/ui/Button";
+import { Sheet } from "@/components/ui/Sheet";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { muscleLabel } from "@/components/exercise/MuscleTags";
 import { routineEditPath } from "@/lib/routes";
@@ -39,9 +41,7 @@ export function RoutineCard({
   const sum = routineSummary(r, byId);
   const ssCount = new Set(Object.values(supersetLabels(r.exercises)).map((x) => x.letter)).size;
   const empty = r.exercises.length === 0;
-  const icon = "tap flex size-11 shrink-0 items-center justify-center rounded-xl raised text-text-muted hover:text-text";
   if (grid) {
-    const small = "tap flex size-9 shrink-0 items-center justify-center rounded-lg raised text-text-muted hover:text-text";
     return (
       <article aria-labelledby={`routine-${r.id}`} className="flex h-full flex-col rounded-card border bg-surface p-3">
         <MusclesWorked sum={sum} />
@@ -51,21 +51,11 @@ export function RoutineCard({
         <p className="num mt-0.5 text-xs text-text-muted">
           {empty ? t("No exercises yet") : [t.n(r.exercises.length, "{n} exercise", "{n} exercises"), sum.minutes > 0 ? `~${t("{n} min", { n: sum.minutes })}` : ""].filter(Boolean).join(" · ")}
         </p>
-        <div className="mt-auto flex flex-col gap-2 pt-3">
-          <Button variant="primary" onClick={onStart} disabled={empty} aria-label={t("Start {name}", { name: r.name })} className="min-h-10 w-full whitespace-nowrap">
+        <div className="mt-auto flex gap-2 pt-3">
+          <Button variant="primary" onClick={onStart} disabled={empty} aria-label={t("Start {name}", { name: r.name })} className="min-h-10 min-w-0 flex-1 whitespace-nowrap">
             <Play aria-hidden="true" size={16} /> {t("Start")}
           </Button>
-          <div className="flex justify-between">
-            <Link href={routineEditPath(r.id)} aria-label={t("Edit {name}", { name: r.name })} className={small}>
-              <Pencil aria-hidden="true" size={16} />
-            </Link>
-            <button type="button" onClick={onDuplicate} aria-label={t("Duplicate {name}", { name: r.name })} className={small}>
-              <Copy aria-hidden="true" size={16} />
-            </button>
-            <button type="button" onClick={onDelete} aria-label={t("Delete {name}", { name: r.name })} className={`${small} hover:!text-failure`}>
-              <Trash2 aria-hidden="true" size={16} />
-            </button>
-          </div>
+          <RoutineMenu routine={r} onDuplicate={onDuplicate} onDelete={onDelete} small />
         </div>
       </article>
     );
@@ -98,18 +88,64 @@ export function RoutineCard({
         <Button variant="primary" onClick={onStart} disabled={empty} aria-label={t("Start {name}", { name: r.name })} className="min-w-0 flex-1 whitespace-nowrap">
           <Play aria-hidden="true" size={16} /> {t("Start")}
         </Button>
-        <Link href={routineEditPath(r.id)} aria-label={t("Edit {name}", { name: r.name })} className={icon}>
-          <Pencil aria-hidden="true" size={17} />
-        </Link>
-        <button type="button" onClick={onDuplicate} aria-label={t("Duplicate {name}", { name: r.name })} className={icon}>
-          <Copy aria-hidden="true" size={17} />
-        </button>
-        <button type="button" onClick={onDelete} aria-label={t("Delete {name}", { name: r.name })} className={`${icon} hover:!text-failure`}>
-          <Trash2 aria-hidden="true" size={17} />
-        </button>
+        <RoutineMenu routine={r} onDuplicate={onDuplicate} onDelete={onDelete} />
       </div>
       {empty && <p className="mt-1.5 text-center text-xs text-text-muted">{t("Add an exercise before starting.")}</p>}
     </article>
+  );
+}
+
+/**
+ * Edit, duplicate and delete behind one "···" (owner, 2026-11-15), so a card leads with Start.
+ * The menu is a sheet: big targets, and the same pattern as the workout's own options.
+ */
+function RoutineMenu({ routine: r, onDuplicate, onDelete, small = false }: { routine: Routine; onDuplicate: () => void; onDelete: () => void; small?: boolean }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-label={t("More for {name}", { name: r.name })}
+        className={`glass-icon flex shrink-0 items-center justify-center rounded-full text-text ${small ? "size-10" : "size-11"}`}
+      >
+        <MoreHorizontal aria-hidden="true" size={20} />
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title={r.name}>
+        <div className="flex flex-col gap-2">
+          <Link
+            href={routineEditPath(r.id)}
+            aria-label={t("Edit {name}", { name: r.name })}
+            className="raised flex min-h-12 items-center gap-3 rounded-xl px-4 text-sm font-semibold"
+          >
+            <Pencil aria-hidden="true" size={18} /> {t("Edit")}
+          </Link>
+          <Button
+            onClick={() => {
+              setOpen(false);
+              onDuplicate();
+            }}
+            aria-label={t("Duplicate {name}", { name: r.name })}
+            className="min-h-12 !justify-start gap-3 px-4"
+          >
+            <Copy aria-hidden="true" size={18} /> {t("Duplicate")}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+            aria-label={t("Delete {name}", { name: r.name })}
+            className="min-h-12 !justify-start gap-3 px-4"
+          >
+            <Trash2 aria-hidden="true" size={18} /> {t("Delete")}
+          </Button>
+        </div>
+      </Sheet>
+    </>
   );
 }
 

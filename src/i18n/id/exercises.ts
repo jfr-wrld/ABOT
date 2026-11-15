@@ -379,4 +379,6 @@ export const exercises: Record<string, string> = {
   "Saved {file}.": "Tersimpan {file}.",
   "The video could not be saved.": "Video tidak bisa disimpan.",
   "This device cannot make videos. Download the image instead.": "Perangkat ini tidak bisa membuat video. Unduh gambarnya saja.",
+  "More for {name}": "Lainnya untuk {name}",
+  "Duplicate": "Duplikat",
 };

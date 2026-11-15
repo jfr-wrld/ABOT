@@ -53,6 +53,7 @@ import { routineSummary } from "@/lib/routine-summary";
 import { LiftList } from "@/components/routines/RoutineCard";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useInbox } from "@/components/notifications/useInbox";
+import { MuscleMap } from "@/components/anatomy/MuscleMap";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-card border border-line bg-surface p-3";
@@ -357,6 +358,17 @@ function WeekRail({
 
 /* ---------------------------------------------------------------- hero */
 
+/** The muscles a routine works, as a small front and back map beside its name. */
+function HeroMuscles({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
+  const muscles = routineSummary(routine, byId).muscles;
+  if (muscles.length === 0) return null;
+  return (
+    <div className="w-24 shrink-0 [&_figcaption]:hidden">
+      <MuscleMap primary={muscles} width={96} />
+    </div>
+  );
+}
+
 /** The routine's lifts folded under "See exercises", as on the routine cards. */
 function HeroLifts({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
   const t = useT();
@@ -503,21 +515,25 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
           : t("Next up");
       body = (
         <>
-          <div className="relative min-w-0">
-            <p className="field-label">{label}</p>
-            <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
-              {routine.name}
-            </h2>
-            <p className="num mt-1 flex items-center gap-3 text-sm text-text-muted">
-              <span className="inline-flex items-center gap-1">
-                <Timer aria-hidden="true" size={14} />
-                {t("{n} min", { n: routineMinutes(routine) })}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Layers aria-hidden="true" size={14} />
-                {t.n(routine.exercises.length, "{n} exercise", "{n} exercises")}
-              </span>
-            </p>
+          {/* The day and the routine on the left, the muscles it works as a small map on the right. */}
+          <div className="relative flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="field-label">{label}</p>
+              <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
+                {routine.name}
+              </h2>
+              <p className="num mt-1 flex items-center gap-3 text-sm text-text-muted">
+                <span className="inline-flex items-center gap-1">
+                  <Timer aria-hidden="true" size={14} />
+                  {t("{n} min", { n: routineMinutes(routine) })}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Layers aria-hidden="true" size={14} />
+                  {t.n(routine.exercises.length, "{n} exercise", "{n} exercises")}
+                </span>
+              </p>
+            </div>
+            <HeroMuscles routine={routine} byId={byId} />
           </div>
           <HeroLifts routine={routine} byId={byId} />
           <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
@@ -602,9 +618,6 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
 
   return (
     <section aria-labelledby="hero-heading" className={`${TILE} relative overflow-hidden p-4`}>
-      {/* Knurling, the crosshatch on a barbell's grip, fading out from the top right corner:
-          the one card on Home that should stand out. */}
-      <span aria-hidden="true" className="hero-knurl pointer-events-none absolute right-0 top-0 size-44" />
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={day.start}
