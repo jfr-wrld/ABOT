@@ -45,10 +45,13 @@ export function MuscleMap({
   primary,
   secondary = [],
   width = 280,
+  captions = true,
 }: {
   primary: MuscleGroup[];
   secondary?: MuscleGroup[];
   width?: number;
+  /** "Front" and "Back" under the figures; off for a thumbnail too small to carry them. */
+  captions?: boolean;
 }) {
   const uid = useId().replace(/:/g, "");
   const levels = regionLevels(primary, secondary);
@@ -76,11 +79,11 @@ export function MuscleMap({
           <path d={OUTLINE_BACK} />
         </g>
       </svg>
-      <figcaption className="mt-1 grid grid-cols-2 text-center text-xs text-text-muted" aria-hidden="true">
+      {captions && <figcaption className="mt-1 grid grid-cols-2 text-center text-xs text-text-muted" aria-hidden="true">
         <span>{t("Front")}</span>
         {/* "Back" alone is the navigation word in the dictionary. */}
         <span>{t.lang === "en" ? "Back" : t("Back (side)")}</span>
-      </figcaption>
+      </figcaption>}
     </figure>
   );
 }

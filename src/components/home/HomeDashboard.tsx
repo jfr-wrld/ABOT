@@ -19,7 +19,9 @@ import { RecoveryMap } from "@/components/anatomy/RecoveryMap";
 import { PhaseCommandCard } from "@/components/phase/PhaseCommandCard";
 import { GetAppBanner } from "@/components/get-app/GetAppBanner";
 import { AnnouncementBanner } from "@/components/remote/AnnouncementBanner";
-import { REGIONS } from "@/components/anatomy/regions";
+import { REGIONS, regionsFor } from "@/components/anatomy/regions";
+import { feedback } from "@/lib/feedback";
+import { startOfWeek } from "@/lib/analytics";
 import { Sheet } from "@/components/ui/Sheet";
 import { regionTelemetry, sleepFactor } from "@/lib/muscle-recovery";
 import { estimateCalories } from "@/lib/calorie-estimator";
@@ -36,7 +38,8 @@ import {
   weeklyVolume,
   type NextProtocol,
 } from "@/lib/home";
-import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
+import type { Exercise, MuscleGroup, Routine, WorkoutSession } from "@/types/workout";
+import { MUSCLE_GROUP_LABELS } from "@/types/workout";
 import type { Weekday } from "@/lib/notifications/schedule";
 import { historyPath } from "@/lib/routes";
 import { isoTime } from "@/lib/safe-date";
@@ -79,6 +82,7 @@ export function HomeDashboard() {
   const now = useNow(60_000);
 
   const next = useMemo(() => nextProtocol(routines, sessions, schedule, now), [routines, sessions, schedule, now]);
+  const [front, setFront] = useHomeFront(active?.id ?? null);
   const days = useMemo(() => weekStrip(sessions, now, firstDayOfWeek), [sessions, now, firstDayOfWeek]);
   // The day the hero shows: today unless another day of this week was tapped.
   const [picked, setPicked] = useState<number | null>(null);
@@ -112,7 +116,14 @@ export function HomeDashboard() {
 
       {/* Stacked like a wallet (owner, 2026-11-15, after GoPay): the week's numbers on a Volt card
           behind, the day's card laid over its lower edge in front. */}
-      <WalletStack back={<NumbersRow now={now} />} front={active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />} />
+      <WalletStack
+        front={front}
+        onFront={setFront}
+        today={active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />}
+        todayStrip={(swap) => <TodayStrip onSwap={swap} next={next} />}
+        week={<WeekCard now={now} />}
+        weekStrip={(swap) => <NumbersRow now={now} onSwap={swap} />}
+      />
 
       <Rise step={0.07} order={2}>
         <PhaseCommandCard now={now} />
@@ -134,7 +145,21 @@ const STACKED_KEY = "abot.home.stacked";
  * card's straight sides. On the first visit of a session the cards are dealt: the back card drops
  * into place, then the front one slides up over it and settles.
  */
-function WalletStack({ back, front }: { back: ReactNode; front: ReactNode }) {
+function WalletStack({
+  front,
+  onFront,
+  today,
+  todayStrip,
+  week,
+  weekStrip,
+}: {
+  front: HomeSide;
+  onFront: (side: HomeSide) => void;
+  today: ReactNode;
+  todayStrip: (swap: () => void) => ReactNode;
+  week: ReactNode;
+  weekStrip: (swap: () => void) => ReactNode;
+}) {
   const reduce = useReducedMotionConfig();
   const backCard = useAnimationControls();
   const frontCard = useAnimationControls();
@@ -158,16 +183,79 @@ function WalletStack({ back, front }: { back: ReactNode; front: ReactNode }) {
     void backCard.start({ y: 0, scale: 1, opacity: 1, transition: play ? { type: "spring", stiffness: 260, damping: 22, delay: 0.05 } : { duration: 0 } });
     void frontCard.start({ y: 0, rotate: 0, opacity: 1, transition: play ? { type: "spring", stiffness: 240, damping: 20, delay: 0.25 } : { duration: 0 } });
   }, [backCard, frontCard, play, splashGone]);
+
+  // A tap on the card behind swaps the two (owner, 2026-11-15). Transforms and opacity only, so
+  // the compositor carries it: both cards dip out (120 ms), trade places, and spring back in.
+  // The stack's height changes once, while both are faded; `contain` keeps that layout local.
+  const [busy, setBusy] = useState(false);
+  const [swapping, setSwapping] = useState(false);
+  const swap = async () => {
+    if (busy) return;
+    setBusy(true);
+    feedback.tick();
+    if (!reduce)
+      await Promise.all([
+        backCard.start({ y: 14, scale: 0.96, opacity: 0, transition: { duration: 0.12, ease: "easeIn" } }),
+        frontCard.start({ y: -14, opacity: 0, transition: { duration: 0.12, ease: "easeIn" } }),
+      ]);
+    setSwapping(true);
+    onFront(front === "today" ? "week" : "today");
+  };
+  useEffect(() => {
+    if (!swapping) return;
+    const spring = { type: "spring", stiffness: 420, damping: 30 } as const;
+    void Promise.all([
+      backCard.start({ y: 0, scale: 1, opacity: 1, transition: reduce ? { duration: 0 } : spring }),
+      frontCard.start({ y: 0, opacity: 1, transition: reduce ? { duration: 0 } : { ...spring, delay: 0.04 } }),
+    ]).then(() => {
+      setSwapping(false);
+      setBusy(false);
+    });
+  }, [front, swapping, backCard, frontCard, reduce]);
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col [contain:layout]">
       <motion.div className="relative z-0" style={play ? { y: -26, scale: 0.92, opacity: 0 } : undefined} animate={backCard}>
-        {back}
+        {front === "today" ? weekStrip(swap) : todayStrip(swap)}
       </motion.div>
       <motion.div className="wallet-front relative z-10 -mt-9" style={play ? { y: 70, rotate: -2, opacity: 0 } : undefined} animate={frontCard}>
-        {front}
+        {front === "today" ? today : week}
       </motion.div>
     </div>
   );
+}
+
+type HomeSide = "today" | "week";
+const FRONT_KEY = "abot.home.front";
+
+/**
+ * Which card leads Home: the day's (or the workout's) or the week's. The last swap is remembered
+ * on this phone and opens Home that way next time. While a workout runs its card comes forward
+ * (owner, 2026-11-15); a swap then holds for that workout only, and the saved choice is left alone.
+ */
+function useHomeFront(activeId: string | null): [HomeSide, (side: HomeSide) => void] {
+  const [saved, setSaved] = useState<HomeSide>(() => {
+    try {
+      return localStorage.getItem(FRONT_KEY) === "week" ? "week" : "today";
+    } catch {
+      return "today";
+    }
+  });
+  const [during, setDuring] = useState<{ id: string; side: HomeSide } | null>(null);
+  const front: HomeSide = activeId ? (during?.id === activeId ? during.side : "today") : saved;
+  const set = (side: HomeSide) => {
+    if (activeId) {
+      setDuring({ id: activeId, side });
+      return;
+    }
+    setSaved(side);
+    try {
+      localStorage.setItem(FRONT_KEY, side);
+    } catch {
+      // Without storage the choice lasts until the page closes.
+    }
+  };
+  return [front, set];
 }
 
 /** The bell at the top right of Home, with a dot and count while something is new. */
@@ -765,7 +853,7 @@ const shortVolume = (n: number, locale: string) => (n >= 100_000 ? `${Math.round
  * The week in three figures on one row: sessions against the plan (or the 7 days), the volume
  * with its change on last week, and muscles ready, which opens the recovery map.
  */
-function NumbersRow({ now }: { now: number }) {
+function NumbersRow({ now, onSwap }: { now: number; onSwap?: () => void }) {
   const t = useT();
   const playEntrance = usePlayEntrance();
   const sessions = useWorkoutStore((s) => s.sessions);
@@ -781,14 +869,18 @@ function NumbersRow({ now }: { now: number }) {
   // Sets ticked in a workout still running tire the muscles too.
   const recovery = useMemo(() => regionTelemetry(active ? [...sessions, active] : sessions, byId, now, sleep), [sessions, active, byId, now, sleep]);
   const ready = REGIONS.filter((r) => recovery[r].stage === "fresh").length;
-  const speed = sleepFactor(sleep, now);
   const target = freq.target ?? 7;
   const perWeek = freq.target !== null;
   const change = volume.changePct;
 
   return (
     <>
-    <section aria-label={t("This week")} className="wallet-card grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card pb-9">
+    <section aria-label={t("This week")} className="wallet-card relative grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card pb-9">
+      {/* Behind the day's card, sessions and volume bring the week to the front; "ready" keeps
+          opening the recovery map. */}
+      {onSwap && (
+        <button type="button" onClick={onSwap} aria-label={t("Bring the week to the front")} className="absolute inset-y-0 left-0 z-[1] w-2/3 hover:bg-ink/[0.03]" />
+      )}
       <div className="flex min-w-0 items-center gap-2 p-3">
         {/* One dash per planned session (owner, 2026-11-15): a whole ring reads as a plain circle,
             dashes read as "2 of 4". They light one by one when the card is dealt. */}
@@ -849,19 +941,7 @@ function NumbersRow({ now }: { now: number }) {
     </section>
     {/* Outside the Volt card: inside it the sheet would inherit the card's re-pointed colours. */}
       <Sheet open={open} onClose={() => setOpen(false)} title={t("Muscle recovery")}>
-        <RecoveryMap data={recovery} now={now} />
-        {speed !== 1 && sleep && (
-          <p className="mt-3 text-xs font-semibold tabular-nums">
-            {speed < 1
-              ? t("Last night's sleep ({h}h {m}m) slows recovery to {pct}% of the usual rate.", { h: Math.floor(sleep.minutes / 60), m: sleep.minutes % 60, pct: Math.round(speed * 100) })
-              : t("Last night's sleep ({h}h {m}m) speeds recovery to {pct}% of the usual rate.", { h: Math.floor(sleep.minutes / 60), m: sleep.minutes % 60, pct: Math.round(speed * 100) })}
-          </p>
-        )}
-        <p className="mt-3 text-xs text-text-muted">
-          {t(
-            "Each set tires the muscles it works. Big muscles recover in 72 hours, small ones in 48.",
-          )}
-        </p>
+        <RecoveryBody recovery={recovery} now={now} />
       </Sheet>
     </>
   );
@@ -1037,5 +1117,217 @@ export function RecentCard({
         </Link>
       </motion.div>
     </motion.li>
+  );
+}
+
+/** The recovery sheet's body: the map, last night's sleep when it changes the pace, and how it works. */
+function RecoveryBody({ recovery, now }: { recovery: ReturnType<typeof regionTelemetry>; now: number }) {
+  const t = useT();
+  const sleep = useSettingsStore((s) => s.lastSleep);
+  const speed = sleepFactor(sleep, now);
+  return (
+    <>
+      <RecoveryMap data={recovery} now={now} />
+      {speed !== 1 && sleep && (
+        <p className="mt-3 text-xs font-semibold tabular-nums">
+          {speed < 1
+            ? t("Last night's sleep ({h}h {m}m) slows recovery to {pct}% of the usual rate.", { h: Math.floor(sleep.minutes / 60), m: sleep.minutes % 60, pct: Math.round(speed * 100) })
+            : t("Last night's sleep ({h}h {m}m) speeds recovery to {pct}% of the usual rate.", { h: Math.floor(sleep.minutes / 60), m: sleep.minutes % 60, pct: Math.round(speed * 100) })}
+        </p>
+      )}
+      <p className="mt-3 text-xs text-text-muted">{t("Each set tires the muscles it works. Big muscles recover in 72 hours, small ones in 48.")}</p>
+    </>
+  );
+}
+
+const DAY = 86_400_000;
+const MUSCLE_GROUPS = (Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[]).filter((m) => m !== "full_body" && m !== "cardio");
+
+/**
+ * The week in front (owner, 2026-11-15): six figures, each a door to its detail. Sessions against
+ * the plan as dashes, volume with its change and a bar per day, muscles ready with the ones still
+ * recovering lit, sets, time trained, and records in gold. Worked out from data Home already
+ * holds; nothing animates but the sessions' dashes on the first visit.
+ */
+function WeekCard({ now }: { now: number }) {
+  const t = useT();
+  const play = usePlayEntrance();
+  const sessions = useWorkoutStore((s) => s.sessions);
+  const active = useWorkoutStore((s) => s.active);
+  const schedule = useReminderStore((s) => s.schedule);
+  const { weightUnit: unit, firstDayOfWeek } = useSettingsStore();
+  const sleep = useSettingsStore((s) => s.lastSleep);
+  const { byId } = useAllExercises();
+  const [open, setOpen] = useState(false);
+
+  const fig = useMemo(() => {
+    const start = startOfWeek(now, firstDayOfWeek);
+    const week = sessions.filter((s) => s.status === "completed" && s.startedAt >= start && s.startedAt <= now);
+    const perDay = Array.from({ length: 7 }, (_, i) =>
+      week.filter((s) => s.startedAt >= start + i * DAY && s.startedAt < start + (i + 1) * DAY).reduce((n, s) => n + sessionVolume(s, byId), 0),
+    );
+    const records = Object.values(prCounts(week, sessions, byId)).reduce((a, b) => a + b, 0);
+    return {
+      perDay,
+      today: Math.min(6, Math.floor((now - start) / DAY)),
+      sets: week.reduce((n, s) => n + countSets(s).completed, 0),
+      seconds: week.reduce((n, s) => n + sessionDurationSec(s, now), 0),
+      records,
+    };
+  }, [sessions, now, firstDayOfWeek, byId]);
+  const volume = useMemo(() => weeklyVolume(sessions, now, firstDayOfWeek, byId), [sessions, now, firstDayOfWeek, byId]);
+  const freq = weeklyFrequency(sessions, schedule, now, firstDayOfWeek);
+  const recovery = useMemo(() => regionTelemetry(active ? [...sessions, active] : sessions, byId, now, sleep), [sessions, active, byId, now, sleep]);
+  const ready = REGIONS.filter((r) => recovery[r].stage === "fresh").length;
+  const tired = MUSCLE_GROUPS.filter((m) => regionsFor(m).some((r) => recovery[r].stage !== "fresh"));
+  const target = freq.target ?? 7;
+  const change = volume.changePct;
+  const max = Math.max(...fig.perDay, 1);
+
+  // Three across, two down, so the card stands about as tall as the day's card it trades places
+  // with (owner, 2026-11-15: the stack keeps its size). Each tile: a small picture, the figure,
+  // its name.
+  const tile = "tile flex min-w-0 flex-col gap-1 rounded-xl p-2.5 text-left transition-colors hover:bg-ink/[0.03]";
+  const pic = "flex h-6 items-end";
+  const label = "field-label truncate";
+  const figure = "num truncate text-lg font-bold leading-tight";
+  return (
+    <section aria-label={t("This week")} className="rounded-card border border-line bg-surface p-3">
+      <h2 className="px-1 pb-2 text-sm font-bold">{t("This week")}</h2>
+      <div className="grid grid-cols-3 gap-2">
+        <Link href="/progress/calendar" className={tile}>
+          <span aria-hidden="true" className={pic}>
+            <Ring value={Math.min(freq.done, target)} max={target} size={24} stroke={3} segments={target} entrance={play} />
+          </span>
+          <span className={figure}>
+            {freq.done}
+            <span className="text-xs font-semibold text-text-muted">/{target}</span>
+          </span>
+          <span className={label}>{freq.target !== null ? t("Planned") : t("Days")}</span>
+        </Link>
+
+        <Link href="/progress/trend" className={tile}>
+          {/* One bar per day of the week, today's lit. */}
+          <span aria-hidden="true" className={`${pic} gap-[3px]`}>
+            {fig.perDay.map((v, i) => (
+              <span key={i} className={`w-1.5 rounded-full ${i === fig.today ? "bg-accent" : v > 0 ? "bg-text-muted/60" : "bg-track"}`} style={{ height: `${Math.max(14, (v / max) * 100)}%` }} />
+            ))}
+          </span>
+          <span className={figure}>
+            {shortVolume(toDisplay(volume.kg, unit), t.locale)}
+            <span className="ml-0.5 text-[11px] font-semibold text-text-muted">{unit}</span>
+          </span>
+          <span className={`${label} flex items-center gap-1`}>
+            {t("Volume")}
+            {change !== null && (
+              <span className="num inline-flex items-center gap-0.5 normal-case">
+                {change >= 0 ? <TrendingUp aria-hidden="true" size={11} className="text-accent" /> : <TrendingDown aria-hidden="true" size={11} />}
+                {change > 0 ? "+" : ""}
+                {change}%<span className="sr-only"> {t("against last week")}</span>
+              </span>
+            )}
+          </span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          aria-label={t("Muscle recovery: {ready} of {total} muscles ready. Open the map.", { ready, total: REGIONS.length })}
+          className={tile}
+        >
+          {/* The muscles still recovering, lit. */}
+          <span aria-hidden="true" className={`${pic} overflow-hidden`}>
+            <MuscleMap primary={tired} width={30} captions={false} />
+          </span>
+          <span aria-hidden="true" className={figure}>
+            {ready}
+            <span className="text-xs font-semibold text-text-muted">/{REGIONS.length}</span>
+          </span>
+          <span aria-hidden="true" className={label}>
+            {t("ready")}
+          </span>
+        </button>
+
+        <Link href="/history/all" className={tile}>
+          <span aria-hidden="true" className={`${pic} text-text-muted`}>
+            <Layers size={18} />
+          </span>
+          <span className={figure}>{fig.sets}</span>
+          <span className={label}>{t("Sets")}</span>
+        </Link>
+
+        <Link href="/history/all" className={tile}>
+          <span aria-hidden="true" className={`${pic} text-text-muted`}>
+            <Timer size={18} />
+          </span>
+          <span className={figure}>{formatDuration(Math.round(fig.seconds))}</span>
+          <span className={label}>{t("Training time")}</span>
+        </Link>
+
+        <Link href="/history/all" className={tile}>
+          <span aria-hidden="true" className={`${pic} text-pr`}>
+            <Trophy size={18} />
+          </span>
+          <span className={`${figure} text-pr`}>{fig.records}</span>
+          <span className={label}>{t("Records")}</span>
+        </Link>
+      </div>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t("Muscle recovery")}>
+        <RecoveryBody recovery={recovery} now={now} />
+      </Sheet>
+    </section>
+  );
+}
+
+/**
+ * The day's card when it sits behind the week's: one Volt line. A workout running shows the
+ * exercise on the bar, its set and the clock, with a play button straight back to it; otherwise
+ * the next workout. A tap anywhere else brings it to the front.
+ */
+function TodayStrip({ onSwap, next }: { onSwap: () => void; next: NextProtocol | null }) {
+  const t = useT();
+  const active = useWorkoutStore((s) => s.active);
+  const { byId } = useAllExercises();
+  const now = useNow(1000, active !== null);
+  const live = active ? liveSet(active) : null;
+  return (
+    <section aria-label={active ? t("Workout in progress") : t("Next up")} className="wallet-card relative overflow-hidden rounded-card pb-9">
+      <button
+        type="button"
+        onClick={onSwap}
+        aria-label={active ? t("Bring the workout to the front") : t("Bring today's plan to the front")}
+        className="absolute inset-0 z-[1] hover:bg-ink/[0.03]"
+      />
+      <div className="flex min-h-[64px] items-center gap-3 px-3.5 py-3">
+        <span className="min-w-0 flex-1">
+          <span className="field-label flex items-center gap-1.5">
+            {active && <span aria-hidden="true" className="size-1.5 rounded-full bg-[currentColor]" />}
+            {active ? t("Workout in progress") : t("Next up")}
+          </span>
+          <span className="block truncate text-base font-bold">
+            {active
+              ? live
+                ? `${byId[live.exercise.exerciseId]?.name ?? t("Removed exercise")} · ${live.number === null ? t("Warm-up") : t("Set {n} of {of}", { n: live.number, of: live.of })}`
+                : active.name
+              : next
+                ? `${next.routine.name} · ${t("{n} exercises", { n: next.routine.exercises.length })}`
+                : t("No workout planned")}
+          </span>
+        </span>
+        {active && (
+          <>
+            <span className="num shrink-0 text-sm font-semibold">{formatDuration(sessionDurationSec(active, now))}</span>
+            <Link
+              href="/workout"
+              aria-label={t("Continue workout")}
+              className="relative z-[2] flex size-11 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--color-on-accent)_12%,transparent)]"
+            >
+              <Play aria-hidden="true" size={18} />
+            </Link>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
