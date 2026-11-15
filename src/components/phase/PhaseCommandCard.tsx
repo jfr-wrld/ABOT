@@ -37,7 +37,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
           {(Object.keys(PHASE_ICON) as BodyPhaseType[]).map((p) => {
             const Icon = PHASE_ICON[p];
             return (
-              <span key={p} className="flex size-9 items-center justify-center rounded-full border-2 border-surface bg-surface-2 text-text-muted transition-colors group-hover:text-accent">
+              <span key={p} className="tile flex size-9 items-center justify-center rounded-full border-2 border-surface bg-surface-2 text-text-muted transition-colors group-hover:text-accent">
                 <Icon size={16} />
               </span>
             );
@@ -69,7 +69,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
       {/* Compact on purpose: phase and week, then two figures. Detail lives one tap away on /phase. */}
       <Link href="/phase" className="flex flex-col gap-2.5 px-3 pb-2.5 pt-3 hover:bg-ink/[0.02]">
         <div className="flex items-center gap-2">
-          <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent">
+          <span aria-hidden="true" className="tile flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent">
             <Icon size={14} />
           </span>
           <h2 id="phase-heading" className="min-w-0 truncate text-sm font-bold">

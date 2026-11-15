@@ -60,7 +60,7 @@ export function SettingsHome() {
         placeholder={t("Search settings")}
         aria-label={t("Search settings")}
         enterKeyHint="search"
-        className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 pl-10 pr-3 text-base text-text placeholder:text-text-muted"
+        className="sunk h-11 w-full rounded-ctl border border-line-strong bg-surface-2 pl-10 pr-3 text-base text-text placeholder:text-text-muted"
       />
     </div>
   );
@@ -180,7 +180,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 
 function IconTile({ children }: { children: ReactNode }) {
   return (
-    <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-ctl bg-surface-2 text-text">
+    <span aria-hidden="true" className="tile flex size-9 shrink-0 items-center justify-center rounded-ctl bg-surface-2 text-text">
       {children}
     </span>
   );

@@ -369,7 +369,7 @@ function Calories({ session, byId, unit }: { session: WorkoutSession; byId: Reco
   return (
     <section aria-labelledby="summary-kcal" className="panel flex flex-col gap-2 p-3">
       <div className="flex items-center gap-3">
-        <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted">
+        <span aria-hidden="true" className="tile flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted">
           <Flame size={16} />
         </span>
         <div className="min-w-0 flex-1">
@@ -425,7 +425,7 @@ function Calories({ session, byId, unit }: { session: WorkoutSession; byId: Reco
 function Tile({ icon, label, value, format }: { icon: React.ReactNode; label: string; value: number; format: (n: number) => string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
-      <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
+      <span aria-hidden="true" className="tile hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
         {icon}
       </span>
       <div className="min-w-0">

@@ -343,15 +343,17 @@ switches being thrown.
   it. The workout bar has it too, with its backdrop darkened rather than tinted so its figures
   stay high-contrast. Safari and Firefox keep the frosted glass; Visual effects: Light makes all
   of it solid.
-- Raised (owner, 2026-11-15: "3D tipis", kept soft like GoPay): buttons, chips and cards stand
-  on a short side a shade off their face (2px under buttons and cards, 1.5px under chips), with a
-  highlight along the top and a soft shadow fading out under them (`--raise-btn`, `--raise-chip`,
-  `--raise-card`, `--raise-accent`). A pressed button sinks onto its side. A selected chip
-  (aria-pressed / aria-checked) sits pressed in, so the choice reads from its shape, not only its
-  colour. Number fields sit slightly sunken (`--sink`). Controls built outside Button use the
-  classes `raised`, `raised-danger`, `raised-card` and `chip`. Left flat on purpose: the dashed
-  "Add set" (an empty slot), glass surfaces, buttons over photos, the week rail's selected day,
-  bottom sheets, and segmented controls with a sliding marker.
+- Raised, the GoPay way (owner, 2026-11-15): every button, chip, card and icon tile has a face
+  that shades from light at the top to a touch darker at the bottom (`--neo-face`,
+  `--neo-card-face`), a grey shade inside its bottom edge in place of a solid side, a fine top
+  highlight and a soft shadow fading out under it (`--raise-btn`, `--raise-chip`, `--raise-card`,
+  `--raise-accent`). The faces are translucent overlays, so tinted cards keep their tint. A pressed
+  button sinks 1px with an inner shadow (`--raise-pressed`); a selected chip (aria-pressed,
+  aria-checked, or a label around a checked radio) stays pressed in; search fields and number
+  fields sit sunken (`--sink`). Controls built outside Button use `raised`, `raised-danger`,
+  `raised-card`, `chip`; icon tiles and stat boxes use `tile`; search fields use `sunk`. Left flat
+  on purpose: exercise photos, the dashed "Add set", glass surfaces, buttons over photos, the week
+  rail's selected day, bottom sheets, and segmented controls with a sliding marker.
 - Shadow: the dock only, as the elevation of the one floating layer.
 
 ## Motion

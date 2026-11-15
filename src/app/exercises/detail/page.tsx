@@ -402,7 +402,7 @@ function QuickStats({ exercise, done, unit }: { exercise: Exercise; done: Workou
         <div key={tile.label} className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
           <span
             aria-hidden="true"
-            className={`hidden size-9 shrink-0 items-center justify-center rounded-lg min-[360px]:flex ${tile.pr ? "bg-pr/10 text-pr" : "bg-surface-2 text-text-muted"}`}
+            className={`tile hidden size-9 shrink-0 items-center justify-center rounded-lg min-[360px]:flex ${tile.pr ? "bg-pr/10 text-pr" : "bg-surface-2 text-text-muted"}`}
           >
             {tile.icon}
           </span>
@@ -415,7 +415,7 @@ function QuickStats({ exercise, done, unit }: { exercise: Exercise; done: Workou
         </div>
       ))}
       <div className="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
-        <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
+        <span aria-hidden="true" className="tile hidden size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-text-muted min-[360px]:flex">
           <CalendarClock size={16} />
         </span>
         <div className="min-w-0">

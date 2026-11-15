@@ -143,7 +143,7 @@ export function ProgressPanel() {
 function SummaryTile({ href, title, icon, headline, line, aside }: { href: string; title: string; icon: ReactNode; headline: string; line: string; aside?: ReactNode }) {
   return (
     <Link href={href} className="tap panel flex min-h-[72px] items-center gap-3 px-3 py-3 hover:border-line-hover active:bg-surface-2">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-2">{icon}</span>
+      <span className="tile flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-surface-2">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="field-label block">{title}</span>
         <span className="mt-0.5 block truncate text-sm font-bold">{headline}</span>

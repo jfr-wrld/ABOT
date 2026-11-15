@@ -144,7 +144,7 @@ function LibraryScreen() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("Name, muscle or equipment")}
             autoComplete="off"
-            className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 pl-9 pr-3 text-base placeholder:text-text-muted"
+            className="sunk h-11 w-full rounded-ctl border border-line-strong bg-surface-2 pl-9 pr-3 text-base placeholder:text-text-muted"
           />
         </div>
       </div>
@@ -242,7 +242,7 @@ function LibraryScreen() {
               >
                 <span className="flex items-center gap-2.5">
                   {sec.muscle && (
-                    <span aria-hidden="true" className="flex size-9 items-center justify-center rounded-lg border border-line bg-surface">
+                    <span aria-hidden="true" className="tile flex size-9 items-center justify-center rounded-lg border border-line bg-surface">
                       <MuscleIcon muscle={sec.muscle} size={28} />
                     </span>
                   )}

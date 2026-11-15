@@ -728,7 +728,7 @@ function NumbersRow({ now }: { now: number }) {
         aria-label={t("Muscle recovery: {ready} of {total} muscles ready. Open the map.", { ready, total: REGIONS.length })}
         className="flex min-w-0 items-center gap-2 p-3 text-left transition-colors hover:bg-ink/[0.03]"
       >
-        <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent min-[380px]:flex">
+        <span aria-hidden="true" className="tile hidden size-9 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent min-[380px]:flex">
           <Activity size={16} />
         </span>
         <span aria-hidden="true" className="min-w-0">
