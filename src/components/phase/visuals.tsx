@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { motion, useReducedMotionConfig, type LegacyAnimationControls as AnimationControls } from "framer-motion";
+import { motion, type LegacyAnimationControls as AnimationControls } from "framer-motion";
+import { usePlayEntrance } from "@/components/motion/Entrance";
 
 /**
  * Small drawn pieces for the body phase screens. Three macro colours only, all from the theme:
@@ -35,7 +36,7 @@ export function Ring({
   /** With `segments`: entrance controls ("still" / "show"); "show" lights the dashes one by one. */
   controls?: AnimationControls;
 }) {
-  const reduce = useReducedMotionConfig();
+  const reduce = !usePlayEntrance();
   if (segments)
     return (
       <DashRing value={value} max={max} size={size} stroke={stroke} color={color} label={label} segments={segments} controls={controls}>
@@ -155,7 +156,7 @@ export function MacroBar({ protein, carbs, fat, className = "h-2" }: { protein: 
 
 /** A donut of the three macros with the calories in the middle. */
 export function MacroDonut({ protein, carbs, fat, size = 132, children }: { protein: number; carbs: number; fat: number; size?: number; children?: ReactNode }) {
-  const reduce = useReducedMotionConfig();
+  const reduce = !usePlayEntrance();
   const stroke = 12;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -253,7 +254,7 @@ export function MacroLegend({ protein, carbs, fat, labels }: { protein: number; 
  * the app rather than a generic progress ring.
  */
 export function BlockPlate({ weeks, done, current, size = 168, color = "var(--color-accent)", children }: { weeks: number; done: number; current: number | null; size?: number; color?: string; children?: ReactNode }) {
-  const reduce = useReducedMotionConfig();
+  const reduce = !usePlayEntrance();
   const c = size / 2;
   const outer = c - 2;
   const inner = c * 0.56;
@@ -297,7 +298,7 @@ export function BlockPlate({ weeks, done, current, size = 168, color = "var(--co
 
 /** The shape of each phase's body-weight line: falling, rising, flat with a cycle, stepped load. */
 export function PhaseCurve({ phase, active, width = 120, height = 44 }: { phase: "CUTTING" | "BULKING" | "RECOMP" | "STRENGTH_PEAK"; active: boolean; width?: number; height?: number }) {
-  const reduce = useReducedMotionConfig();
+  const reduce = !usePlayEntrance();
   const paths = {
     CUTTING: "M4,8 C30,10 40,18 60,22 S95,34 116,38",
     BULKING: "M4,38 C30,36 40,28 60,24 S95,12 116,6",

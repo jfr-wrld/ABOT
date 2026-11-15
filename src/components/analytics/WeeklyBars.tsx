@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useReducedMotionConfig } from "framer-motion";
+import { usePlayEntrance } from "@/components/motion/Entrance";
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART, numTick, tooltipStyle } from "./chartTheme";
 import { useT } from "@/i18n";
@@ -25,8 +27,13 @@ export function WeeklyBars({
   unitLabel: string;
 }) {
   const hasData = points.some((p) => p.value > 0);
-  // Bars grow from the floor when the metric or range changes, so the new shape is read as a change.
-  const animate = !useReducedMotionConfig();
+  // Bars grow from the floor on the page's first visit, and when the metric or range changes, so
+  // the new shape is read as a change; reopening the page shows them in place.
+  const reduce = useReducedMotionConfig();
+  const play = usePlayEntrance();
+  const shape = `${title}|${points.length}`;
+  const [opened] = useState(shape);
+  const animate = !reduce && (play || shape !== opened);
   const t = useT();
   return (
     <figure className="p-0">

@@ -11,6 +11,7 @@ import { PHASE_LABEL } from "@/lib/phase-engine";
 import { toDisplay } from "@/lib/units";
 import type { MuscleGroup } from "@/types/workout";
 import { RangeTabs } from "@/components/progress/RangeTabs";
+import { usePlayEntrance } from "@/components/motion/Entrance";
 import { ProgressHero } from "@/components/progress/ProgressHero";
 import { useProgressData } from "@/components/progress/useProgressData";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
@@ -38,6 +39,8 @@ const PLATE = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
  * muscles, calendar. Charts and long lists live on those pages, not here.
  */
 export function ProgressPanel() {
+  // Sections arrive in order on the first visit; reopening Profile shows them in place.
+  const play = usePlayEntrance();
   const d = useProgressData();
   const setWeeks = useProgressRange((s) => s.setWeeks);
   const t = useT();
@@ -80,7 +83,7 @@ export function ProgressPanel() {
           message above, so they wait for the first workout. */}
       {d.completed.length > 0 && (
         <>
-      <motion.div custom={0} variants={section} initial="hidden" animate="show" className="flex items-center gap-2">
+      <motion.div custom={0} variants={section} initial={play ? "hidden" : false} animate="show" className="flex items-center gap-2">
         <div className="flex-1">
           <RangeTabs id="range" label={t("Range")} options={RANGES.map((n) => ({ value: n, label: t("{n} wk", { n }) }))} value={d.weeks} onChange={setWeeks} />
         </div>
@@ -93,13 +96,13 @@ export function ProgressPanel() {
         )}
       </motion.div>
 
-      <motion.div custom={1} variants={section} initial="hidden" animate="show">
+      <motion.div custom={1} variants={section} initial={play ? "hidden" : false} animate="show">
         <ProgressHero weeks={d.weeks} totals={d.totals} change={d.change} buckets={d.buckets} unit={d.unit} />
       </motion.div>
         </>
       )}
 
-      <motion.nav custom={2} variants={section} initial="hidden" animate="show" aria-label={t("Progress details")} className="flex flex-col gap-2">
+      <motion.nav custom={2} variants={section} initial={play ? "hidden" : false} animate="show" aria-label={t("Progress details")} className="flex flex-col gap-2">
         <SummaryTile
           href="/progress/trend"
           title={t("Weekly trend")}

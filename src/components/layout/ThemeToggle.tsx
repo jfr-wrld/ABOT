@@ -23,6 +23,9 @@ export function ThemeToggle() {
   const theme = useSettingsStore((s) => s.theme);
   const update = useSettingsStore((s) => s.update);
   const [mode, setMode] = useState<"dark" | "light" | null>(null);
+  // The sun turns into the moon only after a tap; the theme read after mount just shows its icon,
+  // so opening Home does not spin it every time.
+  const [tapped, setTapped] = useState(false);
   // Read after paint, once ThemeController has resolved System.
   useEffect(() => {
     const id = requestAnimationFrame(() => setMode(drawnTheme()));
@@ -34,6 +37,7 @@ export function ThemeToggle() {
       type="button"
       onClick={() => {
         feedback.tick();
+        setTapped(true);
         update({ theme: next });
         setMode(next);
       }}
@@ -45,9 +49,9 @@ export function ThemeToggle() {
           key={mode ?? "unknown"}
           aria-hidden="true"
           className="flex"
-          initial={reduce ? { opacity: 0 } : { rotate: -90, scale: 0.4, opacity: 0 }}
+          initial={!tapped ? false : reduce ? { opacity: 0 } : { rotate: -90, scale: 0.4, opacity: 0 }}
           animate={{ rotate: 0, scale: 1, opacity: 1 }}
-          exit={reduce ? { opacity: 0 } : { rotate: 90, scale: 0.4, opacity: 0 }}
+          exit={!tapped ? undefined : reduce ? { opacity: 0 } : { rotate: 90, scale: 0.4, opacity: 0 }}
           transition={{ type: "spring", stiffness: 420, damping: 22 }}
         >
           {mode === "light" ? <Moon size={20} variant="bold" /> : <Sun size={20} variant="bold" className="text-accent" />}
