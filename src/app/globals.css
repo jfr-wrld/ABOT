@@ -30,6 +30,11 @@
   --color-muscle-off: #3a3a40;
   --color-muscle-icon: #52525b;
   --color-row: rgb(0 0 0 / 0.3); /* set rows and chips set into a card */
+  --color-raised: #24242a; /* face of a raised secondary button */
+  --color-edge: rgb(255 255 255 / 0.12); /* thin outline of raised things */
+  --color-lip: #303037; /* the side under a raised button or card */
+  --color-accent-edge: #9cc400;
+  --color-accent-lip: #557300;
 
   --font-sans: var(--font-sans-face), "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: var(--font-numbers), "Saira Semi Condensed", system-ui, sans-serif; /* figures: tabular via .num */
@@ -68,6 +73,11 @@
   --color-muscle-off: #d4d4d8;
   --color-muscle-icon: #a1a1aa;
   --color-row: rgb(0 0 0 / 0.035);
+  --color-raised: #ffffff;
+  --color-edge: #dcdce0;
+  --color-lip: #ececef;
+  --color-accent-edge: #5a8a0c;
+  --color-accent-lip: #3f6212;
   --color-zinc-100: #18181b;
   --color-zinc-400: #52525b;
   --color-zinc-600: #a1a1aa;
@@ -115,6 +125,11 @@
   --color-muscle-off: #3a3a40;
   --color-muscle-icon: #52525b;
   --color-row: rgb(0 0 0 / 0.3);
+  --color-raised: #24242a; /* face of a raised secondary button */
+  --color-edge: rgb(255 255 255 / 0.12); /* thin outline of raised things */
+  --color-lip: #303037; /* the side under a raised button or card */
+  --color-accent-edge: #9cc400;
+  --color-accent-lip: #557300;
   --color-zinc-100: #f4f4f5;
   --color-zinc-400: #a1a1aa;
   --color-zinc-600: #52525b;
@@ -400,6 +415,54 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* 3D with a thin edge (owner, 2026-11-15): buttons and cards stand up from the page on a short
+   side in a darker shade, outlined by a 1px edge, like a key; a pressed button sinks onto its
+   side. The primary button has a dark-green side under the Volt face. Unlayered so it sits on
+   top of the Tailwind classes it pairs with; focus rings keep their own shadow. */
+:is(button, a).bg-surface-2:not(:disabled, [role="switch"]) {
+  background-color: var(--color-raised);
+  border: 1px solid var(--color-edge);
+}
+:is(button, a).bg-surface-2:not(:disabled, [role="switch"], :focus-visible) {
+  box-shadow: 0 3px 0 -1px var(--color-lip), 0 3px 0 0 var(--color-edge);
+}
+:is(button, a).bg-accent:not(:disabled, [role="switch"]),
+span.bg-accent.min-h-12 {
+  border: 1px solid var(--color-accent-edge);
+}
+:is(button, a).bg-accent:not(:disabled, [role="switch"], :focus-visible),
+span.bg-accent.min-h-12 {
+  box-shadow: 0 3px 0 var(--color-accent-lip);
+}
+:is(button, a):is(.bg-surface-2, .bg-accent):not(:disabled, [role="switch"]) {
+  transition-property: color, background-color, border-color, filter, box-shadow, translate;
+  transition-duration: 120ms;
+}
+:is(button, a).bg-surface-2:not(:disabled, [role="switch"]):active {
+  translate: 0 2px;
+  box-shadow: 0 1px 0 -1px var(--color-lip), 0 1px 0 0 var(--color-edge);
+}
+:is(button, a).bg-accent:not(:disabled, [role="switch"]):active {
+  translate: 0 2px;
+  box-shadow: 0 1px 0 var(--color-accent-lip);
+}
+.panel,
+.rounded-card:is(.bg-surface, .bg-accent-tint) {
+  border-color: var(--color-edge);
+  box-shadow: 0 4px 0 -1px var(--color-lip), 0 4px 0 0 var(--color-edge);
+}
+input.bg-well:not(:focus) {
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.7);
+}
+:where([data-theme="light"]) input.bg-well:not(:focus) {
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.07);
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(button, a):is(.bg-surface-2, .bg-accent):active {
+    translate: none;
+  }
 }
 
 /* Real liquid glass where the browser draws SVG backdrop filters (useLiquidGlass sets

@@ -343,6 +343,10 @@ switches being thrown.
   it. The workout bar has it too, with its backdrop darkened rather than tinted so its figures
   stay high-contrast. Safari and Firefox keep the frosted glass; Visual effects: Light makes all
   of it solid.
+- Raised (owner, 2026-11-15: "3D tipis"): buttons and cards stand up from the page on a short
+  side in a darker shade (`--color-lip`, 3px under buttons, 4px under cards) with a 1px edge
+  (`--color-edge`); the primary button has a dark-green side (`--color-accent-lip`). A pressed
+  button sinks 2px onto its side, so a tap feels like a key. Number fields sit a little sunken.
 - Shadow: the dock only, as the elevation of the one floating layer.
 
 ## Motion
