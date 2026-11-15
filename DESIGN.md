@@ -335,6 +335,12 @@ switches being thrown.
   choice, 2026-11-10). Both sit over scrolling content, so glass says "this floats"; cards, set
   rows, buttons, sheets and headers stay solid matte so figures read at a glance. The workout bar
   keeps a dark glass in both themes and its Volt edge glow.
+- Liquid glass (owner, 2026-11-15: "seliquid di iOS"): where the browser draws SVG backdrop
+  filters (Chromium, so the Android app and Chrome), the dock, its lens and the Exercises
+  filter button bend the page at their rim like a lens (`src/lib/liquid-glass.ts`,
+  `useLiquidGlass`), with a light blur and tint so labels stay readable and a specular edge
+  brighter at the top left. The lens is clearer and bends harder, so it magnifies the tab under
+  it. Safari and Firefox keep the frosted glass; Visual effects: Light makes all of it solid.
 - Shadow: the dock only, as the elevation of the one floating layer.
 
 ## Motion

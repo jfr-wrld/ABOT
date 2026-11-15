@@ -402,6 +402,46 @@
   border: 0;
 }
 
+/* Real liquid glass where the browser draws SVG backdrop filters (useLiquidGlass sets
+   data-liquid and each surface's --liquid-filter): the page behind is barely blurred but bent at
+   the rim like a lens, colour lifted, with a specular edge brighter at the top left than the
+   bottom right, as light falls on a curved piece of glass. Without the filter the frosted glass
+   above stays. Before the "lite" rules below, so those still win. */
+[data-liquid="on"] .liquid-glass {
+  background: color-mix(in oklab, var(--color-bg) 42%, transparent);
+  -webkit-backdrop-filter: var(--liquid-filter, blur(22px)) saturate(1.7) brightness(1.06);
+  backdrop-filter: var(--liquid-filter, blur(22px)) saturate(1.7) brightness(1.06);
+  border-color: rgb(255 255 255 / 0.08);
+  box-shadow:
+    inset 1.5px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.5),
+    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / 0.22),
+    inset 0 0 8px rgb(255 255 255 / 0.06),
+    0 10px 30px rgb(0 0 0 / 0.35);
+}
+[data-liquid="on"] .liquid-glass::before {
+  background: linear-gradient(160deg, rgb(255 255 255 / 0.1), transparent 40%);
+}
+:where([data-theme="light"])[data-liquid="on"] .liquid-glass {
+  background: color-mix(in oklab, #ffffff 52%, transparent);
+  border-color: rgb(255 255 255 / 0.5);
+  box-shadow:
+    inset 1.5px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.95),
+    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / 0.6),
+    inset 0 0 8px rgb(255 255 255 / 0.3),
+    0 10px 30px rgb(0 0 0 / 0.12);
+}
+/* The dock's lens: a clear drop that magnifies the tab under it. */
+[data-liquid="on"] .glass-lens {
+  background: rgb(255 255 255 / 0.04);
+  -webkit-backdrop-filter: var(--liquid-filter, saturate(1.5)) saturate(1.4) brightness(1.15);
+  backdrop-filter: var(--liquid-filter, saturate(1.5)) saturate(1.4) brightness(1.15);
+  box-shadow:
+    inset 1.5px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.6),
+    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / 0.3),
+    inset 0 0 10px rgb(255 255 255 / 0.08),
+    0 3px 12px rgb(0 0 0 / 0.25);
+}
+
 /* Settings > Visual effects: Light (or Auto on a modest phone). The glass surfaces become solid,
    so nothing is blurred live while scrolling; their highlights stay. Movement is dropped by
    MotionConfig; colour changes and fades remain. Unlayered, so it wins over the utilities. */

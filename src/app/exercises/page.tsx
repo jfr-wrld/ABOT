@@ -1,11 +1,12 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { LayoutGrid, List, Plus, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { feedback } from "@/lib/feedback";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
+import { useLiquidGlass } from "@/components/layout/useLiquidGlass";
 import { useHideOnScroll } from "@/lib/useHideOnScroll";
 import { useSessionState } from "@/lib/useSessionState";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
@@ -59,6 +60,8 @@ function LibraryScreen() {
   const [equipment, setEquipment] = useSessionState<Equipment | "">("abot.lib.equipment", "");
   const [formOpen, setFormOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const filterButton = useRef<HTMLButtonElement>(null);
+  useLiquidGlass(filterButton, { bezel: 14, strength: 26, blur: 2.5 });
   const [sort, setSort] = useLibrarySort();
   const [view, setView] = useViewMode("exercises");
   const t = useT();
@@ -178,6 +181,7 @@ function LibraryScreen() {
       {/* Floats above the dock in the dock's own glass, and steps aside while the list scrolls
           down, coming back on any scroll up. Kept while its sheet is open, for focus to return. */}
       <button
+        ref={filterButton}
         type="button"
         onClick={() => setSheetOpen(true)}
         aria-haspopup="dialog"
