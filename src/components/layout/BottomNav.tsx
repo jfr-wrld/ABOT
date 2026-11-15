@@ -97,8 +97,12 @@ function NavBar({ pathname }: { pathname: string | null }) {
   // Stretch with speed, like a drop pulled along: wider and a touch flatter the faster it goes.
   const speed = useVelocity(x);
   const stretch = useSpring(useTransform(speed, (v) => Math.min(Math.abs(v) / 2400, 0.22)), { stiffness: 500, damping: 40 });
-  const scaleX = useTransform(stretch, (k) => 1 + k + (pressed ? 0.04 : 0));
-  const scaleY = useTransform(stretch, (k) => 1 - k * 0.45 + (pressed ? 0.04 : 0));
+  // And a swell each time it sets off for another tab: it grows like a drop lifting off, then
+  // settles back to size as it lands (owner, 2026-11-15: "agak zoom ketika digeser").
+  const swell = useMotionValue(0);
+  const scaleX = useTransform([stretch, swell], ([k, s]: number[]) => 1 + k + s * 0.16 + (pressed ? 0.08 : 0));
+  const scaleY = useTransform([stretch, swell], ([k, s]: number[]) => 1 - k * 0.45 + s * 0.2 + (pressed ? 0.08 : 0));
+
 
   // Tab width, kept current as the window turns or resizes.
   useEffect(() => {
@@ -120,8 +124,11 @@ function NavBar({ pathname }: { pathname: string | null }) {
     if (tabW === 0 || currentIndex < 0 || drag.current?.dragging) return;
     const to = offsets[currentIndex] ?? 0;
     if (reduceMotion) x.set(to);
-    else void animate(x, to, LENS_SPRING);
-  }, [currentIndex, tabW, offsets, reduceMotion, x]);
+    else {
+      if (Math.abs(x.get() - to) > 2) void animate(swell, [0, 1, 0], { duration: 0.55, times: [0, 0.3, 1], ease: ["easeOut", [0.34, 1.56, 0.64, 1]] });
+      void animate(x, to, LENS_SPRING);
+    }
+  }, [currentIndex, tabW, offsets, reduceMotion, x, swell]);
 
   // Real liquid glass on the dock and its lens; they wait until the dock is on screen.
   const lensRef = useRef<HTMLSpanElement>(null);
