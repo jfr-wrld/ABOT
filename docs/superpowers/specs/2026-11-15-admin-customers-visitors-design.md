@@ -1,6 +1,6 @@
 # Mission Control: Customers tab and first-party visitor count
 
-Date: 2026-11-15. Status: draft for owner approval.
+Date: 2026-11-15. Status: awaiting owner approval.
 
 ## Why
 
@@ -114,6 +114,19 @@ Customers tab: one sensible way, an `admin_customers()` RPC read by a new module
 - Privacy Policy (EN/ID), "Other services ABOT contacts": the web app also counts visits in ABOT's own
   database: the page path and the date, as totals, with nothing that identifies the visitor.
 - README and CLAUDE.md exception lines updated.
+
+### Sandbox orders (decided by the owner, 2026-11-15)
+
+Midtrans still runs in Sandbox, so every order in `payment_orders` today is a test. Revenue and the
+order counts leave out `payment_type = 'simulated'` (the admin's own test buttons) always. Every other
+order counts as shown. When the owner switches Midtrans to Production, they delete the sandbox orders
+once; `docs/payments-setup.md`'s go-live steps gain that SQL (delete from `payment_orders` where
+`created_at` < the switch time, after checking the list), and the entitlements those test orders granted
+are reset with it. Until then the Customers tab shows a note under the totals: "Midtrans is in Sandbox:
+these are test payments" is not knowable from the client, so the note reads "Clear the sandbox orders
+when Midtrans goes live (docs/payments-setup.md)" and stays until the first real payment is in.
+(Builder may simplify: show the note always when every paid order is older than the newest go-live
+step, or just always; pick the simpler.)
 
 ## Left to the builder
 
