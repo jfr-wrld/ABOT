@@ -701,10 +701,12 @@ input.bg-well:not(:focus) {
     inset 0 1.5px 0 rgb(255 255 255 / 0.7),
     inset 0 -3px 3px rgb(0 0 0 / 0.18),
     0 6px 14px -4px color-mix(in oklab, var(--color-accent) 55%, transparent);
-  transition: translate 120ms, box-shadow 120ms;
+  transition: transform 120ms, box-shadow 120ms;
 }
+/* The press moves by `transform`: the disc is centred with Tailwind's `translate` property, and a
+   `translate` here replaced that centring, so a press threw it off to the side. */
 .today-fab:active {
-  translate: 0 1px;
+  transform: translateY(1px);
   box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.25);
 }
 /* While a workout runs, the disc takes the workout bar's look (owner, 2026-11-15): dark, a Volt
@@ -725,7 +727,7 @@ input.bg-well:not(:focus) {
 }
 @media (prefers-reduced-motion: reduce) {
   .today-fab:active {
-    translate: none;
+    transform: none;
   }
 }
 /* The notch: a circle 8px wider than the disc, centred where the disc sits (its centre is 12px

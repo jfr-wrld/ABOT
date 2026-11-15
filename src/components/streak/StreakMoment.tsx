@@ -292,16 +292,18 @@ function Flame({ reduce, loops }: { reduce: boolean; loops: boolean }) {
 
 /** The old count slides up and away as the new one rises into place with a small pop. */
 function Count({ before, after, reduce }: { before: number; after: number; reduce: boolean }) {
-  const big = "num block text-7xl leading-none font-extrabold tracking-tight";
+  // A line box of 1.3em: Saira's figures stand taller than `leading-none`, and the window below
+  // clips to this box, so a tighter one cut the top and bottom off the number (and its pop).
+  const big = "num block h-[1.3em] text-7xl leading-[1.3em] font-extrabold tracking-tight";
   if (reduce) {
     return (
-      <span aria-hidden="true" className={`${big} mt-2 text-accent`}>
+      <span aria-hidden="true" className={`${big} mt-1 text-accent`}>
         {after}
       </span>
     );
   }
   return (
-    <span aria-hidden="true" className="relative mt-2 block h-[1.1em] overflow-hidden text-7xl">
+    <span aria-hidden="true" className="relative mt-1 block h-[1.3em] overflow-hidden text-7xl">
       <motion.span
         className={`${big} text-text-muted`}
         style={{ y: "0%" }}
