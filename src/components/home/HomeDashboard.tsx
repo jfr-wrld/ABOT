@@ -670,7 +670,7 @@ function NumbersRow({ now }: { now: number }) {
   const change = volume.changePct;
 
   return (
-    <section aria-label={t("This week")} className="grid grid-cols-3 divide-x divide-line border-y border-line">
+    <section aria-label={t("This week")} className="grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card border bg-surface">
       <div className="flex min-w-0 items-center gap-2 p-3">
         <svg viewBox="0 0 36 36" className="hidden size-9 shrink-0 -rotate-90 min-[380px]:block" aria-hidden="true">
           <circle cx="18" cy="18" r="14" fill="none" stroke="var(--color-track)" strokeWidth="4" />
@@ -789,12 +789,12 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
         )}
       </div>
       {recent.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 border-y border-line py-6 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-card border bg-surface py-6 text-center">
           <Dumbbell aria-hidden="true" size={22} className="text-text-muted" />
           <p className="text-sm text-text-muted">{t("No workouts yet.")}</p>
         </div>
       ) : (
-        <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col divide-y divide-line border-y border-line"}>
+        <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col divide-y divide-line overflow-hidden rounded-card border bg-surface"}>
           {recent.map((s, i) => (
             <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} grid={view === "grid"} />
           ))}
@@ -912,7 +912,7 @@ export function RecentCard({
       }}
     >
       <motion.div whileTap={{ scale: 0.98 }} transition={PRESS_SPRING}>
-        <Link href={historyPath(s.id)} className="flex items-center gap-3 py-3 transition-colors hover:bg-ink/[0.03]">
+        <Link href={historyPath(s.id)} className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-ink/[0.03]">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <span className="min-w-0 truncate text-base font-semibold">{s.name}</span>

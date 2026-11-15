@@ -149,7 +149,7 @@ export function RoutineLibrary() {
               <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold text-text-muted">
                 {folder || (folderNames.length > 1 ? t("No folder") : t("All routines"))}
               </h2>
-              <ul className="mt-1 flex flex-col divide-y divide-line border-b border-line">
+              <ul className="mt-2 flex flex-col gap-3">
                 <AnimatePresence initial={false}>
                   {folders.get(folder)!.map((r) => (
                     <motion.li key={r.id} {...LIST_ITEM} className="overflow-hidden">

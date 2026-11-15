@@ -62,7 +62,7 @@ export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
         </div>
       </div>
 
-      <ul className="flex flex-col divide-y divide-line border-b border-line" aria-label={t("Templates")}>
+      <ul className="flex flex-col gap-3" aria-label={t("Templates")}>
         {shown.map((tpl) => (
           <li key={tpl.id}>
             <TemplateCard template={tpl} savedId={saved[tpl.id]} onStart={() => onStart(templateToRoutine(tpl))} onSave={() => save(tpl)} />
@@ -107,7 +107,7 @@ function TemplateCard({
   return (
     <article
       aria-labelledby={`${tpl.id}-title`}
-      className="py-4"
+      className="rounded-card border bg-surface p-4"
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">

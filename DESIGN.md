@@ -47,12 +47,12 @@ values in either theme, in `globals.css`.
 
 ## Surfaces
 
-One card per screen for the one primary thing (Home's day hero or the running workout, the
-routine to start today, the phase check-in). Everything else is a list with hairline dividers:
-the week numbers, recent workouts, routines, templates and the phase sections. Radius by role:
-`rounded-card` (16px) for cards and sheets, `rounded-ctl` for controls, pills only for chips.
-The plate outlines behind Home's hero and the intro are gone; the plate shape stays where it
-carries data (weeks, sets) and as the avatar.
+Cards, the GoPay way (owner, 2026-11-15, reversing the "fewer cards" step): each section sits on
+its own raised card (`rounded-card border bg-surface`, shaded as in "Raised" below) on the page
+background: Home's day hero, the week's numbers and recent workouts (one card, rows divided by
+hairlines), each routine and template, and each section of the phase page. Radius by role:
+`rounded-card` (16px) for cards and sheets, `rounded-ctl` for controls, pills only for chips. The
+plate outlines behind Home's hero and the intro stay gone.
 
 ## Settings
 
