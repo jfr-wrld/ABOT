@@ -108,7 +108,7 @@ function Group({ title, items, now, unread = false }: { title: string; items: In
       <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-card border bg-surface">
         {items.map((i) => {
           const { Icon, tone } = ICON[i.kind];
-          const text = i.kind === "update" ? i.title : t(i.title, i.params);
+          const text = i.plain ? i.title : t(i.title, i.params);
           const body = (
             <>
               <span aria-hidden="true" className={`tile flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 ${tone}`}>

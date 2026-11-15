@@ -25,7 +25,7 @@ import { VARIATION_LABEL } from "@/data/variations";
 export const DYNAMIC_KEYS: string[] = [
   // Notifications (lib/inbox)
   "Today: {name} at {time}", "Missed yesterday: {name}", "{n} new records in {name}", "{n}-week streak",
-  "Backup failed. Tap to try again.", "{n} workouts are not backed up",
+  "Backup failed. Tap to try again.", "{n} workouts are not backed up", "ABOT {version} is out. Tap to update.",
   "Schedule", "Records", "Updates", "Backup",
   // Get the app sheet perks
   ...APP_PERKS.map((p) => p.title),

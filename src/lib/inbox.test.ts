@@ -35,6 +35,18 @@ describe("buildInbox", () => {
     expect(items.find((i) => i.kind === "update")?.title).toBe("New: gold records");
     expect(items.find((i) => i.kind === "backup")).toMatchObject({ params: { n: 3 }, href: "/settings?section=data" });
   });
+  it("shows the announcement as written and a newer app build as a translatable item to Settings > About", () => {
+    const items = buildInbox({ ...base, announcement: "Gym closed Friday", appUpdate: { build: 293, version: "1.0.293", publishedAt: new Date(now - DAY).toISOString() } });
+    expect(items.find((i) => i.id.startsWith("ann:"))).toMatchObject({ plain: true });
+    expect(items.find((i) => i.id === "app-update:293")).toMatchObject({
+      kind: "update",
+      at: now - DAY,
+      title: "ABOT {version} is out. Tap to update.",
+      params: { version: "1.0.293" },
+      href: "/settings?section=about",
+    });
+    expect(buildInbox({ ...base, appUpdate: null }).some((i) => i.id.startsWith("app-update:"))).toBe(false);
+  });
   it("keeps ids stable, so a seen item stays seen", () => {
     const a = buildInbox({ ...base, announcement: "Hi" });
     const b = buildInbox({ ...base, announcement: "Hi", now: now + 1000 });
