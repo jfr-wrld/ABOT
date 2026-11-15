@@ -37,6 +37,7 @@ const MAP = {
   ChevronRight: ["alt-arrow-right", "l"],
   ChevronUp: ["alt-arrow-up", "l"],
   CircleHelp: ["question-circle"],
+  ClipboardList: ["clipboard-list"],
   Cloud: ["cloud"],
   CloudAlert: ["cloud-cross"],
   CloudCheck: ["cloud-check"],

@@ -61,7 +61,8 @@ Solar by 480 Design (CC BY 4.0, credited in About), owner's choice 2026-11-15 ov
 default lines. Meaningful icons are Bold (solid; the owner found the two-tone version odd), which
 sits well in the raised tiles, mixed with Linear (outline). Small UI glyphs (arrows, chevrons, close, plus, minus, check,
 grips) are Linear so they stay light, and so is any icon drawn at 18 px or less, where the two
-solid shape would close up into a blot. The dock draws the current tab Bold and the others in Linear. Import from `@/components/icons` only; a new icon goes into `scripts/make-icons.mjs`, which
+solid shape would close up into a blot. The dock draws the current tab Bold and the others in Linear. The Workout tab is a clipboard (your
+routines), so it never reads as the dumbbell on the centre button (train now). Import from `@/components/icons` only; a new icon goes into `scripts/make-icons.mjs`, which
 writes `src/components/icons/solar.generated.tsx` from the `@iconify-json/solar` dev dependency
 (nothing is fetched at run time). Foods stay in Lucide, since Solar has almost none.
 

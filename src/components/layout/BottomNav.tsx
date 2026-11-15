@@ -1,13 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { animate, motion, useMotionValue, useReducedMotionConfig, useSpring, useTransform, useVelocity } from "framer-motion";
+import { animate, motion, type MotionValue, useMotionValue, useReducedMotionConfig, useSpring, useTransform, useVelocity } from "framer-motion";
 import { feedback } from "@/lib/feedback";
 /** Softer than the press spring, so the lens overshoots a touch, like liquid settling. */
 const LENS_SPRING = { type: "spring", stiffness: 380, damping: 24, mass: 0.8 } as const;
-import { Dumbbell, House, Search } from "@/components/icons";
+import { ClipboardList, House, Search } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useHydration } from "@/store/hydration";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -23,7 +23,7 @@ import { useT } from "@/i18n";
  */
 const TABS = [
   { href: "/", label: "Home", Icon: House, also: [] },
-  { href: "/workout", label: "Workout", Icon: Dumbbell, also: ["/routines"] },
+  { href: "/workout", label: "Workout", Icon: ClipboardList, also: ["/routines"] },
   { href: "/exercises", label: "Exercises", Icon: Search, also: [] },
   { href: "/profile", label: "Profile", Icon: null, also: ["/progress"] },
 ] as const;
@@ -56,6 +56,36 @@ function CurrentNav() {
     document.documentElement.style.setProperty("--dock-h", shown ? "112px" : "16px");
   }, [shown]);
   return <NavBar pathname={pathname} />;
+}
+
+/**
+ * A tab's icon and label as seen through the lens: magnified the closer the lens is, a touch at
+ * rest and up to about a third larger while it moves or is held, with a slight squash, like
+ * looking through a drop of glass (owner, 2026-11-15: "efek mencair/zooming").
+ */
+function Magnified({
+  x,
+  at,
+  width,
+  activity,
+  reduce,
+  children,
+}: {
+  x: MotionValue<number>;
+  at: number;
+  width: number;
+  activity: MotionValue<number>;
+  reduce: boolean;
+  children: ReactNode;
+}) {
+  const near = (v: number) => (width > 0 ? Math.max(0, 1 - Math.abs(v - at) / width) : 0);
+  const scaleX = useTransform([x, activity], ([v, a]: number[]) => (reduce ? 1 : 1 + near(v) * (0.06 + 0.3 * a) * (1 + 0.05 * a)));
+  const scaleY = useTransform([x, activity], ([v, a]: number[]) => (reduce ? 1 : 1 + near(v) * (0.06 + 0.3 * a) * (1 - 0.05 * a)));
+  return (
+    <motion.span style={{ scaleX, scaleY }} className="flex min-w-0 flex-col items-center gap-1">
+      {children}
+    </motion.span>
+  );
 }
 
 /** How tightly the lens trails the finger while dragging. */
@@ -102,6 +132,10 @@ function NavBar({ pathname }: { pathname: string | null }) {
   const swell = useMotionValue(0);
   const scaleX = useTransform([stretch, swell], ([k, s]: number[]) => 1 + k + s * 0.16 + (pressed ? 0.08 : 0));
   const scaleY = useTransform([stretch, swell], ([k, s]: number[]) => 1 - k * 0.45 + s * 0.2 + (pressed ? 0.08 : 0));
+  // How lively the lens is now, 0 at rest to 1 mid-move: drives the magnifier on the tabs.
+  const held = useMotionValue(0);
+  useEffect(() => held.set(pressed ? 1 : 0), [pressed, held]);
+  const activity = useTransform([stretch, swell, held], ([k, s, h]: number[]) => Math.min(1, k * 5 + s + h));
 
 
   // Tab width, kept current as the window turns or resizes.
@@ -235,6 +269,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
                   on ? "text-text" : "text-text-muted"
                 }`}
               >
+                <Magnified x={x} at={offsets[i] ?? i * tabW} width={tabW} activity={activity} reduce={!!reduceMotion}>
                 <span className="relative">
                   {Icon ? (
                     // The lit tab is drawn solid (Bold), the others in outline: a clear "you are here".
@@ -250,6 +285,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
                   )}
                 </span>
                 <span className="relative truncate">{t(label)}</span>
+                </Magnified>
                 {live && <span className="sr-only">{t("(workout in progress)")}</span>}
               </Link>
             </li>
