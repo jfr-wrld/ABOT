@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Plus_Jakarta_Sans, Saira_Semi_Condensed } from "next/font/google";
 import localFont from "next/font/local";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StoreHydrator } from "@/components/layout/StoreHydrator";
@@ -100,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
           <SignInReturn />
         </MotionProvider>
+        <Analytics />
       </body>
     </html>
   );
