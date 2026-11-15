@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { addExercise, freshStart, logSet, startEmptyWorkout, scrollUntil } from "./helpers";
+import { addExercise, freshStart, logSet, startEmptyWorkout, scrollUntil, focusExercise } from "./helpers";
 
 // The photos alternate start and end: motion stays on here (the suite default is reduced).
 test.use({ reducedMotion: "no-preference" });
@@ -14,6 +14,7 @@ test("a superset is labelled A1/A2, hands off with no rest, and rests after its 
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");
   await addExercise(page, "Bent Over Row (Barbell)");
+  await focusExercise(page, "Bench Press (Barbell)");
   await page.getByRole("button", { name: "Options for Bench Press (Barbell)" }).click();
   await page.getByRole("button", { name: "Add to superset" }).click();
   await page.getByRole("dialog", { name: "Superset Bench Press (Barbell) with" }).getByRole("button", { name: /Bent Over Row/ }).click();
@@ -40,6 +41,7 @@ test("a giant set scrolls to each next exercise and labels A1 to A3", async ({ p
   await startEmptyWorkout(page);
   for (const name of ["Bench Press (Barbell)", "Bent Over Row (Barbell)", "Squat (Barbell)"]) await addExercise(page, name);
   const link = async (from: string, to: RegExp) => {
+    await focusExercise(page, from);
     await page.getByRole("button", { name: `Options for ${from}` }).click();
     await page.getByRole("button", { name: "Add to superset" }).click();
     await page.getByRole("dialog", { name: `Superset ${from} with` }).getByRole("button", { name: to }).click();

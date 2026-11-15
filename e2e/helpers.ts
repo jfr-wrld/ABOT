@@ -52,6 +52,7 @@ export async function addExercise(page: Page, name: string): Promise<void> {
  * With `exercise`, the lookup is scoped to that exercise's card.
  */
 export async function logSet(page: Page, n: number, kg: string | null, reps: string, exercise?: string): Promise<void> {
+  if (exercise) await focusExercise(page, exercise);
   const scope = exercise
     ? page.locator("section").filter({ has: page.getByRole("heading", { name: exercise, exact: true }) })
     : page;
@@ -153,4 +154,13 @@ export async function scrollUntil(page: Page, row: Locator, tries = 40): Promise
     await page.waitForTimeout(120);
   }
   await row.first().scrollIntoViewIfNeeded();
+}
+
+/**
+ * The logger opens one exercise at a time (focus mode); the rest are one line each. Tap the line
+ * to bring `name` into focus, as a lifter would; nothing to do when it is open already.
+ */
+export async function focusExercise(page: Page, name: string): Promise<void> {
+  const row = page.getByRole("button", { name: `Open ${name}`, exact: true });
+  if (await row.count()) await row.click();
 }

@@ -72,6 +72,7 @@ export const workout: Record<string, string> = {
   Superset: "Superset",
   "Giant set": "Giant set",
   "Up next": "Berikutnya",
+  "Open {name}": "Buka {name}",
   "No rest": "Tanpa rest",
   "Next: {name}, {set}, no rest": "Berikutnya: {name}, {set}, tanpa rest",
   "How to do {name}": "Cara melakukan {name}",

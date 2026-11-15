@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { Plus, Dumbbell } from "@/components/icons";
@@ -20,6 +20,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { RoutineLibrary } from "@/components/routines/RoutineLibrary";
 import { detectSessionPRs, previousSets, priorPRTable } from "@/lib/calc";
 import { supersetLabels } from "@/lib/superset";
+import { liveSet } from "@/lib/live-set";
 import { scrollToExercise } from "@/lib/scroll-to-exercise";
 import type { PRKind } from "@/types/workout";
 import { summaryPath } from "@/lib/routes";
@@ -147,12 +148,34 @@ function WorkoutScreen() {
     return out;
   }, [prs, active]);
 
+  // Focus mode (owner, 2026-11-15): the exercise on the bar now, with its superset partners, is
+  // the one open card; the rest fold to a line each, the next one marked, a tap brings any into
+  // focus. A tapped choice holds until that exercise is done; a new exercise takes focus, since it
+  // was added to be done next. Kept per workout.
+  const [picked, setPicked] = useState<{ session: string; id: string } | null>(null);
+  const [seen, setSeen] = useState<{ session: string; count: number } | null>(null);
+  const focusOn = useCallback((id: string) => setPicked(activeId ? { session: activeId, id } : null), [activeId]);
+  if (active && (seen?.session !== active.id || seen.count !== active.exercises.length)) {
+    const added = seen?.session === active.id && active.exercises.length > seen.count;
+    setSeen({ session: active.id, count: active.exercises.length });
+    if (added) setPicked({ session: active.id, id: active.exercises[active.exercises.length - 1]!.id });
+  }
+
   if (!active) return <RoutineLibrary />;
 
   const inWorkout = new Set(active.exercises.map((e) => e.exerciseId));
   const supersets = supersetLabels(active.exercises);
   // The furthest card with a set done: finished cards above it fold to one line.
   const furthest = active.exercises.findLastIndex((e) => e.sets.some((x) => x.completed));
+  const open = (e: (typeof active.exercises)[number]) => e.sets.length === 0 || e.sets.some((x) => !x.completed);
+  const chosen = picked?.session === active.id ? active.exercises.find((e) => e.id === picked.id && open(e)) : undefined;
+  const focus = chosen ?? liveSet(active)?.exercise ?? active.exercises.find(open) ?? active.exercises.at(-1);
+  // The focused exercise and the rest of its superset, done back to back, are open together.
+  const inFocus = new Set(
+    focus ? active.exercises.filter((e) => e.id === focus.id || (!!focus.supersetId && e.supersetId === focus.supersetId)).map((e) => e.id) : [],
+  );
+  const lastInFocus = active.exercises.findLastIndex((e) => inFocus.has(e.id));
+  const nextId = active.exercises.find((e, i) => i > lastInFocus && !inFocus.has(e.id) && open(e))?.id;
 
   return (
     <main className="flex flex-1 flex-col">
@@ -180,7 +203,10 @@ function WorkoutScreen() {
             showRpe={showRpe}
             prBySet={prByCard[item.id] ?? NO_PRS}
             canMoveUp={i > 0}
-            movedOn={i < furthest}
+            // In focus mode every finished card outside the focus folds, wherever it sits.
+            movedOn={i < furthest || !inFocus.has(item.id)}
+            preview={inFocus.has(item.id) || !open(item) ? undefined : item.id === nextId ? "next" : "later"}
+            onFocus={focusOn}
             canMoveDown={i < active.exercises.length - 1}
             superset={supersets[item.id]}
             joinedAbove={!!item.supersetId && active.exercises[i - 1]?.supersetId === item.supersetId}

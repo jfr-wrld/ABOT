@@ -5,7 +5,7 @@ import { Select } from "@/components/ui/Select";
 import { memo, useEffect, useRef, useState, type ComponentProps } from "react";
 import { setGridColumns } from "./setGrid";
 import { distanceUnit } from "@/lib/set-metrics";
-import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, BookOpen, Check, ChevronDown, ChevronUp, Flame, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "@/components/icons";
+import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, BookOpen, Check, ChevronDown, ChevronUp, Flame, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2, ChevronRight } from "@/components/icons";
 import { useLocationStore } from "@/store/useLocationStore";
 import { gymSetup } from "@/lib/gym-equipment";
 import { warmupSets } from "@/lib/warmup";
@@ -60,7 +60,14 @@ function ExerciseCardView({
   superset,
   joinedAbove,
   joinedBelow,
+  preview,
+  onFocus,
 }: {
+  /** Focus mode: an exercise not on the bar now shows as one line ("next" marks the one after);
+   *  a tap brings it into focus. */
+  preview?: "next" | "later";
+  /** Brings this exercise into focus (with its id); a stable callback, so cards stay memoised. */
+  onFocus?: (sessionExerciseId: string) => void;
   /** A later exercise has a set done: this one, once every set is done, folds to one line. */
   movedOn?: boolean;
   /** Letter, colour and A1/A2 place when this exercise is in a superset (see lib/superset). */
@@ -147,6 +154,44 @@ function ExerciseCardView({
 
   const allDone = item.sets.length > 0 && item.sets.every((x) => x.completed);
   const foldable = allDone && movedOn;
+  if (preview && onFocus) {
+    // The name stays a heading and the superset keeps its label; the whole row is one button
+    // laid over it, named for what it does.
+    return (
+      <section
+        id={`card-${item.id}`}
+        aria-labelledby={`ex-${item.id}`}
+        style={ssColor ? { borderLeftColor: ssColor } : undefined}
+        className={`relative scroll-mt-[calc(env(safe-area-inset-top)+12px)] rounded-card border bg-surface px-2 py-1 ${preview === "next" ? "border-accent/30" : "border-ink/[0.08]"} ${ssColor ? "border-l-[3px]" : ""}`}
+      >
+        <div className="flex min-h-14 items-center gap-2.5 px-1">
+          {exercise && <ExerciseThumb exercise={exercise} size={preview === "next" ? 40 : 32} />}
+          <div className="min-w-0 flex-1">
+            {preview === "next" && <p className="field-label !text-accent">{t("Up next")}</p>}
+            {superset && (
+              <p className="field-label ss-text !text-[10px]" style={{ "--ss": ssColor } as React.CSSProperties}>
+                {superset.size > 2 ? t("Giant set") : t("Superset")} {"//"} <span className="num">{`${superset.letter}${superset.order}`}</span>
+              </p>
+            )}
+            <h2 id={`ex-${item.id}`} className="truncate text-sm font-semibold">
+              {name}
+            </h2>
+            <p className="num text-xs text-text-muted">{t("{n} sets", { n: item.sets.length })}</p>
+          </div>
+          <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
+        </div>
+        <button
+          type="button"
+          aria-label={t("Open {name}", { name })}
+          onClick={() => {
+            feedback.tick();
+            onFocus(item.id);
+          }}
+          className="absolute inset-0 rounded-card hover:bg-ink/[0.03]"
+        />
+      </section>
+    );
+  }
   if (foldable && !reopened) {
     // Working sets only: warm-ups would inflate the total.
     const volumeKg = item.sets.reduce((sum, x) => (x.type === "warmup" ? sum : sum + (x.weightKg ?? 0) * (x.reps ?? 0)), 0);
