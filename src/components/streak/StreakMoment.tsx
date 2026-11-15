@@ -296,7 +296,8 @@ function Count({ before, after, reduce }: { before: number; after: number; reduc
   // above and below (taken back with negative margins, so nothing around moves) and fades out
   // there with a soft mask instead of a hard edge: its edge stays far from the glyphs, whatever
   // size the phone draws them at (Android's font size setting) and through the pop. A window
-  // fitted to the line box cut the number's top and bottom off on phones.
+  // fitted to the line box cut the number's top and bottom off on phones. It spans the column's
+  // width, not the old figure's: a wider new number (7 to 8, 9 to 10) was cut at the sides.
   const big = "num block h-[1.3em] text-7xl leading-[1.3em] font-extrabold tracking-tight";
   if (reduce) {
     return (
@@ -309,7 +310,7 @@ function Count({ before, after, reduce }: { before: number; after: number; reduc
   return (
     <span
       aria-hidden="true"
-      className="relative block overflow-hidden py-[0.45em] text-7xl"
+      className="relative block self-stretch overflow-hidden py-[0.45em] text-7xl"
       style={{ marginTop: "calc(0.25rem - 0.45em)", marginBottom: "-0.45em", maskImage: fade, WebkitMaskImage: fade }}
     >
       <motion.span
