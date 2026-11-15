@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
@@ -213,12 +213,48 @@ function WalletStack({
     });
   }, [front, swapping, backCard, frontCard, reduce]);
 
+  // A sideways swipe on either card swaps them too (owner, 2026-11-15). Sideways only: an up or
+  // down swipe belongs to the page's scroll (drag="x" leaves vertical panning to the browser). The
+  // card follows the finger on a short leash; past 60 px or a quick flick it swaps, otherwise it
+  // springs back. The click that ends a drag is swallowed, so a swipe never presses Start.
+  const [dragged, setDragged] = useState(false);
+  // Links and photos inside the cards would start the browser's own drag (a link or an image
+  // pulled out) and cancel the swipe; nothing here is meant to be dragged out.
+  const stack = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = stack.current;
+    if (!el) return;
+    const stop = (e: DragEvent) => e.preventDefault();
+    el.addEventListener("dragstart", stop);
+    return () => el.removeEventListener("dragstart", stop);
+  }, []);
+  const swipe = {
+    drag: "x" as const,
+    dragConstraints: { left: 0, right: 0 },
+    dragElastic: 0.35,
+    dragSnapToOrigin: true,
+    onPointerDown: () => setDragged(false),
+    onDragStart: () => setDragged(true),
+    onDragEnd: (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
+      if (Math.abs(info.offset.x) > 60 || Math.abs(info.velocity.x) > 500) void swap();
+    },
+    onClickCapture: (e: React.MouseEvent) => {
+      if (!dragged) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setDragged(false);
+    },
+  };
+
   return (
-    <div className="flex flex-col [contain:layout]">
-      <motion.div className="relative z-0" style={play ? { y: -26, scale: 0.92, opacity: 0 } : undefined} animate={backCard}>
+    // One grid cell holds both cards: the back one stretches to the front one's full height and
+    // peeks out 64 px above it, so the two are the same size, like cards in a wallet, and a swap
+    // never shows a short card behind a tall one (owner, 2026-11-15).
+    <div ref={stack} className="grid [contain:layout]">
+      <motion.div className="relative z-0 flex flex-col [grid-area:1/1]" style={play ? { y: -26, scale: 0.92, opacity: 0 } : undefined} animate={backCard} {...swipe}>
         {front === "today" ? weekStrip(swap) : todayStrip(swap)}
       </motion.div>
-      <motion.div className="wallet-front relative z-10 -mt-9" style={play ? { y: 70, rotate: -2, opacity: 0 } : undefined} animate={frontCard}>
+      <motion.div className="wallet-front relative z-10 mt-16 [grid-area:1/1]" style={play ? { y: 70, rotate: -2, opacity: 0 } : undefined} animate={frontCard} {...swipe}>
         {front === "today" ? today : week}
       </motion.div>
     </div>
@@ -227,6 +263,7 @@ function WalletStack({
 
 type HomeSide = "today" | "week";
 const FRONT_KEY = "abot.home.front";
+const FRONT_DURING_KEY = "abot.home.frontDuring";
 
 /**
  * Which card leads Home: the day's (or the workout's) or the week's. The last swap is remembered
@@ -234,26 +271,35 @@ const FRONT_KEY = "abot.home.front";
  * (owner, 2026-11-15); a swap then holds for that workout only, and the saved choice is left alone.
  */
 function useHomeFront(activeId: string | null): [HomeSide, (side: HomeSide) => void] {
-  const [saved, setSaved] = useState<HomeSide>(() => {
+  const read = (key: string) => {
     try {
-      return localStorage.getItem(FRONT_KEY) === "week" ? "week" : "today";
+      return localStorage.getItem(key);
     } catch {
-      return "today";
+      return null;
     }
+  };
+  const write = (key: string, value: string) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // Without storage the choice lasts until the page closes.
+    }
+  };
+  const [saved, setSaved] = useState<HomeSide>(() => (read(FRONT_KEY) === "week" ? "week" : "today"));
+  // A swap during a workout is kept for that workout (by its id), across pages and restarts.
+  const [during, setDuring] = useState<{ id: string; side: HomeSide } | null>(() => {
+    const [id, side] = (read(FRONT_DURING_KEY) ?? "").split("|");
+    return id && (side === "week" || side === "today") ? { id, side } : null;
   });
-  const [during, setDuring] = useState<{ id: string; side: HomeSide } | null>(null);
   const front: HomeSide = activeId ? (during?.id === activeId ? during.side : "today") : saved;
   const set = (side: HomeSide) => {
     if (activeId) {
       setDuring({ id: activeId, side });
+      write(FRONT_DURING_KEY, `${activeId}|${side}`);
       return;
     }
     setSaved(side);
-    try {
-      localStorage.setItem(FRONT_KEY, side);
-    } catch {
-      // Without storage the choice lasts until the page closes.
-    }
+    write(FRONT_KEY, side);
   };
   return [front, set];
 }
@@ -875,12 +921,13 @@ function NumbersRow({ now, onSwap }: { now: number; onSwap?: () => void }) {
 
   return (
     <>
-    <section aria-label={t("This week")} className="wallet-card relative grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card pb-9">
+    <section aria-label={t("This week")} className="wallet-card relative min-h-[100px] flex-1 overflow-hidden rounded-card">
       {/* Behind the day's card, sessions and volume bring the week to the front; "ready" keeps
           opening the recovery map. */}
       {onSwap && (
-        <button type="button" onClick={onSwap} aria-label={t("Bring the week to the front")} className="absolute inset-y-0 left-0 z-[1] w-2/3 hover:bg-ink/[0.03]" />
+        <button type="button" onClick={onSwap} aria-label={t("Bring the week to the front")} className="absolute left-0 top-0 z-[1] h-16 w-2/3 hover:bg-ink/[0.03]" />
       )}
+      <div className="grid h-16 grid-cols-3 divide-x divide-line">
       <div className="flex min-w-0 items-center gap-2 p-3">
         {/* One dash per planned session (owner, 2026-11-15): a whole ring reads as a plain circle,
             dashes read as "2 of 4". They light one by one when the card is dealt. */}
@@ -938,6 +985,7 @@ function NumbersRow({ now, onSwap }: { now: number; onSwap?: () => void }) {
         </span>
       </button>
 
+      </div>
     </section>
     {/* Outside the Volt card: inside it the sheet would inherit the card's re-pointed colours. */}
       <Sheet open={open} onClose={() => setOpen(false)} title={t("Muscle recovery")}>
@@ -1285,21 +1333,26 @@ function WeekCard({ now }: { now: number }) {
  * exercise on the bar, its set and the clock, with a play button straight back to it; otherwise
  * the next workout. A tap anywhere else brings it to the front.
  */
+/** A button on the Volt strip: dark ink on a faint ink plate, above the strip's swap layer. */
+const STRIP_CTA =
+  "relative z-[2] flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--color-on-accent)_12%,transparent)]";
+
 function TodayStrip({ onSwap, next }: { onSwap: () => void; next: NextProtocol | null }) {
   const t = useT();
+  const router = useRouter();
   const active = useWorkoutStore((s) => s.active);
   const { byId } = useAllExercises();
   const now = useNow(1000, active !== null);
   const live = active ? liveSet(active) : null;
   return (
-    <section aria-label={active ? t("Workout in progress") : t("Next up")} className="wallet-card relative overflow-hidden rounded-card pb-9">
+    <section aria-label={active ? t("Workout in progress") : t("Next up")} className="wallet-card relative min-h-[100px] flex-1 overflow-hidden rounded-card">
       <button
         type="button"
         onClick={onSwap}
         aria-label={active ? t("Bring the workout to the front") : t("Bring today's plan to the front")}
-        className="absolute inset-0 z-[1] hover:bg-ink/[0.03]"
+        className="absolute inset-x-0 top-0 z-[1] h-16 hover:bg-ink/[0.03]"
       />
-      <div className="flex min-h-[64px] items-center gap-3 px-3.5 py-3">
+      <div className="flex h-16 items-center gap-3 px-3.5">
         <span className="min-w-0 flex-1">
           <span className="field-label flex items-center gap-1.5">
             {active && <span aria-hidden="true" className="size-1.5 rounded-full bg-[currentColor]" />}
@@ -1315,17 +1368,31 @@ function TodayStrip({ onSwap, next }: { onSwap: () => void; next: NextProtocol |
                 : t("No workout planned")}
           </span>
         </span>
-        {active && (
+        {/* The card behind still acts: back to the workout, start the next one, or plan the week. */}
+        {active ? (
           <>
             <span className="num shrink-0 text-sm font-semibold">{formatDuration(sessionDurationSec(active, now))}</span>
-            <Link
-              href="/workout"
-              aria-label={t("Continue workout")}
-              className="relative z-[2] flex size-11 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--color-on-accent)_12%,transparent)]"
-            >
+            <Link href="/workout" aria-label={t("Continue workout")} className={`${STRIP_CTA} size-11`}>
               <Play aria-hidden="true" size={18} />
             </Link>
           </>
+        ) : next ? (
+          <button
+            type="button"
+            onClick={() => {
+              feedback.tick();
+              useWorkoutStore.getState().startFromRoutine(next.routine);
+              router.push("/workout");
+            }}
+            className={`${STRIP_CTA} gap-1.5 px-4 text-sm font-bold`}
+          >
+            <Play aria-hidden="true" size={16} />
+            {t("Start")}
+          </button>
+        ) : (
+          <Link href="/plan" className={`${STRIP_CTA} px-4 text-sm font-bold`}>
+            {t("Set up week")}
+          </Link>
         )}
       </div>
     </section>

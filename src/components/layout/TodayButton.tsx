@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Check, DumbbellLarge, Play } from "@/components/icons";
+import { Check, DumbbellLarge, Play, Timer } from "@/components/icons";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { LiftList } from "@/components/routines/RoutineCard";
 import { Sheet } from "@/components/ui/Sheet";
@@ -66,6 +66,10 @@ export function TodayButton() {
   const t = useT();
   const reduce = useReducedMotionConfig();
   const { routine, doneToday, day } = useToday();
+  const router = useRouter();
+  // While a workout runs the disc is about that workout (owner, 2026-11-15): a stopwatch in place
+  // of the dumbbell, and a tap goes straight back to it rather than through the day's sheet.
+  const live = useWorkoutStore((s) => (s.active ? s.active.name : null));
   const [open, setOpen] = useState(false);
   // "done" first when today's workout is finished and the tick has not played yet today.
   const [phase, setPhase] = useState<"plan" | "done">("plan");
@@ -82,7 +86,9 @@ export function TodayButton() {
     };
   }, [doneToday, day, reduce]);
 
-  const label = routine
+  const label = live
+    ? t("Continue workout: {name}", { name: live })
+    : routine
     ? doneToday
       ? t("Done today. Next: {name}", { name: routine.name })
       : t("Today: {name}", { name: routine.name })
@@ -94,14 +100,27 @@ export function TodayButton() {
         type="button"
         onClick={() => {
           feedback.tick();
-          setOpen(true);
+          if (live) router.push("/workout");
+          else setOpen(true);
         }}
         aria-label={label}
-        aria-haspopup="dialog"
-        className="today-fab absolute left-1/2 top-0 z-10 flex size-[60px] -translate-x-1/2 -translate-y-[18px] items-center justify-center overflow-hidden rounded-full"
+        aria-haspopup={live ? undefined : "dialog"}
+        className={`today-fab ${live ? "today-fab-live" : ""} absolute left-1/2 top-0 z-10 flex size-[60px] -translate-x-1/2 -translate-y-[18px] items-center justify-center overflow-hidden rounded-full`}
       >
         <AnimatePresence mode="wait" initial={false}>
-          {phase === "done" ? (
+          {live ? (
+            <motion.span
+              key="live"
+              aria-hidden="true"
+              className="flex items-center justify-center"
+              initial={reduce ? { opacity: 0 } : { scale: 0.4, opacity: 0, rotate: -90 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={reduce ? { opacity: 0 } : { scale: 0.4, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 420, damping: 22 }}
+            >
+              <Timer size={30} variant="bold" />
+            </motion.span>
+          ) : phase === "done" ? (
             <motion.span
               key="done"
               aria-hidden="true"

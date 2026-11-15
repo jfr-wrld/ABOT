@@ -64,3 +64,35 @@ test("the hero offers the saved routine first, with an empty start beside it", a
   await page.waitForURL("**/workout");
   await expect(page.getByText("Bench Press (Barbell)").first()).toBeVisible();
 });
+
+test("the day's card and the week's trade places by tap or swipe, and the choice is remembered", async ({ page }) => {
+  await freshStart(page);
+  const weekInFront = page.getByRole("heading", { name: "This week" });
+  await expect(weekInFront).toHaveCount(0);
+
+  // A tap on the card behind brings it forward.
+  await page.getByRole("button", { name: "Bring the week to the front" }).click();
+  await expect(weekInFront).toBeVisible();
+
+  // A sideways swipe on the front card swaps them back; a short drag does not.
+  const swipe = async (dx: number) => {
+    const box = (await page.locator(".wallet-front").boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (let i = 1; i <= 8; i++) await page.mouse.move(x + (dx * i) / 8, y);
+    await page.mouse.up();
+  };
+  await swipe(-30);
+  await expect(weekInFront).toBeVisible();
+  await swipe(-140);
+  await expect(weekInFront).toHaveCount(0);
+  await expect(page).toHaveURL(/\/$/);
+
+  // The last choice opens Home next time.
+  await page.getByRole("button", { name: "Bring the week to the front" }).click();
+  await expect(weekInFront).toBeVisible();
+  await page.reload();
+  await expect(weekInFront).toBeVisible();
+});
