@@ -189,7 +189,7 @@ export function RestScene() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             transition={{ ...SPRING, delay: 0.5 }}
           >
-            <span className="label-caps !text-[8px]">{t("Rest")}</span>
+            <span className="field-label !text-[8px]">{t("Rest")}</span>
             <span className="num text-sm font-extrabold text-accent">{clock}</span>
             <span className="ml-auto flex gap-2 text-text-muted">
               <span className="text-xs">−</span>

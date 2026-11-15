@@ -210,7 +210,7 @@ function Summary() {
                 <MuscleMap primary={insights.muscles.primary} secondary={insights.muscles.secondary} width={128} />
               </div>
               <div className="min-w-0">
-                <h2 id="summary-muscles" className="label-caps">
+                <h2 id="summary-muscles" className="field-label">
                   {t("Muscles worked")}
                 </h2>
                 <ul className="mt-2 flex flex-wrap gap-1">
@@ -373,7 +373,7 @@ function Calories({ session, byId, unit }: { session: WorkoutSession; byId: Reco
           <Flame size={16} />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 id="summary-kcal" className="label-caps">
+          <h2 id="summary-kcal" className="field-label">
             {t("Calories (estimate)")}
           </h2>
           <p className="num text-lg font-bold tabular-nums">{est.kcal} kcal</p>
@@ -429,7 +429,7 @@ function Tile({ icon, label, value, format }: { icon: React.ReactNode; label: st
         {icon}
       </span>
       <div className="min-w-0">
-        <dt className="label-caps">{label}</dt>
+        <dt className="field-label">{label}</dt>
         <dd className="num truncate text-base font-bold tabular-nums min-[360px]:text-lg">
           <CountFromZero value={value} format={format} delay={0.9} />
         </dd>
@@ -452,7 +452,7 @@ function Compare({ now, before, unit, name }: { now: number; before: number; uni
   return (
     <section aria-labelledby="summary-compare" className="panel p-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="summary-compare" className="label-caps truncate">
+        <h2 id="summary-compare" className="field-label truncate">
           {t("Volume vs last {name}", { name })}
         </h2>
         <span
@@ -534,7 +534,7 @@ function RecordCard({
               <span className="font-bold">
                 {formatWeight(pr.weightKg, unit)} × {pr.reps}
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-pr">{kinds.map((k) => t(SHORT[k])).join(" · ")}</span>
+              <span className="text-[9px] text-pr">{kinds.map((k) => t(SHORT[k])).join(" · ")}</span>
               <span className="sr-only">{kinds.map((k) => t(PR_KIND_LABEL[k])).join(", ")}</span>
             </li>
           ))}

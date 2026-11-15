@@ -43,7 +43,7 @@ export const STREAK_THEMES: { id: StreakThemeId; name: string }[] = [
 
 export interface StreakCardOptions {
   theme: StreakThemeId;
-  /** ABOT // BLACK PRO: leave out the ABOT mark and name. */
+  /** ABOT Pro: leave out the ABOT mark and name. */
   hideWatermark?: boolean;
 }
 

@@ -120,10 +120,10 @@ export const DYNAMIC_KEYS: string[] = [
   ...Object.values(WHY),
   ...Object.values(FILTER_LABEL),
   ...Object.values(AXIS_LABEL),
-  "OPTIMAL", "BALANCED", "IMBALANCED", "CRITICAL",
+  "Optimal", "Balanced", "Imbalanced", "Critical",
   DIAGNOSTIC_KEYS.pushPull, DIAGNOSTIC_KEYS.noPull, DIAGNOSTIC_KEYS.pullPush, DIAGNOSTIC_KEYS.quadHam, DIAGNOSTIC_KEYS.hamQuad, DIAGNOSTIC_KEYS.skipLegs,
   ...Object.values(DIAGNOSTIC_KEYS.low),
-  // ABOT // BLACK PRO: feature names, plans, comparison rows, simulator, checkout answer, Pro tab
+  // ABOT Pro: feature names, plans, comparison rows, simulator, checkout answer, Pro tab
   ...Object.values(PRO_FEATURE_LABEL),
   ...PLANS.flatMap((p) => [p.name, p.note]),
   ...PRO_MATRIX.flatMap((r) => [r.feature, ...[r.core, r.pro].filter((v): v is string => typeof v === "string")]),

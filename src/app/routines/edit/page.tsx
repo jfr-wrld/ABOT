@@ -114,7 +114,7 @@ function Editor() {
               placeholder="Push / Pull / Legs"
               className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
             />
-            {/* The Template Vault's splits, one tap each, so saved routines group the same way. */}
+            {/* The Templates's splits, one tap each, so saved routines group the same way. */}
             <div role="group" aria-label={t("Folder by split")} className="-mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
               {SPLITS.map((sp) => (
                 <button
@@ -201,7 +201,7 @@ function Editor() {
 
               {ss ? (
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <span className="label-caps ss-text" style={{ "--ss": SUPERSET_COLORS[ss.color] } as React.CSSProperties}>
+                  <span className="field-label ss-text" style={{ "--ss": SUPERSET_COLORS[ss.color] } as React.CSSProperties}>
                     {ss.size > 2 ? t("Giant set") : t("Superset")} {"//"} <span className="num">{`${ss.letter}${ss.order}`}</span>
                   </span>
                   <button
@@ -238,7 +238,7 @@ function Editor() {
               </div>
 
               <div
-                className="mt-3 grid gap-1.5 px-1 label-caps"
+                className="mt-3 grid gap-1.5 px-1 field-label"
                 style={{ gridTemplateColumns: "44px minmax(0,1fr) 72px 64px" }}
                 aria-hidden="true"
               >
@@ -390,7 +390,7 @@ function Editor() {
   );
 }
 
-/** What the routine adds up to as it is built: the numbers a Template Vault card shows. */
+/** What the routine adds up to as it is built: the numbers a Templates card shows. */
 function RoutineOverview({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
   const t = useT();
   const sum = routineSummary(routine, byId);

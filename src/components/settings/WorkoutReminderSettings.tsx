@@ -127,7 +127,7 @@ export function WorkoutReminderSettings() {
             <ul className="flex flex-col gap-2" aria-label={t("Routine for each day")}>
               {week.filter((d) => schedule.days[d.wd].on).map((d) => (
                 <li key={d.wd} className="flex items-center gap-3">
-                  <label htmlFor={`day-routine-${d.wd}`} className="label-caps w-10 shrink-0">
+                  <label htmlFor={`day-routine-${d.wd}`} className="field-label w-10 shrink-0">
                     {d.short}
                   </label>
                   <Select
@@ -146,7 +146,7 @@ export function WorkoutReminderSettings() {
             {/* Two 24-hour dropdowns, not <input type="time">: the native field follows the
                 browser's locale (05:30 PM) and its own picker, off the mono 17:30 look. */}
             <div role="group" aria-labelledby="time-label">
-              <span id="time-label" className="label-caps mb-1 block">
+              <span id="time-label" className="field-label mb-1 block">
                 {t("Session time")}
               </span>
               <div className="flex items-center gap-1">
@@ -170,7 +170,7 @@ export function WorkoutReminderSettings() {
               </div>
             </div>
             <div>
-              <span id="lead-label" className="label-caps mb-1 block">
+              <span id="lead-label" className="field-label mb-1 block">
                 {t("Pack-your-bag call")}
               </span>
               <div role="radiogroup" aria-labelledby="lead-label" className="grid min-h-[3.25rem] grid-cols-3 gap-1 rounded-ctl border border-ink/[0.08] p-1">

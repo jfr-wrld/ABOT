@@ -90,7 +90,7 @@ export interface StoryOptions {
   /** How dark the tint over the photo is, 0.2 to 0.85. */
   overlay: number;
   grayscale: boolean;
-  /** ABOT // BLACK PRO: leave out the ABOT mark and name. */
+  /** ABOT Pro: leave out the ABOT mark and name. */
   hideWatermark?: boolean;
   /** Founder pass holders: "FOUNDER // #0421" stamped in the top corner. */
   founderBadge?: string | null;
@@ -130,7 +130,7 @@ const SAFE_BOTTOM = H - 250;
 /* ------------------------------------------------------------------ */
 
 /**
- * Barlow and JetBrains Mono are served by next/font under the family names published as CSS
+ * Plus Jakarta Sans and JetBrains Mono are served by next/font under the family names published as CSS
  * variables on <html>. Canvas cannot use a font the page has not loaded yet, so every weight
  * the cards use is loaded first. Only the real family is loaded: next/font's "Fallback" face
  * points at the system Arial, which phones without Arial reject. A weight that fails to load
@@ -142,7 +142,7 @@ export async function loadStoryFonts(): Promise<StoryFonts> {
   const first = (stack: string, fallback: string) => stack.split(",")[0]?.trim() || fallback;
   // Each face: its CSS variable, a fallback stack, and the weights the cards draw it in.
   const faces: Record<Family, { cssVar: string; name: string; fallback: string; weights: number[] }> = {
-    sans: { cssVar: "--font-sans-face", name: '"Barlow"', fallback: "system-ui, sans-serif", weights: [400, 600, 700, 800] },
+    sans: { cssVar: "--font-sans-face", name: '"Plus Jakarta Sans"', fallback: "system-ui, sans-serif", weights: [400, 600, 700, 800] },
     mono: { cssVar: "--font-jetbrains-mono", name: '"JetBrains Mono"', fallback: "ui-monospace, monospace", weights: [400, 700, 800] },
     display: { cssVar: "--font-anton", name: '"Anton"', fallback: "Impact, sans-serif", weights: [400] },
     serif: { cssVar: "--font-fraunces", name: '"Fraunces"', fallback: "Georgia, serif", weights: [400, 600, 900] },
@@ -323,7 +323,7 @@ function text(s: Scene, str: string, x: number, y: number, o: TextOpts): number 
   return width;
 }
 
-/** Mono uppercase label: the canvas twin of the app's `label-caps`. */
+/** Mono uppercase label: the canvas twin of the app's `field-label`. */
 function caps(s: Scene, str: string, x: number, y: number, o: Partial<TextOpts> = {}): number {
   return text(s, str.toUpperCase(), x, y, { size: 26, family: "mono", color: MUTED, tracking: 3, ...o });
 }

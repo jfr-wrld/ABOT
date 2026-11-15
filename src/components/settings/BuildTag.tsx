@@ -6,7 +6,7 @@ import { useAppVersion } from "./AppVersion";
 import { feedback } from "@/lib/feedback";
 
 /**
- * "ABOT v1.0.15 // TELEMETRY BUILD" at the foot of Settings: the installed version for bug
+ * "ABOT v1.0.15" at the foot of Settings: the installed version for bug
  * reports. Five taps within three seconds open Mission Control (/admin), which asks for the
  * founder PIN.
  */
@@ -26,9 +26,9 @@ export function BuildTag() {
           router.push("/admin");
         }
       }}
-      className="mx-auto min-h-11 px-3 font-mono text-[10px] uppercase tabular-nums tracking-[0.14em] text-text-muted"
+      className="mx-auto min-h-11 px-3 font-mono text-[10px] tabular-nums tracking-[0.14em] text-text-muted"
     >
-      {`ABOT ${version ? `v${version}` : "web"} // TELEMETRY BUILD`}
+      {`ABOT ${version ? `v${version}` : "web"}`}
     </button>
   );
 }

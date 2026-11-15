@@ -15,8 +15,8 @@ export function PlanBadge({ className = "" }: { className?: string }) {
   const label = tier === "lifetime" ? "LIFETIME" : "PRO";
   return (
     <span
-      title={tier === "lifetime" ? t("Lifetime license") : "ABOT // BLACK PRO"}
-      className={`inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-accent px-1.5 py-0.5 font-mono text-[10px] font-extrabold uppercase leading-none tracking-[0.1em] text-black ${className}`}
+      title={tier === "lifetime" ? t("Lifetime license") : "ABOT Pro"}
+      className={`inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-accent px-1.5 py-0.5 font-mono text-[10px] font-extrabold leading-none tracking-[0.1em] text-black ${className}`}
     >
       <AbotMark size={11} />
       {label}

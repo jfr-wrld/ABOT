@@ -201,7 +201,7 @@ function Wizard() {
                         <Icon aria-hidden="true" size={18} className={`mt-px shrink-0 ${on ? "text-accent" : "text-text-muted"}`} />
                         <span className="text-sm font-bold leading-snug">{t(PHASE_GOAL[p])}</span>
                       </span>
-                      <span className="label-caps">{t(PHASE_LABEL[p])}</span>
+                      <span className="field-label">{t(PHASE_LABEL[p])}</span>
                       <PhaseCurve phase={p} active={on} width={140} height={48} />
                       <span className="text-xs leading-snug text-text-muted">{t(PHASE_BLURB[p])}</span>
                     </button>
@@ -286,7 +286,7 @@ function Wizard() {
                 <div className="flex justify-center py-2">
                   <BlockPlate weeks={weeks} done={0} current={0} size={148}>
                     <span className="num text-3xl font-bold">{weeks}</span>
-                    <span className="label-caps">{t("weeks")}</span>
+                    <span className="field-label">{t("weeks")}</span>
                   </BlockPlate>
                 </div>
                 <Field label={t("Target weight")}>
@@ -304,7 +304,7 @@ function Wizard() {
               <div className="flex flex-col items-center gap-5">
                 <MacroDonut protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} size={176}>
                   <CountFromZero value={fuel.kcal} format={(n) => Math.round(n).toLocaleString(t.locale)} className="num text-3xl font-bold text-accent" />
-                  <span className="label-caps">{t("kcal a day")}</span>
+                  <span className="field-label">{t("kcal a day")}</span>
                 </MacroDonut>
                 <div className="w-full max-w-xs">
                   <MacroLegend protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} labels={[t("Protein"), t("Carbs"), t("Fat")]} />
@@ -325,7 +325,7 @@ function Wizard() {
                   </li>
                 </ul>
                 <section aria-labelledby="program-heading" className="flex w-full flex-col gap-2 rounded-card border border-line bg-surface p-3">
-                  <h2 id="program-heading" className="label-caps">
+                  <h2 id="program-heading" className="field-label">
                     {t("Training")}
                   </h2>
                   <div role="radiogroup" aria-label={t("Training days a week")} className="grid grid-cols-5 gap-1.5">
@@ -403,7 +403,7 @@ function Wizard() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="label-caps">{label}</h2>
+      <h2 className="field-label">{label}</h2>
       {children}
     </section>
   );

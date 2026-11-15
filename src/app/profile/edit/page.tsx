@@ -55,7 +55,7 @@ function EditProfile() {
       <PageHeader title={t("Edit profile")} back={{ href: "/profile", label: t("Profile") }} />
       <div className="flex flex-col gap-4 px-4 pb-8 pt-4">
         <section aria-labelledby="body-heading" className="panel flex flex-col gap-3 p-3">
-          <h2 id="body-heading" className="label-caps">
+          <h2 id="body-heading" className="field-label">
             {t("About you")}
           </h2>
           <div className="flex items-center gap-3">

@@ -194,7 +194,7 @@ export type PaymentShown = OrderStatus | "checking" | "unknown";
 
 export const PAYMENT_STATUS_MESSAGE: Record<PaymentShown, string> = {
   checking: "Checking your payment...",
-  paid: "Payment received. ABOT // BLACK PRO is active on your account.",
+  paid: "Payment received. ABOT Pro is active on your account.",
   pending: "Waiting for your payment. Finish it in the payment app or bank; PRO turns on by itself once it settles.",
   failed: "The payment did not go through. Nothing was charged; you can try again.",
   expired: "The payment window closed before it was paid. You can start a new one.",

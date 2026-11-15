@@ -114,7 +114,7 @@ export function ExerciseSwapModal({
                 feedback.tick();
                 setFilter(f.value);
               }}
-              className={`min-h-11 rounded-ctl border px-2 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors ${
+              className={`min-h-11 rounded-ctl border px-2 font-mono text-[11px] font-semibold tracking-[0.08em] transition-colors ${
                 filter === f.value ? "border-accent bg-accent text-on-accent" : "border-line-strong bg-surface-2 text-text-muted hover:text-text"
               }`}
             >
@@ -144,7 +144,7 @@ export function ExerciseSwapModal({
                   <ExerciseThumb exercise={e} size={44} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{e.name}</span>
-                    <span className="mt-0.5 block font-mono text-[10px] uppercase leading-snug tracking-[0.06em] text-text-muted">
+                    <span className="mt-0.5 block font-mono text-[10px] leading-snug tracking-[0.06em] text-text-muted">
                       <span className="tabular-nums text-accent">{t("{n}% match", { n: match })}</span>
                       {" · "}
                       {reason.kind === "pattern"
@@ -160,7 +160,7 @@ export function ExerciseSwapModal({
                         <span className="block font-semibold">
                           {e.loadMode === "per_hand" ? t("{weight} / hand", { weight: formatWeight(load.weightKg, unit) }) : formatWeight(load.weightKg, unit)}
                         </span>
-                        <span className="block text-[10px] uppercase text-text-muted">{load.source === "history" ? t("your last") : t("estimate")}</span>
+                        <span className="block text-[10px] text-text-muted">{load.source === "history" ? t("your last") : t("estimate")}</span>
                       </>
                     ) : (
                       <span className="block text-text-muted">{e.equipment === "bodyweight" || e.isBodyweight ? t("Bodyweight") : t("Set weight")}</span>

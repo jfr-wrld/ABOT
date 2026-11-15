@@ -33,7 +33,7 @@ export function AccountSection() {
 
   return (
     <section id="account" aria-labelledby="account-heading" className="panel scroll-mt-16 p-3">
-      <h2 id="account-heading" className="label-caps">
+      <h2 id="account-heading" className="field-label">
         {t("Account")}
       </h2>
       {signedIn ? <SignedIn now={now} /> : <Guest />}

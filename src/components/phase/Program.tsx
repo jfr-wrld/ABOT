@@ -83,7 +83,7 @@ export function WeekTraining({ m, now }: { m: PhaseTelemetry; now: number }) {
     <Link href="/routines" className="flex min-h-14 items-center gap-3 rounded-card border border-line bg-surface px-4 py-2 hover:bg-surface-2">
       <CalendarCheck aria-hidden="true" size={20} className={done >= planned ? "shrink-0 text-accent" : "shrink-0 text-text-muted"} />
       <span className="min-w-0 flex-1">
-        <span className="label-caps block">{t("Training this week")}</span>
+        <span className="field-label block">{t("Training this week")}</span>
         <span className="num block text-sm font-semibold">{t("{done} of {planned} workouts", { done, planned })}</span>
       </span>
       <span aria-hidden="true" className="flex gap-1">
@@ -113,12 +113,12 @@ export function PhaseSummary({ m }: { m: PhaseTelemetry }) {
       </h2>
       <dl className="num mt-3 grid grid-cols-2 gap-3">
         <div>
-          <dt className="label-caps">{t("Weight")}</dt>
+          <dt className="field-label">{t("Weight")}</dt>
           <dd className="text-xl font-bold">{kg(change)}</dd>
         </div>
         {strength !== null && (
           <div>
-            <dt className="label-caps">{t("Strength")}</dt>
+            <dt className="field-label">{t("Strength")}</dt>
             <dd className={`text-xl font-bold ${strength >= 0 ? "text-accent" : "text-failure"}`}>
               {strength >= 0 ? "+" : ""}
               {strength.toFixed(1)}%

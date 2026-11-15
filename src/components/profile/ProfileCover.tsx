@@ -25,7 +25,7 @@ export function ProfileCover({ weeks }: { weeks: number[] }) {
     // 3:1, the shape a cover image is cropped to, so the crop is what shows.
     <div className="relative aspect-[3/1] overflow-hidden rounded-card border border-line bg-surface">
       <CoverFill value={cover} weeks={weeks} />
-      {kind.kind === "skyline" && <span className="label-caps absolute right-14 top-3">{t("12 wk volume")}</span>}
+      {kind.kind === "skyline" && <span className="field-label absolute right-14 top-3">{t("12 wk volume")}</span>}
       <button
         type="button"
         onClick={() => setOpen(true)}

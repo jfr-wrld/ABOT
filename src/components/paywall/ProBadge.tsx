@@ -6,18 +6,16 @@ import type { ProFeatureKey } from "@/lib/entitlements";
 import { useT } from "@/i18n";
 
 /**
- * The micro PRO tag on premium features. "PRO // BETA" while the founders beta has them open,
- * "PRO" otherwise, with a lock when this lifter cannot use the feature. `suffix` names a family
- * ("TELEMETRY"). Always on black, so Volt reads the same in both themes.
+ * The small Pro tag on premium features: "Pro · beta" while the founders beta has them open,
+ * "Pro" otherwise, with a lock when this lifter cannot use the feature. Gold, the records colour,
+ * as a plain outlined tag.
  */
-export function ProBadge({ suffix, className = "" }: { suffix?: string; className?: string }) {
+export function ProBadge({ className = "" }: { suffix?: string; className?: string }) {
   const { isBetaUnlocked, proActive } = useEntitlements();
   const t = useT();
-  const text = isBetaUnlocked ? `PRO // ${t("BETA")}` : suffix ? `PRO // ${suffix}` : "PRO";
+  const text = isBetaUnlocked ? t("Pro · beta") : "Pro";
   return (
-    <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-[4px] border border-accent/60 bg-black px-1.5 py-px font-mono text-[9px] font-bold uppercase leading-4 tracking-[0.12em] text-accent ${className}`}
-    >
+    <span className={`inline-flex shrink-0 items-center gap-1 rounded-[4px] border border-pr/50 px-1.5 py-px text-[11px] font-semibold leading-4 text-pr ${className}`}>
       {!proActive && <Lock aria-hidden="true" size={9} />}
       {text}
     </span>
@@ -32,17 +30,17 @@ export function ProLock({ feature, text, className = "" }: { feature: ProFeature
   const { openPaywall } = useEntitlements();
   const t = useT();
   return (
-    <div className={`force-dark flex flex-col items-start gap-2 rounded-ctl border border-accent/30 bg-black/90 p-3 text-text ${className}`}>
-      <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.1em] text-accent">
-        <Lock aria-hidden="true" size={12} /> {t("Locked: ABOT // BLACK")}
+    <div className={`flex flex-col items-start gap-2 rounded-ctl border border-line bg-surface-2 p-3 text-text ${className}`}>
+      <p className="flex items-center gap-2 text-xs font-semibold">
+        <Lock aria-hidden="true" size={12} /> {t("Locked: ABOT Pro")}
       </p>
-      <p className="text-xs text-zinc-300">{text}</p>
+      <p className="text-xs text-text-muted">{text}</p>
       <button
         type="button"
         onClick={() => openPaywall(feature)}
-        className="min-h-11 rounded-ctl border border-accent px-3 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-accent hover:bg-accent/10"
+        className="min-h-11 rounded-ctl bg-accent px-3 text-sm font-semibold text-on-accent"
       >
-        {t("Unlock with ABOT // BLACK")}
+        {t("Unlock with ABOT Pro")}
       </button>
     </div>
   );

@@ -172,7 +172,7 @@ function GetAppRow() {
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section aria-label={title}>
-      <h2 className="label-caps mb-2 px-1">{title}</h2>
+      <h2 className="field-label mb-2 px-1">{title}</h2>
       <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">{children}</ul>
     </section>
   );

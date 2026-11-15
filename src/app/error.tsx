@@ -20,7 +20,7 @@ export default function RouteError({ error, reset }: { error: Error & { digest?:
   return (
     <main className="flex flex-1 flex-col justify-center gap-4 px-4 py-10">
       <div>
-        <p className="label-caps">{t("Something went wrong")}</p>
+        <p className="field-label">{t("Something went wrong")}</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">{t("This screen could not be shown")}</h1>
         <p className="mt-2 max-w-[42ch] text-sm text-text-muted">
           {t("Your data is still on this phone. If this started after an import, restore a backup you trust in Settings > Data.")}

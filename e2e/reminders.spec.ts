@@ -50,8 +50,8 @@ test("with permission, a test reminder shows the session call with Start and Sno
   await expect(panel.getByText("Test reminder sent.")).toBeVisible();
   const shown = await shownNotifications(page);
   expect(shown[0]).toEqual({
-    title: "ABOT // SESSION_CALL [Free session]",
-    body: "Scheduled: Free session • Primary: your choice. Tap to initiate workout.",
+    title: "Free session at 17:30",
+    body: "Muscles: your choice. Tap to start.",
     actions: ["ACTION_START", "ACTION_SNOOZE"],
   });
 });
@@ -80,7 +80,7 @@ test("the reminder fires at the scheduled minute", async ({ page, context }) => 
   await panel.getByRole("radio", { name: "Off" }).click();
   await page.waitForTimeout(500); // let the schedule reach IndexedDB
   await page.clock.fastForward("01:30");
-  await expect.poll(async () => (await shownNotifications(page)).map((n) => n.title)).toContain("ABOT // SESSION_CALL [Free session]");
+  await expect.poll(async () => (await shownNotifications(page)).map((n) => n.title)).toContain("Free session at 17:30");
 });
 
 test("the schedule exports as a weekly calendar with the pack-your-bag alarm", async ({ page }) => {
@@ -118,5 +118,5 @@ test("a snooze stored by the notification's Snooze button fires when its time co
       }),
   );
   await page.reload();
-  await expect.poll(async () => (await shownNotifications(page)).map((n) => n.title)).toContain("ABOT // SESSION_CALL [Free session]");
+  await expect.poll(async () => (await shownNotifications(page)).map((n) => n.title)).toContain("Free session at 17:30");
 });

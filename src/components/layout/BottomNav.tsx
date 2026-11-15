@@ -12,6 +12,7 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useHydration } from "@/store/hydration";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { useLiquidGlass } from "@/components/layout/useLiquidGlass";
 import { normalizePath, usePagePath } from "@/components/layout/usePagePath";
 import { useT } from "@/i18n";
 
@@ -114,7 +115,12 @@ function NavBar({ pathname }: { pathname: string | null }) {
     else void animate(x, to, LENS_SPRING);
   }, [currentIndex, tabW, reduceMotion, x]);
 
-  if (!showsDock(pathname)) return null;
+  // Real liquid glass on the dock and its lens; they wait until the dock is on screen.
+  const lensRef = useRef<HTMLSpanElement>(null);
+  const docked = showsDock(pathname);
+  useLiquidGlass(list, { bezel: 18, strength: 34, blur: 3, on: docked });
+  useLiquidGlass(lensRef, { bezel: 22, strength: 46, blur: 0.3, on: docked && tabW > 0 && currentIndex >= 0 });
+  if (!docked) return null;
 
   const indexAt = (px: number) => Math.max(0, Math.min(TABS.length - 1, Math.round(px / tabW)));
   const follow = (clientX: number) => {
@@ -184,6 +190,7 @@ function NavBar({ pathname }: { pathname: string | null }) {
         {/* One lens for the whole dock, moved by the page and by the finger. */}
         {tabW > 0 && currentIndex >= 0 && (
           <motion.span
+            ref={lensRef}
             aria-hidden="true"
             style={{ x, scaleX, scaleY, width: tabW }}
             className="glass-lens pointer-events-none absolute bottom-1 left-1 top-1 rounded-xl"

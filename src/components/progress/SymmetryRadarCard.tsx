@@ -19,6 +19,7 @@ const point = (i: number, r: number) => {
 };
 const poly = (rs: number[]) => rs.map((r, i) => point(i, r).map((v) => v.toFixed(1)).join(",")).join(" ");
 
+const GRADE_TEXT = { OPTIMAL: "Optimal", BALANCED: "Balanced", IMBALANCED: "Imbalanced", CRITICAL: "Critical" } as const;
 const GRADE_COLOR = { OPTIMAL: "var(--color-accent)", BALANCED: "var(--color-dropset)", IMBALANCED: "#e0a100", CRITICAL: "#c8102e" } as const;
 
 /**
@@ -45,7 +46,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
         <h2 id={`${uid}-h`} className="text-sm font-semibold">
           {t("Muscle balance")}
         </h2>
-        <ProBadge suffix="TELEMETRY" />
+        <ProBadge />
       </div>
       <RangeTabs
         id="symmetry-range"
@@ -75,7 +76,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
           </filter>
         </defs>
         {/* Steel web: four rings and six spokes. */}
-        <g fill="none" stroke="#27272a" strokeWidth={1}>
+        <g fill="none" stroke="var(--color-line-strong)" strokeWidth={1}>
           {[0.25, 0.5, 0.75, 1].map((k) => (
             <polygon key={k} points={poly(AXES.map(() => R * k))} />
           ))}
@@ -84,7 +85,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
             return <line key={i} x1={0} y1={0} x2={x} y2={y} />;
           })}
         </g>
-        <polygon points={poly(AXES.map(() => ideal))} fill="none" stroke="#71717a" strokeWidth={1.25} strokeDasharray="4 4" />
+        <polygon points={poly(AXES.map(() => ideal))} fill="none" stroke="var(--color-text-muted)" strokeWidth={1.25} strokeDasharray="4 4" />
         {enough && (
           <>
             <polygon points={poly(AXES.map(radius))} fill="color-mix(in oklab, var(--color-accent) 18%, transparent)" stroke="var(--color-accent)" strokeWidth={2} strokeLinejoin="round" />
@@ -102,14 +103,14 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
           // "Quads / Anterior" on two lines, so it fits beside the web.
           const [first, second] = label(a).split(" / ");
           return (
-            <text key={a} x={x} y={second ? y - 6 : y} textAnchor={anchor} dominantBaseline="middle" className="fill-zinc-300 font-mono text-[10px] uppercase tracking-[0.08em]">
+            <text key={a} x={x} y={second ? y - 6 : y} textAnchor={anchor} dominantBaseline="middle" className="fill-text text-[11px] font-semibold">
               {first}
               {second && (
                 <tspan x={x} dy="11">
                   {second}
                 </tspan>
               )}
-              <tspan x={x} dy="12" className="fill-zinc-500 tabular-nums">
+              <tspan x={x} dy="12" className="fill-text-muted tabular-nums">
                 {fmt(r.axes[a].sets)}
               </tspan>
             </text>
@@ -118,36 +119,36 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
       </svg>
 
       {!unlocked && enough ? (
-        <ProLock feature="symmetry_radar_telemetry" text={t("The score, the ratio checks and what to add this week come with ABOT // BLACK.")} />
+        <ProLock feature="symmetry_radar_telemetry" text={t("The score, the ratio checks and what to add this week come with ABOT Pro.")} />
       ) : (
-      <div role="status" className="rounded-ctl border border-[#27272a] bg-[#121215] px-3 py-2.5 font-mono text-xs leading-relaxed tabular-nums">
+      <div role="status" className="rounded-ctl border border-line bg-surface px-3 py-2.5 text-sm leading-relaxed tabular-nums">
         {enough ? (
           <>
             <p>
-              <span className="text-zinc-400">{t("SYMMETRY SCORE")}:</span>{" "}
-              <span className="font-bold text-white">{r.score}/100</span>{" "}
+              <span className="text-text-muted">{t("Balance score")}:</span>{" "}
+              <span className="font-bold text-text">{r.score}/100</span>{" "}
               <span className="font-bold" style={{ color: GRADE_COLOR[r.grade!] }}>
-                [{t(r.grade!)}]
+                · {t(GRADE_TEXT[r.grade!])}
               </span>
             </p>
             {r.diagnostics.length === 0 ? (
-              <p className="mt-1 text-zinc-300">
-                <span className="text-zinc-400">{t("DIAGNOSTIC")}:</span> {t("Balanced. Keep the split as it is.")}
+              <p className="mt-1 text-text">
+                <span className="text-text-muted">{t("What to do")}:</span> {t("Balanced. Keep the split as it is.")}
               </p>
             ) : (
               r.diagnostics.map((d) => (
-                <p key={d.code} className="mt-1 text-zinc-300">
-                  <span className="text-[#f59e0b]">{t("DIAGNOSTIC")}:</span> {t(d.key, d.params)}
+                <p key={d.code} className="mt-1 text-text">
+                  <span className="text-pr">{t("What to do")}:</span> {t(d.key, d.params)}
                 </p>
               ))
             )}
-            <p className="mt-1.5 text-[10px] uppercase tracking-[0.1em] text-zinc-400">
+            <p className="mt-1.5 text-xs tabular-nums text-text-muted">
               {t("Push : Pull")} {r.pushPull === null ? "-" : `1 : ${(1 / r.pushPull).toFixed(2)}`} · {t("Quad : Ham")}{" "}
               {r.quadHam === null ? "-" : `1 : ${r.quadHam.toFixed(2)}`} · {t("Legs")} {r.lowerShare === null ? "-" : `${Math.round(r.lowerShare * 100)}%`}
             </p>
           </>
         ) : (
-          <p className="text-zinc-300">{t("Log at least {n} working sets in this range to read your balance.", { n: MIN_SETS })}</p>
+          <p className="text-text">{t("Log at least {n} working sets in this range to read your balance.", { n: MIN_SETS })}</p>
         )}
       </div>
       )}

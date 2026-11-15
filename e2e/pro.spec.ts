@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 async function simulate(page: Page, mode: "Beta mode" | "Free locked" | "Pro active") {
   await page.goto("/settings");
-  const card = page.getByRole("region", { name: /FOUNDER UNIT/ });
+  const card = page.getByRole("region", { name: /^Founder #/ });
   await card.getByRole("radio", { name: mode }).click();
   await expect(card.getByRole("radio", { name: mode })).toHaveAttribute("aria-checked", "true");
   // Saved before the test opens another page.
@@ -18,19 +18,19 @@ async function simulate(page: Page, mode: "Beta mode" | "Free locked" | "Pro act
 
 test("every beta install gets a founder unit, and the paywall shows plans and the beta pass", async ({ page }) => {
   await page.goto("/settings");
-  const card = page.getByRole("region", { name: /^FOUNDER UNIT \/\/ #\d{4}$/ });
+  const card = page.getByRole("region", { name: /^Founder #\d{4}$/ });
   await expect(card).toBeVisible();
   const plan = page.getByRole("region", { name: "Plan & billing" });
-  await expect(plan).toContainText("FOUNDERS BETA");
+  await expect(plan).toContainText("Founders beta");
   await expect(plan).toContainText("Every PRO feature is open while the founders beta runs.");
   const code = (await card.getByRole("heading").textContent())!;
   await page.reload();
   // The unit number is permanent.
-  await expect(page.getByRole("region", { name: /FOUNDER UNIT/ }).getByRole("heading")).toHaveText(code);
+  await expect(page.getByRole("region", { name: /^Founder #/ }).getByRole("heading")).toHaveText(code);
   await expectNoHorizontalOverflow(page);
 
-  await plan.getByRole("button", { name: "Get Black Pro" }).click();
-  const pay = page.getByRole("dialog", { name: "Precision engineered for serious lifters." });
+  await plan.getByRole("button", { name: "Get ABOT Pro" }).click();
+  const pay = page.getByRole("dialog", { name: "ABOT Pro" });
   await expect(pay).toBeVisible();
   await expect(pay.getByRole("table")).toContainText("Auto-overload coach");
   await expect(pay).toContainText("Rp 29.000");
@@ -39,9 +39,9 @@ test("every beta install gets a founder unit, and the paywall shows plans and th
   // Founders see the lifetime license at half price, the full price struck through.
   await expect(pay).toContainText("Rp 399.000");
   await expect(pay).toContainText("Rp 798.000");
-  await expect(pay).toContainText("Founder 50% off privilege applied");
-  await expect(pay.getByRole("status").first()).toContainText("Active: Founders Beta Pass");
-  await expect(pay).toContainText(code.replace("FOUNDER UNIT", "FOUNDER"));
+  await expect(pay).toContainText("Founder price: 50% off");
+  await expect(pay.getByRole("status").first()).toContainText("Founders beta: every Pro feature");
+  await expect(pay).toContainText(code);
   await pay.getByRole("button", { name: "Close" }).click();
   await expect(pay).toBeHidden();
 });
@@ -62,13 +62,13 @@ test("Free locked: the Coach Pill, the radar and PRO story layouts open the payw
   await finishWorkout(page);
 
   await simulate(page, "Free locked");
-  await expect(page.getByRole("region", { name: "Plan & billing" })).toContainText("CORE");
+  await expect(page.getByRole("region", { name: "Plan & billing" })).toContainText("ABOT Free");
 
   await startEmptyWorkout(page);
   await addExercise(page, "Bench Press (Barbell)");
   const pill = page.getByRole("group", { name: "Coach: Volume target" });
   await pill.getByRole("button", { name: /^Apply / }).click();
-  const pay = page.getByRole("dialog", { name: "Precision engineered for serious lifters." });
+  const pay = page.getByRole("dialog", { name: "ABOT Pro" });
   await expect(pay).toContainText("Unlock feature: Auto-overload coach");
   await expect(pay.getByRole("button", { name: "Activate Annual telemetry" })).toBeVisible();
   await pay.getByRole("button", { name: "Activate Annual telemetry" }).click();
@@ -82,12 +82,12 @@ test("Free locked: the Coach Pill, the radar and PRO story layouts open the payw
   // The balance radar lives on Progress > Muscles.
   await page.goto("/progress/muscles");
   const radar = page.getByRole("region", { name: "Muscle balance" });
-  await expect(radar.getByText("Locked: ABOT // BLACK")).toBeVisible();
-  await expect(radar.getByText(/SYMMETRY SCORE/)).toHaveCount(0);
+  await expect(radar.getByText("Locked: ABOT Pro")).toBeVisible();
+  await expect(radar.getByText(/Balance score/)).toHaveCount(0);
 
   await simulate(page, "Pro active");
   await page.goto("/progress/muscles");
-  await expect(page.getByRole("region", { name: "Muscle balance" }).getByRole("status")).toContainText("SYMMETRY SCORE");
+  await expect(page.getByRole("region", { name: "Muscle balance" }).getByRole("status")).toContainText("Balance score");
 });
 
 test("Story Studio: free layouts export, PRO layouts and the watermark switch ask to unlock, founders get a badge", async ({ page }) => {
@@ -107,7 +107,7 @@ test("Story Studio: free layouts export, PRO layouts and the watermark switch as
   await studio.getByRole("button", { name: "Brutalist Receipt", exact: true }).click();
   await expect(studio.getByText("PRO layout preview")).toBeVisible();
   await studio.getByRole("button", { name: "Download High-Res PNG" }).click();
-  const pay = page.getByRole("dialog", { name: "Precision engineered for serious lifters." });
+  const pay = page.getByRole("dialog", { name: "ABOT Pro" });
   await expect(pay).toContainText("Unlock feature: Story Studio pro presets");
   await pay.getByRole("button", { name: "Close" }).click();
 

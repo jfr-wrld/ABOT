@@ -99,7 +99,7 @@ export function OverloadBanner({ item, exercise, unit }: { item: SessionExercise
       style={{ borderColor: `${look.color}55`, boxShadow: `0 0 12px ${look.color}1f` }}
     >
       <look.Icon aria-hidden="true" size={14} className="shrink-0" style={{ color: look.color }} />
-      <p className="min-w-0 flex-1 font-mono text-[11px] uppercase leading-tight tracking-[0.08em] text-zinc-300">
+      <p className="min-w-0 flex-1 font-mono text-[11px] leading-tight tracking-[0.08em] text-zinc-300">
         <ProBadge className="mb-0.5 mr-1.5 align-middle" />
         <span className="font-semibold" style={{ color: look.color }}>
           {t(look.label)}:

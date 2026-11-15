@@ -44,16 +44,16 @@ describe("nextSession", () => {
 
 describe("reminderContent", () => {
   const routine = { id: "push", name: "Push Day", muscles: ["Chest", "Shoulders", "Triceps"] };
-  it("session call: terminal title, routine and primary muscles, Start and Snooze", () => {
+  it("session call: the routine and its time, primary muscles, Start and Snooze", () => {
     const c = reminderContent({ kind: "session", at: 0, weekday: 1, routineId: "push", key: "k" }, routine, "17:30");
-    expect(c.title).toBe("ABOT // SESSION_CALL [Push Day]");
-    expect(c.body).toBe("Scheduled: Push Day • Primary: Chest, Shoulders, Triceps. Tap to initiate workout.");
+    expect(c.title).toBe("Push Day at 17:30");
+    expect(c.body).toBe("Muscles: Chest, Shoulders, Triceps. Tap to start.");
     expect(c.actions.map((a) => a.action)).toEqual(["ACTION_START", "ACTION_SNOOZE"]);
     expect(c.data).toEqual({ routineId: "push", url: "/workout?start=push" });
   });
   it("prep call names the time; a day without a routine is a free session", () => {
     const c = reminderContent({ kind: "prep", at: 0, weekday: 5, routineId: null, key: "k" }, null, "17:30");
-    expect(c.title).toBe("ABOT // PREP_CALL [Free session]");
+    expect(c.title).toBe("Pack your bag: Free session");
     expect(c.body).toBe("Pack your gym bag. Free session starts at 17:30.");
     expect(c.data.url).toBe("/workout?start=empty");
   });

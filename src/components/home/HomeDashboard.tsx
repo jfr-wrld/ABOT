@@ -50,7 +50,7 @@ import { StreakMoment } from "@/components/streak/StreakMoment";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
-const TILE = "rounded-xl border border-line bg-surface p-3";
+const TILE = "rounded-card border border-line bg-surface p-3";
 const SPRING = { type: "spring", stiffness: 300, damping: 26 } as const;
 
 /**
@@ -142,7 +142,7 @@ function WelcomeBack({ now }: { now: number }) {
   return (
     <section aria-labelledby="welcome-back" className={`${TILE} flex flex-col gap-3 p-4`}>
       <div>
-        <p className="label-caps text-accent">{t("Welcome back")}</p>
+        <p className="field-label text-accent">{t("Welcome back")}</p>
         <h2 id="welcome-back" className="mt-1 text-lg font-bold tracking-tight">
           {t("Pick up where you left off")}
         </h2>
@@ -233,7 +233,7 @@ function WeekRail({
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="label-caps truncate">{month}</p>
+        <p className="field-label truncate">{month}</p>
         <div className="-my-2 -mr-2 flex shrink-0 items-center">
           {streak > 0 && (
             // The streak plays its flame again on a tap, the same screen as after Finish.
@@ -284,7 +284,7 @@ function WeekRail({
                 onClick={() => onSelect(d.start)}
                 className={`tap flex w-full flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${on ? "bg-surface ring-1 ring-line" : "hover:bg-surface/60"}`}
               >
-                <span aria-hidden="true" className={`label-caps ${d.isToday ? "!text-text" : ""}`}>
+                <span aria-hidden="true" className={`field-label ${d.isToday ? "!text-text" : ""}`}>
                   {date.toLocaleDateString(t.locale, { weekday: "narrow" })}
                 </span>
                 <span aria-hidden="true" className={`num text-xs font-bold leading-none ${d.isToday || on ? "text-text" : "text-text-muted"}`}>
@@ -409,7 +409,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
     body = (
       <>
         <div className="relative min-w-0">
-          <p className="label-caps flex items-center gap-1.5">
+          <p className="field-label flex items-center gap-1.5">
             <Check aria-hidden="true" size={13} strokeWidth={3} className="text-accent" />
             {t("Done")} · {whenLabel(t, day.start, now, null)}
           </p>
@@ -463,7 +463,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
       body = (
         <>
           <div className="relative min-w-0">
-            <p className="label-caps">{label}</p>
+            <p className="field-label">{label}</p>
             <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
               {routine.name}
             </h2>
@@ -498,7 +498,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
       body = (
         <>
           <div className="relative min-w-0">
-            <p className="label-caps">{whenLabel(t, day.start, now, null)}</p>
+            <p className="field-label">{whenLabel(t, day.start, now, null)}</p>
             <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
               {t("Rest day")}
             </h2>
@@ -537,7 +537,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
       body = (
         <>
           <div className="relative">
-            <p className="label-caps">{t("Next up")}</p>
+            <p className="field-label">{t("Next up")}</p>
             <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
               {t("Free session")}
             </h2>
@@ -567,7 +567,6 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
 
   return (
     <section aria-labelledby="hero-heading" className={`${TILE} relative overflow-hidden p-4`}>
-      <HeroPlate />
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={day.start}
@@ -597,31 +596,6 @@ function startOfNext(next: NextProtocol, now: number): number {
   return d.getTime();
 }
 
-/**
- * A large plate outline behind the hero: the brand mark as hardware. It settles in with a short
- * turn, then rests; a plate turning for good kept Home redrawing and cost battery.
- */
-function HeroPlate() {
-  const reduce = useReducedMotionConfig();
-  return (
-    <motion.svg
-      aria-hidden="true"
-      viewBox="0 0 100 100"
-      className="pointer-events-none absolute -right-12 -top-12 size-48 text-accent/[0.16]"
-      initial={reduce ? undefined : { rotate: -30 }}
-      animate={{ rotate: 0 }}
-      transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={0.8}
-    >
-      <path d="M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z" strokeLinejoin="round" />
-      <circle cx="50" cy="50" r="31" />
-      <circle cx="50" cy="50" r="22" />
-    </motion.svg>
-  );
-}
-
 function ActiveCard() {
   const t = useT();
   const now = useNow(1000);
@@ -631,9 +605,9 @@ function ActiveCard() {
   return (
     <Link
       href="/workout"
-      className="block rounded-xl border border-accent/40 bg-accent-tint p-4 transition-colors hover:border-accent/70"
+      className="block rounded-card border border-accent/40 bg-accent-tint p-4 transition-colors hover:border-accent/70"
     >
-      <span className="label-caps flex items-center gap-1.5 !text-accent">
+      <span className="field-label flex items-center gap-1.5 !text-accent">
         <motion.span
           aria-hidden="true"
           className="size-1.5 rounded-full bg-accent"
@@ -696,7 +670,7 @@ function NumbersRow({ now }: { now: number }) {
   const change = volume.changePct;
 
   return (
-    <section aria-label={t("This week")} className="grid grid-cols-3 divide-x divide-line rounded-xl border border-line bg-surface">
+    <section aria-label={t("This week")} className="grid grid-cols-3 divide-x divide-line border-y border-line">
       <div className="flex min-w-0 items-center gap-2 p-3">
         <svg viewBox="0 0 36 36" className="hidden size-9 shrink-0 -rotate-90 min-[380px]:block" aria-hidden="true">
           <circle cx="18" cy="18" r="14" fill="none" stroke="var(--color-track)" strokeWidth="4" />
@@ -721,7 +695,7 @@ function NumbersRow({ now }: { now: number }) {
             {freq.done}
             <span className="text-xs font-semibold text-text-muted">/{target}</span>
           </p>
-          <p aria-hidden="true" className="label-caps truncate">
+          <p aria-hidden="true" className="field-label truncate">
             {perWeek ? t("Planned") : t("Days")}
           </p>
           <span className="sr-only">
@@ -735,7 +709,7 @@ function NumbersRow({ now }: { now: number }) {
           <CountFromZero delay={0.2} value={Math.round(toDisplay(volume.kg, unit))} format={(n) => shortVolume(n, t.locale)} />
           <span className="text-[11px] font-semibold text-text-muted">{unit}</span>
         </p>
-        <p className="label-caps flex items-center gap-1 truncate">
+        <p className="field-label flex items-center gap-1 truncate">
           {t("Volume")}
           {change !== null && (
             <span className={`num inline-flex items-center gap-0.5 normal-case ${change >= 0 ? "!text-text" : ""}`}>
@@ -752,7 +726,7 @@ function NumbersRow({ now }: { now: number }) {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-label={t("Muscle recovery: {ready} of {total} muscles ready. Open the map.", { ready, total: REGIONS.length })}
-        className="flex min-w-0 items-center gap-2 rounded-r-xl p-3 text-left transition-colors hover:bg-ink/[0.03]"
+        className="flex min-w-0 items-center gap-2 p-3 text-left transition-colors hover:bg-ink/[0.03]"
       >
         <span aria-hidden="true" className="hidden size-9 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent min-[380px]:flex">
           <Activity size={16} />
@@ -762,7 +736,7 @@ function NumbersRow({ now }: { now: number }) {
             {ready}
             <span className="text-xs font-semibold text-text-muted">/{REGIONS.length}</span>
           </span>
-          <span className="label-caps block truncate">{t("ready")}</span>
+          <span className="field-label block truncate">{t("ready")}</span>
         </span>
       </button>
 
@@ -798,7 +772,7 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
   return (
     <section aria-labelledby="recent-heading" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="recent-heading" className="label-caps">
+        <h2 id="recent-heading" className="field-label">
           {t("Recent workouts")}
         </h2>
         {recent.length > 0 && (
@@ -815,12 +789,12 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
         )}
       </div>
       {recent.length === 0 ? (
-        <div className={`${TILE} flex flex-col items-center gap-2 py-6 text-center`}>
+        <div className="flex flex-col items-center gap-2 border-y border-line py-6 text-center">
           <Dumbbell aria-hidden="true" size={22} className="text-text-muted" />
           <p className="text-sm text-text-muted">{t("No workouts yet.")}</p>
         </div>
       ) : (
-        <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col gap-2"}>
+        <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col divide-y divide-line border-y border-line"}>
           {recent.map((s, i) => (
             <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} grid={view === "grid"} />
           ))}
@@ -938,7 +912,7 @@ export function RecentCard({
       }}
     >
       <motion.div whileTap={{ scale: 0.98 }} transition={PRESS_SPRING}>
-        <Link href={historyPath(s.id)} className={`${TILE} flex items-center gap-3 transition-colors hover:border-line-hover`}>
+        <Link href={historyPath(s.id)} className="flex items-center gap-3 py-3 transition-colors hover:bg-ink/[0.03]">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <span className="min-w-0 truncate text-base font-semibold">{s.name}</span>

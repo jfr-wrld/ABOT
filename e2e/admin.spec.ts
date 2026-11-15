@@ -21,7 +21,7 @@ test.beforeEach(async ({ page }) => {
 /** Five taps on the build tag at the foot of Settings, then the PIN. */
 async function openConsole(page: Page, expectMode = "● LOCAL MODE") {
   await page.goto("/settings");
-  const tag = page.getByRole("button", { name: /\/\/ TELEMETRY BUILD$/ });
+  const tag = page.getByRole("button", { name: /^ABOT (v[\d.]+|web)$/ });
   for (let i = 0; i < 5; i++) await tag.click();
   await page.waitForURL(/\/admin/);
   await page.getByLabel("PIN").fill("1234");
@@ -58,8 +58,8 @@ test("hidden entry, PIN gate, and the monetization switch with prices and banner
   await page.goto("/settings");
   const card = page.getByRole("region", { name: "Plan & billing" });
   await expect(card).toContainText("PRO features are locked on this phone.");
-  await card.getByRole("button", { name: "Get Black Pro" }).click();
-  await expect(page.getByRole("dialog", { name: "Precision engineered for serious lifters." })).toContainText("Rp 35.000");
+  await card.getByRole("button", { name: "Get ABOT Pro" }).click();
+  await expect(page.getByRole("dialog", { name: "ABOT Pro" })).toContainText("Rp 35.000");
 });
 
 test("a code made in the console is redeemed on the device; built-in codes stop in commercial mode", async ({ page }) => {
@@ -80,28 +80,28 @@ test("a code made in the console is redeemed on the device; built-in codes stop 
   await expect(card).toContainText("PRO features are locked on this phone.");
   await card.getByRole("button", { name: "Redeem code" }).click();
   const redeem = page.getByRole("dialog", { name: "Redeem license code" });
-  await redeem.getByLabel("VIP, influencer or promo code").fill("ABOT-NOPE-0000");
+  await redeem.getByLabel("Promo or gift code").fill("ABOT-NOPE-0000");
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("alert")).toHaveText("This code is not valid, or it has been used up.");
-  await redeem.getByLabel("VIP, influencer or promo code").fill(code.toLowerCase());
+  await redeem.getByLabel("Promo or gift code").fill(code.toLowerCase());
   await redeem.getByRole("button", { name: "Activate" }).click();
-  await expect(redeem.getByRole("status")).toContainText("License activated: ABOT // BLACK PRO");
+  await expect(redeem.getByRole("status")).toContainText("License activated: ABOT Pro");
   await expect(redeem.getByRole("status")).toContainText("30 days access");
   await redeem.getByRole("button", { name: "Done" }).click();
-  await expect(card).toContainText("BLACK PRO");
+  await expect(card).toContainText("ABOT Pro");
   await expect(card.getByText("Days left")).toBeVisible();
 
   // Used once: a second redeem of the same code is refused.
   await card.getByRole("button", { name: "Redeem code" }).click();
-  await redeem.getByLabel("VIP, influencer or promo code").fill(code);
+  await redeem.getByLabel("Promo or gift code").fill(code);
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("alert")).toBeVisible();
   // Built-in codes are public, so once the app sells PRO they no longer unlock it.
-  await redeem.getByLabel("VIP, influencer or promo code").fill("abot pro 30d");
+  await redeem.getByLabel("Promo or gift code").fill("abot pro 30d");
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("alert")).toHaveText("This code is not valid, or it has been used up.");
   await page.keyboard.press("Escape");
-  await expect(card).toContainText("BLACK PRO");
+  await expect(card).toContainText("ABOT Pro");
   // Days left is a counting figure (a visible copy and a screen-reader copy).
   await expect(card.getByText("30", { exact: true }).first()).toBeVisible();
 });

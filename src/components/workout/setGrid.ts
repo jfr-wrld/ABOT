@@ -2,7 +2,7 @@ import type { LogType } from "@/types/workout";
 
 /**
  * Column template shared by the set header and every set row so they always align.
- * Fixed tracks are the narrowest that still fit "102.5" / "10" / "8.5" in 18px JetBrains Mono
+ * Fixed tracks are the narrowest that still fit "102.5" / "10" / "8.5" in 18px Saira Semi Condensed
  * (10.8px per digit) and a 44px tap target; whatever is left goes to Prev (about 58px on a
  * 360px phone with RPE on). A timed set has one wide Time column where weight and reps sit;
  * a cardio set has distance ("12.25") and time ("28:10").

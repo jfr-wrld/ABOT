@@ -248,7 +248,7 @@ export const workout: Record<string, string> = {
   "Pack your gym bag. {name} starts at {time}.": "Siapkan tas gym-mu. {name} mulai jam {time}.",
   "Start now": "Mulai sekarang",
   "Snooze 30 min": "Tunda 30 menit",
-  "Scheduled: {name} • Primary: {muscles}. Tap to initiate workout.": "Jadwal: {name} • Otot utama: {muscles}. Ketuk untuk mulai latihan.",
+  "Muscles: {muscles}. Tap to start.": "Otot: {muscles}. Ketuk untuk mulai.",
   "Start workout": "Mulai latihan",
   Chest: "Dada",
   "Back (muscle)": "Punggung",

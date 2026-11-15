@@ -43,7 +43,7 @@ export function BillingSection() {
   const simulator = e.devOverrideMode !== "AUTO" && e.devOverrideMode !== "FORCE_BETA" ? SIMULATOR.find((m) => m.mode === e.devOverrideMode) : undefined;
 
   const badge = { pro: t("Active"), lifetime: t("Active"), beta: t("Beta access"), core: t("PRO locked") }[s.plan];
-  const primary = { core: t("Get Black Pro"), beta: t("Get Black Pro"), pro: t("Manage plan"), lifetime: t("View plan details") }[s.plan];
+  const primary = { core: t("Get ABOT Pro"), beta: t("Get ABOT Pro"), pro: t("Manage plan"), lifetime: t("View plan details") }[s.plan];
   const note =
     s.plan === "beta"
       ? t("Every PRO feature is open while the founders beta runs.")
@@ -72,7 +72,7 @@ export function BillingSection() {
       {/* Plan name and status on one row; the dates, a note and the actions under it. */}
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 id="billing-heading" className="label-caps text-zinc-400">
+          <h2 id="billing-heading" className="field-label text-zinc-400">
             {t("Plan & billing")}
           </h2>
           <p className="flex items-center gap-2 text-xl font-extrabold leading-tight tracking-tight text-white">
@@ -84,7 +84,7 @@ export function BillingSection() {
             {PLAN_NAME[s.plan]}
           </p>
         </div>
-        <span className={`mt-0.5 shrink-0 rounded-[4px] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${BADGE[s.plan]}`}>{badge}</span>
+        <span className={`mt-0.5 shrink-0 rounded-[4px] px-2 py-0.5 font-mono text-[10px] font-bold tracking-[0.1em] ${BADGE[s.plan]}`}>{badge}</span>
       </div>
 
       {left !== null && (

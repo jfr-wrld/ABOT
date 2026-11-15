@@ -16,7 +16,7 @@ const config: CapacitorConfig = {
     },
     LocalNotifications: {
       smallIcon: "ic_stat_abot",
-      iconColor: "#C8102E",
+      iconColor: "#CCFF00",
     },
   },
   android: {

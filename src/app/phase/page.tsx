@@ -79,7 +79,7 @@ function PhaseScreen() {
         <Fuel m={m} />
       </Rise>
       <Rise order={2} className="px-4">
-        <section aria-label={t("Today's protein and water")} className="rounded-card border border-line bg-surface">
+        <section aria-label={t("Today's protein and water")} className="border-y border-line">
           <Pacer proteinTarget={m.fuel.proteinG} waterTarget={m.waterMl} now={now} size={52} bordered={false} />
         </section>
       </Rise>
@@ -113,14 +113,14 @@ function Hero({ m }: { m: PhaseTelemetry }) {
           {meso.finished ? meso.of : meso.week}
           <span className="text-base font-semibold text-text-muted">/{meso.of}</span>
         </span>
-        <span className="label-caps">{meso.finished ? t("Done") : t("Week")}</span>
+        <span className="field-label">{meso.finished ? t("Done") : t("Week")}</span>
       </BlockPlate>
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         {meso.deload && !meso.finished && (
           <span className="w-fit rounded-ctl bg-warmup/15 px-2 py-1 text-xs font-bold text-warmup">{t("Deload week: lighter loads")}</span>
         )}
         <div>
-          <p className="label-caps">{t("Trend")}</p>
+          <p className="field-label">{t("Trend")}</p>
           <p className="num text-2xl font-bold">
             {shown(m.trendKg)}
             <span className="ml-1 text-sm font-semibold text-text-muted">{unit}</span>
@@ -152,9 +152,9 @@ function Fuel({ m }: { m: PhaseTelemetry }) {
   const t = useT();
   const { fuel } = m;
   return (
-    <section aria-labelledby="fuel-heading" className="rounded-card border border-line bg-surface p-4">
+    <section aria-labelledby="fuel-heading" className="border-t border-line pt-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="fuel-heading" className="label-caps">
+        <h2 id="fuel-heading" className="field-label">
           {m.phase.phaseType === "RECOMP" ? (m.trainingDay ? t("Today, training day") : t("Today, rest day")) : t("Today")}
         </h2>
         <span className="num text-[11px] text-text-muted">
@@ -165,7 +165,7 @@ function Fuel({ m }: { m: PhaseTelemetry }) {
       <div className="mt-3 flex items-center gap-4">
         <MacroDonut protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} size={124}>
           <CountFromZero value={fuel.kcal} format={(n) => Math.round(n).toLocaleString(t.locale)} className="num text-xl font-bold text-accent" />
-          <span className="label-caps">kcal</span>
+          <span className="field-label">kcal</span>
         </MacroDonut>
         <div className="min-w-0 flex-1">
           <MacroLegend protein={fuel.proteinG} carbs={fuel.carbsG} fat={fuel.fatG} labels={[t("Protein"), t("Carbs"), t("Fat")]} />
@@ -210,9 +210,9 @@ function Weigh({ m, now }: { m: PhaseTelemetry; now: number }) {
   }));
 
   return (
-    <section aria-labelledby="weigh-heading" className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
+    <section aria-labelledby="weigh-heading" className="flex flex-col gap-3 border-t border-line pt-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 id="weigh-heading" className="label-caps">
+        <h2 id="weigh-heading" className="field-label">
           {today ? t("Today's weigh-in") : t("Weigh in")}
         </h2>
         <Link href="/profile/body" className="-my-3 -mr-2 flex min-h-11 items-center rounded-ctl px-2 text-xs font-semibold text-text-muted hover:text-text">
@@ -259,8 +259,8 @@ function Strength({ m }: { m: PhaseTelemetry }) {
   const t = useT();
   const s = m.shield;
   return (
-    <section aria-labelledby="strength-heading" className="rounded-card border border-line bg-surface p-4">
-      <h2 id="strength-heading" className="label-caps">
+    <section aria-labelledby="strength-heading" className="border-t border-line pt-4">
+      <h2 id="strength-heading" className="field-label">
         {t("Relative strength")}
       </h2>
       {s ? (

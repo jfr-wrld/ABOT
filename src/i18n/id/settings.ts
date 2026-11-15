@@ -258,7 +258,7 @@ export const settings: Record<string, string> = {
   Credits: "Kredit",
   "Exercise data and photos: free-exercise-db (public domain).": "Data dan foto gerakan: free-exercise-db (domain publik).",
   "Muscle map shapes: react-muscle-highlighter (MIT License).": "Bentuk peta otot: react-muscle-highlighter (MIT License).",
-  "Type: Barlow, Anton and JetBrains Mono (SIL Open Font License).": "Huruf: Barlow, Anton dan JetBrains Mono (SIL Open Font License).",
+  "Type: Plus Jakarta Sans, Saira Semi Condensed, JetBrains Mono and Anton (SIL Open Font License).": "Huruf: Plus Jakarta Sans, Saira Semi Condensed, JetBrains Mono dan Anton (SIL Open Font License).",
 
   // Backup & Sync
   "Backup & Sync": "Backup & Sinkronisasi",
@@ -517,7 +517,7 @@ export const settings: Record<string, string> = {
   "Your payment page is still being made. Try again in a few seconds.": "Halaman pembayaranmu masih dibuat. Coba lagi beberapa detik lagi.",
   "Could not reach the payment service. Check the connection and try again.": "Layanan pembayaran tidak terjangkau. Periksa koneksi lalu coba lagi.",
   "Checking your payment...": "Memeriksa pembayaranmu...",
-  "Payment received. ABOT // BLACK PRO is active on your account.": "Pembayaran diterima. ABOT // BLACK PRO aktif di akunmu.",
+  "Payment received. ABOT Pro is active on your account.": "Pembayaran diterima. ABOT Pro aktif di akunmu.",
   "Waiting for your payment. Finish it in the payment app or bank; PRO turns on by itself once it settles.": "Menunggu pembayaranmu. Selesaikan di aplikasi pembayaran atau bank; PRO aktif sendiri setelah pembayaran masuk.",
   "The payment did not go through. Nothing was charged; you can try again.": "Pembayaran tidak berhasil. Tidak ada yang ditagih; kamu bisa coba lagi.",
   "The payment window closed before it was paid. You can start a new one.": "Batas waktu pembayaran habis sebelum dibayar. Kamu bisa memulai yang baru.",
@@ -802,4 +802,15 @@ export const settings: Record<string, string> = {
   "Something broken or missing in the beta? Settings > Send beta feedback in the app, or": "Ada yang rusak atau kurang di versi beta? Pengaturan > Kirim masukan beta di app, atau",
   "Your set and rest timer on the lock screen": "Set dan timer istirahat di layar kunci",
   "Reminders that arrive even when ABOT is closed": "Pengingat yang sampai walau ABOT tertutup",
+  "Pack your bag: {name}": "Siapkan tas: {name}",
+  "{name} at {time}": "{name} jam {time}",
+  "Balance score": "Skor keseimbangan",
+  "Optimal": "Optimal",
+  "Balanced": "Seimbang",
+  "Imbalanced": "Tidak seimbang",
+  "Critical": "Kritis",
+  "What to do": "Yang perlu dilakukan",
+  "Pro · beta": "Pro · beta",
+  "Free": "Gratis",
+  "Founder pass": "Founder pass",
 };

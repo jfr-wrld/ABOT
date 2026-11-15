@@ -115,7 +115,7 @@ function SessionDetail() {
                 <MuscleMap primary={muscles.primary} secondary={muscles.secondary} width={144} />
               </div>
               <div className="min-w-0">
-                <h2 id="muscles-heading" className="label-caps">
+                <h2 id="muscles-heading" className="field-label">
                   {t("Muscles worked")}
                 </h2>
                 <ul className="mt-2 flex flex-wrap gap-1">
@@ -296,7 +296,7 @@ function Hero({
               </li>
             ))}
           </ul>
-          <p className="num mt-2 text-xs uppercase tracking-wider text-text-muted">
+          <p className="num mt-2 text-xs text-text-muted">
             {date.toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "long" })} ·{" "}
             {date.toLocaleTimeString(t.locale, { hour: "2-digit", minute: "2-digit" })}
           </p>
@@ -323,7 +323,7 @@ function Stat({
 }) {
   return (
     <div className="flex min-w-0 flex-col items-center gap-0.5 px-1 text-center">
-      <dt className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">
+      <dt className="flex items-center gap-1 text-[10px] font-semibold text-text-muted">
         <span aria-hidden="true" className={`[&>svg]:size-3 ${pr ? "text-pr" : ""}`}>
           {icon}
         </span>
@@ -466,7 +466,7 @@ function ExerciseCard({
                       <Trophy aria-hidden="true" size={12} /> PR
                     </span>
                   ) : isBest ? (
-                    <span className="label-caps shrink-0 !text-text">{t("Best")}</span>
+                    <span className="field-label shrink-0 !text-text">{t("Best")}</span>
                   ) : null}
                 </li>
               );

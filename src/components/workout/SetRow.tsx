@@ -238,7 +238,7 @@ export function SetRow({
           <span className="flex items-center gap-1 text-pr" role="status">
             <Trophy aria-hidden="true" size={12} />
             <span className="sr-only">{t("New record: {kinds}", { kinds: prKinds.map((k) => t(PR_LABEL[k])).join(", ") })}</span>
-            <span aria-hidden="true" className="text-[11px] font-bold tracking-wider">
+            <span aria-hidden="true" className="text-[11px] font-bold">
               PR
             </span>
           </span>
@@ -374,7 +374,7 @@ export function SetRow({
               >
                 −{weightStep}
               </StepButton>
-              <span aria-hidden="true" className="label-caps w-8 text-center normal-case">{unit}</span>
+              <span aria-hidden="true" className="field-label w-8 text-center normal-case">{unit}</span>
               <StepButton
                 label={t("{n} {unit} more on {set}", { set: a11yName, n: weightStep, unit })}
                 onClick={() => {
@@ -398,7 +398,7 @@ export function SetRow({
             >
               −1
             </StepButton>
-            <span aria-hidden="true" className="label-caps w-10 text-center">{t("Reps")}</span>
+            <span aria-hidden="true" className="field-label w-10 text-center">{t("Reps")}</span>
             <StepButton
               label={t("One rep more on {set}", { set: a11yName })}
               onClick={() => {

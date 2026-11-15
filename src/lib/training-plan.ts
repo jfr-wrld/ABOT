@@ -8,7 +8,7 @@ import type { Goal, Level } from "@/lib/first-plan";
 /**
  * A training week from a few answers: how many days, which days, where, and the split. Pure, so
  * the setup screens, Home and the tests share it; lib/apply-plan writes the result to the stores.
- * Every workout is a Template Vault day (lib/seed-routines), adapted to the equipment at hand.
+ * Every workout is a Templates day (lib/seed-routines), adapted to the equipment at hand.
  */
 
 export type PlanDays = 2 | 3 | 4 | 5 | 6;

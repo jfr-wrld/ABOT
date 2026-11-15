@@ -100,8 +100,8 @@ export interface ReminderContent {
 }
 
 /**
- * The notification for one reminder, worded by the owner's spec (terminal style). The
- * "ABOT // PREP_CALL" titles stay as they are in every language; the rest is translated.
+ * The notification for one reminder, in plain words: the session and its time, or the call to
+ * pack the bag before it. Translated like the rest of the app.
  */
 export function reminderContent(
   r: DueReminder,
@@ -114,7 +114,7 @@ export function reminderContent(
   const muscles = routine?.muscles.length ? routine.muscles.map((m) => muscleText(m, t)).join(", ") : t("your choice");
   return r.kind === "prep"
     ? {
-        title: `ABOT // PREP_CALL [${name}]`,
+        title: t("Pack your bag: {name}", { name }),
         body: t("Pack your gym bag. {name} starts at {time}.", { name, time }),
         tag: r.key,
         data: { routineId: routine?.id ?? null, url },
@@ -124,8 +124,8 @@ export function reminderContent(
         ],
       }
     : {
-        title: `ABOT // SESSION_CALL [${name}]`,
-        body: t("Scheduled: {name} • Primary: {muscles}. Tap to initiate workout.", { name, muscles }),
+        title: t("{name} at {time}", { name, time }),
+        body: t("Muscles: {muscles}. Tap to start.", { name, muscles }),
         tag: r.key,
         data: { routineId: routine?.id ?? null, url },
         actions: [

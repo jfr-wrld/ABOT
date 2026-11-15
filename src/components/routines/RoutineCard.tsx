@@ -17,7 +17,7 @@ const PREVIEW = 5;
 const THUMB = 38;
 
 /**
- * A saved routine, read like a Template Vault card: focus, time and size up top, the muscles as
+ * A saved routine, read like a Templates card: focus, time and size up top, the muscles as
  * lit figures, each lift as a photo with sets x reps, then Start and the edit actions.
  */
 export function RoutineCard({
@@ -42,7 +42,7 @@ export function RoutineCard({
   const empty = r.exercises.length === 0;
   const icon = "tap flex size-11 shrink-0 items-center justify-center rounded-xl border border-ink/[0.08] text-text-muted hover:border-ink/20 hover:text-text";
   return (
-    <article aria-labelledby={`routine-${r.id}`} className="rounded-card border border-ink/[0.07] bg-surface p-4 transition-colors hover:border-ink/[0.15]">
+    <article aria-labelledby={`routine-${r.id}`} className="py-4">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <SummaryMeta sum={sum} count={r.exercises.length} />
@@ -90,7 +90,7 @@ export function SummaryMeta({ sum, count }: { sum: RoutineSummary; count: number
   return (
     <div className="flex items-center gap-3">
       {sum.focus && (
-        <span className="rounded-full border border-ink/10 px-2 py-px text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+        <span className="rounded-full border border-ink/10 px-2 py-px text-[10px] font-semibold text-text-muted">
           {t(sum.focus.label)}
         </span>
       )}

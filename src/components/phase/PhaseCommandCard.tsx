@@ -45,7 +45,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
-            <span className="label-caps">{t("Body phase")}</span>
+            <span className="field-label">{t("Body phase")}</span>
             {/* Said before the four setup steps, not after them. */}
             {!pro && <span className="rounded-full border border-accent/50 px-1.5 text-[11px] font-bold text-accent">PRO</span>}
           </span>
@@ -78,7 +78,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
           <span className="num shrink-0 text-xs font-bold text-text-muted">
             {meso.finished ? t("Done") : t("W{week}/{of}", { week: meso.week, of: meso.of })}
           </span>
-          {meso.deload && !meso.finished && <span className="shrink-0 rounded-full bg-warmup/15 px-1.5 py-px text-[11px] font-bold uppercase text-warmup">{t("Deload")}</span>}
+          {meso.deload && !meso.finished && <span className="shrink-0 rounded-full bg-warmup/15 px-1.5 py-px text-[11px] font-bold text-warmup">{t("Deload")}</span>}
           {/* Something waits on the phase page: the week's check-in, or the end-of-block summary. */}
           {(meso.finished || (checkIn && checkIn.kind !== "need_weighins")) && (
             <span className="shrink-0 rounded-full bg-accent px-1.5 py-px text-[11px] font-bold text-on-accent">
@@ -93,14 +93,14 @@ export function PhaseCommandCard({ now }: { now: number }) {
             Macros, the block and the charts are on /phase. */}
         <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0">
-            <p className="label-caps">{left >= 0 ? t("Left today") : t("Over today")}</p>
+            <p className="field-label">{left >= 0 ? t("Left today") : t("Over today")}</p>
             <p className="num text-lg font-bold leading-tight text-accent">
               {Math.abs(left).toLocaleString(t.locale)}
               <span className="ml-0.5 text-xs font-semibold text-text-muted">{t("of {n} kcal", { n: fuel.kcal.toLocaleString(t.locale) })}</span>
             </p>
           </div>
           <div className="min-w-0">
-            <p className="label-caps">{t("Trend")}</p>
+            <p className="field-label">{t("Trend")}</p>
             <p className="num flex items-baseline gap-1.5 whitespace-nowrap">
               <span className="text-lg font-bold leading-tight">
                 {weight}

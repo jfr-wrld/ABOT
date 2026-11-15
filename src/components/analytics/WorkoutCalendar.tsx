@@ -99,7 +99,7 @@ export function WorkoutCalendar({
       </div>
 
       <div className="mt-3 border-t border-line pt-3">
-        <h3 className="text-xs font-semibold uppercase text-text-muted">
+        <h3 className="text-xs font-semibold text-text-muted">
           {new Date(selected).toLocaleDateString(t.locale, { weekday: "long", day: "numeric", month: "short" })}
         </h3>
         {daySessions.length === 0 ? (

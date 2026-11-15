@@ -52,7 +52,7 @@ export function LegalPage({ which, docs }: { which: "privacy" | "terms"; docs: R
       <article className="mt-4 flex max-w-[62ch] flex-col gap-6">
         <header className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold tracking-tight">{doc.title}</h1>
-          <p className="label-caps">{doc.updated}</p>
+          <p className="field-label">{doc.updated}</p>
           <p className="text-[15px] leading-relaxed text-text-muted">{doc.intro}</p>
         </header>
         {doc.sections.map((s) => (

@@ -1,5 +1,6 @@
 "use client";
 
+import { founderLabel } from "@/lib/entitlements";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Download, Film, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "lucide-react";
 import { useReducedMotionConfig } from "framer-motion";
@@ -438,7 +439,7 @@ function Studio({
               onClick={() => openPaywall("story_studio_pro_presets")}
               className="min-h-11 rounded-ctl bg-[#ccff00] px-4 font-mono text-xs font-black uppercase tracking-[0.1em] text-black"
             >
-              {t("Unlock with ABOT // BLACK")}
+              {t("Unlock with ABOT Pro")}
             </button>
           </div>
         )}
@@ -517,7 +518,7 @@ function Studio({
             {isFounder ? (
               <ProRow
                 label={t("Show founder badge")}
-                badge={<span className="font-mono text-[10px] tabular-nums text-text-muted">{founderUnitCode}</span>}
+                badge={<span className="font-mono text-[10px] tabular-nums text-text-muted">{founderLabel(founderUnitCode)}</span>}
                 checked={founderBadgeOn}
                 onChange={setFounderBadgeOn}
               />
@@ -681,7 +682,7 @@ const TABS: { id: Tab; label: string; icon: typeof Camera }[] = [
   { id: "pro", label: "Pro", icon: Gem },
 ];
 
-/** Layouts after the free ones (two by default; Mission Control sets it) are ABOT // BLACK PRO. */
+/** Layouts after the free ones (two by default; Mission Control sets it) are ABOT Pro. */
 function isProPreset(id: StoryPresetId): boolean {
   return STORY_PRESETS.findIndex((p) => p.id === id) >= tunables().story.freePresets;
 }

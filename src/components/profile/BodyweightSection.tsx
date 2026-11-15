@@ -91,7 +91,7 @@ export function BodyweightSection({ now }: { now: number }) {
 
   return (
     <section aria-labelledby="bw-heading" className="panel p-3">
-      <h2 id="bw-heading" className="label-caps">
+      <h2 id="bw-heading" className="field-label">
         {t("Bodyweight")}
       </h2>
       <div className="mt-1 flex items-center justify-between gap-3">

@@ -116,7 +116,7 @@ export function HealthSyncCard() {
         <h2 id="health-heading" className="text-sm font-semibold">
           Health Connect
         </h2>
-        <p role="status" className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.14em]">
+        <p role="status" className="flex items-center gap-2 font-mono text-xs font-semibold tracking-[0.14em]">
           {line ? (
             <>
               <span aria-hidden="true" className={`size-2 rounded-full ${line.on ? "bg-accent" : "border border-text-muted"}`} />

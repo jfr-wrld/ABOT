@@ -99,7 +99,7 @@ export function AboutSection() {
             {t("More exercises, mostly newer machines: Open Exercise Atlas (CC0 1.0).")}
           </li>
           <li>{t("Muscle map shapes: react-muscle-highlighter (MIT License).")}</li>
-          <li>{t("Type: Barlow, Anton and JetBrains Mono (SIL Open Font License).")}</li>
+          <li>{t("Type: Plus Jakarta Sans, Saira Semi Condensed, JetBrains Mono and Anton (SIL Open Font License).")}</li>
           <li>{t("Food values: Tabel Komposisi Pangan Indonesia (Kemenkes RI) and USDA FoodData Central (public domain).")}</li>
           <li>
             <details>
