@@ -9,7 +9,6 @@ import { useAllExercises } from "@/store/useExerciseStore";
 import { HydrationGate } from "@/components/ui/Loading";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
-import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 import { RecentCard } from "@/components/home/HomeDashboard";
 import { byMonth, filterHistory, focusesIn } from "@/lib/history-search";
 import { prCounts } from "@/lib/home";
@@ -46,7 +45,6 @@ function AllWorkouts() {
   const [focus, setFocus] = useState<FocusLabel | "">("");
   const [gym, setGym] = useState("");
   const [shown, setShown] = useState(PAGE);
-  const [view, setView] = useViewMode("history-all");
 
   const focuses = useMemo(() => focusesIn(sessions, byId), [sessions, byId]);
   const gyms = useMemo(() => {
@@ -80,7 +78,6 @@ function AllWorkouts() {
             autoComplete="off"
             className="h-11 min-w-0 flex-1 search-pill px-3 text-base placeholder:text-text-muted"
           />
-          <ViewToggle value={view} onChange={setView} />
         </div>
 
         {focuses.length > 1 && (
@@ -139,9 +136,9 @@ function AllWorkouts() {
               <h2 id={`m-${g.month}`} className="field-label">
                 {new Date(g.month).toLocaleDateString(t.locale, { month: "long", year: "numeric" })}
               </h2>
-              <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col gap-2"}>
+              <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-card border bg-surface">
                 {g.sessions.map((s, i) => (
-                  <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} grid={view === "grid"} />
+                  <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} />
                 ))}
               </ul>
             </section>

@@ -52,7 +52,6 @@ import { weekStreak } from "@/lib/analytics";
 import { asRoutine, comeback, dismissWelcomeBack, welcomeBackDismissed } from "@/lib/comeback";
 import { currentStreak, type StreakMoment as StreakMomentData } from "@/lib/streak-moment";
 import { StreakMoment } from "@/components/streak/StreakMoment";
-import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 import { EmptyArt } from "@/components/ui/EmptyArt";
 import { routineSummary } from "@/lib/routine-summary";
 import { LiftList } from "@/components/routines/RoutineCard";
@@ -1100,8 +1099,6 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
   const recent = useMemo(() => [...sessions].sort((a, b) => b.startedAt - a.startedAt).slice(0, 3), [sessions]);
   const prs = useMemo(() => prCounts(recent, sessions, byId), [recent, sessions, byId]);
 
-  const [view, setView] = useViewMode("recent");
-
   return (
     <section aria-labelledby="recent-heading" className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
@@ -1109,16 +1106,13 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
           {t("Recent workouts")}
         </h2>
         {recent.length > 0 && (
-          <div className="flex items-center gap-1">
-            <Link
-              href="/history/all"
-              className="flex min-h-11 items-center gap-0.5 rounded-ctl px-2 text-xs font-semibold text-text-muted hover:bg-surface hover:text-text"
-            >
-              {t("See all")}
-              <ChevronRight aria-hidden="true" size={14} />
-            </Link>
-            <ViewToggle value={view} onChange={setView} />
-          </div>
+          <Link
+            href="/history/all"
+            className="flex min-h-11 items-center gap-0.5 rounded-ctl px-2 text-xs font-semibold text-text-muted hover:bg-surface hover:text-text"
+          >
+            {t("See all")}
+            <ChevronRight aria-hidden="true" size={14} />
+          </Link>
         )}
       </div>
       {recent.length === 0 ? (
@@ -1127,9 +1121,9 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
           <p className="text-sm text-text-muted">{t("No workouts yet.")}</p>
         </div>
       ) : (
-        <ul className={view === "grid" ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-col divide-y divide-line overflow-hidden rounded-card border bg-surface"}>
+        <ul className="flex flex-col divide-y divide-line overflow-hidden rounded-card border bg-surface">
           {recent.map((s, i) => (
-            <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} grid={view === "grid"} />
+            <RecentCard key={s.id} session={s} pr={prs[s.id] ?? 0} unit={unit} byId={byId} now={now} order={i} />
           ))}
         </ul>
       )}
@@ -1144,7 +1138,6 @@ export function RecentCard({
   byId,
   now,
   order,
-  grid,
 }: {
   session: WorkoutSession;
   pr: number;
@@ -1152,7 +1145,6 @@ export function RecentCard({
   byId: Record<string, Exercise>;
   now: number;
   order: number;
-  grid: boolean;
 }) {
   const t = useT();
   const controls = useEntrance();
@@ -1205,36 +1197,6 @@ export function RecentCard({
       {relativeDay(s.startedAt, now, t)}
     </time>
   );
-
-  if (grid) {
-    const ids = s.exercises.map((e) => e.exerciseId).filter((id) => byId[id]);
-    return (
-      <motion.li style={{ opacity: 0, y: 8 }} animate={controls} variants={{ still: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0, transition: { ...SPRING, delay: 0.35 + Math.min(order, 6) * 0.05 } } }}>
-        <motion.div whileTap={{ scale: 0.97 }} transition={PRESS_SPRING} className="h-full">
-          <Link href={historyPath(s.id)} className={`${TILE} flex h-full flex-col gap-2 transition-colors hover:border-line-hover`}>
-            {/* Up to four of its exercises, as a 2 x 2 photo mosaic. */}
-            <div aria-hidden="true" className="grid grid-cols-2 gap-1 overflow-hidden rounded-lg">
-              {[0, 1, 2, 3].map((i) =>
-                ids[i] ? (
-                  <div key={i} className="flex aspect-square items-center justify-center overflow-hidden bg-surface-2 [&>span]:!size-full [&>span]:!rounded-none [&>span]:!border-0">
-                    <ExerciseThumb exercise={byId[ids[i]]} size={36} />
-                  </div>
-                ) : (
-                  <div key={i} className="aspect-square bg-surface-2" />
-                ),
-              )}
-            </div>
-            <span className="line-clamp-2 text-sm font-semibold leading-snug">{s.name}</span>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              {when}
-              {prChip}
-            </div>
-            <div className="mt-auto">{stats}</div>
-          </Link>
-        </motion.div>
-      </motion.li>
-    );
-  }
 
   return (
     <motion.li
