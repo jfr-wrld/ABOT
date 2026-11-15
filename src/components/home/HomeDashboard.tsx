@@ -283,7 +283,7 @@ function WeekRail({
                 type="button"
                 aria-pressed={on}
                 onClick={() => onSelect(d.start)}
-                className={`tap flex w-full flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${on ? "bg-surface ring-1 ring-line" : "hover:bg-surface/60"}`}
+                className={`tap flex w-full flex-col items-center gap-1 rounded-xl py-1.5 transition-colors ${on ? "tile border border-line bg-surface" : "hover:bg-surface/60"}`}
               >
                 <span aria-hidden="true" className={`field-label ${d.isToday ? "!text-text" : ""}`}>
                   {date.toLocaleDateString(t.locale, { weekday: "narrow" })}
@@ -294,7 +294,7 @@ function WeekRail({
                 <span aria-hidden="true" className="relative flex size-10 items-center justify-center">
                   {c.kind === "trained" ? (
                     <motion.span
-                      className={`flex size-full items-center justify-center rounded-lg border bg-accent-tint ${d.isToday ? "border-accent" : "border-accent/40"}`}
+                      className={`tile flex size-full items-center justify-center rounded-lg border bg-accent-tint ${d.isToday ? "border-accent" : "border-accent/40"}`}
                       style={{ scale: 0.4, opacity: 0 }}
                       animate={controls}
                       variants={{
@@ -305,12 +305,15 @@ function WeekRail({
                       {c.focus ? <MuscleIcon muscle={c.focus.muscle} size={28} /> : <Check size={16} strokeWidth={3} className="text-accent" />}
                     </motion.span>
                   ) : c.kind === "planned" ? (
-                    // A training day still to come: a ring where the muscle will light up.
-                    <motion.span
-                      className={`size-3.5 rounded-full border-2 ${d.isToday ? "border-accent" : "border-accent/60"}`}
-                      animate={d.isToday && !reduce ? { scale: [1, 1.25, 1] } : undefined}
-                      transition={{ duration: 2.4, repeat: 2, ease: "easeInOut" }}
-                    />
+                    // A training day still to come: a ring where the muscle will light up, set into a
+                    // small sunken well like an empty slot.
+                    <span className="sunk flex size-full items-center justify-center rounded-lg bg-surface-2">
+                      <motion.span
+                        className={`size-3.5 rounded-full border-2 ${d.isToday ? "border-accent" : "border-accent/60"}`}
+                        animate={d.isToday && !reduce ? { scale: [1, 1.25, 1] } : undefined}
+                        transition={{ duration: 2.4, repeat: 2, ease: "easeInOut" }}
+                      />
+                    </span>
                   ) : (
                     <span className={`size-1.5 rounded-full ${d.isToday ? "bg-text" : "bg-ink/20"}`} />
                   )}

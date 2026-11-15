@@ -559,4 +559,5 @@ export const workout: Record<string, string> = {
   "One rep fewer on {set}": "Satu repetisi lebih sedikit di {set}",
   "One rep more on {set}": "Satu repetisi lebih banyak di {set}",
   "See exercises": "Lihat latihan",
+  "Apply": "Pakai",
 };
