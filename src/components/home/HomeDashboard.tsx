@@ -526,7 +526,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
             <Link
               href="/plan"
               aria-label={t("Adjust your plan")}
-              className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
+              className="raised flex size-12 items-center justify-center rounded-xl"
             >
               <SlidersHorizontal aria-hidden="true" size={18} />
             </Link>
@@ -551,7 +551,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
             <Link
               href="/workout"
               aria-label={t("Create a routine")}
-              className="flex size-12 items-center justify-center rounded-xl border border-ink/[0.12] transition-colors hover:border-ink/25"
+              className="raised flex size-12 items-center justify-center rounded-xl"
             >
               <Plus aria-hidden="true" size={20} />
             </Link>

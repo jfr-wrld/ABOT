@@ -114,7 +114,7 @@ export function ExerciseSwapModal({
                 feedback.tick();
                 setFilter(f.value);
               }}
-              className={`min-h-11 rounded-ctl border px-2 font-mono text-[11px] font-semibold tracking-[0.08em] transition-colors ${
+              className={`chip min-h-11 rounded-ctl border px-2 font-mono text-[11px] font-semibold tracking-[0.08em] transition-colors ${
                 filter === f.value ? "border-accent bg-accent text-on-accent" : "border-line-strong bg-surface-2 text-text-muted hover:text-text"
               }`}
             >

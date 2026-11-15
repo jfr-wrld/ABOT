@@ -344,7 +344,7 @@ function FilterChip({
       type="button"
       aria-pressed={pressed}
       onClick={onClick}
-      className={`flex h-10 shrink-0 items-center gap-1.5 rounded-ctl border pl-2 pr-3 text-sm font-medium transition-colors ${
+      className={`chip flex h-10 shrink-0 items-center gap-1.5 rounded-ctl border pl-2 pr-3 text-sm font-medium transition-colors ${
         pressed
           ? "border-accent bg-accent-tint text-text"
           : "border-line-strong bg-surface-2 text-text-muted hover:text-text"

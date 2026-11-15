@@ -122,7 +122,7 @@ function Editor() {
                   type="button"
                   aria-pressed={routine.folder === sp.folder}
                   onClick={() => update(routine.id, { folder: routine.folder === sp.folder ? "" : sp.folder })}
-                  className={`tap h-8 shrink-0 rounded-full border px-3 text-xs font-semibold ${
+                  className={`chip tap h-8 shrink-0 rounded-full border px-3 text-xs font-semibold ${
                     routine.folder === sp.folder ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
                   }`}
                 >

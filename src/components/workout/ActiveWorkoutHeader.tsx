@@ -71,7 +71,7 @@ export function ActiveWorkoutHeader({
           onClick={onFinish}
           {...press}
           className={`min-h-11 shrink-0 rounded-xl px-5 text-sm font-extrabold transition-[filter,background-color] duration-150 ${
-            ready ? "bg-accent text-on-accent shadow-volt hover:brightness-110" : "border border-line-strong bg-surface text-text hover:bg-surface-2"
+            ready ? "bg-accent text-on-accent shadow-volt hover:brightness-110" : "raised text-text"
           }`}
         >
           {t("Finish")}

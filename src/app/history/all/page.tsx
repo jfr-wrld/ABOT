@@ -94,7 +94,7 @@ function AllWorkouts() {
                   setFocus(f);
                   setShown(PAGE);
                 }}
-                className={`tap h-11 shrink-0 rounded-full border px-4 text-xs font-semibold ${
+                className={`chip tap h-11 shrink-0 rounded-full border px-4 text-xs font-semibold ${
                   focus === f ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
                 }`}
               >

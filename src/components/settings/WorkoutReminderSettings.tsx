@@ -89,7 +89,7 @@ export function WorkoutReminderSettings() {
 
       <Link
         href="/plan"
-        className="mt-3 flex min-h-11 items-center justify-between gap-2 rounded-ctl border border-ink/[0.08] px-3 text-sm font-semibold hover:border-ink/25"
+        className="raised mt-3 flex min-h-11 items-center justify-between gap-2 rounded-ctl px-3 text-sm font-semibold"
       >
         {t("Set up your days and workouts in one go")}
         <CalendarDays aria-hidden="true" size={16} className="shrink-0 text-accent" />
@@ -113,7 +113,7 @@ export function WorkoutReminderSettings() {
                   aria-pressed={on}
                   aria-label={d.long}
                   onClick={() => setDay(d.wd, { on: !on })}
-                  className={`num flex h-11 items-center justify-center rounded-full border text-xs font-semibold transition-colors ${
+                  className={`chip num flex h-11 items-center justify-center rounded-full border text-xs font-semibold transition-colors ${
                     on ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
                   }`}
                 >
@@ -181,7 +181,7 @@ export function WorkoutReminderSettings() {
                     role="radio"
                     aria-checked={schedule.leadMinutes === m}
                     onClick={() => update({ leadMinutes: m })}
-                    className={`num min-h-11 rounded-lg text-xs font-semibold transition-colors ${
+                    className={`chip num min-h-11 rounded-lg text-xs font-semibold transition-colors ${
                       schedule.leadMinutes === m ? "bg-ink/[0.1] text-text" : "text-text-muted hover:text-text"
                     }`}
                   >

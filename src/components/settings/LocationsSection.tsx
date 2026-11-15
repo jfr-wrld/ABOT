@@ -178,7 +178,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
                   // 20 kg plates are no whole number of pounds: a switch starts from that unit's standard set.
                   update(gym.id, setupPatch(standardSetup(u), u));
                 }}
-                className={`min-h-11 rounded-lg text-sm font-semibold ${unit === u ? "bg-ink/[0.1] text-text" : "text-text-muted hover:text-text"}`}
+                className={`chip min-h-11 rounded-lg text-sm font-semibold ${unit === u ? "bg-ink/[0.1] text-text" : "text-text-muted hover:text-text"}`}
               >
                 {u === "kg" ? "kg" : "lb"}
               </button>
@@ -212,7 +212,7 @@ function GymRow({ gym, onMakeDefault }: { gym: GymLocation; onMakeDefault: () =>
                     type="button"
                     aria-pressed={on}
                     onClick={() => togglePlate(p)}
-                    className={`num my-1 min-h-11 min-w-20 rounded-lg px-3 text-sm font-semibold ${on ? "bg-accent text-on-accent" : "border border-line-strong text-text-muted"}`}
+                    className={`chip num my-1 min-h-11 min-w-20 rounded-lg px-3 text-sm font-semibold ${on ? "bg-accent text-on-accent" : "border border-line-strong text-text-muted"}`}
                   >
                     {label}
                   </button>

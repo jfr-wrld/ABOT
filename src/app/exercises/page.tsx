@@ -334,7 +334,7 @@ function Pill({ pressed, onClick, children }: { pressed: boolean; onClick: () =>
         if (!pressed) feedback.tick();
         onClick();
       }}
-      className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors ${
+      className={`chip flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors ${
         // Volt tint like the picker's chips: follows the theme instead of an inverted white pill.
         pressed ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface text-text-muted hover:text-text"
       }`}
@@ -373,7 +373,7 @@ function FilterSheet({
 }) {
   const t = useT();
   const chip = (on: boolean) =>
-    `flex min-h-11 items-center gap-2 rounded-ctl border px-3 text-sm font-semibold transition-colors ${
+    `chip flex min-h-11 items-center gap-2 rounded-ctl border px-3 text-sm font-semibold transition-colors ${
       on ? "border-accent bg-accent-tint text-text" : "border-line-strong bg-surface-2 text-text-muted hover:text-text"
     }`;
   return (

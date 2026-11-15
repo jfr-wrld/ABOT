@@ -50,7 +50,7 @@ export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
                 if (split !== s.value) feedback.tick();
                 setSplit(s.value);
               }}
-              className={`tap h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold ${
+              className={`chip tap h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold ${
                 split === s.value
                   ? "border-accent bg-accent text-on-accent"
                   : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"

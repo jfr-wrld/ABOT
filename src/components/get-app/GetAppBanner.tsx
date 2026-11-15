@@ -36,7 +36,7 @@ export function GetAppBanner() {
   }
 
   return (
-    <section aria-label={t("ABOT app")} className="flex items-center gap-3 rounded-xl border border-line bg-surface py-2 pl-2 pr-1">
+    <section aria-label={t("ABOT app")} className="raised-card flex items-center gap-3 rounded-card border bg-surface py-2 pl-2 pr-1">
       <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-black text-accent">
         <AbotMark size={22} />
       </span>

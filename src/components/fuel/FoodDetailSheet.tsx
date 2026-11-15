@@ -79,7 +79,7 @@ function Detail({ food, onDone }: { food: Food; onDone: () => void }) {
                 feedback.tick();
                 setGrams(p.grams);
               }}
-              className={`tap min-h-11 rounded-full border px-3.5 text-xs font-semibold ${
+              className={`chip tap min-h-11 rounded-full border px-3.5 text-xs font-semibold ${
                 grams === p.grams ? "border-accent bg-accent text-on-accent" : "border-ink/[0.12] text-text-muted hover:border-ink/25 hover:text-text"
               }`}
             >

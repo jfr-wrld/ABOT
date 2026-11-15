@@ -31,10 +31,18 @@
   --color-muscle-icon: #52525b;
   --color-row: rgb(0 0 0 / 0.3); /* set rows and chips set into a card */
   --color-raised: #24242a; /* face of a raised secondary button */
-  --color-edge: rgb(255 255 255 / 0.12); /* thin outline of raised things */
-  --color-lip: #303037; /* the side under a raised button or card */
-  --color-accent-edge: #9cc400;
-  --color-accent-lip: #557300;
+  --color-edge: rgb(255 255 255 / 0.08); /* thin outline of raised things */
+  --color-lip: #2b2b31; /* the short side under a raised button or card */
+  --color-accent-edge: #b3e600;
+  --color-accent-lip: #7fa300;
+  /* Raised, softly: a short side a shade off the face, a highlight along the top, and a soft
+     shadow that fades out under it (no hard outline round the side). */
+  --raise-btn: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 0 var(--color-lip), 0 4px 10px -3px rgb(0 0 0 / 0.55);
+  --raise-chip: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 1.5px 0 var(--color-lip), 0 3px 6px -2px rgb(0 0 0 / 0.45);
+  --raise-card: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 2px 0 var(--color-lip), 0 8px 18px -8px rgb(0 0 0 / 0.6);
+  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 2px 0 var(--color-accent-lip), 0 5px 12px -4px rgb(110 150 0 / 0.45);
+  --raise-pressed: 0 0 0 var(--color-lip), 0 1px 3px -1px rgb(0 0 0 / 0.4);
+  --sink: inset 0 1.5px 3px rgb(0 0 0 / 0.45);
 
   --font-sans: var(--font-sans-face), "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: var(--font-numbers), "Saira Semi Condensed", system-ui, sans-serif; /* figures: tabular via .num */
@@ -74,10 +82,16 @@
   --color-muscle-icon: #a1a1aa;
   --color-row: rgb(0 0 0 / 0.035);
   --color-raised: #ffffff;
-  --color-edge: #dcdce0;
-  --color-lip: #ececef;
-  --color-accent-edge: #5a8a0c;
-  --color-accent-lip: #3f6212;
+  --color-edge: #e4e4e7;
+  --color-lip: #e2e2e6;
+  --color-accent-edge: #5f9410;
+  --color-accent-lip: #4d7c0f;
+  --raise-btn: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 2px 0 var(--color-lip), 0 4px 10px -3px rgb(0 0 0 / 0.12);
+  --raise-chip: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 1.5px 0 var(--color-lip), 0 3px 6px -2px rgb(0 0 0 / 0.1);
+  --raise-card: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 2px 0 var(--color-lip), 0 8px 18px -8px rgb(0 0 0 / 0.14);
+  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 2px 0 var(--color-accent-lip), 0 5px 12px -4px rgb(77 124 15 / 0.4);
+  --raise-pressed: 0 0 0 var(--color-lip), 0 1px 3px -1px rgb(0 0 0 / 0.12);
+  --sink: inset 0 1px 3px rgb(0 0 0 / 0.1);
   --color-zinc-100: #18181b;
   --color-zinc-400: #52525b;
   --color-zinc-600: #a1a1aa;
@@ -126,10 +140,18 @@
   --color-muscle-icon: #52525b;
   --color-row: rgb(0 0 0 / 0.3);
   --color-raised: #24242a; /* face of a raised secondary button */
-  --color-edge: rgb(255 255 255 / 0.12); /* thin outline of raised things */
-  --color-lip: #303037; /* the side under a raised button or card */
-  --color-accent-edge: #9cc400;
-  --color-accent-lip: #557300;
+  --color-edge: rgb(255 255 255 / 0.08); /* thin outline of raised things */
+  --color-lip: #2b2b31; /* the short side under a raised button or card */
+  --color-accent-edge: #b3e600;
+  --color-accent-lip: #7fa300;
+  /* Raised, softly: a short side a shade off the face, a highlight along the top, and a soft
+     shadow that fades out under it (no hard outline round the side). */
+  --raise-btn: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 2px 0 var(--color-lip), 0 4px 10px -3px rgb(0 0 0 / 0.55);
+  --raise-chip: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 1.5px 0 var(--color-lip), 0 3px 6px -2px rgb(0 0 0 / 0.45);
+  --raise-card: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 2px 0 var(--color-lip), 0 8px 18px -8px rgb(0 0 0 / 0.6);
+  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 2px 0 var(--color-accent-lip), 0 5px 12px -4px rgb(110 150 0 / 0.45);
+  --raise-pressed: 0 0 0 var(--color-lip), 0 1px 3px -1px rgb(0 0 0 / 0.4);
+  --sink: inset 0 1.5px 3px rgb(0 0 0 / 0.45);
   --color-zinc-100: #f4f4f5;
   --color-zinc-400: #a1a1aa;
   --color-zinc-600: #52525b;
@@ -417,16 +439,16 @@
   border: 0;
 }
 
-/* 3D with a thin edge (owner, 2026-11-15): buttons and cards stand up from the page on a short
-   side in a darker shade, outlined by a 1px edge, like a key; a pressed button sinks onto its
-   side. The primary button has a dark-green side under the Volt face. Unlayered so it sits on
+/* 3D with a thin edge (owner, 2026-11-15), kept soft like GoPay's: buttons and cards stand on a
+   short side a shade off their face, with a top highlight and a fading shadow under them; a
+   pressed button sinks onto its side. The primary button has a dark-green side under the Volt face. Unlayered so it sits on
    top of the Tailwind classes it pairs with; focus rings keep their own shadow. */
 :is(button, a).bg-surface-2:not(:disabled, [role="switch"]) {
   background-color: var(--color-raised);
   border: 1px solid var(--color-edge);
 }
 :is(button, a).bg-surface-2:not(:disabled, [role="switch"], :focus-visible) {
-  box-shadow: 0 3px 0 -1px var(--color-lip), 0 3px 0 0 var(--color-edge);
+  box-shadow: var(--raise-btn);
 }
 :is(button, a).bg-accent:not(:disabled, [role="switch"]),
 span.bg-accent.min-h-12 {
@@ -434,7 +456,7 @@ span.bg-accent.min-h-12 {
 }
 :is(button, a).bg-accent:not(:disabled, [role="switch"], :focus-visible),
 span.bg-accent.min-h-12 {
-  box-shadow: 0 3px 0 var(--color-accent-lip);
+  box-shadow: var(--raise-accent);
 }
 :is(button, a):is(.bg-surface-2, .bg-accent):not(:disabled, [role="switch"]) {
   transition-property: color, background-color, border-color, filter, box-shadow, translate;
@@ -442,25 +464,81 @@ span.bg-accent.min-h-12 {
 }
 :is(button, a).bg-surface-2:not(:disabled, [role="switch"]):active {
   translate: 0 2px;
-  box-shadow: 0 1px 0 -1px var(--color-lip), 0 1px 0 0 var(--color-edge);
+  box-shadow: var(--raise-pressed);
 }
 :is(button, a).bg-accent:not(:disabled, [role="switch"]):active {
   translate: 0 2px;
-  box-shadow: 0 1px 0 var(--color-accent-lip);
+  box-shadow: var(--raise-pressed);
 }
 .panel,
 .rounded-card:is(.bg-surface, .bg-accent-tint) {
   border-color: var(--color-edge);
-  box-shadow: 0 4px 0 -1px var(--color-lip), 0 4px 0 0 var(--color-edge);
+  box-shadow: var(--raise-card);
 }
 input.bg-well:not(:focus) {
-  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.7);
-}
-:where([data-theme="light"]) input.bg-well:not(:focus) {
-  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.07);
+  box-shadow: var(--sink);
 }
 @media (prefers-reduced-motion: reduce) {
   :is(button, a):is(.bg-surface-2, .bg-accent):active {
+    translate: none;
+  }
+}
+
+/* The same raised look for controls built outside Button: `raised` (a key on a 3px side),
+   `raised-danger` (a red side), `raised-card` (a card's 4px side) and `chip` for toggles and
+   choices: a chip stands on a 2px side and, once selected (aria-pressed / aria-checked), sits
+   pressed in, so the choice reads from its shape and not only from its colour. */
+.raised:not(:disabled) {
+  background-color: var(--color-raised);
+  border: 1px solid var(--color-edge);
+}
+.raised:not(:disabled, :focus-visible) {
+  box-shadow: var(--raise-btn);
+}
+.raised:not(:disabled):active {
+  translate: 0 2px;
+  box-shadow: var(--raise-pressed);
+}
+.raised-danger:not(:disabled) {
+  border: 1px solid color-mix(in oklab, var(--color-failure) 60%, transparent);
+}
+.raised-danger:not(:disabled, :focus-visible) {
+  box-shadow: 0 2px 0 color-mix(in oklab, var(--color-failure) 45%, black), 0 4px 10px -3px rgb(0 0 0 / 0.35);
+}
+.raised-danger:not(:disabled):active {
+  translate: 0 2px;
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--color-failure) 45%, black);
+}
+.raised-card {
+  border-color: var(--color-edge);
+  box-shadow: var(--raise-card);
+}
+.raised,
+.raised-danger,
+button.chip {
+  transition-property: color, background-color, border-color, filter, box-shadow, translate, scale;
+  transition-duration: 120ms;
+}
+button.chip:not(:disabled, [aria-pressed="true"], [aria-checked="true"]) {
+  background-color: var(--color-raised);
+  border: 1px solid var(--color-edge);
+}
+button.chip:not(:disabled, [aria-pressed="true"], [aria-checked="true"], :focus-visible) {
+  box-shadow: var(--raise-chip);
+}
+button.chip:is([aria-pressed="true"], [aria-checked="true"]):not(:focus-visible) {
+  translate: 0 1.5px;
+  box-shadow: var(--sink);
+}
+button.chip:not(:disabled):active {
+  translate: 0 1.5px;
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .raised:active,
+  .raised-danger:active,
+  button.chip:active,
+  button.chip:is([aria-pressed="true"], [aria-checked="true"]) {
     translate: none;
   }
 }

@@ -33,7 +33,7 @@ export function ExerciseExtras({ item, exercise, name }: { item: SessionExercise
             aria-haspopup="dialog"
             aria-label={item.variation ? t("Variation: {variation}. Change", { variation: t(variationLabel(item.variation)) }) : t("Choose a variation")}
             className={`flex min-h-9 items-center gap-1 rounded-full border px-3 text-xs font-semibold ${
-              item.variation ? "border-accent/50 bg-accent-tint text-text" : "border-line-strong text-text-muted hover:text-text"
+              item.variation ? "border-accent/50 bg-accent-tint text-text" : "raised text-text-muted hover:text-text"
             }`}
           >
             {item.variation && <VariationIcon variation={item.variation} size={18} />}
@@ -47,7 +47,7 @@ export function ExerciseExtras({ item, exercise, name }: { item: SessionExercise
             onClick={() => setNoteOpen(true)}
             aria-haspopup="dialog"
             aria-label={t("Add a note for {name}", { name })}
-            className="flex min-h-9 items-center gap-1 rounded-full border border-line-strong px-3 text-xs font-semibold text-text-muted hover:text-text"
+            className="flex min-h-9 items-center gap-1 rounded-full raised px-3 text-xs font-semibold text-text-muted hover:text-text"
           >
             <NotebookPen aria-hidden="true" size={14} />
             {t("Note")}
@@ -81,7 +81,7 @@ export function ExerciseExtras({ item, exercise, name }: { item: SessionExercise
                   useWorkoutStore.getState().setExerciseVariation(item.id, key);
                   setVariationOpen(false);
                 }}
-                className={`flex min-h-14 items-center gap-2.5 rounded-ctl border px-3 text-left text-sm font-semibold ${
+                className={`chip flex min-h-14 items-center gap-2.5 rounded-ctl border px-3 text-left text-sm font-semibold ${
                   on ? "border-accent bg-accent-tint text-text" : "border-line-strong text-text hover:bg-surface-2"
                 }`}
               >

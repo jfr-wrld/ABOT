@@ -108,7 +108,7 @@ function ProfileScreen() {
           </button>
           <Link
             href={EDIT_PROFILE}
-            className="tap mt-3 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-line-strong bg-surface px-4 text-sm font-semibold text-text hover:bg-press active:bg-press-strong"
+            className="tap mt-3 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full raised px-4 text-sm font-semibold text-text"
           >
             <Pencil aria-hidden="true" size={15} />
             {t("Edit profile")}

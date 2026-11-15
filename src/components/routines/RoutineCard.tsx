@@ -40,7 +40,7 @@ export function RoutineCard({
   const sum = routineSummary(r, byId);
   const ssCount = new Set(Object.values(supersetLabels(r.exercises)).map((x) => x.letter)).size;
   const empty = r.exercises.length === 0;
-  const icon = "tap flex size-11 shrink-0 items-center justify-center rounded-xl border border-ink/[0.08] text-text-muted hover:border-ink/20 hover:text-text";
+  const icon = "tap flex size-11 shrink-0 items-center justify-center rounded-xl raised text-text-muted hover:text-text";
   return (
     <article aria-labelledby={`routine-${r.id}`} className="py-4">
       <header className="flex items-start justify-between gap-3">
@@ -75,7 +75,7 @@ export function RoutineCard({
         <button type="button" onClick={onDuplicate} aria-label={t("Duplicate {name}", { name: r.name })} className={icon}>
           <Copy aria-hidden="true" size={17} />
         </button>
-        <button type="button" onClick={onDelete} aria-label={t("Delete {name}", { name: r.name })} className={`${icon} hover:!border-failure/40 hover:!text-failure`}>
+        <button type="button" onClick={onDelete} aria-label={t("Delete {name}", { name: r.name })} className={`${icon} hover:!text-failure`}>
           <Trash2 aria-hidden="true" size={17} />
         </button>
       </div>

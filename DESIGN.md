@@ -343,10 +343,15 @@ switches being thrown.
   it. The workout bar has it too, with its backdrop darkened rather than tinted so its figures
   stay high-contrast. Safari and Firefox keep the frosted glass; Visual effects: Light makes all
   of it solid.
-- Raised (owner, 2026-11-15: "3D tipis"): buttons and cards stand up from the page on a short
-  side in a darker shade (`--color-lip`, 3px under buttons, 4px under cards) with a 1px edge
-  (`--color-edge`); the primary button has a dark-green side (`--color-accent-lip`). A pressed
-  button sinks 2px onto its side, so a tap feels like a key. Number fields sit a little sunken.
+- Raised (owner, 2026-11-15: "3D tipis", kept soft like GoPay): buttons, chips and cards stand
+  on a short side a shade off their face (2px under buttons and cards, 1.5px under chips), with a
+  highlight along the top and a soft shadow fading out under them (`--raise-btn`, `--raise-chip`,
+  `--raise-card`, `--raise-accent`). A pressed button sinks onto its side. A selected chip
+  (aria-pressed / aria-checked) sits pressed in, so the choice reads from its shape, not only its
+  colour. Number fields sit slightly sunken (`--sink`). Controls built outside Button use the
+  classes `raised`, `raised-danger`, `raised-card` and `chip`. Left flat on purpose: the dashed
+  "Add set" (an empty slot), glass surfaces, buttons over photos, the week rail's selected day,
+  bottom sheets, and segmented controls with a sliding marker.
 - Shadow: the dock only, as the elevation of the one floating layer.
 
 ## Motion

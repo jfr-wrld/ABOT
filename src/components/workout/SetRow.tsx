@@ -338,7 +338,7 @@ export function SetRow({
         className={`relative z-[1] flex size-11 items-center justify-center rounded-xl border transition-colors duration-150 ${
           set.completed
             ? "border-accent bg-accent text-on-accent hover:brightness-110"
-            : "border-ink/15 bg-transparent text-text-muted hover:border-ink/30 hover:text-text"
+            : "raised text-text-muted hover:text-text"
         }`}
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">

@@ -12,7 +12,7 @@ const variants: Record<Variant, string> = {
   secondary:
     "border border-ink/[0.12] bg-surface-2 text-text hover:border-ink/25 hover:bg-press active:bg-press-strong",
   ghost: "text-text-muted hover:bg-ink/[0.05] hover:text-text active:bg-ink/[0.08]",
-  danger: "border border-failure/50 text-failure hover:bg-failure/10 active:bg-failure/20",
+  danger: "raised-danger text-failure hover:bg-failure/10 active:bg-failure/20",
 };
 
 /** Springy enough to feel under the thumb, damped enough to settle before the next tap. */
