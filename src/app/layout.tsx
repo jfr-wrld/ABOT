@@ -23,6 +23,7 @@ import { LoadingStatus } from "@/components/ui/Loading";
 import { AudioUnlock } from "@/components/layout/AudioUnlock";
 import { EntitlementsProvider } from "@/components/paywall/EntitlementsProvider";
 import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
+import { WebAnalytics } from "@/components/layout/WebAnalytics";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
@@ -98,6 +99,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           <BottomNav />
           <SignInReturn />
+          {/* It reads the search params, which a prerendered page only has in the browser. */}
+          <Suspense fallback={null}>
+            <WebAnalytics />
+          </Suspense>
         </MotionProvider>
       </body>
     </html>

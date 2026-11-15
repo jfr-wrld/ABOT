@@ -1,6 +1,7 @@
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
 import { normalizeRemoteConfig, useRemoteConfig, type RemoteConfig } from "./remote-config";
+import { summarizeGrowth, type GrowthSummary } from "./growth";
 import { readLocalCodes, writeLocalCodes, type Grant, type LocalCode } from "./redeem-service";
 
 /**
@@ -121,6 +122,13 @@ export async function stats(mode: AdminMode, codes: AdminCode[]): Promise<AdminS
   fail(error);
   const r = (Array.isArray(data) ? data[0] : data) as Record<string, number> | null;
   return { totalUsers: Number(r?.total_users ?? 0), founders: Number(r?.founders ?? 0), activePro: Number(r?.active_pro ?? 0), activeCodes };
+}
+
+/** Sign-ups and syncing accounts per day (admin_growth, supabase/migrations/20261115_admin_growth.sql). */
+export async function growth(days = 30): Promise<GrowthSummary> {
+  const { data, error } = await (await getSupabase()).rpc("admin_growth", { p_days: days });
+  fail(error);
+  return summarizeGrowth(data);
 }
 
 /** Manual upgrade by email. False: no ABOT account with that email (they sign in once first). */
