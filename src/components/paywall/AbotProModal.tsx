@@ -37,7 +37,7 @@ export function AbotProModal() {
   const open = usePaywallStore((s) => s.open);
   const feature = usePaywallStore((s) => s.feature);
   const close = usePaywallStore((s) => s.close);
-  const { isBetaUnlocked, tier, isFounder, founderUnitCode, proExpiresAt } = useEntitlements();
+  const { isBetaUnlocked, tier, isFounder, founderUnitCode, proExpiresAt, renewNeeded } = useEntitlements();
   const paid = tier === "pro" || tier === "lifetime";
   const [plan, setPlan] = useState<PlanId>("annual");
   // Prices from Mission Control (remote config), the built-in ones until it answers.
@@ -251,6 +251,12 @@ export function AbotProModal() {
                 <BuyButton busy={busy} onClick={() => void checkout()} label={plan === "lifetime" ? t("Upgrade to lifetime") : t("Add another year")} />
               )}
             </>
+          ) : renewNeeded ? (
+            // Bought, but this device holds no signed licence that checks out (offline over 30
+            // days, signed out, or a wrong clock). Buying again would not help.
+            <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 text-sm leading-relaxed text-accent">
+              {t("Your Pro license needs a quick check. Go online, sign in with the same account, and open ABOT again.")}
+            </p>
           ) : isBetaUnlocked ? (
             <>
               <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold leading-relaxed tracking-[0.08em] text-accent">

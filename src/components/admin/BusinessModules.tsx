@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import { useRemoteConfig, type RemoteConfig } from "@/lib/remote-config";
-import { useLicense } from "@/store/useLicense";
+import { selectLicense, useLicense } from "@/store/useLicense";
 import { createCode, grantByEmail, listOrders, saveConfig, setCodeActive, simulateOrder, type AdminCode, type AdminMode, type AdminOrder, type SimulatedOutcome } from "@/lib/admin-api";
 import { generateCode, type Grant } from "@/lib/redeem-service";
-import { DEFAULT_ENTITLEMENT, SIMULATOR, annualSaving, plansFor, resolveEntitlement, rupiah, type Tier } from "@/lib/entitlements";
+import { DEFAULT_ENTITLEMENT, LICENSE_KEY_SET, SIMULATOR, annualSaving, plansFor, resolveEntitlement, rupiah, type Tier } from "@/lib/entitlements";
 import { updateEntitlement } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { feedback } from "@/lib/feedback";
@@ -452,7 +452,7 @@ function DeviceEntitlementPanel() {
   const e = useSettingsStore((s) => s.entitlement) ?? DEFAULT_ENTITLEMENT;
   const appMode = useRemoteConfig((s) => s.config.monetizationMode);
   const now = useNow(60_000);
-  const license = useLicense((s) => s.license);
+  const license = useLicense(selectLicense);
   const r = resolveEntitlement(e, appMode, now, undefined, license);
   return (
     <Panel id="l-device" title="Entitlement on this device" scope="device">
@@ -474,6 +474,16 @@ function DeviceEntitlementPanel() {
           <dd className="font-mono text-xs tabular-nums text-white">{e.founderUnitCode ?? "-"}</dd>
         </div>
       </dl>
+      <p className="font-mono text-[11px] text-zinc-400">
+        Signed licence:{" "}
+        {!LICENSE_KEY_SET
+          ? "signing off in this build"
+          : license
+            ? `verified, ${license.tier}, works offline until ${new Date(license.exp).toLocaleDateString("en-GB")}`
+            : e.licenseToken
+              ? "stored but not verified (other key, other account, expired, or wrong clock)"
+              : "none yet (sign in and open the app online)"}
+      </p>
       <div role="radiogroup" aria-label="Simulator" className="grid grid-cols-3 gap-1">
         {SIMULATOR.map((s) => (
           <button

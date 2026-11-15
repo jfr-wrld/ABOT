@@ -58,5 +58,9 @@ a localStorage cache (`abot.remote-config`). Both are plain data: editing either
 
 ## Known limits
 
+A token is a bearer token. On a signed-in device it counts only for that account (`sub` must match),
+and every sync replaces it with the account's own. On a signed-out device a token copied from
+someone else works until it expires (at most 30 days). Device binding stays a non-goal.
+
 Setting the phone's clock back keeps a token alive past 30 days (but not before its `iat`). A
 rebuilt or patched app ignores all of this.

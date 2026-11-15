@@ -12,8 +12,8 @@ export interface VerifiedLicense {
   exp: number;
 }
 
-/** How far ahead of this device's clock a token's issue time may be (clock drift). */
-const SKEW_MS = 10 * 60 * 1000;
+/** How far ahead of this device's clock a token's issue time may be: a phone set hours wrong still works. */
+const SKEW_MS = 12 * 3600 * 1000;
 
 /** The public key from NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY, or null. A private key is refused. */
 export function parsePublicKey(raw: string | undefined): JsonWebKey | null {
@@ -68,4 +68,12 @@ export async function verifyLicense(token: string, publicJwk: JsonWebKey, nowMs:
   if (c.tier !== "free" && c.tier !== "pro" && c.tier !== "lifetime") return null;
   if (c.exp * 1000 <= nowMs || c.iat * 1000 > nowMs + SKEW_MS) return null;
   return { sub: c.sub, tier: c.tier, proUntil: typeof c.pro_until === "string" ? c.pro_until : null, exp: c.exp * 1000 };
+}
+
+/**
+ * The licence counts for the account signed in on this device, or on a signed-out device. A token
+ * copied from another account is refused while someone else is signed in.
+ */
+export function licenseFor(license: VerifiedLicense | null, signedInUserId: string | null): VerifiedLicense | null {
+  return license && (signedInUserId === null || license.sub === signedInUserId) ? license : null;
 }

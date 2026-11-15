@@ -3,6 +3,12 @@ import type { NextConfig } from "next";
 // `npm run build:android` sets this: the app ships inside the APK as plain static files.
 const nativeApp = process.env.ABOT_TARGET === "android";
 
+// NEXT_PUBLIC_ variables are copied into the app for everyone to read. A private licence key put
+// there by mistake ("d" is the private part of a JWK) must stop the build, not ship.
+if (/"d"\s*:/.test(process.env.NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY ?? "")) {
+  throw new Error("NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY holds a private key. Put only the public key there (scripts/make-license-keys.mjs).");
+}
+
 /**
  * Content-Security-Policy for the web build (security audit 2026-11-11). Scripts come from this
  * site only; 'unsafe-inline' stays because Next.js writes its page data as inline scripts and a

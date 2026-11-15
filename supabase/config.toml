@@ -14,6 +14,8 @@ verify_jwt = false
 [functions.delete-account]
 verify_jwt = true
 
-# A signed-in lifter's licence, signed: the gateway checks the token, the function too.
+# A signed-in lifter's licence, signed. The browser calls it directly, and the gateway's JWT check
+# rejects the browser's CORS preflight (docs/payments-setup.md), so the function checks the user
+# itself (getUser) and answers 401 without one.
 [functions.license]
-verify_jwt = true
+verify_jwt = false

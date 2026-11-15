@@ -1,3 +1,4 @@
+import { bindLicenseUser } from "./useLicense";
 import { safeReturnPath } from "@/lib/safe-path";
 import { create } from "zustand";
 import type { User } from "@supabase/supabase-js";
@@ -109,6 +110,7 @@ export const useSyncStore = create<SyncStoreState>()((set, get) => ({
     try {
       // Local scope: works offline and does not sign the user out of their other devices.
       await (await getSupabase()).auth.signOut({ scope: "local" });
+      bindLicenseUser(null);
     } catch {
       // The local session is what matters here; it is cleared below either way.
     }

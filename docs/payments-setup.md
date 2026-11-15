@@ -126,14 +126,16 @@ variable is missing. Mission Control → Overview → Live config says which rul
 3. Deploy the function:
 
    ```bash
-   supabase functions deploy license
+   supabase functions deploy license --no-verify-jwt
    ```
 
 4. Put the public key it printed in `NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY`: in Vercel (Project →
    Settings → Environment Variables) and in the repository's Actions variables (for the APK). Redeploy.
 
-Do steps 1 to 3 before step 4: a build with the key and no working function shows paying users as
-free until it can fetch a token. A new key pair later works the same way and invalidates old tokens
+Before step 4, sign in on the web app and check that `license` answers (Supabase → Edge Functions →
+license → Logs shows a 200), then set the variable. A build with the key and no working function
+shows paying users "Your Pro license needs a quick check" until it can fetch a token. After the
+redeploy, Mission Control → Licenses → Entitlement on this device should say the licence is verified. A new key pair later works the same way and invalidates old tokens
 until each phone is online.
 
 When ABOT sells for real, also set `NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR=COMMERCIAL_LIVE` in the same

@@ -1,10 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { create } from "zustand";
 import { useSettingsStore } from "./useSettingsStore";
-import { useLicense } from "./useLicense";
+import { selectLicense, useLicense } from "./useLicense";
 import { useRemoteConfig, currentMonetizationMode } from "@/lib/remote-config";
 import {
   DEFAULT_ENTITLEMENT,
+  MONETIZATION_FLOOR,
   claimFounder,
   resolveEntitlement,
   type DevOverride,
@@ -12,6 +13,7 @@ import {
   type ProFeatureKey,
 } from "@/lib/entitlements";
 import { newId } from "@/lib/id";
+import { DEV_TOOLS } from "@/lib/dev-tools";
 
 /** The paywall is one sheet for the whole app; this says whether it is open and for what. */
 interface PaywallState {
@@ -37,7 +39,8 @@ export function updateEntitlement(patch: Partial<EntitlementState>): void {
 
 /** Stamps this install a Founder once, while the build is in the founders beta. */
 export function autoClaimFounder(): void {
-  if (currentMonetizationMode() !== "FOUNDERS_BETA") return;
+  // Once live (the build's floor), an edited cache cannot stamp new founders on this device.
+  if (currentMonetizationMode() !== "FOUNDERS_BETA" || (MONETIZATION_FLOOR === "COMMERCIAL_LIVE" && !DEV_TOOLS)) return;
   const e = current();
   if (e.isFounder) return;
   useSettingsStore.getState().update({ entitlement: claimFounder(e, `${newId()}-${Date.now()}`) });
@@ -52,7 +55,7 @@ export function useEntitlements() {
   const show = usePaywallStore((s) => s.show);
   // Mission Control's switch (remote config) decides beta or paywall for every install.
   const appMode = useRemoteConfig((s) => s.config.monetizationMode);
-  const license = useLicense((s) => s.license);
+  const license = useLicense(selectLicense);
   const r = useMemo(() => resolveEntitlement(e, appMode, undefined, undefined, license), [e, appMode, license]);
   // Every PRO feature is gated the same way today; the key names what is being asked for.
   const canAccessPro = useCallback(

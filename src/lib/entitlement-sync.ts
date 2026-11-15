@@ -1,3 +1,4 @@
+import { bindLicenseUser } from "@/store/useLicense";
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
 import { applyGrant, type EntitlementState } from "./entitlements";
@@ -67,7 +68,7 @@ export type RestoreResult =
   | { kind: "revoked"; next: EntitlementState }
   /** The account holds nothing this phone does not already have (next: only a fresh licence token). */
   | { kind: "up-to-date"; next?: EntitlementState }
-  | { kind: "none" }
+  | { kind: "none"; next?: EntitlementState }
   | { kind: "error" };
 
 /** The change takes paid time away: lifetime lost, or pro ending sooner or gone. */
@@ -86,13 +87,36 @@ export function withLicenseToken(state: EntitlementState, token: string | null):
 
 /** A fresh signed licence from the license Edge Function, or null (not deployed, offline, no key). */
 async function fetchLicenseToken(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string | null> {
-  try {
-    const { data, error } = await supabase.functions.invoke("license", { body: {} });
-    const token = (data as { token?: unknown } | null)?.token;
-    return !error && typeof token === "string" ? token : null;
-  } catch {
-    return null;
+  // Three tries: right after a payment a cold function start can fail once.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const { data, error } = await supabase.functions.invoke("license", { body: {} });
+      const token = (data as { token?: unknown } | null)?.token;
+      if (!error && typeof token === "string") return token;
+    } catch {
+      // Tried again below.
+    }
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
   }
+  return null;
+}
+
+/**
+ * What a restore changes, from the account's row and a fresh signed token (null when none came).
+ * The signed token is what release builds trust; the row is what the screen shows. A fresh token
+ * always replaces the stored one, so a token pasted from another account does not survive a sync;
+ * a revoked licence drops its old token even when no fresh one arrived.
+ */
+export function decideRestore(local: EntitlementState, data: AccountEntitlement | null, token: string | null, now = Date.now()): RestoreResult {
+  const merged = mergeAccountEntitlement(local, data, now);
+  if (merged !== local) {
+    const revoked = isLoss(local, merged);
+    const next = token === null && revoked ? { ...merged, licenseToken: null } : withLicenseToken(merged, token);
+    return { kind: revoked ? "revoked" : "restored", next };
+  }
+  const next = withLicenseToken(local, token);
+  if (next === local) return data ? { kind: "up-to-date" } : { kind: "none" };
+  return data ? { kind: "up-to-date", next } : { kind: "none", next };
 }
 
 /** Reads the signed-in account's licence and says what it would change here. */
@@ -111,12 +135,8 @@ export async function restoreEntitlementFromAccount(local: EntitlementState): Pr
       .eq("user_id", session.session.user.id)
       .maybeSingle();
     if (error) return { kind: "error" };
-    const merged = mergeAccountEntitlement(local, (data as AccountEntitlement | null) ?? null);
-    // The signed token is what release builds trust; the row above is what the screen shows.
-    const next = withLicenseToken(merged, await fetchLicenseToken(supabase));
-    if (merged !== local) return { kind: isLoss(local, merged) ? "revoked" : "restored", next };
-    if (next !== local) return data ? { kind: "up-to-date", next } : { kind: "none" };
-    return data ? { kind: "up-to-date" } : { kind: "none" };
+    bindLicenseUser(session.session.user.id);
+    return decideRestore(local, (data as AccountEntitlement | null) ?? null, await fetchLicenseToken(supabase));
   } catch {
     return { kind: "error" };
   }

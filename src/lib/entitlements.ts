@@ -94,6 +94,8 @@ export interface Resolved {
   isBetaUnlocked: boolean;
   /** PRO features are open, for whatever reason. */
   proActive: boolean;
+  /** A paid licence from the account is remembered here, but no signed licence checks out: go online. */
+  renewNeeded: boolean;
 }
 
 /**
@@ -113,12 +115,15 @@ export function resolveEntitlement(
   keySet = LICENSE_KEY_SET,
   floor: MonetizationMode | null = MONETIZATION_FLOOR,
 ): Resolved {
+  let renewNeeded = false;
   if (!devTools) {
     if (floor === "COMMERCIAL_LIVE") appMode = "COMMERCIAL_LIVE";
     if (keySet) {
       // Only a verified, unexpired licence counts; the stored tier is whatever the device says.
       const valid = license !== null && license.exp > now;
       const tier: Tier = valid ? license.tier : "free";
+      // The device remembers a paid licence from the account, but no signed one checks out now.
+      renewNeeded = !valid && e.licenseSource === "account" && (e.tier === "lifetime" || (e.tier === "pro" && Date.parse(e.proExpiresAt ?? "0") > now));
       e = { ...e, devOverrideMode: "AUTO", tier, proExpiresAt: tier === "pro" ? license!.proUntil : null };
     } else {
       const tier: Tier = e.licenseSource === "account" ? e.tier : "free";
@@ -131,7 +136,7 @@ export function resolveEntitlement(
   const expired = tier === "pro" && e.devOverrideMode !== "FORCE_PRO" && e.proExpiresAt !== null && Date.parse(e.proExpiresAt) <= now;
   const paid = tier === "lifetime" || (tier === "pro" && !expired);
   const isBetaUnlocked = mode === "FOUNDERS_BETA";
-  return { mode, tier: expired ? "free" : tier, isBetaUnlocked, proActive: isBetaUnlocked || paid };
+  return { mode, tier: expired ? "free" : tier, isBetaUnlocked, proActive: isBetaUnlocked || paid, renewNeeded };
 }
 
 /** Four digits from an id, the same digits for the same id: 0001 to 9999. */

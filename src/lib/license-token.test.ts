@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { licensePayload, signLicense } from "../../supabase/functions/_shared/license";
-import { parsePublicKey, verifyLicense } from "./license-token";
+import { licenseFor, parsePublicKey, verifyLicense } from "./license-token";
 
 async function keyPair() {
   const k = (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])) as CryptoKeyPair;
@@ -34,8 +34,9 @@ describe("licence tokens", () => {
     const a = await keyPair();
     const token = await signLicense(licensePayload({ tier: "lifetime", pro_expires_at: null }, "u1", nowSec), a.priv);
     expect(await verifyLicense(token, a.pub, NOW + 2592000 * 1000)).toBeNull();
-    expect(await verifyLicense(token, a.pub, NOW - 11 * 60 * 1000)).toBeNull();
-    expect(await verifyLicense(token, a.pub, NOW - 5 * 60 * 1000)).not.toBeNull();
+    // A phone whose clock runs hours slow still accepts a fresh token; one more than 12 h behind does not.
+    expect(await verifyLicense(token, a.pub, NOW - 13 * 3600 * 1000)).toBeNull();
+    expect(await verifyLicense(token, a.pub, NOW - 3 * 3600 * 1000)).not.toBeNull();
     const [, p, s] = token.split(".");
     const none = Buffer.from(JSON.stringify({ alg: "none", typ: "ABOT-LICENSE" })).toString("base64url");
     expect(await verifyLicense(`${none}.${p}.${s}`, a.pub, NOW)).toBeNull();
@@ -48,5 +49,15 @@ describe("licence tokens", () => {
     expect(parsePublicKey("not json")).toBeNull();
     expect(parsePublicKey(JSON.stringify({ kty: "RSA" }))).toBeNull();
     expect(parsePublicKey(JSON.stringify({ ...pub, d: "secret" }))).toBeNull();
+  });
+});
+
+describe("licenseFor", () => {
+  const lic = { sub: "u1", tier: "lifetime" as const, proUntil: null, exp: 1 };
+  it("counts a licence only for the account signed in on this device, or when nobody is", () => {
+    expect(licenseFor(lic, "u1")).toBe(lic);
+    expect(licenseFor(lic, null)).toBe(lic);
+    expect(licenseFor(lic, "u2")).toBeNull();
+    expect(licenseFor(null, "u1")).toBeNull();
   });
 });
