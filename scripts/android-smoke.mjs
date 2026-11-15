@@ -162,6 +162,12 @@ async function main() {
   await openApp();
   page = await attach();
   watchPage(page);
+  // The revoke killed ABOT, and onboarding is done, so it starts on Home: open the permissions
+  // page again, as in step 2.
+  await page.getByRole("button", { name: "Start an empty workout" }).first().waitFor({ timeout: 15000 });
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- a test script driving the WebView, not app code
+  await page.evaluate(() => window.location.assign("/permissions/?next=%2F"));
+  await page.getByRole("heading", { name: "Allow access" }).waitFor({ timeout: 15000 });
   // The row offers Allow or Settings; either way the tap must land in Android's settings, since
   // Android will not show its dialog again.
   const row = page.getByRole("button", { name: /^(Allow notifications|Notifications is off\. Open Android settings)$/ });
