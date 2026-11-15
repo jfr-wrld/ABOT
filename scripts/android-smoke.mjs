@@ -102,6 +102,7 @@ async function main() {
     }
   };
   let page = await attach();
+  watchPage(page);
   const fits = () => page.evaluate(() => document.scrollingElement.scrollHeight <= window.innerHeight + 1);
 
   // 1. Intro: one screen, no scrolling.
@@ -160,6 +161,7 @@ async function main() {
   await sleep(1200);
   await openApp();
   page = await attach();
+  watchPage(page);
   // The row offers Allow or Settings; either way the tap must land in Android's settings, since
   // Android will not show its dialog again.
   const row = page.getByRole("button", { name: /^(Allow notifications|Notifications is off\. Open Android settings)$/ });
@@ -178,6 +180,7 @@ async function main() {
   shell(`am force-stop ${PKG}`);
   await openApp();
   page = await attach();
+  watchPage(page);
   await page.getByRole("button", { name: "Not now" }).click().catch(() => {});
   await page.getByRole("button", { name: "Start an empty workout" }).first().click({ timeout: 15000 });
   await sleep(2500);
@@ -194,6 +197,7 @@ async function main() {
   shell("cmd statusbar collapse");
   await openApp();
   page = await attach();
+  watchPage(page);
   const hc = (method, args) =>
     page.evaluate(
       async ([m, a]) => {
@@ -245,10 +249,25 @@ const watchdog = setTimeout(() => {
 }, 20 * 60_000);
 watchdog.unref();
 
+let watched = null;
+const pageLog = [];
+function watchPage(p) {
+  watched = p;
+  p.on("console", (m) => pageLog.push(`${m.type()}: ${m.text().slice(0, 300)}`));
+  p.on("pageerror", (e) => pageLog.push(`pageerror: ${String(e?.message ?? e).slice(0, 300)}`));
+}
+
 main()
-  .catch((err) => {
+  .catch(async (err) => {
     console.log(`FAIL  smoke script crashed: ${err?.stack ?? err}`);
     failures++;
+    // What the WebView showed and logged when it went wrong (the screenshots are only in the artifact).
+    try {
+      console.log(`PAGE ${watched?.url()}\n${(await watched?.locator("body").innerText({ timeout: 5000 }))?.slice(0, 1500)}`);
+    } catch (e) {
+      console.log(`PAGE unreadable: ${String(e?.message ?? e).split("\n")[0]}`);
+    }
+    console.log(`PAGE LOG (last 30):\n${pageLog.slice(-30).join("\n")}`);
   })
   .finally(() => {
     try {
