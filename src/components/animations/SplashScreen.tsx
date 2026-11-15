@@ -49,9 +49,9 @@ export function SplashScreen() {
                 ? undefined
                 : {
                     filter: [
-                      "drop-shadow(0 0 0px rgb(204 255 0 / 0))",
-                      "drop-shadow(0 0 22px rgb(204 255 0 / 0.5))",
-                      "drop-shadow(0 0 6px rgb(204 255 0 / 0.2))",
+                      "drop-shadow(0 0 0px rgb(0 0 0 / 0))",
+                      "drop-shadow(0 0 22px rgb(0 0 0 / 0))",
+                      "drop-shadow(0 0 6px rgb(0 0 0 / 0))",
                     ],
                   }
             }

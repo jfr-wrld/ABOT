@@ -209,8 +209,8 @@ function PulseRing({ pulse, children }: { pulse: number; children: ReactNode }) 
     <motion.span
       key={pulse}
       className="inline-flex rounded-full"
-      initial={pulse ? { scale: 1, boxShadow: "0 0 0px rgb(204 255 0 / 0)" } : false}
-      animate={pulse ? { scale: [1, 1.22, 1], boxShadow: ["0 0 0px rgb(204 255 0 / 0)", "0 0 16px rgb(204 255 0 / 0.7)", "0 0 0px rgb(204 255 0 / 0)"] } : undefined}
+      initial={pulse ? { scale: 1, boxShadow: "0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)" } : false}
+      animate={pulse ? { scale: [1, 1.22, 1], boxShadow: ["0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)", "0 0 16px color-mix(in oklab, var(--color-accent) 70%, transparent)", "0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)"] } : undefined}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {children}

@@ -1,48 +1,46 @@
 # ABOT: design direction
 
-Reading this as: a mobile-first workout logger used mid-set, one hand, between reps, in a dim gym.
-Direction is the owner's "Tactile Industrial Luxury" (2026-11-08): matte black hardware, one
-high-voltage accent, every figure in a fixed-width face. Dials: ENERGY 2 / RHYTHM 2 / MOTION 2.
-
-The owner chose the fonts, palette, accent colours, glow on the primary action, the floating dock
-and the camera capsule. They are applied as direction, not as defaults; reasons are below.
+Reading this as: a mobile-first workout logger used mid-set, one hand, between reps.
+Direction (owner, 2026-11-15): **gym analog**. It replaces "Tactile Industrial Luxury" (matte black
+plus a neon Volt accent, every label in a code font), which people read as AI-made: near-black with
+one acid-green pop and monospace caps is the stock AI look. The new system is taken from the gym
+itself: chalk, iron, rubber and the colours stamped on plates.
 
 ## Palette (and why)
 
-| Token | Value | Reason |
-|---|---|---|
-| `bg` | `#09090b` Matte Obsidian | Gym floors are dim and glances are short; near-black keeps the numbers the brightest thing on screen. |
-| `surface` | `#121215` Carbon | One step up for cards. Separation comes from a hairline edge, not a lighter fill, so cards read as machined panels. |
-| `surface-2` | `#1c1c21` | Chips and secondary buttons. |
-| `well` | `#000` at 80% | Number inputs sit in a black well, so the white figure inside is the highest contrast on the card. |
-| `line` / `line-hover` | white 7% / 15% | Card edges. Brightens on hover only when the card is itself a control. |
-| `line-strong` | `#71717a` | Boundaries of form controls outside the set table (selects, file inputs): 3:1 against surface. |
-| `text` | `#f4f4f5` | 18:1 on bg. |
-| `text-muted` | `#a1a1aa` | Lowest grey used for text: 6.9:1 on surface. Zinc-500 measures 4.1:1 on bg and 3.8:1 on surface, below AA, so the owner's zinc-500 labels are set in zinc-400 instead. |
-| `accent` | `#ccff00` Volt | Owner direction. Marks what is live or primary: Finish, the done check, the rest countdown, the current tab, the current week's bar. Black text on Volt is 18:1. |
-| `pr` | `#00f0ff` Electric Cyan | Owner direction. Personal records only, so a record never reads as "done". 14:1 on bg. |
-| `warmup` / `dropset` / `failure` | `#facc15` / `#c084fc` / `#f87171` | Set types W, D, F. Always paired with the letter, never colour alone. |
+| Token | Light (default) | Dark | Reason |
+|---|---|---|---|
+| `bg` | `#f1eee7` chalk | `#121110` iron | A chalked floor and a painted wall; warm, not screen-grey. |
+| `surface` | `#faf8f3` | `#1b1a17` | One step off the background for the one thing that needs a card. |
+| `text` | `#1d1b17` iron | `#ece8df` chalk | 15:1 and 14:1. |
+| `text-muted` | `#5b564c` | `#a8a296` | 6.9:1 and 7:1 on surface. |
+| `accent` | `#1d1b17` rubber black, chalk text | `#ece8df` chalk, iron text | The primary action only: Start, Finish, the done check, the current tab. Nothing else gets it, so the next action is obvious. |
+| `pr` | `#8a6300` gold | `#e8b931` | Records only: the medal colour. |
+| `failure` | `#b3261e` | `#ef6b5e` | Red 25 kg plate. Failure sets and destructive actions. |
+| `dropset` | `#1f4fa3` | `#7ea6e6` | Blue 20 kg plate. |
+| `warmup` | `#2e6b30` | `#74b878` | Green 10 kg plate: warm-ups are the light plates. |
 
-Core palette: neutrals plus Volt. Cyan and the set-type colours are status labels with one job each.
+Plate colours are also the data colours (the plate calculator, the recovery map: bare iron, then
+yellow, orange, red as load climbs). Set types are always paired with their letter, never colour
+alone.
 
-## Light theme
+## Themes
 
-Settings > General > Theme: System (default, follows the phone), Dark, Light. The same token names
-take light values on `[data-theme="light"]` (`globals.css`), checked against white: text 16:1,
-muted 7.7:1, accent text `#3f6212` 7:1, accent fill `#65a30d` 3.1:1 with black text on it at 6.8:1,
-PR `#155e75` 7.3:1 (5.7:1 on its own tint, where `#0e7490` fell to 4.3:1). Volt `#ccff00` cannot carry text on white, so `text-accent` switches to the
-darker lime there; fills and borders use the mid lime.
+Light (chalk) is the default for new installs; Dark (iron) and System stay in Settings > General.
+The same token names take dark values on `[data-theme="dark"]` and inside `.force-dark` (photos,
+video, the intro, Story Studio, the paywall and the streak moment), in `globals.css`.
 
-- **`ink`** is white on dark and black on light: hairlines and hovers are `border-ink/[…]` and
-  `bg-ink/[…]`, never `white/[…]`.
-- Charts read the same tokens (`chartTheme.ts`: accent, line, text-muted, surface), so a series
-  is the mid lime on white instead of Volt, which nearly vanishes there.
-- `force-dark` sets tokens but no background: give the dark block its own fill (a photo, `bg-bg`),
-  or text under it turns white on the light page. The exercise page keeps only its photo dark.
-- **`force-dark`** keeps the dark tokens inside it on a light page: photo and video boxes, the
-  exercise hero, the live workout capsule, the splash, onboarding and Story Studio (a darkroom).
-- The theme is set before the first paint by `THEME_SCRIPT` (`ThemeController.tsx`) from a
-  `localStorage` mirror, so a light page never flashes dark. Android's status bar icons follow it.
+- **`ink`** is black on light and white on dark: hairlines and hovers are `border-ink/[…]` and
+  `bg-ink/[…]`.
+- The theme is set before the first paint by `THEME_SCRIPT` (`ThemeController.tsx`).
+
+## Type
+
+- **Barlow** (body and every figure, tabular digits): the plain, slightly condensed grotesque of
+  gym signage and plate stamping. It replaces both Plus Jakarta Sans and the JetBrains Mono labels;
+  numbers are no longer set in a code font.
+- **Anton** (page titles, `h1`): a single-weight poster face, never faux-bolded.
+- JetBrains Mono remains only inside story cards that print receipts.
 
 ## Settings
 
@@ -116,20 +114,11 @@ app the page beeps while ABOT is on screen and the system notification rings whi
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the
 running rest timer, and the current tab icon. Cyan appears only where a record was set.
 
-## Typography
+## Typography (old, superseded by "Type" above)
 
-- **Plus Jakarta Sans** for words: labels, names, instructions, buttons. The owner asked for a more
-  modern face (2026-11-09); its open, geometric shapes and tall x-height keep 12px labels legible
-  at arm's length, and it tops out at weight 800, so `font-extrabold` is the heaviest used.
-- **JetBrains Mono** for every figure: weight, reps, RPE, timers, volume, 1RM, dates, chart ticks.
-  It has fixed-width digits with a slashed zero, so `102.5` and `62.5` line up in the 60px column
-  and a running timer never shifts sideways as it ticks. The `num` utility applies it.
-- Sizes: set inputs `text-lg` bold, header stats `text-xl` bold, the rest countdown `text-xl`
-  extrabold in Volt. Column and stat labels use `label-caps`: mono 10px, 0.1em tracking, uppercase.
-  The tracking keeps 10px capitals from merging on a phone screen.
-
-Both fonts load through `next/font/google`, which downloads them at build time and serves them from
-the app, so the browser makes no request to Google.
+The earlier Plus Jakarta Sans plus JetBrains Mono pairing is replaced. `num` now gives Barlow's
+tabular figures; `label-caps` still exists until step 2 of the redesign replaces it with
+sentence-case labels.
 
 ## Layout
 

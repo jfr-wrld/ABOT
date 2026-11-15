@@ -19,7 +19,7 @@ const point = (i: number, r: number) => {
 };
 const poly = (rs: number[]) => rs.map((r, i) => point(i, r).map((v) => v.toFixed(1)).join(",")).join(" ");
 
-const GRADE_COLOR = { OPTIMAL: "#ccff00", BALANCED: "#00f0ff", IMBALANCED: "#f59e0b", CRITICAL: "#ef4444" } as const;
+const GRADE_COLOR = { OPTIMAL: "var(--color-accent)", BALANCED: "var(--color-dropset)", IMBALANCED: "#e0a100", CRITICAL: "#c8102e" } as const;
 
 /**
  * Muscle balance on six axes as a cockpit radar: steel web, the balanced shape dashed, the
@@ -40,7 +40,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
   const enough = r.score !== null;
 
   return (
-    <section aria-labelledby={`${uid}-h`} className="force-dark flex flex-col gap-3 rounded-card border border-line-strong bg-[#09090b] p-4 text-text">
+    <section aria-labelledby={`${uid}-h`} className="force-dark flex flex-col gap-3 rounded-card border border-line-strong bg-bg p-4 text-text">
       <div className="flex items-baseline justify-between gap-2">
         <h2 id={`${uid}-h`} className="text-sm font-semibold">
           {t("Muscle balance")}
@@ -87,11 +87,11 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
         <polygon points={poly(AXES.map(() => ideal))} fill="none" stroke="#71717a" strokeWidth={1.25} strokeDasharray="4 4" />
         {enough && (
           <>
-            <polygon points={poly(AXES.map(radius))} fill="rgba(204, 255, 0, 0.18)" stroke="#ccff00" strokeWidth={2} strokeLinejoin="round" />
+            <polygon points={poly(AXES.map(radius))} fill="color-mix(in oklab, var(--color-accent) 18%, transparent)" stroke="var(--color-accent)" strokeWidth={2} strokeLinejoin="round" />
             <g filter={`url(#${uid}-glow)`}>
               {AXES.map((a, i) => {
                 const [x, y] = point(i, radius(a));
-                return <circle key={a} cx={x} cy={y} r={3.5} fill="#ccff00" />;
+                return <circle key={a} cx={x} cy={y} r={3.5} fill="var(--color-accent)" />;
               })}
             </g>
           </>

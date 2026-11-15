@@ -1,82 +1,124 @@
 @import "tailwindcss";
 
-/* Tactile Industrial Luxury. Values and reasons: DESIGN.md. */
+/* Gym analog: chalk and iron for everything, the plate colours for meaning (red 25, blue 20,
+   yellow 15, green 10), gold only for records. The accent is the primary action, nothing else.
+   Light (chalk) is the default; dark (iron) is the same system inverted. Reasons: DESIGN.md. */
 @theme {
-  --color-bg: #09090b; /* Matte Obsidian */
-  --color-surface: #121215; /* Carbon Surface */
-  --color-surface-2: #1c1c21;
-  --color-well: rgb(0 0 0 / 0.8); /* number inputs sit in a black well */
-  --color-line: rgb(255 255 255 / 0.07);
-  --color-line-hover: rgb(255 255 255 / 0.15);
-  --color-line-strong: #71717a;
-  --color-text: #f4f4f5;
-  --color-text-muted: #a1a1aa;
-  --color-accent: #ccff00; /* High-Voltage Volt */
-  --color-accent-solid: #ccff00;
-  --color-on-accent: #000000;
-  --color-accent-tint: rgb(204 255 0 / 0.08);
-  --color-pr: #00f0ff; /* Electric Cyan: personal records only */
-  --color-warmup: #facc15;
-  --color-dropset: #c084fc;
-  --color-failure: #f87171;
-  /* Theme-aware tints: "ink" is white on the dark theme and black on the light one, so
-     border-ink/[0.07] and bg-ink/[0.05] read as hairlines and hovers on either. */
-  --color-ink: #ffffff;
-  --color-accent-text: #ccff00; /* text-accent; a darker lime on light pages */
-  --color-accent-dim: #4d5c12; /* earlier weeks in bar charts */
-  --color-press: #24242a;
-  --color-press-strong: #2c2c33;
-  --color-track: #27272a; /* empty part of rings and bars */
-  --color-muscle-off: #3a3a40;
-  --color-muscle-icon: #52525b;
-  --color-row: rgb(0 0 0 / 0.3); /* set rows and chips set into a card */
+  --color-bg: #f1eee7; /* chalk */
+  --color-surface: #faf8f3;
+  --color-surface-2: #e8e4db;
+  --color-well: rgb(29 27 23 / 0.05);
+  --color-line: rgb(29 27 23 / 0.1);
+  --color-line-hover: rgb(29 27 23 / 0.2);
+  --color-line-strong: #8a8478;
+  --color-text: #1d1b17; /* iron */
+  --color-text-muted: #5b564c;
+  --color-accent: #1d1b17; /* the primary action: rubber black, chalk text */
+  --color-accent-solid: #1d1b17;
+  --color-on-accent: #faf8f3;
+  --color-accent-tint: rgb(29 27 23 / 0.06);
+  --color-pr: #8a6300; /* gold: records only */
+  --color-warmup: #2e6b30; /* green 10 kg plate: the light warm-up sets */
+  --color-dropset: #1f4fa3; /* blue 20 kg plate */
+  --color-failure: #b3261e; /* red 25 kg plate */
+  --color-ink: #000000;
+  --color-accent-text: #1d1b17;
+  --color-accent-dim: #c9c3b5; /* earlier weeks in bar charts */
+  --color-press: #e3dfd5;
+  --color-press-strong: #d9d4c9;
+  --color-track: #e1ddd3; /* empty part of rings and bars */
+  --color-muscle-off: #d6d1c6;
+  --color-muscle-icon: #a39d90;
+  --color-row: rgb(29 27 23 / 0.035);
+  --color-zinc-100: #1d1b17;
+  --color-zinc-400: #5b564c;
+  --color-zinc-600: #a39d90;
+  --color-zinc-700: #8a8478;
+  --color-zinc-800: #e1ddd3;
 
-  --font-sans: var(--font-sans-face), "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+  --font-sans: var(--font-sans-face), "Barlow", system-ui, sans-serif;
+  --font-mono: var(--font-sans-face), "Barlow", system-ui, sans-serif; /* figures: Barlow's tabular digits, no code font */
+  --font-display: var(--font-anton), "Anton", Impact, sans-serif;
 
   --radius-ctl: 10px;
   --radius-card: 16px;
 
-  --shadow-volt: 0 0 0 1px rgb(204 255 0 / 0.5), 0 0 22px rgb(204 255 0 / 0.28);
+  --shadow-volt: 0 0 0 1px rgb(29 27 23 / 0.35);
 }
 
-/* Light theme (Settings > General > Theme). Same token names; contrast checked against white:
-   text 16:1, muted 7.7:1, accent text 7:1, accent fill 3.1:1 with black text on it at 6.8:1. */
-[data-theme="light"] {
-  color-scheme: light;
-  --color-bg: #f4f4f2;
-  --color-surface: #ffffff;
-  --color-surface-2: #ebebe8;
-  --color-well: rgb(0 0 0 / 0.04);
-  --color-line: rgb(0 0 0 / 0.09);
-  --color-line-hover: rgb(0 0 0 / 0.18);
-  --color-line-strong: #8e8e96;
-  --color-text: #18181b;
-  --color-text-muted: #52525b;
-  --color-accent: #65a30d;
-  --color-accent-text: #3f6212;
-  --color-accent-tint: rgb(101 163 13 / 0.12);
-  --color-accent-dim: #c9e59a;
-  --color-pr: #155e75;
-  --color-warmup: #a16207;
-  --color-dropset: #7e22ce;
-  --color-failure: #b91c1c;
-  --color-ink: #000000;
-  --color-press: #e2e2df;
-  --color-press-strong: #d8d8d4;
-  --color-track: #e4e4e7;
-  --color-muscle-off: #d4d4d8;
-  --color-muscle-icon: #a1a1aa;
-  --color-row: rgb(0 0 0 / 0.035);
-  --color-zinc-100: #18181b;
-  --color-zinc-400: #52525b;
-  --color-zinc-600: #a1a1aa;
-  --color-zinc-700: #8e8e96;
-  --color-zinc-800: #e4e4e7;
-  --shadow-volt: 0 0 0 1px rgb(101 163 13 / 0.5), 0 0 18px rgb(101 163 13 / 0.2);
+/* Iron (Settings > General > Theme: Dark). Same token names. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #121110; /* iron */
+  --color-surface: #1b1a17;
+  --color-surface-2: #25231f;
+  --color-well: rgb(0 0 0 / 0.45);
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-hover: rgb(255 255 255 / 0.16);
+  --color-line-strong: #7a7468;
+  --color-text: #ece8df; /* chalk */
+  --color-text-muted: #a8a296;
+  --color-accent: #ece8df; /* the primary action: chalk on iron */
+  --color-accent-solid: #ece8df;
+  --color-on-accent: #121110;
+  --color-accent-tint: rgb(236 232 223 / 0.08);
+  --color-accent-text: #ece8df;
+  --color-accent-dim: #4a463e;
+  --color-pr: #e8b931; /* gold: records only */
+  --color-warmup: #74b878; /* green 10 kg plate: the light warm-up sets */
+  --color-dropset: #7ea6e6; /* blue 20 kg plate */
+  --color-failure: #ef6b5e; /* red 25 kg plate */
+  --color-ink: #ffffff;
+  --color-press: #262420;
+  --color-press-strong: #2f2c27;
+  --color-track: #2e2c27;
+  --color-muscle-off: #3a3732;
+  --color-muscle-icon: #5c574e;
+  --color-row: rgb(0 0 0 / 0.22);
+  --color-zinc-100: #ece8df;
+  --color-zinc-400: #a8a296;
+  --color-zinc-600: #5c574e;
+  --color-zinc-700: #3f3c35;
+  --color-zinc-800: #2e2c27;
+  --shadow-volt: 0 0 0 1px rgb(236 232 223 / 0.35);
 }
-[data-theme="light"] .text-accent {
-  color: var(--color-accent-text);
+
+/* Dark in every theme: over photos and video, the live capsule, the intro, Story Studio. */
+.force-dark {
+  color-scheme: dark;
+  --color-bg: #121110; /* iron */
+  --color-surface: #1b1a17;
+  --color-surface-2: #25231f;
+  --color-well: rgb(0 0 0 / 0.45);
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-hover: rgb(255 255 255 / 0.16);
+  --color-line-strong: #7a7468;
+  --color-text: #ece8df; /* chalk */
+  --color-text-muted: #a8a296;
+  --color-accent: #ece8df; /* the primary action: chalk on iron */
+  --color-accent-solid: #ece8df;
+  --color-on-accent: #121110;
+  --color-accent-tint: rgb(236 232 223 / 0.08);
+  --color-accent-text: #ece8df;
+  --color-accent-dim: #4a463e;
+  --color-pr: #e8b931; /* gold: records only */
+  --color-warmup: #74b878; /* green 10 kg plate: the light warm-up sets */
+  --color-dropset: #7ea6e6; /* blue 20 kg plate */
+  --color-failure: #ef6b5e; /* red 25 kg plate */
+  --color-ink: #ffffff;
+  --color-press: #262420;
+  --color-press-strong: #2f2c27;
+  --color-track: #2e2c27;
+  --color-muscle-off: #3a3732;
+  --color-muscle-icon: #5c574e;
+  --color-row: rgb(0 0 0 / 0.22);
+  --color-zinc-100: #ece8df;
+  --color-zinc-400: #a8a296;
+  --color-zinc-600: #5c574e;
+  --color-zinc-700: #3f3c35;
+  --color-zinc-800: #2e2c27;
+  --shadow-volt: 0 0 0 1px rgb(236 232 223 / 0.35);
+  color: var(--color-text);
 }
 
 /* Superset labels: the group colour (--ss) as text. On white the pastel group colours fall under
@@ -88,45 +130,10 @@
   color: color-mix(in oklab, var(--ss) 55%, black);
 }
 
-/* Dark in every theme: over photos and video, the live capsule, the intro, Story Studio. */
-[data-theme="light"] .force-dark {
-  color-scheme: dark;
-  --color-bg: #09090b;
-  --color-surface: #121215;
-  --color-surface-2: #1c1c21;
-  --color-well: rgb(0 0 0 / 0.8);
-  --color-line: rgb(255 255 255 / 0.07);
-  --color-line-hover: rgb(255 255 255 / 0.15);
-  --color-line-strong: #71717a;
-  --color-text: #f4f4f5;
-  --color-text-muted: #a1a1aa;
-  --color-accent: #ccff00;
-  --color-accent-text: #ccff00;
-  --color-accent-tint: rgb(204 255 0 / 0.08);
-  --color-accent-dim: #4d5c12;
-  --color-pr: #00f0ff;
-  --color-warmup: #facc15;
-  --color-dropset: #c084fc;
-  --color-failure: #f87171;
-  --color-ink: #ffffff;
-  --color-press: #24242a;
-  --color-press-strong: #2c2c33;
-  --color-track: #27272a;
-  --color-muscle-off: #3a3a40;
-  --color-muscle-icon: #52525b;
-  --color-row: rgb(0 0 0 / 0.3);
-  --color-zinc-100: #f4f4f5;
-  --color-zinc-400: #a1a1aa;
-  --color-zinc-600: #52525b;
-  --color-zinc-700: #3f3f46;
-  --color-zinc-800: #27272a;
-  --shadow-volt: 0 0 0 1px rgb(204 255 0 / 0.5), 0 0 22px rgb(204 255 0 / 0.28);
-  color: var(--color-text);
-}
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
     background: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
@@ -136,6 +143,14 @@
   body {
     background: var(--color-bg);
     min-height: 100dvh;
+  }
+
+  /* Page titles in the poster face, set like a gym's signage: one weight, never faux-bolded. */
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-synthesis: none;
+    letter-spacing: 0.005em;
   }
 
   /* Every enabled control shows it can be used; disabled ones say they cannot. */

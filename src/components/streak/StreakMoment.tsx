@@ -30,7 +30,7 @@ const IGNITE = 0.35;
 const ROLL = 0.85;
 /** When this week's plate lights. */
 const LIGHT = 1.15;
-const VOLT = "#ccff00";
+const VOLT = "#d9480f"; // the flame: orange-red, with the yellow core below
 const EMBERS = 14;
 const PLATE = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
 
@@ -106,14 +106,14 @@ export function StreakMoment({
       role="dialog"
       aria-modal="true"
       aria-labelledby="streak-title"
-      className="force-dark fixed inset-0 z-[60] flex flex-col overflow-hidden bg-[#09090b] text-text"
+      className="force-dark fixed inset-0 z-[60] flex flex-col overflow-hidden bg-bg text-text"
     >
       {/* The flash when the flame catches. */}
       {!reduce && (
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
-          style={{ opacity: 0, background: "radial-gradient(60% 45% at 50% 38%, rgb(204 255 0 / 0.55), transparent 70%)" }}
+          style={{ opacity: 0, background: "radial-gradient(60% 45% at 50% 38%, color-mix(in oklab, var(--color-accent) 55%, transparent), transparent 70%)" }}
           animate={{ opacity: [0, 0.9, 0.25] }}
           transition={{ delay: IGNITE, duration: 0.7, times: [0, 0.15, 1] }}
         />
@@ -122,7 +122,7 @@ export function StreakMoment({
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-[12%] mx-auto size-80 rounded-full"
-        style={{ opacity: reduce ? 0.3 : 0, background: "radial-gradient(circle, rgb(204 255 0 / 0.35), transparent 65%)" }}
+        style={{ opacity: reduce ? 0.3 : 0, background: "radial-gradient(circle, color-mix(in oklab, var(--color-accent) 35%, transparent), transparent 65%)" }}
         animate={reduce ? undefined : { opacity: [0, 0.4, 0.25, 0.4], scale: [0.8, 1.05, 0.98, 1.05] }}
         transition={{ delay: IGNITE, duration: 3, times: [0, 0.2, 0.6, 1], repeat: loops ? loopsFor(3) : 0, repeatType: "mirror" }}
       />
@@ -130,7 +130,7 @@ export function StreakMoment({
       <div className="relative flex flex-1 flex-col items-center justify-center px-6 pt-[env(safe-area-inset-top)] text-center">
         <Flame reduce={reduce} loops={loops} />
 
-        <h1 id="streak-title" className="mt-4 font-mono text-xs font-bold uppercase tracking-[0.22em] text-[#ccff00]">
+        <h1 id="streak-title" className="mt-4 font-mono text-xs font-bold uppercase tracking-[0.22em] text-accent">
           {!sessionId ? t("Your week streak") : first ? t("Streak started") : t("Streak extended")}
         </h1>
 
@@ -160,7 +160,7 @@ export function StreakMoment({
                     <motion.path
                       d={PLATE}
                       fill={VOLT}
-                      style={{ filter: `drop-shadow(0 0 ${current ? 8 : 3}px rgb(204 255 0 / 0.6))` }}
+                      style={{ filter: `drop-shadow(0 0 ${current ? 8 : 3}px color-mix(in oklab, var(--color-accent) 60%, transparent))` }}
                       // An SVG path takes its opacity as an attribute, so it starts from initial, not style.
                       initial={current && !reduce ? { opacity: 0 } : false}
                       animate={current && !reduce ? { opacity: 1 } : undefined}
@@ -168,7 +168,7 @@ export function StreakMoment({
                     />
                   )}
                 </motion.svg>
-                <span className={`font-mono text-[10px] uppercase tracking-wider ${current ? "font-bold text-[#ccff00]" : "text-text-muted"}`}>
+                <span className={`font-mono text-[10px] uppercase tracking-wider ${current ? "font-bold text-accent" : "text-text-muted"}`}>
                   {current ? t("This wk") : `-${weeks.length - 1 - i}`}
                 </span>
                 <span className="sr-only">{on ? t("trained") : t("rest")}</span>
@@ -213,7 +213,7 @@ export function StreakMoment({
             type="button"
             onClick={onClose}
             whileTap={{ scale: 0.97 }}
-            className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-[#ccff00] text-base font-bold text-[#09090b] shadow-[0_0_28px_rgb(204_255_0/0.35)] hover:brightness-110"
+            className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-accent text-base font-bold text-on-accent hover:brightness-110"
           >
             {t("Continue")}
           </motion.button>
@@ -240,14 +240,14 @@ function Flame({ reduce, loops }: { reduce: boolean; loops: boolean }) {
         <>
           {/* The spark before ignition. */}
           <motion.span
-            className="absolute bottom-0 size-2 rounded-full bg-[#ccff00] shadow-[0_0_12px_#ccff00]"
+            className="absolute bottom-0 size-2 rounded-full bg-accent"
             style={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 1, 0], y: [80, 20, -30, -40], scale: [0.6, 1, 1.4, 3] }}
             transition={{ duration: IGNITE + 0.05, times: [0, 0.3, 0.9, 1], ease: "easeOut" }}
           />
           {/* The ring that rolls out when it catches. */}
           <motion.span
-            className="absolute bottom-6 size-40 rounded-full border-2 border-[#ccff00]"
+            className="absolute bottom-6 size-40 rounded-full border-2 border-accent"
             style={{ opacity: 0, scale: 0.3 }}
             animate={{ opacity: [0, 0.8, 0], scale: [0.3, 1.9] }}
             transition={{ delay: IGNITE, duration: 0.8, ease: "easeOut" }}
@@ -257,7 +257,7 @@ function Flame({ reduce, loops }: { reduce: boolean; loops: boolean }) {
             <motion.span
               key={i}
               className="absolute bottom-10 rounded-full"
-              style={{ width: e.size, height: e.size, left: `calc(50% + ${e.x}px)`, opacity: 0, background: i % 3 ? "#ccff00" : "#facc15" }}
+              style={{ width: e.size, height: e.size, left: `calc(50% + ${e.x}px)`, opacity: 0, background: i % 3 ? "var(--color-accent)" : "#facc15" }}
               animate={{ opacity: [0, 1, 0], y: [0, -150 - (i % 5) * 18], x: [0, e.drift] }}
               transition={{ delay: e.delay, duration: e.duration, repeat: loopsFor(e.duration), ease: "easeOut" }}
             />
@@ -268,7 +268,7 @@ function Flame({ reduce, loops }: { reduce: boolean; loops: boolean }) {
         viewBox="0 0 120 160"
         className="relative h-48 w-36 overflow-visible"
         style={{
-          filter: "drop-shadow(0 0 22px rgb(204 255 0 / 0.55))",
+          filter: "drop-shadow(0 0 22px color-mix(in oklab, var(--color-accent) 55%, transparent))",
           originY: 1,
           ...(reduce ? {} : { scale: 0, opacity: 0 }),
         }}
@@ -295,7 +295,7 @@ function Count({ before, after, reduce }: { before: number; after: number; reduc
   const big = "num block text-7xl leading-none font-extrabold tracking-tight";
   if (reduce) {
     return (
-      <span aria-hidden="true" className={`${big} mt-2 text-[#ccff00]`}>
+      <span aria-hidden="true" className={`${big} mt-2 text-accent`}>
         {after}
       </span>
     );
@@ -311,7 +311,7 @@ function Count({ before, after, reduce }: { before: number; after: number; reduc
         {before}
       </motion.span>
       <motion.span
-        className={`${big} absolute inset-x-0 top-0 text-[#ccff00]`}
+        className={`${big} absolute inset-x-0 top-0 text-accent`}
         style={{ y: "110%", scale: 1 }}
         animate={{ y: "0%", scale: [1, 1.18, 1] }}
         transition={{ delay: ROLL + 0.12, duration: 0.5, ease: "easeOut", scale: { delay: ROLL + 0.3, duration: 0.35 } }}

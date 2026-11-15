@@ -110,7 +110,7 @@ export function AbotProModal() {
       aria-labelledby={titleId}
       onClose={done}
       onCancel={done}
-      className="force-dark m-0 h-[100dvh] max-h-none w-full max-w-none bg-[#09090b] p-0 text-text backdrop:bg-black/80"
+      className="force-dark m-0 h-[100dvh] max-h-none w-full max-w-none bg-bg p-0 text-text backdrop:bg-black/80"
     >
       <div className="relative mx-auto flex min-h-full max-w-[560px] flex-col gap-5 px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(12px+env(safe-area-inset-top))]">
         {/* Technical grid and a Volt glow behind the header. */}
@@ -119,12 +119,12 @@ export function AbotProModal() {
           className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-60"
           style={{
             backgroundImage:
-              "radial-gradient(ellipse at 50% 0%, rgb(204 255 0 / 0.16), transparent 60%), linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px)",
+              "radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--color-accent) 16%, transparent), transparent 60%), linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px)",
             backgroundSize: "100% 100%, 24px 24px, 24px 24px",
           }}
         />
         <div className="relative flex items-center justify-between">
-          <span className="rounded-[4px] border border-[#ccff00]/50 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#ccff00]">
+          <span className="rounded-[4px] border border-accent/50 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
             ABOT // BLACK TELEMETRY SYSTEM
           </span>
           <button type="button" onClick={done} aria-label={t("Close")} className="flex size-11 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white">
@@ -140,8 +140,8 @@ export function AbotProModal() {
         </header>
 
         {feature && (
-          <p className="relative flex items-center gap-2 rounded-ctl border border-[#ccff00]/40 bg-[#ccff00]/[0.06] px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-[#ccff00]">
-            <Zap aria-hidden="true" size={14} className="shrink-0 fill-[#ccff00]" />
+          <p className="relative flex items-center gap-2 rounded-ctl border border-accent/40 bg-accent/[0.06] px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-accent">
+            <Zap aria-hidden="true" size={14} className="shrink-0 fill-accent" />
             {t("Unlock feature: {name}", { name: t(PRO_FEATURE_LABEL[feature]) })}
           </p>
         )}
@@ -154,7 +154,7 @@ export function AbotProModal() {
               <th scope="col" className="w-20 pb-2 text-center font-semibold">
                 {t("Core (free)")}
               </th>
-              <th scope="col" className="w-24 pb-2 text-center font-semibold text-[#ccff00]">
+              <th scope="col" className="w-24 pb-2 text-center font-semibold text-accent">
                 BLACK PRO
               </th>
             </tr>
@@ -168,11 +168,11 @@ export function AbotProModal() {
                 {[row.core, row.pro].map((v, i) => (
                   <td key={i} className="py-2.5 text-center font-mono tabular-nums">
                     {v === true ? (
-                      <Check aria-label={t("Included")} size={16} className={`mx-auto ${i ? "text-[#ccff00]" : "text-zinc-300"}`} />
+                      <Check aria-label={t("Included")} size={16} className={`mx-auto ${i ? "text-accent" : "text-zinc-300"}`} />
                     ) : v === false ? (
                       <Minus aria-label={t("Not included")} size={16} className="mx-auto text-zinc-600" />
                     ) : (
-                      <span className={i ? "text-[#ccff00]" : "text-zinc-400"}>{t(v)}</span>
+                      <span className={i ? "text-accent" : "text-zinc-400"}>{t(v)}</span>
                     )}
                   </td>
                 ))}
@@ -190,7 +190,7 @@ export function AbotProModal() {
             return (
               <label
                 key={p.id}
-                className={`tap relative flex min-h-16 cursor-pointer items-center gap-3 rounded-ctl border bg-[#121215] px-3 py-3 ${best ? "border-[#ccff00]/50" : "border-[#27272a]"}`}
+                className={`tap relative flex min-h-16 cursor-pointer items-center gap-3 rounded-ctl border bg-[#121215] px-3 py-3 ${best ? "border-accent/50" : "border-[#27272a]"}`}
               >
                 {/* The selection is one Volt frame that slides to the chosen plan. */}
                 {selected && (
@@ -198,12 +198,12 @@ export function AbotProModal() {
                     layoutId="plan-pick"
                     transition={PRESS_SPRING}
                     aria-hidden="true"
-                    className="pointer-events-none absolute -inset-px rounded-ctl border-2 border-[#ccff00] shadow-[0_0_18px_rgb(204_255_0/0.18)]"
+                    className="pointer-events-none absolute -inset-px rounded-ctl border-2 border-accent shadow-[0_0_18px_color-mix(in_oklab,var(--color-accent)_18%,transparent)]"
                   />
                 )}
                 <input type="radio" name="abot-plan" value={p.id} checked={selected} onChange={() => setPlan(p.id)} className="peer sr-only" />
-                <span aria-hidden="true" className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-[#ccff00]" : "border-zinc-600"}`}>
-                  {selected && <span className="size-2.5 rounded-full bg-[#ccff00]" />}
+                <span aria-hidden="true" className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${selected ? "border-accent" : "border-zinc-600"}`}>
+                  {selected && <span className="size-2.5 rounded-full bg-accent" />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">{t(p.name)}</span>
@@ -223,12 +223,12 @@ export function AbotProModal() {
                   </span>
                 </span>
                 {best && (
-                  <span className="absolute -top-2.5 right-3 rounded-[4px] bg-[#ccff00] px-1.5 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-black">
+                  <span className="absolute -top-2.5 right-3 rounded-[4px] bg-accent px-1.5 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-black">
                     {t("Best value · save {pct}%", { pct: saving })}
                   </span>
                 )}
                 {p.id === "lifetime" && (
-                  <span className="absolute -top-2.5 right-3 rounded-[4px] border border-[#ccff00]/60 bg-black px-1.5 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-[#ccff00]">
+                  <span className="absolute -top-2.5 right-3 rounded-[4px] border border-accent/60 bg-black px-1.5 font-mono text-[9px] font-black uppercase tracking-[0.12em] text-accent">
                     {t("Limited edition")}
                   </span>
                 )}
@@ -241,7 +241,7 @@ export function AbotProModal() {
           {paid ? (
             <>
               {/* A paid licence outranks the beta: say what was bought, and until when. */}
-              <p role="status" className="rounded-ctl border border-[#ccff00] bg-[#ccff00]/10 px-3 py-3 font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.08em] text-[#ccff00]">
+              <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.08em] text-accent">
                 {tier === "lifetime" ? t("Active: lifetime license") : t("Active: ABOT // BLACK PRO")}
                 {tier === "pro" && proExpiresAt && (
                   <span className="mt-1 block text-zinc-300">{t("Until {date}", { date: new Date(proExpiresAt).toLocaleDateString(t.locale, { day: "numeric", month: "long", year: "numeric" }) })}</span>
@@ -253,7 +253,7 @@ export function AbotProModal() {
             </>
           ) : isBetaUnlocked ? (
             <>
-              <p role="status" className="rounded-ctl border border-[#ccff00] bg-[#ccff00]/10 px-3 py-3 font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.08em] text-[#ccff00]">
+              <p role="status" className="rounded-ctl border border-accent bg-accent/10 px-3 py-3 font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.08em] text-accent">
                 ⚡ {t("Active: Founders Beta Pass. All PRO features unlocked free.")}
                 {founderUnitCode && <span className="mt-1 block text-zinc-300">{founderUnitCode}</span>}
               </p>
@@ -301,7 +301,7 @@ export function AbotProModal() {
               done();
               showRedeem();
             }}
-            className="min-h-11 rounded-ctl border border-dashed border-[#ccff00]/50 font-mono text-xs font-bold uppercase tracking-[0.1em] text-[#ccff00] hover:bg-[#ccff00]/10"
+            className="min-h-11 rounded-ctl border border-dashed border-accent/50 font-mono text-xs font-bold uppercase tracking-[0.1em] text-accent hover:bg-accent/10"
           >
             {t("Redeem VIP / activation code")}
           </button>
@@ -320,7 +320,7 @@ function BuyButton({ busy, onClick, label }: { busy: boolean; onClick: () => voi
       onClick={onClick}
       disabled={busy}
       aria-busy={busy}
-      className="min-h-14 rounded-ctl bg-[#ccff00] font-mono text-sm font-black uppercase tracking-[0.1em] text-black hover:brightness-95 disabled:opacity-60"
+      className="min-h-14 rounded-ctl bg-accent font-mono text-sm font-black uppercase tracking-[0.1em] text-black hover:brightness-95 disabled:opacity-60"
     >
       {busy ? t("Opening payment...") : label}
     </button>

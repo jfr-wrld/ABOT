@@ -99,13 +99,13 @@ export function sleeveStack(load: PlateLoad): number[] {
  * the same rank (45 lb as 25 kg, and so on). `edge` outlines plates that would vanish on black.
  */
 export const PLATE_COLORS: { fill: string; edge?: string; name: string }[] = [
-  { fill: "#ef4444", name: "Crimson Steel" },
-  { fill: "#3b82f6", name: "Cyber Blue" },
-  { fill: "#eab308", name: "Industrial Amber" },
-  { fill: "#22c55e", name: "Tactical Green" },
-  { fill: "#e4e4e7", name: "Brushed Titanium" },
-  { fill: "#18181b", edge: "#ccff00", name: "Carbon Black" },
-  { fill: "#71717a", edge: "#a1a1aa", name: "Micro Chrome" },
+  { fill: "#c8102e", name: "Red" },
+  { fill: "#1f4fa3", name: "Blue" },
+  { fill: "#e0a100", name: "Yellow" },
+  { fill: "#2e7d32", name: "Green" },
+  { fill: "#f2efe8", name: "White" },
+  { fill: "#1d1b17", edge: "#8a8478", name: "Black" },
+  { fill: "#8a8478", edge: "#b3ada0", name: "Grey" },
 ];
 
 export function plateColor(plate: number, unit: PlateUnit) {

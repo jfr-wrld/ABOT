@@ -116,7 +116,10 @@ test("library: records in the lifter's unit, favourites first, other orders, cle
 });
 
 test("Sort & filter floats in the dock's glass, follows the theme, and steps aside while scrolling down", async ({ page }) => {
-  await page.emulateMedia({ colorScheme: "dark" });
+  // Light is the default since the gym-analog redesign: pick Dark in Settings.
+  await page.goto("/settings?section=general");
+  await page.getByRole("radiogroup", { name: "Theme" }).getByText("Dark").click();
+  await waitForSavedSetting(page, "theme", "dark");
   await page.goto("/exercises");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   const button = page.getByRole("button", { name: /^Sort and filter/ });
@@ -125,7 +128,7 @@ test("Sort & filter floats in the dock's glass, follows the theme, and steps asi
   const bg = await button.evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(bg).not.toMatch(/^rgba?\(255, 255, 255/);
   expect(await button.evaluate((el) => getComputedStyle(el).color)).not.toMatch(/^rgba?\(0, 0, 0/);
-  // The selected pill too: a Volt tint, not an inverted white pill.
+  // The selected pill too: a tint, not an inverted white pill.
   const all = page.getByRole("group", { name: "Show" }).getByRole("button", { name: "All", exact: true });
   expect(await all.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toMatch(/^rgba?\(2[45]\d, 2[45]\d, 2[45]\d/);
 

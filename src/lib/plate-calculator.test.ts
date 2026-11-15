@@ -52,8 +52,8 @@ describe("calculatePlates", () => {
   });
 
   it("colours plates by rank (IWF), the same rank in pounds", () => {
-    expect(plateColor(25, "kg").fill).toBe("#ef4444");
-    expect(plateColor(2.5, "kg")).toMatchObject({ fill: "#18181b", edge: "#ccff00" });
-    expect(plateColor(45, "lbs").fill).toBe("#ef4444");
+    expect(plateColor(25, "kg").fill).toBe("#c8102e");
+    expect(plateColor(2.5, "kg")).toMatchObject({ fill: "#1d1b17", edge: "#8a8478" });
+    expect(plateColor(45, "lbs").fill).toBe("#c8102e");
   });
 });

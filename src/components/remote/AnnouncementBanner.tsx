@@ -28,8 +28,8 @@ export function AnnouncementBanner() {
   const dismissed = dismissedNow ?? stored;
   if (!text || dismissed === text) return null;
   return (
-    <aside aria-label={t("Announcement")} className="force-dark flex items-start gap-2 rounded-ctl border border-[#ccff00]/40 bg-black py-1.5 pl-3 pr-1 text-text">
-      <Megaphone aria-hidden="true" size={16} className="mt-2.5 shrink-0 text-[#ccff00]" />
+    <aside aria-label={t("Announcement")} className="force-dark flex items-start gap-2 rounded-ctl border border-accent/40 bg-black py-1.5 pl-3 pr-1 text-text">
+      <Megaphone aria-hidden="true" size={16} className="mt-2.5 shrink-0 text-accent" />
       <p className="min-w-0 flex-1 py-2 text-sm">{text}</p>
       <button
         type="button"

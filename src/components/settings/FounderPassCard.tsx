@@ -19,7 +19,7 @@ export function FounderPassCard() {
   return (
     <section
       aria-labelledby="founder-heading"
-      className="force-dark relative overflow-hidden rounded-card border border-[#ccff00]/40 bg-gradient-to-br from-[#141418] to-[#09090b] px-4 py-3 text-text shadow-[0_0_24px_rgb(204_255_0/0.08)]"
+      className="force-dark relative overflow-hidden rounded-card border border-accent/40 bg-surface px-4 py-3 text-text"
     >
       {/* Rivets, like a plate bolted to the machine. */}
       {["left-2 top-2", "right-2 top-2", "bottom-2 left-2", "bottom-2 right-2"].map((p) => (
@@ -27,7 +27,7 @@ export function FounderPassCard() {
       ))}
       {/* Pass name and join date on one line, the unit number under them: the plate reads in one glance. */}
       <div className="flex items-baseline justify-between gap-3 font-mono text-[10px] uppercase">
-        <p className="font-bold tracking-[0.18em] text-[#ccff00]">FOUNDER PASS</p>
+        <p className="font-bold tracking-[0.18em] text-accent">FOUNDER PASS</p>
         {joined && <p className="shrink-0 tabular-nums tracking-[0.08em] text-zinc-300">{t("Since {date}", { date: joined })}</p>}
       </div>
       <h2 id="founder-heading" className="mt-1 font-mono text-lg font-black tabular-nums tracking-[0.06em] text-white">
@@ -53,7 +53,7 @@ export function FounderPassCard() {
                   setDevOverride(s.mode);
                 }}
                 className={`min-h-11 rounded-[calc(var(--radius-ctl)-4px)] px-1 font-mono text-[10px] font-bold uppercase tracking-[0.06em] transition-colors ${
-                  on ? "bg-[#ccff00] text-black" : "text-zinc-400 hover:text-white"
+                  on ? "bg-accent text-black" : "text-zinc-400 hover:text-white"
                 }`}
               >
                 {t(s.label)}

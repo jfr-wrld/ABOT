@@ -29,11 +29,11 @@ export const plates: Record<string, string> = {
   "Plate-loaded machine": "Mesin plate-loaded",
   "Gym bar": "Bar gym",
   // Plate colours
-  "Crimson Steel": "Merah baja",
-  "Cyber Blue": "Biru siber",
-  "Industrial Amber": "Kuning industri",
-  "Tactical Green": "Hijau taktis",
-  "Brushed Titanium": "Titanium",
-  "Carbon Black": "Hitam karbon",
-  "Micro Chrome": "Krom mikro",
+  Red: "Merah",
+  Blue: "Biru",
+  Yellow: "Kuning",
+  Green: "Hijau",
+  White: "Putih",
+  Black: "Hitam",
+  Grey: "Abu-abu",
 };

@@ -366,7 +366,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   profileName: "",
   profileHandle: "",
   language: "auto",
-  theme: "system",
+  theme: "light",
   visualEffects: "auto",
   tapFeedback: true,
   healthAutoSync: false,

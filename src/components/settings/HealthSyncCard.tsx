@@ -119,7 +119,7 @@ export function HealthSyncCard() {
         <p role="status" className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.14em]">
           {line ? (
             <>
-              <span aria-hidden="true" className={`size-2 rounded-full ${line.on ? "bg-accent shadow-[0_0_8px_rgb(204_255_0/0.7)]" : "border border-text-muted"}`} />
+              <span aria-hidden="true" className={`size-2 rounded-full ${line.on ? "bg-accent" : "border border-text-muted"}`} />
               <span className={line.on ? "text-accent" : "text-text-muted"}>{t(line.text)}</span>
             </>
           ) : (

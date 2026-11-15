@@ -191,10 +191,11 @@ export function regionTelemetry(
   return out;
 }
 
-/** Spec colours for each stage; fresh is Carbon Steel with a thin light edge. */
+/** Stage colours from the plate set: fresh is bare iron, then yellow, orange and red as the load
+ * on a muscle climbs, the way plates get heavier. */
 export const STAGE_STYLE: Record<FatigueStage, { fill: string; opacity: number; stroke?: string }> = {
-  fresh: { fill: "#27272a", opacity: 1, stroke: "rgb(255 255 255 / 0.35)" },
-  recovering: { fill: "#ccff00", opacity: 0.5 },
-  high: { fill: "#f59e0b", opacity: 1 },
-  exhausted: { fill: "#ef4444", opacity: 1 },
+  fresh: { fill: "#2e2c27", opacity: 1, stroke: "rgb(255 255 255 / 0.35)" },
+  recovering: { fill: "#e0a100", opacity: 0.55 },
+  high: { fill: "#d9480f", opacity: 1 },
+  exhausted: { fill: "#c8102e", opacity: 1 },
 };

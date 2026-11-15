@@ -87,7 +87,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
 
   if (phase !== "playing") {
     return (
-      <div role="dialog" aria-modal="true" aria-label={titleOf(unlocked, t)} className="force-dark fixed inset-0 z-[60] bg-[#09090b] text-text">
+      <div role="dialog" aria-modal="true" aria-label={titleOf(unlocked, t)} className="force-dark fixed inset-0 z-[60] bg-bg text-text">
         {phase === "armed" && (
           <button
             type="button"
@@ -97,13 +97,13 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           >
             <motion.span
               aria-hidden="true"
-              className="text-[#ccff00]/80"
+              className="text-accent/80"
               animate={reduce ? undefined : { scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 1.6, repeat: 4, ease: "easeInOut" }}
             >
               <AbotMark size={112} />
             </motion.span>
-            <span className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-[#ccff00]">{t("Tap to unlock")}</span>
+            <span className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-accent">{t("Tap to unlock")}</span>
           </button>
         )}
       </div>
@@ -131,7 +131,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="pro-celebration-title"
-      className="force-dark fixed inset-0 z-[60] overflow-hidden bg-[#09090b] text-text"
+      className="force-dark fixed inset-0 z-[60] overflow-hidden bg-bg text-text"
     >
       {/* Embers rising for as long as the screen is open. */}
       {!reduce && <Embers />}
@@ -157,7 +157,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-[34%] size-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ background: "radial-gradient(circle, rgb(204 255 0 / 0.26), rgb(204 255 0 / 0.06) 40%, transparent 64%)" }}
+          style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--color-accent) 26%, transparent), color-mix(in oklab, var(--color-accent) 6%, transparent) 40%, transparent 64%)" }}
           initial={{ opacity: 0, scale: reduce ? 1 : 0.3 }}
           animate={reduce ? { opacity: 1, scale: 1 } : { opacity: [0, 1, 0.75, 1], scale: [0.3, 1.1, 1, 1.06, 1] }}
           transition={reduce ? { duration: 0 } : { delay: HIT, duration: 1.2, ease: "easeOut" }}
@@ -166,7 +166,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           <motion.div
             aria-hidden="true"
             className="pointer-events-none absolute left-1/2 top-[34%] size-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{ background: "radial-gradient(circle, rgb(204 255 0 / 0.12), transparent 55%)" }}
+            style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 55%)" }}
             animate={{ scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] }}
             transition={{ delay: 1.6, duration: 3.4, ease: "easeInOut", repeat: 4 }}
           />
@@ -181,7 +181,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
                 cy="100"
                 r="92"
                 fill="none"
-                stroke="#ccff00"
+                stroke="var(--color-accent)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 initial={{ pathLength: 0, opacity: 0.9 }}
@@ -195,7 +195,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           <motion.svg
             aria-hidden="true"
             viewBox="0 0 200 200"
-            className="absolute -inset-6 size-[calc(100%+48px)] text-[#ccff00]"
+            className="absolute -inset-6 size-[calc(100%+48px)] text-accent"
             initial={{ opacity: 0, scale: reduce ? 1 : 0.7 }}
             animate={{ opacity: 1, scale: 1, rotate: reduce ? 0 : 360 }}
             transition={{ opacity: { delay: after(HIT + 0.15), duration: 0.5 }, scale: { delay: after(HIT + 0.15), duration: 0.6, ease: [0.22, 1, 0.36, 1] }, rotate: loop({ duration: 36, ease: "linear" }) }}
@@ -217,7 +217,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           <motion.svg
             aria-hidden="true"
             viewBox="0 0 200 200"
-            className="absolute inset-2 size-[calc(100%-16px)] text-[#ccff00]"
+            className="absolute inset-2 size-[calc(100%-16px)] text-accent"
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5, rotate: reduce ? 0 : -360 }}
             transition={{ opacity: { delay: after(HIT + 0.3), duration: 0.5 }, rotate: loop({ duration: 20, ease: "linear" }) }}
@@ -231,7 +231,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
               <motion.span
                 key={d}
                 aria-hidden="true"
-                className="absolute inset-6 rounded-full border-2 border-[#ccff00]"
+                className="absolute inset-6 rounded-full border-2 border-accent"
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 2.4, opacity: [0, 0.85, 0] }}
                 transition={{ delay: HIT + d, duration: 0.9, ease: "easeOut" }}
@@ -247,7 +247,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
                 <motion.span
                   key={i}
                   aria-hidden="true"
-                  className={`absolute left-1/2 top-1/2 rounded-full bg-[#ccff00] ${i % 3 === 0 ? "h-1 w-5" : "h-[3px] w-3"}`}
+                  className={`absolute left-1/2 top-1/2 rounded-full bg-accent ${i % 3 === 0 ? "h-1 w-5" : "h-[3px] w-3"}`}
                   style={{ rotate: `${(a * 180) / Math.PI}deg`, translateX: "-50%", translateY: "-50%" }}
                   initial={{ x: 0, y: 0, opacity: 0 }}
                   animate={{ x: Math.cos(a) * r, y: Math.sin(a) * r + 40, opacity: [0, 1, 1, 0] }}
@@ -258,7 +258,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
 
           {/* The plate: falls hard, locks, then floats while the screen is open. */}
           <motion.div
-            className="relative text-[#ccff00] drop-shadow-[0_0_34px_rgb(204_255_0/0.6)]"
+            className="relative text-accent drop-shadow-[0_0_34px_color-mix(in_oklab,var(--color-accent)_60%,transparent)]"
             initial={reduce ? false : { y: -340, rotate: -120, scale: 0.5, opacity: 0 }}
             animate={{ y: 0, rotate: 0, scale: 1, opacity: 1 }}
             transition={{ y: { duration: HIT, ease: [0.55, 0, 1, 0.45] }, rotate: { duration: HIT, ease: "easeIn" }, scale: { duration: HIT }, opacity: { duration: 0.15 } }}
@@ -278,7 +278,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
         </div>
 
         <motion.p
-          className="mt-8 font-mono text-[11px] font-bold uppercase text-[#ccff00]"
+          className="mt-8 font-mono text-[11px] font-bold uppercase text-accent"
           initial={{ opacity: 0, letterSpacing: reduce ? "0.22em" : "0.9em" }}
           animate={{ opacity: 1, letterSpacing: "0.22em" }}
           transition={{ delay: after(HIT + 0.3), duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -287,7 +287,7 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
         </motion.p>
         <motion.h2
           id="pro-celebration-title"
-          className="mt-2 bg-[linear-gradient(110deg,#ffffff_40%,#ccff00_50%,#ffffff_60%)] bg-[length:300%_100%] bg-clip-text text-center text-[2.6rem] font-extrabold leading-[0.95] tracking-tight text-transparent"
+          className="mt-2 bg-[linear-gradient(110deg,#ffffff_40%,var(--color-pr)_50%,#ffffff_60%)] bg-[length:300%_100%] bg-clip-text text-center text-[2.6rem] font-extrabold leading-[0.95] tracking-tight text-transparent"
           initial={{ opacity: 0, scale: reduce ? 1 : 1.35, filter: reduce ? "blur(0px)" : "blur(10px)", backgroundPosition: "100% 0" }}
           animate={{ opacity: 1, scale: 1, filter: "blur(0px)", backgroundPosition: reduce ? "100% 0" : ["100% 0", "0% 0"] }}
           transition={{
@@ -315,14 +315,14 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
             {PERKS.map(({ icon: Icon, text }, i) => (
               <motion.li
                 key={text}
-                className="flex items-center gap-2 rounded-ctl border border-[#ccff00]/20 bg-[#121215]/90 px-3 py-2.5 text-xs font-semibold leading-tight text-white"
+                className="flex items-center gap-2 rounded-ctl border border-accent/20 bg-[#121215]/90 px-3 py-2.5 text-xs font-semibold leading-tight text-white"
                 initial={{ opacity: 0, rotateX: reduce ? 0 : -80, y: reduce ? 0 : 10 }}
                 animate={{ opacity: 1, rotateX: 0, y: 0 }}
                 transition={{ delay: after(HIT + 0.7 + i * 0.09), duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               >
                 <motion.span
                   aria-hidden="true"
-                  className="shrink-0 text-[#ccff00]"
+                  className="shrink-0 text-accent"
                   animate={reduce ? undefined : { scale: [1, 1.25, 1] }}
                   transition={{ delay: 2.4 + i * 0.6, duration: 0.5, repeat: 4, repeatDelay: 4 }}
                 >
@@ -338,14 +338,14 @@ function Celebration({ unlocked }: { unlocked: Unlocked }) {
           ref={button}
           type="button"
           onClick={close}
-          className="mt-8 min-h-14 w-full max-w-sm rounded-ctl bg-[#ccff00] font-mono text-sm font-extrabold uppercase tracking-[0.1em] text-black hover:brightness-95"
+          className="mt-8 min-h-14 w-full max-w-sm rounded-ctl bg-accent font-mono text-sm font-extrabold uppercase tracking-[0.1em] text-black hover:brightness-95"
           initial={{ opacity: 0, y: reduce ? 0 : 16 }}
           animate={{
             opacity: 1,
             y: 0,
             boxShadow: reduce
-              ? "0 0 0px rgb(204 255 0 / 0)"
-              : ["0 0 0px rgb(204 255 0 / 0)", "0 0 28px rgb(204 255 0 / 0.55)", "0 0 0px rgb(204 255 0 / 0)"],
+              ? "0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)"
+              : ["0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)", "0 0 28px color-mix(in oklab, var(--color-accent) 55%, transparent)", "0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)"],
           }}
           transition={{
             opacity: { delay: after(HIT + 1.1), duration: 0.35 },
@@ -374,8 +374,8 @@ function Embers() {
         return (
           <motion.span
             key={i}
-            className="absolute bottom-0 rounded-full bg-[#ccff00]"
-            style={{ left: `${left}%`, width: size, height: size, boxShadow: "0 0 8px rgb(204 255 0 / 0.8)" }}
+            className="absolute bottom-0 rounded-full bg-accent"
+            style={{ left: `${left}%`, width: size, height: size, boxShadow: "0 0 8px color-mix(in oklab, var(--color-accent) 80%, transparent)" }}
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: [40, -520 - (i % 4) * 90], x: [0, (i % 2 ? 1 : -1) * (12 + (i % 3) * 8), 0], opacity: [0, 0.9, 0] }}
             transition={{ delay: 0.9 + ((i * 0.53) % 3.2), duration: dur, ease: "easeOut", repeat: 4, repeatDelay: (i % 4) * 0.4 }}
@@ -417,7 +417,7 @@ function DateRoll({ from, until, delay, reduce }: { from: string; until: string;
   const t = useT();
   return (
     <motion.div
-      className="mt-7 flex w-full max-w-sm items-center gap-2 rounded-ctl border border-[#ccff00]/25 bg-[#121215]/90 p-3"
+      className="mt-7 flex w-full max-w-sm items-center gap-2 rounded-ctl border border-accent/25 bg-[#121215]/90 p-3"
       initial={{ opacity: 0, y: reduce ? 0 : 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
@@ -437,7 +437,7 @@ function DateRoll({ from, until, delay, reduce }: { from: string; until: string;
       </div>
       <motion.span
         aria-hidden="true"
-        className="shrink-0 text-[#ccff00]"
+        className="shrink-0 text-accent"
         initial={{ x: reduce ? 0 : -8, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: reduce ? 0 : delay + 0.55, duration: 0.3 }}
@@ -445,7 +445,7 @@ function DateRoll({ from, until, delay, reduce }: { from: string; until: string;
         <ArrowRight size={18} />
       </motion.span>
       <div className="min-w-0 flex-1 text-right">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[#ccff00]">{t("Now until")}</p>
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-accent">{t("Now until")}</p>
         <motion.p
           className="mt-0.5 text-sm font-extrabold text-white"
           initial={{ opacity: 0, scale: reduce ? 1 : 1.4 }}

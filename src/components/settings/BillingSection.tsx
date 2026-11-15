@@ -21,9 +21,9 @@ import { CountUp } from "@/components/progress/CountUp";
 const ENDS_SOON_DAYS = 7;
 
 const BADGE: Record<PlanKind, string> = {
-  pro: "bg-[#ccff00] text-black",
-  lifetime: "bg-[#ccff00] text-black",
-  beta: "border border-[#ccff00]/60 text-[#ccff00]",
+  pro: "bg-accent text-black",
+  lifetime: "bg-accent text-black",
+  beta: "border border-accent/60 text-accent",
   core: "border border-white/20 text-zinc-300",
 };
 
@@ -60,13 +60,13 @@ export function BillingSection() {
   return (
     <section
       aria-labelledby="billing-heading"
-      className={`force-dark relative overflow-hidden rounded-card border bg-[#121215] px-4 py-3 text-text ${paid ? "border-[#ccff00]/45" : "border-white/10"}`}
+      className={`force-dark relative overflow-hidden rounded-card border bg-[#121215] px-4 py-3 text-text ${paid ? "border-accent/45" : "border-white/10"}`}
     >
       {paid && (
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full"
-          style={{ background: "radial-gradient(circle, rgb(204 255 0 / 0.16), transparent 65%)" }}
+          style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--color-accent) 16%, transparent), transparent 65%)" }}
         />
       )}
       {/* Plan name and status on one row; the dates, a note and the actions under it. */}
@@ -77,7 +77,7 @@ export function BillingSection() {
           </h2>
           <p className="flex items-center gap-2 text-xl font-extrabold leading-tight tracking-tight text-white">
             {paid && (
-              <span className="text-[#ccff00] drop-shadow-[0_0_10px_rgb(204_255_0/0.45)]">
+              <span className="text-accent drop-shadow-[0_0_10px_color-mix(in_oklab,var(--color-accent)_45%,transparent)]">
                 <AbotMark size={20} />
               </span>
             )}
@@ -89,7 +89,7 @@ export function BillingSection() {
 
       {left !== null && (
         <div aria-hidden="true" className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-          <div className={`h-full rounded-full ${s.daysLeft! <= ENDS_SOON_DAYS ? "bg-[#f59e0b]" : "bg-[#ccff00]"}`} style={{ width: `${Math.max(2, left * 100)}%` }} />
+          <div className={`h-full rounded-full ${s.daysLeft! <= ENDS_SOON_DAYS ? "bg-[#f59e0b]" : "bg-accent"}`} style={{ width: `${Math.max(2, left * 100)}%` }} />
         </div>
       )}
       {s.plan === "pro" && (
@@ -101,7 +101,7 @@ export function BillingSection() {
           {s.daysLeft !== null && (
             <div className="flex gap-1.5">
               <dt className="text-zinc-400">{t("Days left")}</dt>
-              <dd className={`font-mono font-semibold tabular-nums ${s.daysLeft <= ENDS_SOON_DAYS ? "text-[#f59e0b]" : "text-[#ccff00]"}`}>
+              <dd className={`font-mono font-semibold tabular-nums ${s.daysLeft <= ENDS_SOON_DAYS ? "text-[#f59e0b]" : "text-accent"}`}>
                 {/* Counts up when a code or a purchase adds days while the card is on screen. */}
                 <CountUp value={s.daysLeft} format={(n) => String(Math.round(n))} />
               </dd>

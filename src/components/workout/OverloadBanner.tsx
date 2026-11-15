@@ -15,13 +15,13 @@ import { ProBadge } from "@/components/paywall/ProBadge";
 
 /** Volt for more load, cyan for more reps, amber for a deload: on black in every theme. */
 const LOOK: Record<OverloadKind, { color: string; Icon: typeof Zap; label: string }> = {
-  load: { color: "#ccff00", Icon: Zap, label: KIND_LABEL.load },
-  reps: { color: "#00f0ff", Icon: TrendingUp, label: KIND_LABEL.reps },
+  load: { color: "var(--color-accent)", Icon: Zap, label: KIND_LABEL.load },
+  reps: { color: "var(--color-dropset)", Icon: TrendingUp, label: KIND_LABEL.reps },
   deload: { color: "#f59e0b", Icon: AlertTriangle, label: KIND_LABEL.deload },
-  hold: { color: "#00f0ff", Icon: Shield, label: KIND_LABEL.hold },
+  hold: { color: "var(--color-dropset)", Icon: Shield, label: KIND_LABEL.hold },
   trim: { color: "#f59e0b", Icon: Scissors, label: KIND_LABEL.trim },
   // A return is good news, not a warning: cyan like the other "keep going" calls.
-  comeback: { color: "#00f0ff", Icon: RotateCcw, label: KIND_LABEL.comeback },
+  comeback: { color: "var(--color-dropset)", Icon: RotateCcw, label: KIND_LABEL.comeback },
 };
 
 /** Exercises in this workout that already got the lean-bulk extra set (one per exercise). */

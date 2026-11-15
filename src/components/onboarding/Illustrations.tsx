@@ -17,7 +17,7 @@ const SPRING = { type: "spring", stiffness: 300, damping: 24 } as const;
 /** A phone outline at a fixed size, so the three scenes share one frame. */
 function Phone({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative h-[232px] w-[176px] overflow-hidden rounded-[30px] border border-ink/[0.14] bg-black p-2.5 shadow-[0_0_0_6px_#121215]">
+    <div className="relative h-[232px] w-[176px] overflow-hidden rounded-[30px] border border-ink/[0.14] bg-black p-2.5 shadow-[0_0_0_6px_#1b1a17]">
       <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-ink/10" />
       {children}
     </div>
@@ -52,14 +52,14 @@ export function LogSetScene() {
         className="relative grid grid-cols-[36px_1fr_64px_44px_44px] items-center gap-1.5 overflow-hidden rounded-xl border border-ink/[0.07] bg-surface p-1.5"
         animate={controls}
         variants={{
-          still: { backgroundColor: "rgba(204, 255, 0, 0.08)", borderColor: "rgba(204, 255, 0, 0.3)" },
+          still: { backgroundColor: "rgba(236, 232, 223, 0.08)", borderColor: "rgba(236, 232, 223, 0.3)" },
           loop: {
             backgroundColor: ["rgba(18, 18, 21, 1)", "rgba(18, 18, 21, 1)", "rgba(36, 44, 8, 1)", "rgba(36, 44, 8, 1)", "rgba(18, 18, 21, 1)"],
             borderColor: [
               "rgba(255, 255, 255, 0.07)",
               "rgba(255, 255, 255, 0.07)",
-              "rgba(204, 255, 0, 0.3)",
-              "rgba(204, 255, 0, 0.3)",
+              "rgba(236, 232, 223, 0.3)",
+              "rgba(236, 232, 223, 0.3)",
               "rgba(255, 255, 255, 0.07)",
             ],
             transition: loop(ROW_TIMES),
@@ -74,15 +74,15 @@ export function LogSetScene() {
           className="flex size-11 items-center justify-center rounded-xl border border-ink/[0.12] bg-surface-2 text-text-muted"
           animate={controls}
           variants={{
-            still: { backgroundColor: "rgba(204, 255, 0, 1)", color: "rgba(0, 0, 0, 1)", borderColor: "rgba(204, 255, 0, 1)" },
+            still: { backgroundColor: "rgba(236, 232, 223, 1)", color: "rgba(18, 17, 16, 1)", borderColor: "rgba(236, 232, 223, 1)" },
             loop: {
-              backgroundColor: ["rgba(28, 28, 33, 1)", "rgba(28, 28, 33, 1)", "rgba(204, 255, 0, 1)", "rgba(204, 255, 0, 1)", "rgba(28, 28, 33, 1)"],
+              backgroundColor: ["rgba(28, 28, 33, 1)", "rgba(28, 28, 33, 1)", "rgba(236, 232, 223, 1)", "rgba(236, 232, 223, 1)", "rgba(28, 28, 33, 1)"],
               color: ["rgba(161, 161, 170, 1)", "rgba(161, 161, 170, 1)", "rgba(0, 0, 0, 1)", "rgba(0, 0, 0, 1)", "rgba(161, 161, 170, 1)"],
               borderColor: [
                 "rgba(255, 255, 255, 0.12)",
                 "rgba(255, 255, 255, 0.12)",
-                "rgba(204, 255, 0, 1)",
-                "rgba(204, 255, 0, 1)",
+                "rgba(236, 232, 223, 1)",
+                "rgba(236, 232, 223, 1)",
                 "rgba(255, 255, 255, 0.12)",
               ],
               scale: [1, 1, 0.88, 1, 1],
@@ -94,7 +94,7 @@ export function LogSetScene() {
         </motion.span>
         {/* The band of light that crosses a row when its set is ticked. */}
         <motion.span
-          className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-[linear-gradient(90deg,transparent,rgb(204_255_0/0.35),transparent)]"
+          className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-[linear-gradient(90deg,transparent,rgb(236_232_223/0.3),transparent)]"
           style={{ x: -80 }}
           animate={controls}
           variants={{ still: { opacity: 0 }, loop: { x: [-80, -80, 340, 340], transition: loop([0, 0.36, 0.55, 1], "easeOut") } }}
@@ -167,7 +167,7 @@ export function RestScene() {
       <svg className="pointer-events-none absolute -bottom-4 -right-10 z-10 h-40 w-44 overflow-visible" viewBox="0 0 176 160" fill="none">
         <motion.path
           d="M170 158 C 150 80, 80 40, 8 52"
-          stroke="#ccff00"
+          stroke="#ece8df"
           strokeOpacity={0.55}
           strokeWidth={1.5}
           strokeDasharray="4 6"
@@ -254,8 +254,7 @@ export function DeviceScene() {
               width={p.w}
               height={p.h}
               rx={2.5}
-              fill="#ccff00"
-              fillOpacity={1 - i * 0.18}
+              fill={["#c8102e", "#1f4fa3", "#e0a100"][i]}
               initial={reduce ? false : { x: 140, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.3 + i * 0.32 }}
