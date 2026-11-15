@@ -10,6 +10,7 @@
  * - The simulator (devOverrideMode) lets anyone switch between Beta, Free (locked) and Pro to
  *   try both sides without a rebuild. AUTO follows the build.
  */
+import { parsePublicKey, type VerifiedLicense } from "./license-token";
 import { DEV_TOOLS } from "./dev-tools";
 
 export type MonetizationMode = "FOUNDERS_BETA" | "COMMERCIAL_LIVE";
@@ -33,6 +34,11 @@ export interface EntitlementState {
    */
   licenseSource: "account" | "device" | null;
   devOverrideMode: DevOverride;
+  /**
+   * The signed licence the account's server issued (src/lib/license-token.ts). Release builds with
+   * a public key open a paid tier only from this token, once its signature checks out.
+   */
+  licenseToken?: string | null;
 }
 
 export const DEFAULT_ENTITLEMENT: EntitlementState = {
@@ -44,6 +50,15 @@ export const DEFAULT_ENTITLEMENT: EntitlementState = {
   licenseSource: null,
   devOverrideMode: "AUTO",
 };
+
+/** True when this build carries the licence public key (NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY). */
+export const LICENSE_KEY_SET = parsePublicKey(process.env.NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY) !== null;
+
+/**
+ * NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR=COMMERCIAL_LIVE: set once ABOT sells, so a release build
+ * stays live even when the cached remote config says beta (it is plain localStorage).
+ */
+export const MONETIZATION_FLOOR: MonetizationMode | null = process.env.NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR === "COMMERCIAL_LIVE" ? "COMMERCIAL_LIVE" : null;
 
 export const APP_MONETIZATION_MODE: MonetizationMode =
   process.env.NEXT_PUBLIC_ABOT_MONETIZATION === "COMMERCIAL_LIVE" ? "COMMERCIAL_LIVE" : "FOUNDERS_BETA";
@@ -83,15 +98,32 @@ export interface Resolved {
 
 /**
  * What the rules say for this state at `now`, after the simulator override.
- * Release builds (`devTools` false) ignore the simulator, and count a paid tier only when it came
- * from the account (the server's user_entitlements, written by a payment or a server-checked
- * code). A tier held on the device alone, from a simulator, an offline code or an edited backup,
- * opens nothing there.
+ * Release builds (`devTools` false) ignore the simulator. With the licence public key built in,
+ * they count a paid tier only from `license`: a token signed by the server and verified on this
+ * device (src/lib/license-token.ts), so an edited stored tier opens nothing. Without the key they
+ * fall back to the stored tier when it came from the account (`licenseSource`). The mode floor
+ * keeps a live build live whatever the cached remote config says.
  */
-export function resolveEntitlement(e: EntitlementState, appMode: MonetizationMode = APP_MONETIZATION_MODE, now = Date.now(), devTools = DEV_TOOLS): Resolved {
+export function resolveEntitlement(
+  e: EntitlementState,
+  appMode: MonetizationMode = APP_MONETIZATION_MODE,
+  now = Date.now(),
+  devTools = DEV_TOOLS,
+  license: VerifiedLicense | null = null,
+  keySet = LICENSE_KEY_SET,
+  floor: MonetizationMode | null = MONETIZATION_FLOOR,
+): Resolved {
   if (!devTools) {
-    const tier: Tier = e.licenseSource === "account" ? e.tier : "free";
-    e = { ...e, devOverrideMode: "AUTO", tier, proExpiresAt: tier === "free" ? null : e.proExpiresAt };
+    if (floor === "COMMERCIAL_LIVE") appMode = "COMMERCIAL_LIVE";
+    if (keySet) {
+      // Only a verified, unexpired licence counts; the stored tier is whatever the device says.
+      const valid = license !== null && license.exp > now;
+      const tier: Tier = valid ? license.tier : "free";
+      e = { ...e, devOverrideMode: "AUTO", tier, proExpiresAt: tier === "pro" ? license!.proUntil : null };
+    } else {
+      const tier: Tier = e.licenseSource === "account" ? e.tier : "free";
+      e = { ...e, devOverrideMode: "AUTO", tier, proExpiresAt: tier === "free" ? null : e.proExpiresAt };
+    }
   }
   const mode: MonetizationMode =
     e.devOverrideMode === "FORCE_BETA" ? "FOUNDERS_BETA" : e.devOverrideMode === "FORCE_FREE" || e.devOverrideMode === "FORCE_PRO" ? "COMMERCIAL_LIVE" : appMode;
