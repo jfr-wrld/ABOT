@@ -1247,22 +1247,20 @@ export function RecentCard({
     >
       <motion.div whileTap={{ scale: 0.98 }} transition={PRESS_SPRING}>
         <Link href={historyPath(s.id)} className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-ink/[0.03]">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {/* The muscles it worked, one small map instead of a row of photos: quicker to read, and
+              the same for every lift. It leads the row, about as tall as the title and figures. */}
+          {muscles.length > 0 && (
+            <div aria-hidden="true" data-muscles className="w-11 shrink-0">
+              <MuscleMap primary={muscles} width={44} captions={false} />
+            </div>
+          )}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex min-w-0 items-center gap-2">
               <span className="min-w-0 truncate text-base font-semibold">{s.name}</span>
               {prChip}
               <span className="ml-auto">{when}</span>
             </div>
-            {/* The muscles it worked, one small map instead of a row of photos: quicker to read,
-                and the same for every lift. Map and figures share a row while they fit. */}
-            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-              {muscles.length > 0 && (
-                <div aria-hidden="true" data-muscles className="w-16 shrink-0">
-                  <MuscleMap primary={muscles} width={64} captions={false} />
-                </div>
-              )}
-              {stats}
-            </div>
+            {stats}
           </div>
           <ChevronRight aria-hidden="true" size={16} className="shrink-0 text-text-muted" />
         </Link>
