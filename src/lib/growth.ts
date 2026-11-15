@@ -96,3 +96,35 @@ export function summarizeGrowth(raw: unknown): GrowthSummary {
     activePeak: days.reduce((m, d) => Math.max(m, d.active), 0),
   };
 }
+
+export interface VisitDay {
+  day: string;
+  visitors: number;
+  views: number;
+}
+
+export interface VisitSummary {
+  days: VisitDay[];
+  /** Sums of daily visitors: a browser counts once per day, so someone who comes back counts again. */
+  today: number;
+  last7: number;
+  last30: number;
+  topPaths: { path: string; visitors: number; views: number }[];
+}
+
+/** Rows from admin_visits() and admin_visit_paths() (migration 20261116). */
+export function summarizeVisits(daysRaw: unknown, pathsRaw: unknown): VisitSummary {
+  const n = (v: unknown) => Number(v ?? 0) || 0;
+  const days: VisitDay[] = (Array.isArray(daysRaw) ? daysRaw : [])
+    .map((r) => {
+      const x = r as Record<string, unknown>;
+      return { day: String(x.day ?? ""), visitors: n(x.visitors), views: n(x.views) };
+    })
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d.day));
+  const sum = (xs: VisitDay[]) => xs.reduce((s, d) => s + d.visitors, 0);
+  const topPaths = (Array.isArray(pathsRaw) ? pathsRaw : []).slice(0, 5).map((r) => {
+    const x = r as Record<string, unknown>;
+    return { path: String(x.path ?? ""), visitors: n(x.visitors), views: n(x.views) };
+  });
+  return { days, today: days.at(-1)?.visitors ?? 0, last7: sum(days.slice(-7)), last30: sum(days.slice(-30)), topPaths };
+}

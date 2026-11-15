@@ -54,3 +54,20 @@ describe("growth rows", () => {
     expect(summarizeGrowth(undefined).signupsTotal).toBe(0);
   });
 });
+
+describe("web visits", () => {
+  it("totals today, 7 and 30 days, and keeps the top 5 pages", async () => {
+    const { summarizeVisits } = await import("./growth");
+    const days = Array.from({ length: 30 }, (_, i) => ({ day: `2026-10-${String(i + 1).padStart(2, "0")}`, visitors: "1", views: 2 }));
+    days[29] = { day: "2026-10-30", visitors: "5", views: 9 };
+    const paths = ["/", "/workout", "/progress", "/history", "other", "/settings"].map((path, i) => ({ path, visitors: 6 - i, views: String(60 - i) }));
+    const v = summarizeVisits(days, paths);
+    expect(v.today).toBe(5);
+    expect(v.last7).toBe(6 + 5);
+    expect(v.last30).toBe(29 + 5);
+    expect(v.days[29]).toEqual({ day: "2026-10-30", visitors: 5, views: 9 });
+    expect(v.topPaths.map((p) => p.path)).toEqual(["/", "/workout", "/progress", "/history", "other"]);
+    expect(v.topPaths[0]).toEqual({ path: "/", visitors: 6, views: 60 });
+    expect(summarizeVisits(null, undefined)).toEqual({ days: [], today: 0, last7: 0, last30: 0, topPaths: [] });
+  });
+});

@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { ExternalLink, RefreshCw } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { growth, type AdminMode } from "@/lib/admin-api";
-import { fetchDownloads, type DownloadSummary, type GrowthSummary } from "@/lib/growth";
+import { growth, visits, type AdminMode } from "@/lib/admin-api";
+import { missingFunctionMessage } from "@/lib/customers";
+import { fetchDownloads, type DownloadSummary, type GrowthSummary, type VisitSummary } from "@/lib/growth";
 import { Metric, Note, Panel, cls, errText } from "./ui";
 
 /**
- * Growth: web visitors (Vercel's dashboard; ABOT only sends the page views), APK downloads
- * (GitHub Releases) and accounts (admin_growth). Numbers are read when the module opens and on
+ * Growth: web visitors (ABOT's own counter, admin_visits), accounts (admin_growth) and APK
+ * downloads (GitHub Releases). Numbers are read when the module opens and on
  * Refresh, never in the background.
  */
 
@@ -19,9 +20,9 @@ const shortDay = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString
 export function GrowthModule({ mode }: { mode: AdminMode }) {
   return (
     <>
+      <VisitorsPanel mode={mode} />
       <AccountsPanel mode={mode} />
       <DownloadsPanel />
-      <VisitorsPanel />
     </>
   );
 }
@@ -172,16 +173,100 @@ function DownloadsPanel() {
   );
 }
 
-function VisitorsPanel() {
+function VisitorsPanel({ mode }: { mode: AdminMode }) {
+  const live = mode.kind === "server" && mode.admin;
+  const [data, setData] = useState<VisitSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(live);
+
+  const load = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setData(await visits(30));
+    } catch (e) {
+      setError(missingFunctionMessage(e, "admin_visits", "20261116_admin_customers_visits.sql"));
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!live) return;
+    void visits(30)
+      .then(setData, (e) => setError(missingFunctionMessage(e, "admin_visits", "20261116_admin_customers_visits.sql")))
+      .finally(() => setBusy(false));
+  }, [live]);
+
   return (
-    <Panel id="g-visitors" title="Web visitors" scope="global">
-      <p className="text-sm text-zinc-300">
-        Visitors, top pages, countries, devices and where people came from (Threads shows up as a referrer) are in Vercel: open the project, then Analytics.
-      </p>
+    <Panel id="g-visitors" title="Web visitors" scope="global" wide actions={live ? <RefreshButton busy={busy} onClick={() => void load()} /> : undefined}>
+      {!live ? (
+        <Note>Visitor numbers need Supabase in the build and an admin sign-in.</Note>
+      ) : (
+        <>
+          <dl className="grid grid-cols-3 gap-2">
+            <Metric label="Today" value={num(data?.today)} tone="volt" />
+            <Metric label="Last 7 days" value={num(data?.last7)} />
+            <Metric label="Last 30 days" value={num(data?.last30)} />
+          </dl>
+          {data && data.days.length > 0 && (
+            <figure className="flex flex-col gap-2">
+              <div className="h-48 w-full" role="img" aria-label={`Web visitors per day over the last ${data.days.length} days, ${data.last30} in all, and page views per day.`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.days} margin={{ top: 8, right: 4, left: -20, bottom: 0 }} barCategoryGap="20%">
+                    <CartesianGrid vertical={false} stroke="#27272a" />
+                    <XAxis dataKey="day" tickFormatter={shortDay} tick={{ fill: "#a1a1aa", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "#27272a" }} minTickGap={16} />
+                    <YAxis allowDecimals={false} tick={{ fill: "#a1a1aa", fontSize: 10 }} tickLine={false} axisLine={false} width={44} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                      contentStyle={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: "#fff" }}
+                      labelFormatter={(v) => shortDay(String(v))}
+                    />
+                    <Bar dataKey="visitors" name="Visitors" fill="#ccff00" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="views" name="Page views" fill="#71717a" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-400">
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-[#ccff00]" /> Visitors
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden="true" className="size-2.5 rounded-[2px] bg-[#71717a]" /> Page views
+                </span>
+                <span>Days in Jakarta time.</span>
+              </figcaption>
+            </figure>
+          )}
+          {data && data.topPaths.length > 0 && (
+            <table className="w-full text-sm tabular-nums">
+              <caption className="sr-only">Most viewed pages, last 30 days</caption>
+              <thead>
+                <tr className="text-left text-xs text-zinc-400">
+                  <th scope="col" className="py-1 font-normal">Page</th>
+                  <th scope="col" className="py-1 text-right font-normal">Visitors</th>
+                  <th scope="col" className="py-1 text-right font-normal">Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.topPaths.map((p) => (
+                  <tr key={p.path} className="border-t border-[#27272a] text-zinc-200">
+                    <td className="py-1.5">{p.path === "other" ? "Other pages" : p.path}</td>
+                    <td className="py-1.5 text-right">{num(p.visitors)}</td>
+                    <td className="py-1.5 text-right">{num(p.views)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <Note>A browser counts once per day, so someone who comes back on three days counts three times. The Android app sends nothing.</Note>
+          {error && <Note tone="error">{error}</Note>}
+        </>
+      )}
       <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" className={`${cls.ghost} self-start`}>
-        Open Vercel <ExternalLink aria-hidden="true" size={14} />
+        Countries and referrers in Vercel <ExternalLink aria-hidden="true" size={14} />
       </a>
-      <Note>Counting starts once Web Analytics is turned on for the project in Vercel and this version is deployed. The Android app sends nothing.</Note>
     </Panel>
   );
 }

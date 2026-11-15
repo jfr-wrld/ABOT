@@ -2,7 +2,7 @@ import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
 import { normalizeRemoteConfig, useRemoteConfig, type RemoteConfig } from "./remote-config";
 import { parseCustomers, parseTotals, type Customer, type OrderTotals } from "./customers";
-import { summarizeGrowth, type GrowthSummary } from "./growth";
+import { summarizeGrowth, summarizeVisits, type GrowthSummary, type VisitSummary } from "./growth";
 import { readLocalCodes, writeLocalCodes, type Grant, type LocalCode } from "./redeem-service";
 
 /**
@@ -130,6 +130,15 @@ export async function growth(days = 30): Promise<GrowthSummary> {
   const { data, error } = await (await getSupabase()).rpc("admin_growth", { p_days: days });
   fail(error);
   return summarizeGrowth(data);
+}
+
+/** ABOT's own web visit totals (admin_visits, admin_visit_paths; migration 20261116). */
+export async function visits(days = 30): Promise<VisitSummary> {
+  const supabase = await getSupabase();
+  const [perDay, paths] = await Promise.all([supabase.rpc("admin_visits", { p_days: days }), supabase.rpc("admin_visit_paths", { p_days: days })]);
+  fail(perDay.error);
+  fail(paths.error);
+  return summarizeVisits(perDay.data, paths.data);
 }
 
 /** Who paid and what PRO they hold (admin_customers, admin_order_totals; migration 20261116). */

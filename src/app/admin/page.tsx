@@ -167,7 +167,7 @@ function Console() {
   const isGlobal = !DEV_TOOLS || current === "growth" || current === "customers" || current === "money" || current === "licenses" || current === "algorithms";
 
   return (
-    <div className="mx-auto grid min-h-dvh max-w-[1440px] grid-cols-[minmax(0,1fr)] lg:grid-cols-[232px_minmax(0,1fr)]">
+    <div className="mx-auto grid min-h-dvh max-w-[1440px] content-start grid-cols-[minmax(0,1fr)] lg:grid-cols-[232px_minmax(0,1fr)]">
       <aside className="sticky top-0 z-10 min-w-0 border-b border-[#27272a] bg-[#09090b]/95 pt-[env(safe-area-inset-top)] backdrop-blur lg:h-dvh lg:self-start lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-2 px-4 py-3 lg:flex-col lg:items-start lg:py-5">
           <div>
