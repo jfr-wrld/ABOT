@@ -1,8 +1,8 @@
 /**
  * The notifications page, built on the phone from what ABOT already knows: no server, nothing
  * sent. Four kinds (owner, 2026-11-15): the day's plan and a missed session, new records and the
- * weekly streak, the admin's announcement, and backup or sync trouble. Titles are English keys
- * with their values, translated where they are shown.
+ * weekly streak, the admin's announcement and a newer Android build, and backup or sync trouble.
+ * Titles are English keys with their values, translated where they are shown.
  */
 import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
 import { nextSession, type WorkoutSchedule, type Weekday } from "@/lib/notifications/schedule";
@@ -19,6 +19,8 @@ export interface InboxItem {
   title: string;
   params?: Record<string, string | number>;
   href?: string;
+  /** Shown as written: the admin's announcement is not an English key. */
+  plain?: true;
 }
 
 export interface InboxInput {
@@ -31,6 +33,8 @@ export interface InboxInput {
   streak: number;
   announcement: string | null;
   sync: { phase: string; pendingCount: number };
+  /** A newer Android build than the one installed, as the update check last found it. */
+  appUpdate?: { build: number; version: string; publishedAt: string | null } | null;
 }
 
 const DAY = 86_400_000;
@@ -78,7 +82,18 @@ export function buildInbox(x: InboxInput): InboxItem[] {
     out.push({ id: `streak:${x.streak}`, kind: "record", at: last, title: "{n}-week streak", params: { n: x.streak } });
   }
 
-  if (x.announcement) out.push({ id: `ann:${hash(x.announcement)}`, kind: "update", at: x.now, title: x.announcement });
+  if (x.announcement) out.push({ id: `ann:${hash(x.announcement)}`, kind: "update", at: x.now, title: x.announcement, plain: true });
+  if (x.appUpdate) {
+    const published = x.appUpdate.publishedAt ? Date.parse(x.appUpdate.publishedAt) : NaN;
+    out.push({
+      id: `app-update:${x.appUpdate.build}`,
+      kind: "update",
+      at: Number.isFinite(published) ? Math.min(published, x.now) : x.now,
+      title: "ABOT {version} is out. Tap to update.",
+      params: { version: x.appUpdate.version },
+      href: "/settings?section=about",
+    });
+  }
 
   // Backup: trouble with sync, or a growing log with no copy anywhere.
   if (x.sync.phase === "error") out.push({ id: `sync-error:${today}`, kind: "backup", at: x.now, title: "Backup failed. Tap to try again.", href: "/settings?section=data" });

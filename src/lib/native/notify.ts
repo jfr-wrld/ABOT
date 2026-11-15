@@ -2,6 +2,7 @@ import { registerPlugin } from "@capacitor/core";
 import type { LocalNotificationSchema } from "@capacitor/local-notifications";
 import type { NativeLive } from "@/lib/notifications/live-workout";
 import { DEFAULT_SCHEDULE, reminderContent, type ReminderContent, type Weekday, type WorkoutSchedule } from "@/lib/notifications/schedule";
+import { currentT } from "@/i18n";
 
 /**
  * Notifications in the Android app, through @capacitor/local-notifications. The WebView has no
@@ -19,9 +20,11 @@ const plugin = () => import("@capacitor/local-notifications").then((m) => ({ ln:
 
 export type NativePermission = "granted" | "denied" | "default";
 
-/** Fixed ids: one snooze, two per weekday (prep, session). The live notification and the rest
- * alarm belong to LiveWorkout. */
-const ID = { snooze: 3 } as const;
+/** Fixed ids: one snooze, the new version, two per weekday (prep, session). The live notification
+ * and the rest alarm belong to LiveWorkout. */
+const ID = { snooze: 3, update: 4 } as const;
+/** Where a tap on the new-version notification lands, whatever the payload says. */
+export const UPDATE_URL = "/settings?section=about";
 const sessionId = (wd: Weekday) => 100 + wd;
 const prepId = (wd: Weekday) => 110 + wd;
 const REMINDER_IDS = [0, 1, 2, 3, 4, 5, 6].flatMap((wd) => [sessionId(wd as Weekday), prepId(wd as Weekday)]);
@@ -48,7 +51,7 @@ export function reminderAction(notificationId: unknown, actionId: unknown, extra
   return { kind: "open", url: m ? url as string : "/workout" };
 }
 
-const CHANNEL = { live: "workout-live", rest: "rest-over", reminders: "reminders" } as const;
+const CHANNEL = { live: "workout-live", rest: "rest-over", reminders: "reminders", updates: "app-updates" } as const;
 const REMINDER_ACTIONS = "abot-reminder";
 const SNOOZE_MS = 30 * 60_000;
 const ICON = "ic_stat_abot";
@@ -91,6 +94,7 @@ export async function setupNativeNotifications(
     ln.createChannel({ id: CHANNEL.live, name: "Workout in progress", description: "The workout and your next set while ABOT is in the background.", importance: 2, vibration: false }),
     ln.createChannel({ id: CHANNEL.rest, name: "Rest over", description: "Rings when a rest timer ends.", importance: 5, vibration: true }),
     ln.createChannel({ id: CHANNEL.reminders, name: "Workout reminders", description: "Your scheduled session and the pack-your-bag call.", importance: 4, vibration: true }),
+    ln.createChannel({ id: CHANNEL.updates, name: "App updates", description: "A new ABOT version is ready to download.", importance: 3, vibration: false }),
   ]);
   await ln.registerActionTypes({
     types: [
@@ -104,6 +108,7 @@ export async function setupNativeNotifications(
     ],
   });
   const handle = await ln.addListener("localNotificationActionPerformed", ({ actionId, notification }) => {
+    if (notification.id === ID.update) return open(UPDATE_URL);
     const act = reminderAction(notification.id, actionId, notification.extra);
     if (act.kind === "ignore") return;
     if (act.kind === "snooze") {
@@ -119,6 +124,25 @@ export async function setupNativeNotifications(
     open(act.url);
   });
   return () => void handle.remove();
+}
+
+/** A newer build was found: says so in Android's shade. False when notifications are off. */
+export async function showUpdateNotification(version: string): Promise<boolean> {
+  if ((await nativePermission()) !== "granted") return false;
+  const t = currentT();
+  await (await plugin()).ln.schedule({
+    notifications: [
+      { id: ID.update, title: t("New version"), body: t("ABOT {version} is out. Tap to update.", { version }), channelId: CHANNEL.updates, smallIcon: ICON },
+    ],
+  });
+  return true;
+}
+
+/** The download started: the notification has done its job. */
+export async function clearUpdateNotification(): Promise<void> {
+  const { ln } = await plugin();
+  // cancel() leaves a notification already in the shade; removal matches by id only.
+  await ln.removeDeliveredNotifications({ notifications: [{ id: ID.update, title: "", body: "" }] });
 }
 
 /* ------------------------------------------------------------------ */
