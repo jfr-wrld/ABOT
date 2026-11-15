@@ -29,6 +29,8 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261112_payment_test_tools.sql
 \i supabase/migrations/20261113_security_hardening.sql
 \i supabase/migrations/20261114_founder_seat_lock.sql
+\i supabase/migrations/20261115_admin_growth.sql
+\i supabase/migrations/20261116_admin_customers_visits.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
@@ -38,6 +40,8 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261112_payment_test_tools.sql
 \i supabase/migrations/20261113_security_hardening.sql
 \i supabase/migrations/20261114_founder_seat_lock.sql
+\i supabase/migrations/20261115_admin_growth.sql
+\i supabase/migrations/20261116_admin_customers_visits.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
 insert into auth.users values
@@ -456,6 +460,64 @@ do $$ begin
     raise exception 'client created a founders order';
   exception when insufficient_privilege then null;
   end;
+end $$;
+
+-- Visit counter and customer admin functions (20261116_admin_customers_visits.sql).
+reset role;
+insert into auth.users values ('00000000-0000-0000-0000-00000000000d', 'd@example.com', now());
+insert into public.payment_orders (order_id, user_id, plan, amount_idr, status, payment_type, paid_at, created_at) values
+  ('ABOT-ANNUAL-PAID-901', '00000000-0000-0000-0000-00000000000d', 'annual', 249000, 'paid', 'qris', now() - interval '2 days', now() - interval '2 days'),
+  ('ABOT-ANNUAL-EXP-902', '00000000-0000-0000-0000-00000000000d', 'annual', 249000, 'expired', null, null, now() - interval '1 day'),
+  ('ABOT-ANNUAL-SIM-903', '00000000-0000-0000-0000-00000000000d', 'annual', 249000, 'paid', 'simulated', now(), now());
+set role anon;
+set request.jwt.claim.sub = '';
+set request.jwt.claim.email = '';
+do $$ begin
+  perform public.track_visit('/workout/?start=x#y', true);
+  perform public.track_visit('/workout', false);
+  perform public.track_visit('/admin', true);
+  perform public.track_visit('/admin/x', true);
+  perform public.track_visit('/made-up-123', true);
+  perform public.track_visit('', true);
+  begin
+    perform 1 from public.web_visits;
+    raise exception 'anon read web_visits';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+reset role;
+do $$ begin
+  if (select visitors from public.web_visits where path = '/workout') <> 1 or (select views from public.web_visits where path = '/workout') <> 2 then raise exception 'workout visit counts wrong'; end if;
+  if exists (select 1 from public.web_visits where path like '%admin%') then raise exception 'admin visit stored'; end if;
+  if (select views from public.web_visits where path = 'other') <> 1 then raise exception 'unknown path not stored as other'; end if;
+  if (select views from public.web_visits where path = '/') <> 1 then raise exception 'empty path not stored as /'; end if;
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+set request.jwt.claim.email = 'a@example.com';
+do $$ begin
+  begin perform * from public.admin_visits(); raise exception 'non-admin read visits'; exception when insufficient_privilege then null; end;
+  begin perform * from public.admin_customers(); raise exception 'non-admin read customers'; exception when insufficient_privilege then null; end;
+  begin perform * from public.admin_order_totals(); raise exception 'non-admin read totals'; exception when insufficient_privilege then null; end;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+set request.jwt.claim.email = 'boss@example.com';
+do $$
+declare c record; t record; real_revenue bigint;
+begin
+  if (select count(*) from public.admin_visits(7)) <> 7 then raise exception 'admin_visits not zero-filled'; end if;
+  if (select visitors from public.admin_visits(7) order by day desc limit 1) <> 3 then raise exception 'today visitors wrong'; end if;
+  if (select path from public.admin_visit_paths() limit 1) <> '/workout' then raise exception 'top path wrong'; end if;
+  -- D paid once, then left a checkout to expire; the simulated order is not theirs to count.
+  select * into c from public.admin_customers() where email = 'd@example.com';
+  if not found then raise exception 'd missing from customers'; end if;
+  if c.paid_orders <> 1 or c.paid_total_idr <> 249000 or c.last_status <> 'paid' or c.last_payment_type <> 'qris' then raise exception 'd row wrong: %', c; end if;
+  if c.tier <> 'free' or c.source is not null then raise exception 'd entitlement wrong: %', c; end if;
+  select * into c from public.admin_customers() where email = 'boss2@example.com';
+  if c.last_plan <> 'founders' or c.founder_seat is null then raise exception 'founders seat missing: %', c; end if;
+  select sum(amount_idr) into real_revenue from public.payment_orders where status = 'paid' and payment_type <> 'simulated';
+  select * into t from public.admin_order_totals();
+  if t.revenue_idr <> real_revenue or t.failed < 1 then raise exception 'totals wrong: %', t; end if;
 end $$;
 
 reset role;
