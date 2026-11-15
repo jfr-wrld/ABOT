@@ -54,6 +54,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_ABOT_ADMIN_PIN: ${{ vars.NEXT_PUBLIC_ABOT_ADMIN_PIN }}
+          # Signed licences (docs/payments-setup.md, Signed licences): public key and the live floor.
+          NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY }}
+          NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR: ${{ vars.NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR }}
 
       - name: Build the release APK (unsigned) and the debug APK for the smoke test
         working-directory: android

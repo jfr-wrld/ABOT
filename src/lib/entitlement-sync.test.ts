@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_ENTITLEMENT, applyGrant, type EntitlementState } from "./entitlements";
-import { mergeAccountEntitlement, type AccountEntitlement } from "./entitlement-sync";
+import { mergeAccountEntitlement, withLicenseToken, type AccountEntitlement } from "./entitlement-sync";
 
 const now = Date.parse("2026-11-09T12:00:00Z");
 const day = 86_400_000;
@@ -58,5 +58,14 @@ describe("mergeAccountEntitlement", () => {
     const mixed = applyGrant(accountPro(30), { tier: "pro", days: 30, founder: false }, "seed", now, "device");
     expect(mixed.licenseSource).toBe("device");
     expect(mergeAccountEntitlement(mixed, null, now)).toBe(mixed);
+  });
+});
+
+describe("withLicenseToken", () => {
+  it("stores a new token, and keeps the same object when there is none or it is unchanged", () => {
+    const withToken = withLicenseToken(DEFAULT_ENTITLEMENT, "a.b.c");
+    expect(withToken).toEqual({ ...DEFAULT_ENTITLEMENT, licenseToken: "a.b.c" });
+    expect(withLicenseToken(withToken, "a.b.c")).toBe(withToken);
+    expect(withLicenseToken(withToken, null)).toBe(withToken);
   });
 });

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useHydration } from "@/store/hydration";
 import { autoClaimFounder, updateEntitlement, usePaywallStore } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { verifyStoredLicense } from "@/store/useLicense";
 import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
 import { syncEntitlementWithAccount } from "@/lib/entitlement-sync";
 import dynamic from "next/dynamic";
@@ -26,6 +27,12 @@ export function EntitlementsProvider() {
     // Signed in: a licence bought or granted on the account comes down to this device.
     void syncEntitlementWithAccount(useSettingsStore.getState().entitlement ?? DEFAULT_ENTITLEMENT).then((next) => next && updateEntitlement(next));
   }, [hydrated]);
+  // The stored licence token is checked against the built-in public key on load and after each
+  // sync; only the in-memory result opens PRO in release builds.
+  const token = useSettingsStore((s) => s.entitlement?.licenseToken ?? null);
+  useEffect(() => {
+    if (hydrated) void verifyStoredLicense(token);
+  }, [hydrated, token]);
   // Mounted only while open. Left in the page closed, the full-screen <dialog> made links on
   // other screens (the workout summary's) never settle for a click in the e2e browser.
   const open = usePaywallStore((s) => s.open);

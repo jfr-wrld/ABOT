@@ -65,8 +65,8 @@ export type RestoreResult =
   | { kind: "restored"; next: EntitlementState }
   /** The account no longer holds the licence this phone had from it (refund or revocation). */
   | { kind: "revoked"; next: EntitlementState }
-  /** The account holds nothing this phone does not already have. */
-  | { kind: "up-to-date" }
+  /** The account holds nothing this phone does not already have (next: only a fresh licence token). */
+  | { kind: "up-to-date"; next?: EntitlementState }
   | { kind: "none" }
   | { kind: "error" };
 
@@ -77,6 +77,22 @@ function isLoss(before: EntitlementState, after: EntitlementState): boolean {
   if (after.tier === "lifetime") return false;
   if (after.tier === "free") return true;
   return Date.parse(after.proExpiresAt ?? "0") < Date.parse(before.proExpiresAt ?? "0");
+}
+
+/** The state with the server's signed licence token in it; the same object when nothing changes. */
+export function withLicenseToken(state: EntitlementState, token: string | null): EntitlementState {
+  return token === null || state.licenseToken === token ? state : { ...state, licenseToken: token };
+}
+
+/** A fresh signed licence from the license Edge Function, or null (not deployed, offline, no key). */
+async function fetchLicenseToken(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("license", { body: {} });
+    const token = (data as { token?: unknown } | null)?.token;
+    return !error && typeof token === "string" ? token : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Reads the signed-in account's licence and says what it would change here. */
@@ -95,8 +111,11 @@ export async function restoreEntitlementFromAccount(local: EntitlementState): Pr
       .eq("user_id", session.session.user.id)
       .maybeSingle();
     if (error) return { kind: "error" };
-    const next = mergeAccountEntitlement(local, (data as AccountEntitlement | null) ?? null);
-    if (next !== local) return { kind: isLoss(local, next) ? "revoked" : "restored", next };
+    const merged = mergeAccountEntitlement(local, (data as AccountEntitlement | null) ?? null);
+    // The signed token is what release builds trust; the row above is what the screen shows.
+    const next = withLicenseToken(merged, await fetchLicenseToken(supabase));
+    if (merged !== local) return { kind: isLoss(local, merged) ? "revoked" : "restored", next };
+    if (next !== local) return data ? { kind: "up-to-date", next } : { kind: "none" };
     return data ? { kind: "up-to-date" } : { kind: "none" };
   } catch {
     return { kind: "error" };
@@ -121,5 +140,5 @@ export async function syncEntitlementWithAccount(local: EntitlementState): Promi
     return null;
   }
   const r = await restoreEntitlementFromAccount(local);
-  return r.kind === "restored" || r.kind === "revoked" ? r.next : null;
+  return "next" in r && r.next ? r.next : null;
 }

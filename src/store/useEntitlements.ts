@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { create } from "zustand";
 import { useSettingsStore } from "./useSettingsStore";
+import { useLicense } from "./useLicense";
 import { useRemoteConfig, currentMonetizationMode } from "@/lib/remote-config";
 import {
   DEFAULT_ENTITLEMENT,
@@ -51,7 +52,8 @@ export function useEntitlements() {
   const show = usePaywallStore((s) => s.show);
   // Mission Control's switch (remote config) decides beta or paywall for every install.
   const appMode = useRemoteConfig((s) => s.config.monetizationMode);
-  const r = useMemo(() => resolveEntitlement(e, appMode), [e, appMode]);
+  const license = useLicense((s) => s.license);
+  const r = useMemo(() => resolveEntitlement(e, appMode, undefined, undefined, license), [e, appMode, license]);
   // Every PRO feature is gated the same way today; the key names what is being asked for.
   const canAccessPro = useCallback(
     (feature?: ProFeatureKey) => {

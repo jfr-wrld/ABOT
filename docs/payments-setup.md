@@ -107,6 +107,39 @@ select u.email, e.tier, e.pro_expires_at, e.is_founder, e.source from public.use
 - **"(FunctionsFetchError)" after the message:** the browser got no readable answer. Usually "Verify JWT" is still on for `midtrans-checkout` (the gateway rejects the browser's preflight), or the function name is not exactly `midtrans-checkout`.
 - **Notification arrived before a fix:** the Midtrans dashboard can resend it.
 
+## Signed licences
+
+Release builds with a licence public key open PRO only from a token the `license` Edge Function
+signed, checked offline in the app (`src/lib/license-token.ts`). Editing the stored tier on a phone
+or in a browser then opens nothing. A token works offline for 30 days and every signed-in start
+renews it. Without the public key a build keeps the older rule, so nobody loses PRO because a
+variable is missing. Mission Control → Overview → Live config says which rule a build uses.
+
+1. Make a key pair once (nothing is written to disk):
+
+   ```bash
+   node scripts/make-license-keys.mjs
+   ```
+
+2. Run the `supabase secrets set LICENSE_PRIVATE_JWK='…'` line it prints. Keep the private key
+   nowhere else.
+3. Deploy the function:
+
+   ```bash
+   supabase functions deploy license
+   ```
+
+4. Put the public key it printed in `NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY`: in Vercel (Project →
+   Settings → Environment Variables) and in the repository's Actions variables (for the APK). Redeploy.
+
+Do steps 1 to 3 before step 4: a build with the key and no working function shows paying users as
+free until it can fetch a token. A new key pair later works the same way and invalidates old tokens
+until each phone is online.
+
+When ABOT sells for real, also set `NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR=COMMERCIAL_LIVE` in the same
+two places. The mode then stays live even if someone edits the cached remote config back to beta.
+Leave it unset during the Founders beta.
+
 ## Going live
 
 1. Turn the test buttons off: run `update public.app_remote_config set payments_sandbox = false;`.

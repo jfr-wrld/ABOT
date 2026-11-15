@@ -13,3 +13,7 @@ verify_jwt = false
 # A signed-in lifter deletes their own account: the gateway checks the token, the function too.
 [functions.delete-account]
 verify_jwt = true
+
+# A signed-in lifter's licence, signed: the gateway checks the token, the function too.
+[functions.license]
+verify_jwt = true

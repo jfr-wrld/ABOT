@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import { useRemoteConfig, type RemoteConfig } from "@/lib/remote-config";
+import { useLicense } from "@/store/useLicense";
 import { createCode, grantByEmail, listOrders, saveConfig, setCodeActive, simulateOrder, type AdminCode, type AdminMode, type AdminOrder, type SimulatedOutcome } from "@/lib/admin-api";
 import { generateCode, type Grant } from "@/lib/redeem-service";
 import { DEFAULT_ENTITLEMENT, SIMULATOR, annualSaving, plansFor, resolveEntitlement, rupiah, type Tier } from "@/lib/entitlements";
@@ -451,7 +452,8 @@ function DeviceEntitlementPanel() {
   const e = useSettingsStore((s) => s.entitlement) ?? DEFAULT_ENTITLEMENT;
   const appMode = useRemoteConfig((s) => s.config.monetizationMode);
   const now = useNow(60_000);
-  const r = resolveEntitlement(e, appMode, now);
+  const license = useLicense((s) => s.license);
+  const r = resolveEntitlement(e, appMode, now, undefined, license);
   return (
     <Panel id="l-device" title="Entitlement on this device" scope="device">
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">

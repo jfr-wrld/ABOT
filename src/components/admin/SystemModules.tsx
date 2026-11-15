@@ -17,6 +17,7 @@ import { saveFile } from "@/lib/native/files";
 import { HealthSyncService, type HealthStatus } from "@/lib/health-sync";
 import { requestPersistentStorage, type PersistStatus } from "@/lib/storagePersistence";
 import { DEFAULT_SETTINGS } from "@/types/workout";
+import { LICENSE_KEY_SET, MONETIZATION_FLOOR } from "@/lib/entitlements";
 import type { RepoSnapshot } from "@/data/repo/types";
 import type { AdminMode, AdminStats } from "@/lib/admin-api";
 import { Metric, Note, Panel, cls, errText } from "./ui";
@@ -51,6 +52,10 @@ export function OverviewModule({ mode, numbers }: { mode: AdminMode; numbers: Ad
           <Metric label="Source" value={remote.source.toUpperCase()} tone="cyan" />
         </dl>
         <p className="text-xs text-zinc-400">Banner: {remote.config.announcement ?? "none"}</p>
+        <p className="text-xs text-zinc-400">
+          Licence signing: {LICENSE_KEY_SET ? "on, PRO needs a signed licence" : "off, set NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY (docs/payments-setup.md)"}
+          {MONETIZATION_FLOOR ? " · Mode floor: live" : ""}
+        </p>
       </Panel>
       <Panel id="o-device" title="This device" scope="device">
         <dl className="grid grid-cols-2 gap-2">
