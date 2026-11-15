@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "@/components/icons";
+import { ArrowDownRight, ArrowUpRight, ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "@/components/icons";
 import { Beef } from "lucide-react";
 import { addProtein, addWater, useTodayFuel } from "@/store/useFuelPacer";
 import { dayOf, useFoodLog } from "@/store/useFoodLog";
@@ -81,67 +81,96 @@ export function PhaseCommandCard({ now }: { now: number }) {
     <section
       aria-labelledby="phase-heading"
       className="panel overflow-hidden"
-      style={{
-        backgroundColor: `color-mix(in oklab, ${color} 9%, var(--color-surface))`,
-        borderColor: `color-mix(in oklab, ${color} 32%, transparent)`,
-      }}
+      // The phase colour as a wash from the top corner, fading into the surface; the edge stays the
+      // ordinary faint line so the colour reads as light on the card, not as an outline.
+      style={{ backgroundImage: `var(--neo-card-face), linear-gradient(150deg, color-mix(in oklab, ${color} 20%, var(--color-surface)) 0%, var(--color-surface) 75%)` }}
     >
-      {/* Compact on purpose: phase and week, then two figures. Detail lives one tap away on /phase. */}
-      <Link href="/phase" className="flex flex-col gap-2.5 px-3 pb-2.5 pt-3 hover:bg-ink/[0.02]">
+      {/* The block as weeks, today's room to eat as the lead figure, the weight trend beside it.
+          The phase's icon stays beside its name (owner, 2026-11-15). */}
+      <Link href="/phase" className="flex flex-col gap-3 px-3.5 pb-3 pt-3 hover:bg-ink/[0.02]">
         <div className="flex items-center gap-2">
           <span
             aria-hidden="true"
-            className="tile flex size-7 shrink-0 items-center justify-center rounded-full"
-            style={{ color, backgroundColor: `color-mix(in oklab, ${color} 18%, transparent)` }}
+            className="tile flex size-8 shrink-0 items-center justify-center rounded-full"
+            style={{ color, backgroundColor: `color-mix(in oklab, ${color} 26%, var(--color-surface))` }}
           >
-            <Icon size={14} />
+            <Icon size={16} style={{ color }} />
           </span>
-          <h2 id="phase-heading" className="min-w-0 truncate text-sm font-bold">
+          <h2 id="phase-heading" className="min-w-0 truncate text-base font-bold">
             {t(PHASE_LABEL[m.phase.phaseType])}
           </h2>
-          <span className="num shrink-0 text-xs font-bold text-text-muted">
-            {meso.finished ? t("Done") : t("W{week}/{of}", { week: meso.week, of: meso.of })}
-          </span>
-          {meso.deload && !meso.finished && <span className="shrink-0 rounded-full bg-warmup/15 px-1.5 py-px text-[11px] font-bold text-warmup">{t("Deload")}</span>}
-          {/* Something waits on the phase page: the week's check-in, or the end-of-block summary. */}
+          {meso.deload && !meso.finished && <span className="shrink-0 text-xs font-bold text-warmup">{t("Deload")}</span>}
+          <span className="flex-1" />
+          {/* Something waits on the phase page: the week's check-in, or the end-of-block summary. The
+              dot marks that state; there is no dot otherwise. */}
           {(meso.finished || (checkIn && checkIn.kind !== "need_weighins")) && (
-            <span className="shrink-0 rounded-full px-1.5 py-px text-[11px] font-bold" style={{ backgroundColor: color, color: "var(--color-bg)" }}>
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold" style={{ color }}>
+              <span aria-hidden="true" className="size-1.5 rounded-full" style={{ backgroundColor: color }} />
               {meso.finished ? t("See what's next") : t("Check-in")}
             </span>
           )}
-          <span className="flex-1" />
           <ChevronRight aria-hidden="true" size={16} className="shrink-0 text-text-muted" />
         </div>
 
-        {/* Two figures and nothing else: the day's room to eat, and where the weight is heading.
-            Macros, the block and the charts are on /phase. */}
-        <div className="grid grid-cols-2 gap-3">
+        <BlockWeeks week={meso.week} of={meso.of} progress={meso.progress} finished={meso.finished} color={color} label={meso.finished ? t("Done") : t("W{week}/{of}", { week: meso.week, of: meso.of })} />
+
+        <div className="grid grid-cols-[1fr_auto] items-end gap-4">
           <div className="min-w-0">
             <p className="field-label">{left >= 0 ? t("Left today") : t("Over today")}</p>
-            <p className="num text-lg font-bold leading-tight" style={{ color }}>
-              {Math.abs(left).toLocaleString(t.locale)}
-              <span className="ml-0.5 text-xs font-semibold text-text-muted">{t("of {n} kcal", { n: fuel.kcal.toLocaleString(t.locale) })}</span>
-            </p>
-          </div>
-          <div className="min-w-0">
-            <p className="field-label">{t("Trend")}</p>
-            <p className="num flex items-baseline gap-1.5 whitespace-nowrap">
-              <span className="text-lg font-bold leading-tight">
-                {weight}
-                <span className="ml-0.5 text-xs font-semibold text-text-muted">{unit}</span>
+            <p className="num flex items-baseline gap-1 whitespace-nowrap">
+              <span className="text-[28px] font-bold leading-none" style={{ color: left >= 0 ? color : "var(--color-caution)" }}>
+                {Math.abs(left).toLocaleString(t.locale)}
               </span>
-              {rate !== null && (
-                <span className="text-xs font-semibold text-text-muted">
-                  {rate > 0 ? "+" : rate < 0 ? "−" : "±"}
-                  {Math.abs(Math.round(toDisplay(rate, unit) * 10) / 10)}/{t("wk")}
-                </span>
-              )}
+              <span className="text-xs font-semibold text-text-muted">{t("of {n} kcal", { n: fuel.kcal.toLocaleString(t.locale) })}</span>
             </p>
+            <span aria-hidden="true" className="sunk mt-2 block h-1.5 overflow-hidden rounded-full">
+              <span
+                className="block h-full rounded-full"
+                style={{ width: `${Math.min(100, fuel.kcal > 0 ? (eaten / fuel.kcal) * 100 : 0)}%`, backgroundColor: left >= 0 ? color : "var(--color-caution)" }}
+              />
+            </span>
+          </div>
+          <div className="text-right">
+            <p className="field-label">{t("Trend")}</p>
+            <p className="num whitespace-nowrap text-lg font-bold leading-tight">
+              {weight}
+              <span className="ml-0.5 text-xs font-semibold text-text-muted">{unit}</span>
+            </p>
+            {rate !== null && (
+              <p className="num inline-flex items-center gap-0.5 whitespace-nowrap text-xs font-semibold text-text-muted">
+                {rate > 0 ? <ArrowUpRight aria-hidden="true" size={12} /> : rate < 0 ? <ArrowDownRight aria-hidden="true" size={12} /> : "±"}
+                {rate !== 0 && <span className="sr-only">{rate > 0 ? "+" : "−"}</span>}
+                {Math.abs(Math.round(toDisplay(rate, unit) * 10) / 10)}/{t("wk")}
+              </p>
+            )}
           </div>
         </div>
       </Link>
-      <PacerChips proteinTarget={fuel.proteinG} waterTarget={m.waterMl} now={now} />
+      <PacerChips proteinTarget={fuel.proteinG} waterTarget={m.waterMl} now={now} color={color} />
     </section>
+  );
+}
+
+/**
+ * The block, one segment a week: weeks behind are filled, this week fills by the day, weeks ahead
+ * sit sunk. Says "week 6 of 12" as a shape, so the fraction beside it is only a label.
+ */
+function BlockWeeks({ week, of, progress, finished, color, label }: { week: number; of: number; progress: number; finished: boolean; color: string; label: string }) {
+  const into = finished ? 1 : Math.max(0.08, Math.min(1, progress * of - (week - 1)));
+  return (
+    <div className="flex items-center gap-2.5">
+      <span aria-hidden="true" className="flex flex-1 gap-1">
+        {Array.from({ length: of }, (_, i) => {
+          const fill = finished || i < week - 1 ? 1 : i === week - 1 ? into : 0;
+          return (
+            <span key={i} className="sunk block h-2 flex-1 overflow-hidden rounded-full">
+              {fill > 0 && <span className="block h-full rounded-full" style={{ width: `${fill * 100}%`, backgroundColor: color }} />}
+            </span>
+          );
+        })}
+      </span>
+      <span className="num shrink-0 text-xs font-bold text-text-muted">{label}</span>
+    </div>
   );
 }
 
@@ -149,7 +178,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
  * Protein and water as two small tap targets on one row: a mini ring, today against the target,
  * and the step a tap adds. The full-size Pacer stays on /phase.
  */
-function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number; waterTarget: number; now: number }) {
+function PacerChips({ proteinTarget, waterTarget, now, color }: { proteinTarget: number; waterTarget: number; now: number; color: string }) {
   const t = useT();
   const { proteinG, waterMl } = useTodayFuel(now);
   const litres = (n: number) => (n / 1000).toLocaleString(t.locale, { maximumFractionDigits: 1 });
@@ -165,6 +194,7 @@ function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number
         aria={t("Add 25 g protein")}
         onAdd={() => addProtein(25)}
         Icon={Beef}
+        color={color}
       />
       <PacerChip
         label={t("Water")}
@@ -176,6 +206,7 @@ function PacerChips({ proteinTarget, waterTarget, now }: { proteinTarget: number
         aria={t("Add 500 ml water")}
         onAdd={() => addWater(500)}
         Icon={Droplets}
+        color={color}
       />
     </div>
   );
@@ -191,6 +222,8 @@ type ChipProps = {
   aria: string;
   onAdd: () => void;
   Icon: typeof Droplets;
+  /** The card's phase colour, so the row does not bring a second accent in. Volt when absent. */
+  color?: string;
 };
 
 /**
@@ -212,11 +245,12 @@ function useAddMoment(value: number, target: number, step: number) {
   return { ghosts, pulse, fire, done };
 }
 
-function Ghost({ id, text, done }: { id: number; text: string; done: (id: number) => void }) {
+function Ghost({ id, text, done, color = "var(--color-accent)" }: { id: number; text: string; done: (id: number) => void; color?: string }) {
   return (
     <motion.span
       aria-hidden="true"
-      className="num pointer-events-none absolute right-2 top-1 text-[11px] font-bold text-accent"
+      className="num pointer-events-none absolute right-2 top-1 text-[11px] font-bold"
+      style={{ color }}
       initial={{ y: 0, opacity: 1 }}
       animate={{ y: -18, opacity: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -228,13 +262,14 @@ function Ghost({ id, text, done }: { id: number; text: string; done: (id: number
 }
 
 /** The ring wrapper: one Volt pulse each time `pulse` goes up (never on first show). */
-function PulseRing({ pulse, children }: { pulse: number; children: ReactNode }) {
+function PulseRing({ pulse, children, color = "var(--color-accent)" }: { pulse: number; children: ReactNode; color?: string }) {
+  const glow = (n: number, a: number) => `0 0 ${n}px color-mix(in oklab, ${color} ${a}%, transparent)`;
   return (
     <motion.span
       key={pulse}
       className="inline-flex rounded-full"
-      initial={pulse ? { scale: 1, boxShadow: "0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)" } : false}
-      animate={pulse ? { scale: [1, 1.22, 1], boxShadow: ["0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)", "0 0 16px color-mix(in oklab, var(--color-accent) 70%, transparent)", "0 0 0px color-mix(in oklab, var(--color-accent) 0%, transparent)"] } : undefined}
+      initial={pulse ? { scale: 1, boxShadow: glow(0, 0) } : false}
+      animate={pulse ? { scale: [1, 1.22, 1], boxShadow: [glow(0, 0), glow(16, 70), glow(0, 0)] } : undefined}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       {children}
@@ -242,8 +277,9 @@ function PulseRing({ pulse, children }: { pulse: number; children: ReactNode }) 
   );
 }
 
-function PacerChip({ label, value, target, step, figure, stepText, aria, onAdd, Icon }: ChipProps) {
+function PacerChip({ label, value, target, step, figure, stepText, aria, onAdd, Icon, color }: ChipProps) {
   const m = useAddMoment(value, target, step);
+  const hit = value >= target;
   return (
     <button
       type="button"
@@ -254,18 +290,19 @@ function PacerChip({ label, value, target, step, figure, stepText, aria, onAdd, 
       aria-label={aria}
       className="tap relative flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-ctl px-2 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
     >
-      <PulseRing pulse={m.pulse}>
-        <Ring value={value} max={target} size={28} stroke={3} label={`${label}: ${value} / ${target}`}>
-          <Icon aria-hidden="true" size={11} className={value >= target ? "text-accent" : "text-text-muted"} />
+      <PulseRing pulse={m.pulse} color={color}>
+        <Ring value={value} max={target} size={30} stroke={3} segments={10} color={color} label={`${label}: ${value} / ${target}`}>
+          <Icon aria-hidden="true" size={11} className={hit ? undefined : "text-text-muted"} style={hit ? { color } : undefined} />
         </Ring>
       </PulseRing>
       <span className="num min-w-0 flex-1 truncate text-xs font-bold">{figure}</span>
-      <span aria-hidden="true" className="num inline-flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-accent">
+      {/* The step reads as a small key, in the text colour: the tap is the action, not a second accent. */}
+      <span aria-hidden="true" className="num inline-flex shrink-0 items-center gap-0.5 rounded-full bg-ink/[0.07] px-1.5 py-0.5 text-[11px] font-bold">
         <Plus size={10} />
         {stepText}
       </span>
       {m.ghosts.map((id) => (
-        <Ghost key={id} id={id} text={stepText} done={m.done} />
+        <Ghost key={id} id={id} text={stepText} done={m.done} color={color} />
       ))}
     </button>
   );
@@ -337,7 +374,7 @@ function PacerItem({ label, value, target, step, figure, targetText, stepText, a
       className="tap relative flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-ctl px-2 py-1.5 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
     >
       <PulseRing pulse={m.pulse}>
-        <Ring value={value} max={target} size={size} stroke={4} label={`${label}: ${value} / ${target}`}>
+        <Ring value={value} max={target} size={size} stroke={4} segments={14} label={`${label}: ${value} / ${target}`}>
           <Icon aria-hidden="true" size={Math.round(size * 0.36)} className={value >= target ? "text-accent" : "text-text-muted"} />
         </Ring>
       </PulseRing>

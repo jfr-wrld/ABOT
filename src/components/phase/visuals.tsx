@@ -19,6 +19,7 @@ export function Ring({
   color = "var(--color-accent)",
   children,
   label,
+  segments,
 }: {
   value: number;
   max: number;
@@ -27,8 +28,12 @@ export function Ring({
   color?: string;
   children?: ReactNode;
   label?: string;
+  /** Draw the ring as this many short dashes, lit one by one, instead of one stroke (owner,
+   *  2026-11-15: a full stroke reads as a plain circle anywhere; dashes read as a count). */
+  segments?: number;
 }) {
   const reduce = useReducedMotionConfig();
+  if (segments) return <DashRing value={value} max={max} size={size} stroke={stroke} color={color} label={label} segments={segments}>{children}</DashRing>;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const f = Math.max(0, Math.min(1, max > 0 ? value / max : 0));
@@ -54,6 +59,37 @@ export function Ring({
           animate={{ strokeDashoffset: c * (1 - f) }}
           transition={{ type: "spring", stiffness: 120, damping: 20 }}
         />
+      </svg>
+      <span className="absolute inset-0 flex flex-col items-center justify-center">{children}</span>
+    </span>
+  );
+}
+
+function DashRing({ value, max, size, stroke, color, label, segments, children }: { value: number; max: number; size: number; stroke: number; color: string; label?: string; segments: number; children?: ReactNode }) {
+  const r = (size - stroke) / 2;
+  const mid = size / 2;
+  const lit = Math.round(Math.max(0, Math.min(1, max > 0 ? value / max : 0)) * segments);
+  // Each dash covers 60% of its slice; the rest is the gap.
+  const slice = (2 * Math.PI) / segments;
+  const at = (a: number) => `${mid + r * Math.sin(a)} ${mid - r * Math.cos(a)}`;
+  return (
+    <span className="relative inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size }} role={label ? "img" : undefined} aria-label={label}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+        {Array.from({ length: segments }, (_, i) => {
+          const a0 = i * slice + slice * 0.2;
+          const a1 = a0 + slice * 0.6;
+          return (
+            <path
+              key={i}
+              d={`M ${at(a0)} A ${r} ${r} 0 0 1 ${at(a1)}`}
+              fill="none"
+              stroke={i < lit ? color : "var(--color-track)"}
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              style={{ transition: `stroke 200ms ease ${i * 25}ms` }}
+            />
+          );
+        })}
       </svg>
       <span className="absolute inset-0 flex flex-col items-center justify-center">{children}</span>
     </span>
