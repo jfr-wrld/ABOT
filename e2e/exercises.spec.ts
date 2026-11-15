@@ -1,6 +1,6 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, choose, waitForSavedSetting, showPill, sortAndFilter } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, choose, waitForSavedSetting, showPill, sortAndFilter, scrollUntil } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
@@ -31,6 +31,7 @@ test("creates a custom exercise and opens its detail", async ({ page }) => {
   await page.getByRole("button", { name: "Add to library" }).click();
   // 873 with photos, plus the lifter's own.
   await expect(page.getByText("874 exercises", { exact: true })).toBeVisible();
+  await scrollUntil(page, page.getByRole("link", { name: /Kroc Row Variation/ }));
   await page.getByRole("link", { name: /Kroc Row Variation/ }).click();
   await expect(page.getByRole("heading", { name: "Kroc Row Variation" })).toBeVisible();
   await expect(page.getByText("No records yet.")).toBeVisible();

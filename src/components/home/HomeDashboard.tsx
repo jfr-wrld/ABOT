@@ -41,6 +41,7 @@ import type { Weekday } from "@/lib/notifications/schedule";
 import { historyPath } from "@/lib/routes";
 import { isoTime } from "@/lib/safe-date";
 import { Ring } from "@/components/phase/visuals";
+import { liveSet } from "@/lib/live-set";
 import { useT, type T } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { routineFocus, trainingFocus } from "@/lib/training-focus";
@@ -695,11 +696,17 @@ function ActiveCard() {
   const now = useNow(1000);
   const active = useWorkoutStore((s) => s.active)!;
   const { byId } = useAllExercises();
-  const done = countSets(active).completed;
+  const live = liveSet(active);
+  // The next exercise with a set still to do, after the one on the bar now.
+  const at = live ? active.exercises.indexOf(live.exercise) : -1;
+  const next = live ? active.exercises.slice(at + 1).find((e) => e.sets.some((st) => !st.completed)) : undefined;
   return (
+    // An opaque surface with the Volt tint laid over it: it sits on the Volt week card, and a
+    // see-through tint let that card show through its top edge.
     <Link
       href="/workout"
-      className="block rounded-card border border-accent/40 bg-accent-tint p-4 transition-colors hover:border-accent/70"
+      className="block rounded-card border border-accent/40 bg-surface p-4 transition-colors hover:border-accent/70"
+      style={{ backgroundImage: "linear-gradient(var(--color-accent-tint), var(--color-accent-tint)), var(--neo-card-face)" }}
     >
       <span className="field-label flex items-center gap-1.5 !text-accent">
         <motion.span
@@ -709,21 +716,38 @@ function ActiveCard() {
           transition={{ duration: 1.2, repeat: 3 }}
         />
         {t("Workout in progress")}
-      </span>
-      <span className="mt-1 block truncate text-2xl font-bold tracking-tight">{active.name}</span>
-      <span className="mt-2 block">
-        <ThumbRow exerciseIds={active.exercises.map((e) => e.exerciseId)} byId={byId} size={36} />
-      </span>
-      <span className="num mt-2 flex items-center gap-3 text-sm text-text-muted">
-        <span className="inline-flex items-center gap-1">
+        <span className="num ml-auto inline-flex items-center gap-1 normal-case text-text-muted">
           <Timer aria-hidden="true" size={14} />
           {formatDuration(sessionDurationSec(active, now))}
         </span>
-        <span className="inline-flex items-center gap-1">
-          <Layers aria-hidden="true" size={14} />
-          {t.n(done, "{n} set done", "{n} sets done")}
-        </span>
       </span>
+      <span className="mt-1 block truncate text-xl font-bold tracking-tight">{active.name}</span>
+      {/* What is on the bar now, and what comes after it (owner, 2026-11-15): one photo and the
+          set count, not every exercise of the session. */}
+      {live ? (
+        <span className="tile mt-3 flex items-center gap-3 rounded-xl p-2.5">
+          {byId[live.exercise.exerciseId] && <ExerciseThumb exercise={byId[live.exercise.exerciseId]!} size={56} />}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-base font-bold">{byId[live.exercise.exerciseId]?.name ?? t("Removed exercise")}</span>
+            <span className="num block text-sm font-semibold text-accent">
+              {live.number === null ? t("Warm-up") : t("Set {n} of {of}", { n: live.number, of: live.of })}
+            </span>
+            {/* One dot per set of this exercise, filled once done. */}
+            <span aria-hidden="true" className="mt-1.5 flex flex-wrap gap-1">
+              {live.exercise.sets.map((st, i) => (
+                <span key={i} className={`h-1.5 w-4 rounded-full ${st.completed ? "bg-accent" : st === live.set ? "bg-accent/45" : "bg-track"}`} />
+              ))}
+            </span>
+          </span>
+        </span>
+      ) : (
+        <span className="mt-2 block text-sm font-semibold text-text-muted">{active.exercises.length ? t("All sets done") : t("No exercises yet")}</span>
+      )}
+      {next && (
+        <span className="mt-2 block truncate text-sm text-text-muted">
+          {t("Next: {name}", { name: byId[next.exerciseId]?.name ?? t("Removed exercise") })}
+        </span>
+      )}
       <span className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-accent text-base font-bold text-on-accent">
         <Play aria-hidden="true" size={18} />
         {t("Continue workout")}

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { addExercise, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, freshStart, logSet, startEmptyWorkout, scrollUntil } from "./helpers";
 
 // The photos alternate start and end: motion stays on here (the suite default is reduced).
 test.use({ reducedMotion: "no-preference" });
@@ -84,7 +84,7 @@ test("a photo thumbnail falls back to the equipment icon when the photo cannot l
   await page.goto("/exercises");
   const squat = page.getByRole("link", { name: /^Squat \(Barbell\)/ });
   // Lazy photos load only on screen; bring the row into view so its photo is requested and fails.
-  await squat.scrollIntoViewIfNeeded();
+  await scrollUntil(page, squat);
   await expect(squat.locator('[data-thumb="icon"]')).toBeVisible();
   await expect(squat.getByText("Quads")).toBeVisible();
 });

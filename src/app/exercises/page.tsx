@@ -9,6 +9,8 @@ import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
 import { useLiquidGlass } from "@/components/layout/useLiquidGlass";
 import { useHideOnScroll } from "@/lib/useHideOnScroll";
 import { useSessionState } from "@/lib/useSessionState";
+import { useIncremental } from "@/lib/useIncremental";
+import { rememberedScroll, urlKey } from "@/lib/nav-memory";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
@@ -61,15 +63,11 @@ function LibraryScreen() {
   const [equipment, setEquipment] = useSessionState<Equipment | "">("abot.lib.equipment", "");
   const [formOpen, setFormOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const filterButton = useRef<HTMLButtonElement>(null);
-  useLiquidGlass(filterButton, { bezel: 14, strength: 26, blur: 2.5 });
   const [sort, setSort] = useLibrarySort();
   const [view, setView] = useViewMode("exercises");
   const t = useT();
   // The workout capsule, when one is running, rises above the floating button instead of covering it.
   useActionBarSpace(60);
-  const scrollingDown = useHideOnScroll();
-  const buttonHidden = scrollingDown && !sheetOpen;
 
   const prTable = useMemo(() => buildPRTable(sessions, byId, { allGyms: true }), [sessions, byId]);
   const usage = useMemo(() => exerciseUsage(sessions), [sessions]);
@@ -117,6 +115,23 @@ function LibraryScreen() {
     out.push({ key: "all", title: t("All exercises"), items: sorted });
     return out;
   }, [filtered, favorites, favoritesOnly, searching, sort, usage, t]);
+
+  // Rows a page at a time (measured: drawing every row with its photo made opening and scrolling
+  // the library slow on a mid-range phone). Coming Back with a saved scroll offset draws them all,
+  // so ScrollMemory still lands on the same row.
+  const [restoring] = useState(() => (rememberedScroll(urlKey(window.location.pathname, window.location.search)) ?? 0) > 0);
+  const total = sections.reduce((n, sec) => n + sec.items.length, 0);
+  const [limit, more, setSentinel] = useIncremental(total, `${search}|${muscle}|${equipment}|${favoritesOnly}|${sort}|${view}`, restoring ? Math.max(total, 60) : 60);
+  const shownSections = useMemo(() => {
+    let left = limit;
+    const out: typeof sections = [];
+    for (const sec of sections) {
+      if (left <= 0) break;
+      out.push({ ...sec, items: sec.items.slice(0, left) });
+      left -= sec.items.length;
+    }
+    return out;
+  }, [sections, limit]);
 
   const best = (e: Exercise) => prTable[e.id]?.heaviest_weight;
 
@@ -181,28 +196,7 @@ function LibraryScreen() {
 
       {/* Floats above the dock in the dock's own glass, and steps aside while the list scrolls
           down, coming back on any scroll up. Kept while its sheet is open, for focus to return. */}
-      <button
-        ref={filterButton}
-        type="button"
-        onClick={() => setSheetOpen(true)}
-        aria-haspopup="dialog"
-        aria-label={sheetChoices ? t("Sort and filter, {n} set", { n: sheetChoices }) : t("Sort and filter")}
-        aria-hidden={buttonHidden || undefined}
-        tabIndex={buttonHidden ? -1 : undefined}
-        data-hidden={buttonHidden}
-        className={`liquid-glass fixed left-1/2 z-20 flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full px-4 text-sm font-semibold text-text transition-[translate,opacity,scale] duration-200 ease-out active:scale-95 ${
-          buttonHidden ? "pointer-events-none translate-y-[72px] opacity-0 motion-reduce:translate-y-0" : ""
-        }`}
-        style={{ bottom: "calc(var(--dock-h, 96px) - 4px + env(safe-area-inset-bottom))" }}
-      >
-        <SlidersHorizontal aria-hidden="true" size={16} className="text-accent" />
-        {t("Sort & filter")}
-        {sheetChoices > 0 && (
-          <span aria-hidden="true" className="num flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-on-accent">
-            {sheetChoices}
-          </span>
-        )}
-      </button>
+      <FilterButton choices={sheetChoices} sheetOpen={sheetOpen} onOpen={() => setSheetOpen(true)} />
       <FilterSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
@@ -235,12 +229,12 @@ function LibraryScreen() {
         </div>
       ) : (
         <div className="mt-3 flex flex-col gap-4">
-          {sections.map((sec) => (
+          {shownSections.map((sec) => (
             <section key={sec.key} aria-labelledby={`group-${sec.key}`}>
               {/* Sticky so the section stays named while its list scrolls. */}
               <h2
                 id={`group-${sec.key}`}
-                className="sticky top-[env(safe-area-inset-top)] z-10 flex items-center justify-between bg-bg/95 px-4 py-2 backdrop-blur-sm"
+                className="sticky top-[env(safe-area-inset-top)] z-10 flex items-center justify-between bg-bg px-4 py-2"
               >
                 <span className="flex items-center gap-2.5">
                   {sec.muscle && (
@@ -251,7 +245,7 @@ function LibraryScreen() {
                   {sec.key === "favorites" && <Star aria-hidden="true" size={16} className="text-accent" fill="currentColor" />}
                   <span className="text-sm font-bold">{sec.title}</span>
                 </span>
-                <span className="num text-xs text-text-muted">{sec.items.length}</span>
+                <span className="num text-xs text-text-muted">{sections.find((x) => x.key === sec.key)?.items.length ?? sec.items.length}</span>
               </h2>
               <ul className={view === "grid" ? "grid grid-cols-2 gap-2 px-4 sm:grid-cols-3" : "flex flex-col px-2"}>
                 {sec.items.map((e) => {
@@ -308,6 +302,7 @@ function LibraryScreen() {
           ))}
         </div>
       )}
+      {more && <div ref={setSentinel} aria-hidden="true" className="h-px" />}
       {/* Room for the floating Sort & filter button, so the last row scrolls clear of it. */}
       <div aria-hidden="true" className="h-20" />
 
@@ -471,4 +466,41 @@ function useLibrarySort(): [LibrarySort, (v: LibrarySort) => void] {
       }
     },
   ];
+}
+
+/**
+ * The floating Sort & filter button, in the dock's glass. It steps aside while the list scrolls
+ * down and comes back on any scroll up; kept while its sheet is open, for focus to return. Its
+ * scroll state lives here, not in the list, so hiding it never re-renders the hundreds of rows
+ * (measured: that re-render made scrolling the library drop to about 25 fps on a mid-range phone).
+ */
+function FilterButton({ choices, sheetOpen, onOpen }: { choices: number; sheetOpen: boolean; onOpen: () => void }) {
+  const t = useT();
+  const ref = useRef<HTMLButtonElement>(null);
+  useLiquidGlass(ref, { bezel: 14, strength: 26, blur: 2.5 });
+  const hidden = useHideOnScroll() && !sheetOpen;
+  return (
+    <button
+      ref={ref}
+      type="button"
+      onClick={onOpen}
+      aria-haspopup="dialog"
+      aria-label={choices ? t("Sort and filter, {n} set", { n: choices }) : t("Sort and filter")}
+      aria-hidden={hidden || undefined}
+      tabIndex={hidden ? -1 : undefined}
+      data-hidden={hidden}
+      className={`liquid-glass fixed left-1/2 z-20 flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full px-4 text-sm font-semibold text-text transition-[translate,opacity,scale] duration-200 ease-out active:scale-95 ${
+        hidden ? "pointer-events-none translate-y-[72px] opacity-0 motion-reduce:translate-y-0" : ""
+      }`}
+      style={{ bottom: "calc(var(--dock-h, 96px) - 4px + env(safe-area-inset-bottom))" }}
+    >
+      <SlidersHorizontal aria-hidden="true" size={16} className="text-accent" />
+      {t("Sort & filter")}
+      {choices > 0 && (
+        <span aria-hidden="true" className="num flex size-5 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-on-accent">
+          {choices}
+        </span>
+      )}
+    </button>
+  );
 }

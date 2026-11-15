@@ -142,3 +142,15 @@ export async function sortAndFilter(page: Page, ...options: string[]): Promise<v
   await sheet.getByRole("button", { name: /^Show \d+ exercises?$/ }).click();
   await expect(sheet).toHaveCount(0);
 }
+
+/**
+ * The exercise library draws its rows a page at a time as it is scrolled. Scroll to the end, the
+ * way a lifter would, until `row` exists, then bring it into view.
+ */
+export async function scrollUntil(page: Page, row: Locator, tries = 40): Promise<void> {
+  for (let i = 0; i < tries && (await row.count()) === 0; i++) {
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(120);
+  }
+  await row.first().scrollIntoViewIfNeeded();
+}

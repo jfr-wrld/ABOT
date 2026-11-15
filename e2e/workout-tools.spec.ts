@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, freshStart, logSet, showPill, startEmptyWorkout } from "./helpers";
+import { addExercise, freshStart, logSet, showPill, startEmptyWorkout, scrollUntil } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await freshStart(page);
@@ -57,6 +57,7 @@ test("the library is grouped by muscle, each exercise with a bundled photo", asy
   const chest = page.getByRole("region", { name: /^Chest/ });
   const legs = page.getByRole("region", { name: /^Quads/ });
   await expect(chest.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toBeVisible();
+  await scrollUntil(page, legs.getByRole("link", { name: /^Squat \(Barbell\)/ }));
   await expect(legs.getByRole("link", { name: /^Squat \(Barbell\)/ })).toBeVisible();
   await expect(chest.getByRole("link", { name: /^Squat/ })).toHaveCount(0);
 
@@ -84,6 +85,7 @@ test("the muscle filter counts groups drawn as one shape together", async ({ pag
   await page.getByRole("button", { name: /^Sort and filter/ }).click();
   await expect(page.getByRole("dialog", { name: "Sort & filter" }).getByRole("radio", { name: "Barbell", exact: true }).locator("svg:not(.lucide)")).toBeVisible();
   await page.keyboard.press("Escape");
+  await scrollUntil(page, page.getByRole("link", { name: /^Squat \(Barbell\)/ }));
   await expect(page.getByRole("link", { name: /^Squat \(Barbell\)/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /^Bench Press \(Barbell\)/ })).toHaveCount(0);
 });

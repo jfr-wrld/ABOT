@@ -140,7 +140,7 @@ function ProfileScreen() {
       <div
         role="tablist"
         aria-label={t("Profile sections")}
-        className="sticky top-[env(safe-area-inset-top)] z-10 mt-2 flex border-b border-line bg-bg/95 px-4 backdrop-blur"
+        className="sticky top-[env(safe-area-inset-top)] z-10 mt-2 flex border-b border-line bg-bg px-4"
         onKeyDown={(e) => {
           if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
           const i = TABS.indexOf(tab);

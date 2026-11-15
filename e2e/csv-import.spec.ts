@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
-import { expectNoHorizontalOverflow, freshStart } from "./helpers";
+import { expectNoHorizontalOverflow, freshStart, scrollUntil } from "./helpers";
 
 const HEVY = `"title","start_time","end_time","description","exercise_title","superset_id","exercise_notes","set_index","set_type","weight_kg","reps","distance_km","duration_seconds","rpe"
 "Push Day","15 Jan 2024, 08:30","15 Jan 2024, 09:35","","Bench Press (Barbell)",,"",0,"warmup",40,10,,,
@@ -47,6 +47,7 @@ test("a Hevy export is previewed, imported once, and counts toward records", asy
   await expect(page.getByText(/92\.5/).first()).toBeVisible();
 
   await page.goto("/exercises");
+  await scrollUntil(page, page.getByRole("link", { name: /Cable Zottman Curl/ }));
   await expect(page.getByRole("link", { name: /Cable Zottman Curl/ })).toBeVisible();
 });
 

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, scrollUntil } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
@@ -66,6 +66,7 @@ test("a custom exercise without steps says so honestly", async ({ page }) => {
   await page.getByRole("button", { name: "New", exact: true }).click();
   await page.getByLabel("Name").fill("Zorro Curl");
   await page.getByRole("button", { name: "Add to library" }).click();
+  await scrollUntil(page, page.getByRole("link", { name: /Zorro Curl/ }));
   await page.getByRole("link", { name: /Zorro Curl/ }).click();
   await page.getByRole("tab", { name: "How to" }).click();
   await expect(page.getByText("No step-by-step instructions for this exercise.")).toBeVisible();
