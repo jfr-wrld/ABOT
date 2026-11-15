@@ -1,6 +1,7 @@
 import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getSupabase, maySignedIn } from "@/data/sync/client";
 import { normalizeRemoteConfig, useRemoteConfig, type RemoteConfig } from "./remote-config";
+import { parseCustomers, parseTotals, type Customer, type OrderTotals } from "./customers";
 import { summarizeGrowth, type GrowthSummary } from "./growth";
 import { readLocalCodes, writeLocalCodes, type Grant, type LocalCode } from "./redeem-service";
 
@@ -129,6 +130,15 @@ export async function growth(days = 30): Promise<GrowthSummary> {
   const { data, error } = await (await getSupabase()).rpc("admin_growth", { p_days: days });
   fail(error);
   return summarizeGrowth(data);
+}
+
+/** Who paid and what PRO they hold (admin_customers, admin_order_totals; migration 20261116). */
+export async function customers(): Promise<{ list: Customer[]; totals: OrderTotals }> {
+  const supabase = await getSupabase();
+  const [list, totals] = await Promise.all([supabase.rpc("admin_customers"), supabase.rpc("admin_order_totals")]);
+  fail(list.error);
+  fail(totals.error);
+  return { list: parseCustomers(list.data), totals: parseTotals(totals.data) };
 }
 
 /** Manual upgrade by email. False: no ABOT account with that email (they sign in once first). */
