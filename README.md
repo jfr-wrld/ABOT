@@ -208,7 +208,8 @@ in again after installing.
 
 - Your training is stored on your phone (IndexedDB) and works with no connection.
 - ABOT has no ads and no paid API. The web build (not the APK) counts page views with Vercel Web
-  Analytics: cookieless, path only, `/admin` left out. The network is used only for exercise photos,
+  Analytics: cookieless, path only, `/admin` left out. It also adds one to ABOT's own daily
+  per-page totals in Supabase (`track_visit()`), with nothing that identifies the visitor. The network is used only for exercise photos,
   the optional full catalog download, backup if you sign in, buying PRO, the Android update
   check, and, in builds with Supabase set up, one small read of the public app settings row (`app_remote_config`: plan prices, the
   announcement, algorithm calibration) at most every 6 hours. That read sends nothing about you.

@@ -15,7 +15,8 @@ Remotion is design-time only: `tools/motion-studio/` (its own package) previews 
 painters in Remotion Studio; it is never shipped in the app, which makes its MP4s itself (`src/lib/video-export.ts`).
 Free Remotion licence (individual / at most 3 people), so renders pass no licence key.
 Also approved (2026-11-15): Vercel Web Analytics on the web build only, never the APK (`src/components/layout/WebAnalytics.tsx`):
-cookieless page views to the site's own `/_vercel/insights`, path only, `/admin` dropped. Mission Control's Growth module reads
+cookieless page views to the site's own `/_vercel/insights`, path only, `/admin` dropped. The web build also calls Supabase
+`track_visit()` per page view (`src/components/layout/VisitCounter.tsx`): daily totals per known page, nothing identifying. Mission Control's Growth module reads
 APK download counts from the GitHub Releases API and sign-ups from Supabase (`admin_growth()`), admins only.
 Also approved: turning a TikTok share link (vt.tiktok.com) into its full video link, one request to TikTok
 only when the user saves that link as an exercise video (`src/lib/tiktok-resolve.ts`).
