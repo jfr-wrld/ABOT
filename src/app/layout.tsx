@@ -24,8 +24,6 @@ import { AudioUnlock } from "@/components/layout/AudioUnlock";
 import { EntitlementsProvider } from "@/components/paywall/EntitlementsProvider";
 import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
 import { WebAnalytics } from "@/components/layout/WebAnalytics";
-import { DeepLinkRestore } from "@/components/layout/DeepLinkRestore";
-import { DEEP_LINK_SCRIPT } from "@/lib/native/deep-link";
 import { VisitCounter } from "@/components/layout/VisitCounter";
 
 // next/font downloads both families at build time and serves them from this app,
@@ -76,7 +74,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Theme before the first paint, so a light page never flashes dark. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        {process.env.ABOT_NATIVE === "1" && <script dangerouslySetInnerHTML={{ __html: DEEP_LINK_SCRIPT }} />}
       </head>
       <body className="flex min-h-full flex-col">
         <ThemeController />
@@ -104,7 +101,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           <BottomNav />
           <SignInReturn />
-          {process.env.ABOT_NATIVE === "1" && <DeepLinkRestore />}
           {/* Web build only: the APK leaves both out entirely (next.config.ts sets the flag). They
               read the search params, which a prerendered page only has in the browser. */}
           {process.env.ABOT_WEB_ANALYTICS === "1" && (
