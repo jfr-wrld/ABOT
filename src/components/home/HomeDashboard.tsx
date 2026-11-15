@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
-import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Bell, RotateCcw, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "@/components/icons";
+import { AnimatePresence, animate, motion, useMotionValue, useReducedMotionConfig, useTransform, type MotionValue } from "framer-motion";
+import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Bell, RotateCcw, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy, Pause } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -82,7 +82,6 @@ export function HomeDashboard() {
   const now = useNow(60_000);
 
   const next = useMemo(() => nextProtocol(routines, sessions, schedule, now), [routines, sessions, schedule, now]);
-  const [front, setFront] = useHomeFront(active?.id ?? null);
   const days = useMemo(() => weekStrip(sessions, now, firstDayOfWeek), [sessions, now, firstDayOfWeek]);
   // The day the hero shows: today unless another day of this week was tapped.
   const [picked, setPicked] = useState<number | null>(null);
@@ -117,12 +116,11 @@ export function HomeDashboard() {
       {/* Stacked like a wallet (owner, 2026-11-15, after GoPay): the week's numbers on a Volt card
           behind, the day's card laid over its lower edge in front. */}
       <WalletStack
-        front={front}
-        onFront={setFront}
+        activeId={active?.id ?? null}
         today={active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />}
-        todayStrip={(swap) => <TodayStrip onSwap={swap} next={next} />}
+        todayStrip={<TodayStrip next={next} />}
         week={<WeekCard now={now} />}
-        weekStrip={(swap) => <NumbersRow now={now} onSwap={swap} />}
+        weekStrip={<NumbersRow now={now} />}
       />
 
       <Rise step={0.07} order={2}>
@@ -145,26 +143,58 @@ const STACKED_KEY = "abot.home.stacked";
  * card's straight sides. On the first visit of a session the cards are dealt: the back card drops
  * into place, then the front one slides up over it and settles.
  */
+/** The swap, for the strip on the card behind (its tap layer). */
+const StackSwap = createContext<(() => void) | null>(null);
+
+/** How far the back card peeks out above the front one, and how much smaller it sits. */
+const PEEK = 64;
+const BACK_SCALE = 0.96;
+const STACK_SPRING = { type: "spring", stiffness: 380, damping: 32 } as const;
+
+type CardMotion = { x: MotionValue<number>; y: MotionValue<number>; scale: MotionValue<number>; opacity: MotionValue<number> };
+
+/** One card's position as motion values, so dragging and swapping never re-render the page. */
+function useCardMotion(y: number, scale: number, opacity: number): CardMotion {
+  const mx = useMotionValue(0);
+  const my = useMotionValue(y);
+  const ms = useMotionValue(scale);
+  const mo = useMotionValue(opacity);
+  return useMemo(() => ({ x: mx, y: my, scale: ms, opacity: mo }), [mx, my, ms, mo]);
+}
+
+/**
+ * The day's card and the week's as a wallet (owner, 2026-11-15): two cards with a fixed identity,
+ * each always mounted with both faces, its full card and its Volt strip. The one in front shows its
+ * full face; the one behind sits 64 px higher, a touch smaller, showing its strip. A swap moves the
+ * cards, it never swaps their contents, and only transforms and opacity change, all on motion
+ * values: no re-render per frame and nothing mounted mid-swap.
+ *
+ * The front card follows a sideways drag with no limit, tilting as it goes, while the card behind
+ * rises to meet it. Let go past 30% of the width (or flick it) and it flies off that way as the
+ * other takes its place, then drops back in behind; short of that it springs home. A tap on the
+ * strip, or a sideways swipe on it, does the same. On the first visit of a session the cards are dealt.
+ */
 function WalletStack({
-  front,
-  onFront,
+  activeId,
   today,
   todayStrip,
   week,
   weekStrip,
 }: {
-  front: HomeSide;
-  onFront: (side: HomeSide) => void;
+  activeId: string | null;
   today: ReactNode;
-  todayStrip: (swap: () => void) => ReactNode;
+  todayStrip: ReactNode;
   week: ReactNode;
-  weekStrip: (swap: () => void) => ReactNode;
+  weekStrip: ReactNode;
 }) {
   const reduce = useReducedMotionConfig();
-  const backCard = useAnimationControls();
-  const frontCard = useAnimationControls();
-  // Pages mount with AnimatePresence initial={false}, which skips `initial`: start from inline
-  // styles and drive the cards from an effect, as useEntrance does.
+  // The front is kept here, not in Home: a swap then re-renders only this stack, and the two
+  // cards, handed in as elements, are skipped by React (measured: re-rendering all of Home made
+  // the frame after a swap the slowest one).
+  const [front, onFront] = useHomeFront(activeId);
+  const back: HomeSide = front === "today" ? "week" : "today";
+  // Pages mount with AnimatePresence initial={false}, which skips `initial`: the deal starts from
+  // these values and runs from an effect.
   const [deal] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
@@ -176,51 +206,85 @@ function WalletStack({
     return true;
   });
   const play = deal && !reduce;
+  const at = (side: HomeSide) =>
+    side === front ? [play ? PEEK + 70 : PEEK, 1, play ? 0 : 1] : [play ? -26 : 0, play ? 0.92 : BACK_SCALE, play ? 0 : 1];
+  const [tY, tS, tO] = at("today");
+  const [wY, wS, wO] = at("week");
+  const todayMotion = useCardMotion(tY!, tS!, tO!);
+  const weekMotion = useCardMotion(wY!, wS!, wO!);
+  const cards = useMemo(() => ({ today: todayMotion, week: weekMotion }), [todayMotion, weekMotion]);
+  const todayTilt = useTransform(todayMotion.x, (v) => v / 25);
+  const weekTilt = useTransform(weekMotion.x, (v) => v / 25);
+
   // Dealt once the splash has gone, so the stack is seen being built, not behind it.
   const splashGone = useSplashGone((s) => s.gone);
+  const dealt = useRef(false);
   useEffect(() => {
-    if (play && !splashGone) return;
-    void backCard.start({ y: 0, scale: 1, opacity: 1, transition: play ? { type: "spring", stiffness: 260, damping: 22, delay: 0.05 } : { duration: 0 } });
-    void frontCard.start({ y: 0, rotate: 0, opacity: 1, transition: play ? { type: "spring", stiffness: 240, damping: 20, delay: 0.25 } : { duration: 0 } });
-  }, [backCard, frontCard, play, splashGone]);
+    if (!play || !splashGone || dealt.current) return;
+    dealt.current = true;
+    const f = cards[front];
+    const b = cards[back];
+    void animate(b.y, 0, { type: "spring", stiffness: 260, damping: 22, delay: 0.05 });
+    void animate(b.scale, BACK_SCALE, { type: "spring", stiffness: 260, damping: 22, delay: 0.05 });
+    void animate(b.opacity, 1, { duration: 0.2, delay: 0.05 });
+    void animate(f.y, PEEK, { type: "spring", stiffness: 240, damping: 20, delay: 0.25 });
+    void animate(f.opacity, 1, { duration: 0.2, delay: 0.25 });
+  }, [play, splashGone, cards, front, back]);
 
-  // A tap on the card behind swaps the two (owner, 2026-11-15). Transforms and opacity only, so
-  // the compositor carries it: both cards dip out (120 ms), trade places, and spring back in.
-  // The stack's height changes once, while both are faded; `contain` keeps that layout local.
-  const [busy, setBusy] = useState(false);
-  const [swapping, setSwapping] = useState(false);
-  const swap = async () => {
-    if (busy) return;
-    setBusy(true);
-    feedback.tick();
-    if (!reduce)
-      await Promise.all([
-        backCard.start({ y: 14, scale: 0.96, opacity: 0, transition: { duration: 0.12, ease: "easeIn" } }),
-        frontCard.start({ y: -14, opacity: 0, transition: { duration: 0.12, ease: "easeIn" } }),
-      ]);
-    setSwapping(true);
-    onFront(front === "today" ? "week" : "today");
-  };
+  // When the front changes without a swap (a workout starts or ends), the cards move to their places.
+  const committing = useRef(false);
   useEffect(() => {
-    if (!swapping) return;
-    const spring = { type: "spring", stiffness: 420, damping: 30 } as const;
-    void Promise.all([
-      backCard.start({ y: 0, scale: 1, opacity: 1, transition: reduce ? { duration: 0 } : spring }),
-      frontCard.start({ y: 0, opacity: 1, transition: reduce ? { duration: 0 } : { ...spring, delay: 0.04 } }),
-    ]).then(() => {
-      setSwapping(false);
-      setBusy(false);
-    });
-  }, [front, swapping, backCard, frontCard, reduce]);
+    if (committing.current) return;
+    const f = cards[front];
+    const b = cards[back];
+    const how = reduce ? { duration: 0 } : STACK_SPRING;
+    for (const [mv, to] of [
+      [f.x, 0],
+      [f.y, PEEK],
+      [f.scale, 1],
+      [f.opacity, 1],
+      [b.x, 0],
+      [b.y, 0],
+      [b.scale, BACK_SCALE],
+      [b.opacity, 1],
+    ] as const)
+      if (dealt.current || !play) void animate(mv, to, how);
+  }, [front, back, cards, reduce, play]);
 
-  // A sideways swipe on either card swaps them too (owner, 2026-11-15). Sideways only: an up or
-  // down swipe belongs to the page's scroll (drag="x" leaves vertical panning to the browser). The
-  // card follows the finger on a short leash; past 60 px or a quick flick it swaps, otherwise it
-  // springs back. The click that ends a drag is swallowed, so a swipe never presses Start.
-  const [dragged, setDragged] = useState(false);
-  // Links and photos inside the cards would start the browser's own drag (a link or an image
-  // pulled out) and cancel the swipe; nothing here is meant to be dragged out.
+  // The card on its way forward shows its full face already, as it rises.
+  const [promoting, setPromoting] = useState<HomeSide | null>(null);
   const stack = useRef<HTMLDivElement>(null);
+  const width = () => stack.current?.offsetWidth ?? 400;
+  const commit = async (dir: 1 | -1) => {
+    if (committing.current) return;
+    committing.current = true;
+    feedback.tick();
+    const f = cards[front];
+    const b = cards[back];
+    if (reduce) {
+      onFront(back);
+      committing.current = false;
+      return;
+    }
+    setPromoting(back);
+    void animate(b.y, PEEK, STACK_SPRING);
+    void animate(b.scale, 1, STACK_SPRING);
+    await Promise.all([animate(f.x, dir * (width() + 60), { duration: 0.24, ease: [0.32, 0, 0.67, 0] }), animate(f.opacity, 0, { duration: 0.24 })]);
+    // The card that left comes back behind: from just above, out of sight, then it drops in.
+    f.x.set(0);
+    f.y.set(-16);
+    f.scale.set(BACK_SCALE);
+    onFront(back);
+    setPromoting(null);
+    void animate(f.y, 0, STACK_SPRING);
+    await animate(f.opacity, 1, { duration: 0.2 });
+    committing.current = false;
+  };
+  const swap = () => void commit(-1);
+
+  // A drag that ends a gesture must not also press what it started on (Start, a tile, a link).
+  const [dragged, setDragged] = useState(false);
+  // Links and photos would start the browser's own drag (pulled out of the page) and cancel ours.
   useEffect(() => {
     const el = stack.current;
     if (!el) return;
@@ -228,35 +292,77 @@ function WalletStack({
     el.addEventListener("dragstart", stop);
     return () => el.removeEventListener("dragstart", stop);
   }, []);
-  const swipe = {
-    drag: "x" as const,
-    dragConstraints: { left: 0, right: 0 },
-    dragElastic: 0.35,
-    dragSnapToOrigin: true,
-    onPointerDown: () => setDragged(false),
-    onDragStart: () => setDragged(true),
-    onDragEnd: (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
-      if (Math.abs(info.offset.x) > 60 || Math.abs(info.velocity.x) > 500) void swap();
-    },
-    onClickCapture: (e: React.MouseEvent) => {
-      if (!dragged) return;
-      e.preventDefault();
-      e.stopPropagation();
-      setDragged(false);
-    },
+  const swallow = (e: React.MouseEvent) => {
+    if (!dragged) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragged(false);
   };
 
+  const faces: Record<HomeSide, { full: ReactNode; strip: ReactNode }> = {
+    today: { full: today, strip: todayStrip },
+    week: { full: week, strip: weekStrip },
+  };
+  // The hidden face fades by opacity alone, on its own layer; `inert` and aria-hidden take it out
+  // of reach and of the accessibility tree. (Toggling `visibility`, which every element inside
+  // inherits, recalculated the style of the whole card at the swap: the slowest frame, measured.)
+  const shown = (on: boolean): React.CSSProperties => ({
+    opacity: on ? 1 : 0,
+    pointerEvents: on ? undefined : "none",
+    transition: "opacity 150ms ease",
+    willChange: "opacity",
+  });
+
   return (
-    // One grid cell holds both cards: the back one stretches to the front one's full height and
-    // peeks out 64 px above it, so the two are the same size, like cards in a wallet, and a swap
-    // never shows a short card behind a tall one (owner, 2026-11-15).
-    <div ref={stack} className="grid [contain:layout]">
-      <motion.div className="relative z-0 flex flex-col [grid-area:1/1]" style={play ? { y: -26, scale: 0.92, opacity: 0 } : undefined} animate={backCard} {...swipe}>
-        {front === "today" ? weekStrip(swap) : todayStrip(swap)}
-      </motion.div>
-      <motion.div className="wallet-front relative z-10 mt-16 [grid-area:1/1]" style={play ? { y: 70, rotate: -2, opacity: 0 } : undefined} animate={frontCard} {...swipe}>
-        {front === "today" ? today : week}
-      </motion.div>
+    <div ref={stack} className="grid pb-16 [contain:layout]">
+      {(["today", "week"] as const).map((side) => {
+        const isFront = side === front;
+        const m = cards[side];
+        const full = isFront || promoting === side;
+        return (
+          <motion.div
+            key={side}
+            className="relative origin-top [grid-area:1/1]"
+            // On their own layers from the start, so the first frame of a drag paints nothing.
+            style={{ x: m.x, y: m.y, scale: m.scale, opacity: m.opacity, rotate: side === "today" ? todayTilt : weekTilt, zIndex: isFront ? 10 : 0, touchAction: "pan-y", willChange: "transform" }}
+            drag={isFront ? "x" : false}
+            dragMomentum={false}
+            onPointerDown={() => setDragged(false)}
+            onDragStart={() => setDragged(true)}
+            onDrag={(_, info) => {
+              const p = Math.min(Math.abs(info.offset.x) / 140, 1);
+              cards[back].y.set(p * 10);
+              cards[back].scale.set(BACK_SCALE + (1 - BACK_SCALE) * p);
+            }}
+            onDragEnd={(_, info) => {
+              if (Math.abs(info.offset.x) > width() * 0.3 || Math.abs(info.velocity.x) > 500) {
+                void commit(info.offset.x < 0 ? -1 : 1);
+                return;
+              }
+              void animate(m.x, 0, STACK_SPRING);
+              void animate(cards[back].y, 0, STACK_SPRING);
+              void animate(cards[back].scale, BACK_SCALE, STACK_SPRING);
+            }}
+            // Behind, the strip answers a sideways swipe too (it is too short to follow the finger).
+            onPanStart={isFront ? undefined : () => setDragged(true)}
+            onPanEnd={
+              isFront
+                ? undefined
+                : (_, info) => {
+                    if (Math.abs(info.offset.x) > 60 || Math.abs(info.velocity.x) > 500) void commit(info.offset.x < 0 ? -1 : 1);
+                  }
+            }
+            onClickCapture={swallow}
+          >
+            <div className={isFront ? "wallet-front" : ""} style={shown(full)} inert={!full} aria-hidden={!full || undefined}>
+              {faces[side].full}
+            </div>
+            <div className="absolute inset-0 flex flex-col" style={shown(!full)} inert={full} aria-hidden={full || undefined}>
+              <StackSwap.Provider value={swap}>{faces[side].strip}</StackSwap.Provider>
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
@@ -899,7 +1005,8 @@ const shortVolume = (n: number, locale: string) => (n >= 100_000 ? `${Math.round
  * The week in three figures on one row: sessions against the plan (or the 7 days), the volume
  * with its change on last week, and muscles ready, which opens the recovery map.
  */
-function NumbersRow({ now, onSwap }: { now: number; onSwap?: () => void }) {
+function NumbersRow({ now }: { now: number }) {
+  const onSwap = useContext(StackSwap);
   const t = useT();
   const playEntrance = usePlayEntrance();
   const sessions = useWorkoutStore((s) => s.sessions);
@@ -1337,13 +1444,15 @@ function WeekCard({ now }: { now: number }) {
 const STRIP_CTA =
   "relative z-[2] flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--color-on-accent)_12%,transparent)]";
 
-function TodayStrip({ onSwap, next }: { onSwap: () => void; next: NextProtocol | null }) {
+function TodayStrip({ next }: { next: NextProtocol | null }) {
+  const onSwap = useContext(StackSwap) ?? undefined;
   const t = useT();
   const router = useRouter();
   const active = useWorkoutStore((s) => s.active);
   const { byId } = useAllExercises();
   const now = useNow(1000, active !== null);
   const live = active ? liveSet(active) : null;
+  const paused = active?.pausedAt !== undefined && active !== null;
   return (
     <section aria-label={active ? t("Workout in progress") : t("Next up")} className="wallet-card relative min-h-[100px] flex-1 overflow-hidden rounded-card">
       <button
@@ -1356,7 +1465,7 @@ function TodayStrip({ onSwap, next }: { onSwap: () => void; next: NextProtocol |
         <span className="min-w-0 flex-1">
           <span className="field-label flex items-center gap-1.5">
             {active && <span aria-hidden="true" className="size-1.5 rounded-full bg-[currentColor]" />}
-            {active ? t("Workout in progress") : t("Next up")}
+            {active ? (paused ? t("Paused") : t("Workout in progress")) : t("Next up")}
           </span>
           <span className="block truncate text-base font-bold">
             {active
@@ -1372,9 +1481,19 @@ function TodayStrip({ onSwap, next }: { onSwap: () => void; next: NextProtocol |
         {active ? (
           <>
             <span className="num shrink-0 text-sm font-semibold">{formatDuration(sessionDurationSec(active, now))}</span>
-            <Link href="/workout" aria-label={t("Continue workout")} className={`${STRIP_CTA} size-11`}>
-              <Play aria-hidden="true" size={18} />
-            </Link>
+            {/* The workout is on: the strip pauses it, and resumes it (owner, 2026-11-15). */}
+            <button
+              type="button"
+              aria-label={paused ? t("Resume") : t("Pause")}
+              onClick={() => {
+                feedback.tick();
+                if (paused) useWorkoutStore.getState().resumeActive();
+                else useWorkoutStore.getState().pauseActive();
+              }}
+              className={`${STRIP_CTA} size-11`}
+            >
+              {paused ? <Play aria-hidden="true" size={18} /> : <Pause aria-hidden="true" size={18} />}
+            </button>
           </>
         ) : next ? (
           <button

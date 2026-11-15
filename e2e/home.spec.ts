@@ -96,3 +96,17 @@ test("the day's card and the week's trade places by tap or swipe, and the choice
   await page.reload();
   await expect(weekInFront).toBeVisible();
 });
+
+test("behind the week, the running workout's strip pauses and resumes it", async ({ page }) => {
+  await freshStart(page);
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await page.goto("/");
+  // The workout's card comes forward by itself; bring the week in front of it.
+  await page.getByRole("button", { name: "Bring the week to the front" }).click();
+  const strip = page.getByRole("region", { name: "Workout in progress" });
+  await strip.getByRole("button", { name: "Pause", exact: true }).click();
+  await expect(strip.getByText("Paused")).toBeVisible();
+  await strip.getByRole("button", { name: "Resume", exact: true }).click();
+  await expect(strip.getByRole("button", { name: "Pause", exact: true })).toBeVisible();
+});
