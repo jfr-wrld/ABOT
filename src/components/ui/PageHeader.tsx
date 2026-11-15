@@ -25,7 +25,8 @@ export function PageHeader({
           {back.label}
         </BackLink>
       )}
-      <div className="flex items-start justify-between gap-3">
+      {/* A clear step between the back pill and the page title, so the two never touch. */}
+      <div className={`flex items-start justify-between gap-3 ${back ? "mt-4" : ""}`}>
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold">{title}</h1>
           {subtitle && <p className="text-sm text-text-muted">{subtitle}</p>}
