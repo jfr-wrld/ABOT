@@ -178,7 +178,7 @@ export function RecoveryMap({
             type="button"
             aria-pressed={view === v}
             onClick={() => choose(v)}
-            className={`chip min-h-11 rounded-[calc(var(--radius-ctl)-4px)] text-xs font-semibold tracking-[0.12em] transition-colors ${
+            className={`chip min-h-11 rounded-[calc(var(--radius-ctl)-4px)] text-sm font-semibold transition-colors ${
               view === v ? "bg-accent text-black" : "text-text-muted hover:bg-ink/[0.06] hover:text-text"
             }`}
           >

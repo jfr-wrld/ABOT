@@ -79,7 +79,7 @@ test("a code made in the console is redeemed on the device; built-in codes stop 
   const card = page.getByRole("region", { name: "Plan & billing" });
   await expect(card).toContainText("PRO features are locked on this phone.");
   await card.getByRole("button", { name: "Redeem code" }).click();
-  const redeem = page.getByRole("dialog", { name: "Redeem license code" });
+  const redeem = page.getByRole("dialog", { name: "Redeem a code" });
   await redeem.getByLabel("Promo or gift code").fill("ABOT-NOPE-0000");
   await redeem.getByRole("button", { name: "Activate" }).click();
   await expect(redeem.getByRole("alert")).toHaveText("This code is not valid, or it has been used up.");

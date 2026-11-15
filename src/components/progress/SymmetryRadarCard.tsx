@@ -20,7 +20,8 @@ const point = (i: number, r: number) => {
 const poly = (rs: number[]) => rs.map((r, i) => point(i, r).map((v) => v.toFixed(1)).join(",")).join(" ");
 
 const GRADE_TEXT = { OPTIMAL: "Optimal", BALANCED: "Balanced", IMBALANCED: "Imbalanced", CRITICAL: "Critical" } as const;
-const GRADE_COLOR = { OPTIMAL: "var(--color-accent)", BALANCED: "var(--color-dropset)", IMBALANCED: "#e0a100", CRITICAL: "#c8102e" } as const;
+/** Good grades in the accent, a lean in the caution orange, a real gap in the failure red: the app's own meanings. */
+const GRADE_COLOR = { OPTIMAL: "var(--color-accent)", BALANCED: "var(--color-accent)", IMBALANCED: "var(--color-caution)", CRITICAL: "var(--color-failure)" } as const;
 
 /**
  * Muscle balance on six axes as a cockpit radar: steel web, the balanced shape dashed, the
@@ -41,9 +42,9 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
   const enough = r.score !== null;
 
   return (
-    <section aria-labelledby={`${uid}-h`} className="force-dark flex flex-col gap-3 rounded-card border border-line-strong bg-bg p-4 text-text">
+    <section aria-labelledby={`${uid}-h`} className="raised-card flex flex-col gap-3 rounded-card bg-surface p-4">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 id={`${uid}-h`} className="text-sm font-semibold">
+        <h2 id={`${uid}-h`} className="text-base font-bold">
           {t("Muscle balance")}
         </h2>
         <ProBadge />
@@ -121,7 +122,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
       {!unlocked && enough ? (
         <ProLock feature="symmetry_radar_telemetry" text={t("The score, the ratio checks and what to add this week come with ABOT Pro.")} />
       ) : (
-      <div role="status" className="rounded-ctl border border-line bg-surface px-3 py-2.5 text-sm leading-relaxed tabular-nums">
+      <div role="status" className="rounded-ctl bg-surface-2 px-3 py-2.5 text-sm leading-relaxed tabular-nums">
         {enough ? (
           <>
             <p>
@@ -138,7 +139,7 @@ export function SymmetryRadarCard({ sessions, byId, now }: { sessions: WorkoutSe
             ) : (
               r.diagnostics.map((d) => (
                 <p key={d.code} className="mt-1 text-text">
-                  <span className="text-pr">{t("What to do")}:</span> {t(d.key, d.params)}
+                  <span className="font-semibold text-text-muted">{t("What to do")}:</span> {t(d.key, d.params)}
                 </p>
               ))
             )}

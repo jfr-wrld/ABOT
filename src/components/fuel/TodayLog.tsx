@@ -66,14 +66,15 @@ export function TodayLog({
       <h2 id="today-heading" className="sr-only">
         {t("Today")}
       </h2>
-      <div className="grid grid-cols-4 gap-1 rounded-card border border-line bg-surface p-3">
+      <div className="raised-card grid grid-cols-4 gap-1 rounded-card bg-surface p-3">
         {rings.map((r) => (
           <div key={r.key} className="flex flex-col items-center gap-1 text-center">
             <Ring
               value={r.value}
               max={r.max || 1}
               size={60}
-              stroke={6}
+              stroke={5}
+              segments={14}
               color={r.color}
               label={r.max ? t("{label}: {value} of {max} {unit}", { label: r.label, value: r.value, max: r.max, unit: r.unit }) : `${r.label}: ${r.value} ${r.unit}`}
             >
@@ -93,16 +94,18 @@ export function TodayLog({
       )}
 
       {fuel && phase && <TargetBreakdown fuel={fuel} phase={phase} trainingDay={trainingDay} />}
-      <div className="grid grid-cols-3 gap-2">
-        <Button variant="primary" onClick={onAddFood}>
+      {/* Food leads on its own row; the other two share the next, so no label has to wrap. */}
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="primary" onClick={onAddFood} className="col-span-2">
           <Plus aria-hidden="true" size={16} />
           {t("Food")}
         </Button>
-        <Button onClick={() => setQuick(true)}>
+        <Button onClick={() => setQuick(true)} className="whitespace-nowrap">
           <Zap aria-hidden="true" size={16} />
           {t("Quick add")}
         </Button>
         <Button
+          className="whitespace-nowrap"
           disabled={!hadYesterday}
           onClick={() => {
             const n = useFoodLog.getState().copyDay(yesterday, today, now);

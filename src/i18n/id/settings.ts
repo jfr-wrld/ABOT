@@ -187,6 +187,8 @@ export const settings: Record<string, string> = {
   "{n} photos": "{n} foto",
   "Export backup": "Ekspor backup",
   "Import backup": "Impor backup",
+  "Choose file": "Pilih file",
+  "No file chosen": "Belum ada file",
   "contains {list}.": "berisi {list}.",
   "Merge into my data": "Gabungkan ke dataku",
   "Replace all my data": "Ganti semua dataku",

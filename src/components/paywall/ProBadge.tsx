@@ -7,15 +7,15 @@ import { useT } from "@/i18n";
 
 /**
  * The small Pro tag on premium features: "Pro · beta" while the founders beta has them open,
- * "Pro" otherwise, with a lock when this lifter cannot use the feature. Gold, the records colour,
- * as a plain outlined tag.
+ * "Pro" otherwise, with a lock when this lifter cannot use the feature. An outlined tag in the
+ * accent, like the PRO tag on the body phase card: gold now means a record (owner, 2026-11-15).
  */
 export function ProBadge({ className = "" }: { suffix?: string; className?: string }) {
   const { isBetaUnlocked, proActive } = useEntitlements();
   const t = useT();
   const text = isBetaUnlocked ? t("Pro · beta") : "Pro";
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1 rounded-[4px] border border-pr/50 px-1.5 py-px text-[11px] font-semibold leading-4 text-pr ${className}`}>
+    <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border border-accent/50 px-1.5 py-px text-[11px] font-bold leading-4 text-accent ${className}`}>
       {!proActive && <Lock aria-hidden="true" size={9} />}
       {text}
     </span>

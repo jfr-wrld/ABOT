@@ -252,7 +252,7 @@ export function MacroLegend({ protein, carbs, fat, labels }: { protein: number; 
  * weeks pass (this week half-lit). The plate is ABOT's own mark, so the block reads as part of
  * the app rather than a generic progress ring.
  */
-export function BlockPlate({ weeks, done, current, size = 168, children }: { weeks: number; done: number; current: number | null; size?: number; children?: ReactNode }) {
+export function BlockPlate({ weeks, done, current, size = 168, color = "var(--color-accent)", children }: { weeks: number; done: number; current: number | null; size?: number; color?: string; children?: ReactNode }) {
   const reduce = useReducedMotionConfig();
   const c = size / 2;
   const outer = c - 2;
@@ -275,7 +275,7 @@ export function BlockPlate({ weeks, done, current, size = 168, children }: { wee
         {Array.from({ length: weeks }, (_, i) => {
           const lit = i < done;
           const now = current !== null && i === current;
-          const fill = lit ? "var(--color-accent)" : now ? "color-mix(in srgb, var(--color-accent) 45%, transparent)" : "var(--color-track)";
+          const fill = lit ? color : now ? `color-mix(in srgb, ${color} 45%, transparent)` : "var(--color-track)";
           return (
             <motion.path
               key={i}

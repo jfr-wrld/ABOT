@@ -318,12 +318,15 @@ export function Pacer({
   now,
   size = 44,
   bordered = true,
+  color,
 }: {
   proteinTarget: number;
   waterTarget: number;
   now: number;
   size?: number;
   bordered?: boolean;
+  /** The phase's colour, as on its Home card; Volt when absent. */
+  color?: string;
 }) {
   const t = useT();
   const { proteinG, waterMl } = useTodayFuel(now);
@@ -343,6 +346,7 @@ export function Pacer({
         onAdd={() => addProtein(25)}
         Icon={Beef}
         size={size}
+        color={color}
       />
       <PacerItem
         label={t("Water")}
@@ -356,12 +360,13 @@ export function Pacer({
         onAdd={() => addWater(500)}
         Icon={Droplets}
         size={size}
+        color={color}
       />
     </div>
   );
 }
 
-function PacerItem({ label, value, target, step, figure, targetText, stepText, aria, onAdd, Icon, size }: Omit<ChipProps, "figure"> & { figure: string; targetText: string; size: number }) {
+function PacerItem({ label, value, target, step, figure, targetText, stepText, aria, onAdd, Icon, size, color }: Omit<ChipProps, "figure"> & { figure: string; targetText: string; size: number }) {
   const m = useAddMoment(value, target, step);
   return (
     <button
@@ -373,9 +378,9 @@ function PacerItem({ label, value, target, step, figure, targetText, stepText, a
       aria-label={aria}
       className="tap relative flex min-h-14 min-w-0 flex-1 items-center gap-2.5 rounded-ctl px-2 py-1.5 text-left hover:bg-ink/[0.04] active:bg-ink/[0.07]"
     >
-      <PulseRing pulse={m.pulse}>
-        <Ring value={value} max={target} size={size} stroke={4} segments={14} label={`${label}: ${value} / ${target}`}>
-          <Icon aria-hidden="true" size={Math.round(size * 0.36)} className={value >= target ? "text-accent" : "text-text-muted"} />
+      <PulseRing pulse={m.pulse} color={color}>
+        <Ring value={value} max={target} size={size} stroke={4} segments={14} color={color} label={`${label}: ${value} / ${target}`}>
+          <Icon aria-hidden="true" size={Math.round(size * 0.36)} className={value >= target ? undefined : "text-text-muted"} style={value >= target ? { color: color ?? "var(--color-accent)" } : undefined} />
         </Ring>
       </PulseRing>
       <span className="min-w-0 flex-1">
@@ -390,7 +395,7 @@ function PacerItem({ label, value, target, step, figure, targetText, stepText, a
         </span>
       </span>
       {m.ghosts.map((id) => (
-        <Ghost key={id} id={id} text={stepText} done={m.done} />
+        <Ghost key={id} id={id} text={stepText} done={m.done} color={color} />
       ))}
     </button>
   );

@@ -62,14 +62,14 @@ export type ProFeatureKey =
 /** Names shown on the paywall's "Unlock feature" banner. */
 export const PRO_FEATURE_LABEL: Record<ProFeatureKey, string> = {
   progressive_overload_coach: "Auto-overload coach",
-  symmetry_radar_telemetry: "Hexagon symmetry radar",
-  thermal_recovery_inspector: "72h thermal recovery inspector",
+  symmetry_radar_telemetry: "Muscle balance",
+  thermal_recovery_inspector: "Muscle recovery details",
   voice_handsfree_logger: "Hands-free voice logger",
   smart_exercise_swap: "Smart exercise swap",
   story_studio_pro_presets: "Story Studio pro presets",
   remove_story_watermark: "Story without watermark",
   story_video: "Story video",
-  body_phase_protocols: "Body phase protocols",
+  body_phase_protocols: "Body phase",
 };
 
 export interface Resolved {
@@ -126,8 +126,8 @@ export function claimFounder(e: EntitlementState, seed: string, now = new Date()
 export const PRO_MATRIX: { feature: string; core: boolean | string; pro: boolean | string }[] = [
   { feature: "Workout logging, routines, records", core: true, pro: true },
   { feature: "Auto-overload coach", core: false, pro: true },
-  { feature: "72h thermal recovery inspector", core: "Map only", pro: true },
-  { feature: "Hexagon symmetry radar diagnostics", core: "Radar only", pro: true },
+  { feature: "Muscle recovery details", core: "Map only", pro: true },
+  { feature: "Muscle balance advice", core: "Radar only", pro: true },
   { feature: "Story presets", core: "2", pro: "11 + no watermark" },
   { feature: "Voice logger", core: false, pro: true },
   { feature: "Body phases: cut, bulk, recomp, peak", core: false, pro: true },
@@ -181,9 +181,9 @@ export interface Plan {
 }
 
 export const PLANS: Plan[] = [
-  { id: "monthly", name: "Monthly protocol", idr: 29_000, usd: 2.99, per: "month", note: "Flexible, cancel any time" },
-  { id: "annual", name: "Annual telemetry", idr: 199_000, usd: 19.99, per: "year", note: "Best value" },
-  { id: "lifetime", name: "Founders lifetime license", idr: 798_000, usd: 79.98, per: "once", note: "Pay once, keep it for life" },
+  { id: "monthly", name: "Monthly plan", idr: 29_000, usd: 2.99, per: "month", note: "Flexible, cancel any time" },
+  { id: "annual", name: "Yearly plan", idr: 199_000, usd: 19.99, per: "year", note: "Best value" },
+  { id: "lifetime", name: "Lifetime plan", idr: 798_000, usd: 79.98, per: "once", note: "Pay once, keep it for life" },
 ];
 
 export interface PlanPrices {

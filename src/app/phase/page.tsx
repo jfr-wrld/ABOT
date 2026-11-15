@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { CountFromZero, Rise } from "@/components/motion/Entrance";
 import { CHART, numTick, tooltipStyle } from "@/components/analytics/chartTheme";
-import { PHASE_ICON, Pacer } from "@/components/phase/PhaseCommandCard";
+import { PHASE_COLOR, PHASE_ICON, Pacer } from "@/components/phase/PhaseCommandCard";
 import { TargetBreakdown } from "@/components/phase/TargetBreakdown";
 import { CheckInCard, PhaseSummary, WeekTraining } from "@/components/phase/Program";
 import { usePhaseTelemetry, type PhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
@@ -81,7 +81,7 @@ function PhaseScreen() {
       </Rise>
       <Rise order={2} className="px-4">
         <section aria-label={t("Today's protein and water")} className="rounded-card border bg-surface">
-          <Pacer proteinTarget={m.fuel.proteinG} waterTarget={m.waterMl} now={now} size={52} bordered={false} />
+          <Pacer proteinTarget={m.fuel.proteinG} waterTarget={m.waterMl} now={now} size={52} bordered={false} color={PHASE_COLOR[m.phase.phaseType]} />
         </section>
       </Rise>
       <Rise order={3} className="px-4">
@@ -100,6 +100,8 @@ function Hero({ m }: { m: PhaseTelemetry }) {
   const unit = useSettingsStore((s) => s.weightUnit);
   const { meso, phase } = m;
   const Icon = PHASE_ICON[phase.phaseType];
+  // The phase's own colour, as on its Home card, so the phase looks the same in both places.
+  const color = PHASE_COLOR[phase.phaseType];
   const done = Math.floor(meso.progress * meso.of + 1e-9);
   const shown = (kg: number) => (Math.round(toDisplay(kg, unit) * 10) / 10).toFixed(1);
   // Where the trend sits between start and target, 0..1 (either direction).
@@ -108,8 +110,8 @@ function Hero({ m }: { m: PhaseTelemetry }) {
 
   return (
     <section aria-labelledby="hero-week" className="flex items-center gap-4">
-      <BlockPlate weeks={meso.of} done={done} current={meso.finished ? null : meso.week - 1} size={156}>
-        <Icon aria-hidden="true" size={16} className="text-accent" />
+      <BlockPlate weeks={meso.of} done={done} current={meso.finished ? null : meso.week - 1} size={156} color={color}>
+        <Icon aria-hidden="true" size={16} style={{ color }} />
         <span id="hero-week" className="num text-3xl font-bold leading-none">
           {meso.finished ? meso.of : meso.week}
           <span className="text-base font-semibold text-text-muted">/{meso.of}</span>
@@ -135,7 +137,7 @@ function Hero({ m }: { m: PhaseTelemetry }) {
         </div>
         <div aria-label={t("From {start} to {target} {unit}", { start: shown(phase.startWeightKg), target: shown(phase.targetWeightKg), unit })} role="img">
           <div className="relative h-1.5 rounded-full bg-track">
-            <span className="absolute inset-y-0 left-0 rounded-full bg-accent" style={{ width: `${along * 100}%` }} />
+            <span className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${along * 100}%`, backgroundColor: color }} />
           </div>
           <div className="num mt-1 flex justify-between text-[11px] text-text-muted" aria-hidden="true">
             <span>{shown(phase.startWeightKg)}</span>

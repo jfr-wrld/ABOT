@@ -763,6 +763,7 @@ function NumbersRow({ now }: { now: number }) {
   const change = volume.changePct;
 
   return (
+    <>
     <section aria-label={t("This week")} className="wallet-card grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card pb-9">
       <div className="flex min-w-0 items-center gap-2 p-3">
         {/* One dash per planned session (owner, 2026-11-15): a whole ring reads as a plain circle,
@@ -821,6 +822,8 @@ function NumbersRow({ now }: { now: number }) {
         </span>
       </button>
 
+    </section>
+    {/* Outside the Volt card: inside it the sheet would inherit the card's re-pointed colours. */}
       <Sheet open={open} onClose={() => setOpen(false)} title={t("Muscle recovery")}>
         <RecoveryMap data={recovery} now={now} />
         {speed !== 1 && sleep && (
@@ -836,7 +839,7 @@ function NumbersRow({ now }: { now: number }) {
           )}
         </p>
       </Sheet>
-    </section>
+    </>
   );
 }
 
