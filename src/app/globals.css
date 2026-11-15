@@ -670,6 +670,16 @@ input.bg-well:not(:focus) {
   }
 }
 
+/* Home's hero card: knurling (a barbell grip's crosshatch) in the accent, fading out from the
+   top right corner, so the day's card stands out without a picture. */
+.hero-knurl {
+  background-image:
+    repeating-linear-gradient(45deg, color-mix(in oklab, var(--color-accent) 26%, transparent) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg, color-mix(in oklab, var(--color-accent) 26%, transparent) 0 1px, transparent 1px 7px);
+  -webkit-mask-image: radial-gradient(circle at 100% 0, #000 0, transparent 70%);
+  mask-image: radial-gradient(circle at 100% 0, #000 0, transparent 70%);
+}
+
 /* Real liquid glass where the browser draws SVG backdrop filters (useLiquidGlass sets
    data-liquid and each surface's --liquid-filter): the page behind is barely blurred but bent at
    the rim like a lens, colour lifted, with a specular edge brighter at the top left than the

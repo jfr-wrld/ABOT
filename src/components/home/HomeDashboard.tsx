@@ -49,6 +49,8 @@ import { currentStreak, type StreakMoment as StreakMomentData } from "@/lib/stre
 import { StreakMoment } from "@/components/streak/StreakMoment";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 import { EmptyArt } from "@/components/ui/EmptyArt";
+import { routineSummary } from "@/lib/routine-summary";
+import { LiftList } from "@/components/routines/RoutineCard";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-card border border-line bg-surface p-3";
@@ -337,6 +339,23 @@ function WeekRail({
 
 /* ---------------------------------------------------------------- hero */
 
+/** The routine's lifts folded under "See exercises", as on the routine cards. */
+function HeroLifts({ routine, byId }: { routine: Routine; byId: Record<string, Exercise> }) {
+  const t = useT();
+  const sum = routineSummary(routine, byId);
+  return (
+    <div className="relative -mt-3">
+      <LiftList
+        items={sum.lines.map((l) => ({
+          name: byId[l.exerciseId]?.name ?? t("Removed exercise"),
+          detail: l.reps ? `${l.sets}×${l.reps}` : t("{n} sets", { n: l.sets }),
+          superset: !!l.superset,
+        }))}
+      />
+    </div>
+  );
+}
+
 /** A routine as the faces of its lifts: up to five photos and a "+N". */
 function ThumbRow({ exerciseIds, byId, size = 44 }: { exerciseIds: string[]; byId: Record<string, Exercise>; size?: number }) {
   const shown = exerciseIds.slice(0, 5);
@@ -482,9 +501,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
               </span>
             </p>
           </div>
-          <div className="relative">
-            <ThumbRow exerciseIds={routine.exercises.map((e) => e.exerciseId)} byId={byId} />
-          </div>
+          <HeroLifts routine={routine} byId={byId} />
           <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <Button variant="primary" onClick={() => start(routine)} aria-label={t("Start {name}", { name: routine.name })} className="min-h-12 text-base">
               <Play aria-hidden="true" size={18} />
@@ -510,11 +527,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
               {day.isToday ? (nextLine ?? t("Recovery is where the muscle grows.")) : day.isFuture ? t("Nothing planned for this day.") : t("No workout this day.")}
             </p>
           </div>
-          {upcoming && (
-            <div className="relative">
-              <ThumbRow exerciseIds={upcoming.exercises.map((e) => e.exerciseId)} byId={byId} size={36} />
-            </div>
-          )}
+          {upcoming && <HeroLifts routine={upcoming} byId={byId} />}
           <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             {upcoming ? (
               <Button onClick={() => start(upcoming)} aria-label={t("Train anyway: {name}", { name: upcoming.name })} className="min-h-12 text-base">
@@ -571,6 +584,9 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
 
   return (
     <section aria-labelledby="hero-heading" className={`${TILE} relative overflow-hidden p-4`}>
+      {/* Knurling, the crosshatch on a barbell's grip, fading out from the top right corner:
+          the one card on Home that should stand out. */}
+      <span aria-hidden="true" className="hero-knurl pointer-events-none absolute right-0 top-0 size-44" />
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={day.start}
