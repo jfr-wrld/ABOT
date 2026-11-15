@@ -10,17 +10,13 @@ import { PHASE_LABEL, templateFitsPhase } from "@/lib/phase-engine";
 import { SEED_EXERCISES_BY_ID } from "@/data/exercises";
 import { ROUTINE_TEMPLATES, SPLITS, estimateMinutes, templateToRoutine, type RoutineTemplate, type Split } from "@/lib/seed-routines";
 import { Button } from "@/components/ui/Button";
-import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
+import { LiftList } from "@/components/routines/RoutineCard";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { routineEditPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { muscleLabel } from "@/components/exercise/MuscleTags";
 import { feedback } from "@/lib/feedback";
 
-/** Photos on a card; the sixth slot shows "+N" when there are more. */
-const PREVIEW = 5;
-/** Six photos and their gaps fit a 320 px phone at this size. */
-const THUMB = 38;
 
 /** Ready-made programs: filter by split, start one now, or save an editable copy. */
 export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
@@ -84,8 +80,7 @@ function topMuscles(tpl: RoutineTemplate, n = 3): MuscleGroup[] {
 
 /**
  * One template, read at a glance: split, time and size as icons with figures, the muscles as
- * lit figures, and the lifts as photos with their sets x reps underneath. Names stay available
- * to screen readers and as each photo's tooltip.
+ * lit figures, and the lifts as one line of text with their sets x reps.
  */
 function TemplateCard({
   template: tpl,
@@ -101,8 +96,6 @@ function TemplateCard({
   const t = useT();
   const phase = useSettingsStore((s) => (s.bodyPhase?.isActive ? s.bodyPhase.phaseType : null));
   const splitLabel = SPLITS.find((s) => s.value === tpl.split)?.label;
-  const shown = tpl.exercises.slice(0, PREVIEW);
-  const more = tpl.exercises.length - shown.length;
   const muscles = topMuscles(tpl);
   return (
     <article
@@ -146,33 +139,13 @@ function TemplateCard({
         </ul>
       </header>
 
-      <ol aria-label={t("Exercises")} className="mt-3 grid grid-cols-6 justify-items-center gap-1 border-t border-line pt-3">
-        {shown.map((e) => {
-          const ex = SEED_EXERCISES_BY_ID[e.exerciseId];
-          return (
-            <li key={e.exerciseId} className="flex min-w-0 flex-col items-center gap-1" title={ex?.name}>
-              {ex ? (
-                <ExerciseThumb exercise={ex} size={THUMB} />
-              ) : (
-                <span style={{ width: THUMB, height: THUMB }} className="rounded-xl bg-surface-2" aria-hidden="true" />
-              )}
-              <span className="sr-only">{ex?.name ?? e.exerciseId}, </span>
-              <span className="num text-[10px] leading-none text-text-muted">
-                {e.sets}×{e.holdSec ? `${e.holdSec}s` : e.reps}
-                {e.superset && <span className="ml-0.5 text-text">SS</span>}
-              </span>
-            </li>
-          );
-        })}
-        {more > 0 && (
-          <li className="flex flex-col items-center gap-1">
-            <span style={{ width: THUMB, height: THUMB }} className="num flex items-center justify-center rounded-xl bg-surface-2 text-xs text-text-muted">
-              +{more}
-              <span className="sr-only"> {t.n(more, "more exercise", "more exercises")}</span>
-            </span>
-          </li>
-        )}
-      </ol>
+      <LiftList
+        items={tpl.exercises.map((e) => ({
+          name: SEED_EXERCISES_BY_ID[e.exerciseId]?.name ?? e.exerciseId,
+          detail: `${e.sets}×${e.holdSec ? `${e.holdSec}s` : e.reps}`,
+          superset: !!e.superset,
+        }))}
+      />
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Button variant="primary" onClick={onStart} aria-label={t("Start workout: {name}", { name: tpl.name })} className="whitespace-nowrap">

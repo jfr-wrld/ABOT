@@ -102,7 +102,9 @@ test("the routine editor builds a superset that carries into the workout", async
   const lifts = card.getByRole("list", { name: "Exercises" });
   for (const name of ["Bicep Curl (Barbell)", "Triceps Pushdown (Cable)", "Lateral Raise (Dumbbell)"]) await expect(lifts).toContainText(name);
   await expect(lifts).toContainText("3 setsSS");
-  await expect(card.locator("[data-thumb]")).toHaveCount(3);
+  // The card names its lifts in text, with no photo strip.
+  await expect(lifts.getByRole("listitem")).toHaveCount(3);
+  await expect(card.locator("[data-thumb]")).toHaveCount(0);
   await expect(card.getByRole("list", { name: "Muscles worked" })).toBeVisible();
   await page.getByRole("button", { name: "Start Arms" }).click();
   await page.waitForURL("**/workout");

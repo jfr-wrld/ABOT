@@ -6,19 +6,17 @@ import type { Exercise, Routine } from "@/types/workout";
 import { routineSummary, type RoutineSummary } from "@/lib/routine-summary";
 import { supersetLabels } from "@/lib/superset";
 import { Button } from "@/components/ui/Button";
-import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { muscleLabel } from "@/components/exercise/MuscleTags";
 import { routineEditPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 
-/** Photos on a card; the sixth slot shows "+N" when there are more. */
+/** Lifts named on a card; the rest show as "+N". */
 const PREVIEW = 5;
-const THUMB = 38;
 
 /**
  * A saved routine, read like a Templates card: focus, time and size up top, the muscles as
- * lit figures, each lift as a photo with sets x reps, then Start and the edit actions.
+ * lit figures, the lifts as one line of text with sets x reps, then Start and the edit actions.
  */
 export function RoutineCard({
   routine: r,
@@ -127,33 +125,38 @@ export function MusclesWorked({ sum }: { sum: RoutineSummary }) {
 
 function LiftGrid({ sum, byId }: { sum: RoutineSummary; byId: Record<string, Exercise> }) {
   const t = useT();
-  const shown = sum.lines.slice(0, PREVIEW);
-  const more = sum.lines.length - shown.length;
   return (
-    <ol aria-label={t("Exercises")} className="mt-3 grid grid-cols-6 justify-items-center gap-1 border-t border-line pt-3">
-      {shown.map((l, i) => {
-        const ex = byId[l.exerciseId];
-        return (
-          <li key={`${l.exerciseId}-${i}`} className="flex min-w-0 flex-col items-center gap-1" title={ex?.name}>
-            {ex ? (
-              <ExerciseThumb exercise={ex} size={THUMB} />
-            ) : (
-              <span style={{ width: THUMB, height: THUMB }} className="rounded-xl bg-surface-2" aria-hidden="true" />
-            )}
-            <span className="sr-only">{ex?.name ?? t("Removed exercise")}, </span>
-            <span className="num text-[10px] leading-none text-text-muted">
-              {l.reps ? `${l.sets}×${l.reps}` : t("{n} sets", { n: l.sets })}
-              {l.superset && <span className="ml-0.5 text-text">SS</span>}
-            </span>
-          </li>
-        );
-      })}
+    <LiftList
+      items={sum.lines.map((l) => ({
+        name: byId[l.exerciseId]?.name ?? t("Removed exercise"),
+        detail: l.reps ? `${l.sets}×${l.reps}` : t("{n} sets", { n: l.sets }),
+        superset: !!l.superset,
+      }))}
+    />
+  );
+}
+
+/**
+ * The lifts as one quiet line of text (name and sets × reps), the first few and a count of the
+ * rest: the card stays clean, with no photo strip (owner, 2026-11-15).
+ */
+export function LiftList({ items }: { items: { name: string; detail: string; superset?: boolean }[] }) {
+  const t = useT();
+  const shown = items.slice(0, PREVIEW);
+  const more = items.length - shown.length;
+  return (
+    <ol aria-label={t("Exercises")} className="mt-3 flex flex-wrap gap-x-1 gap-y-0.5 border-t border-line pt-3 text-xs leading-relaxed text-text-muted">
+      {shown.map((l, i) => (
+        <li key={i} className="min-w-0">
+          <span className="text-text">{l.name}</span> <span className="num">{l.detail}</span>
+          {l.superset && <span className="ml-0.5 font-semibold text-text">SS</span>}
+          {(i < shown.length - 1 || more > 0) && <span aria-hidden="true"> ·</span>}
+        </li>
+      ))}
       {more > 0 && (
-        <li className="flex flex-col items-center gap-1">
-          <span style={{ width: THUMB, height: THUMB }} className="num flex items-center justify-center rounded-xl bg-surface-2 text-xs text-text-muted">
-            +{more}
-            <span className="sr-only"> {t.n(more, "more exercise", "more exercises")}</span>
-          </span>
+        <li className="num">
+          +{more}
+          <span className="sr-only"> {t.n(more, "more exercise", "more exercises")}</span>
         </li>
       )}
     </ol>
