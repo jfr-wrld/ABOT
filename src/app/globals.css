@@ -31,9 +31,8 @@
   --color-muscle-icon: #52525b;
   --color-row: rgb(0 0 0 / 0.3); /* set rows and chips set into a card */
 
-  --font-sans: var(--font-sans-face), "Barlow", system-ui, sans-serif;
-  --font-mono: var(--font-sans-face), "Barlow", system-ui, sans-serif; /* figures: Barlow's tabular digits, no code font */
-  --font-display: var(--font-anton), "Anton", Impact, sans-serif;
+  --font-sans: var(--font-sans-face), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 
   --radius-ctl: 10px;
   --radius-card: 16px;
@@ -137,14 +136,6 @@
   body {
     background: var(--color-bg);
     min-height: 100dvh;
-  }
-
-  /* Page titles in the poster face, set like a gym's signage: one weight, never faux-bolded. */
-  h1 {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-synthesis: none;
-    letter-spacing: 0.005em;
   }
 
   /* Every enabled control shows it can be used; disabled ones say they cannot. */

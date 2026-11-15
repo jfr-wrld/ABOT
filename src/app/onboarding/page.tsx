@@ -120,19 +120,6 @@ export default function OnboardingPage() {
         )}
       </div>
 
-      {/* A large plate behind the slides turns one flat per step, like a plate being loaded. */}
-      <motion.svg
-        aria-hidden="true"
-        viewBox="0 0 100 100"
-        className="pointer-events-none absolute left-1/2 top-[18%] -z-0 size-[440px] -translate-x-1/2 text-ink/[0.035]"
-        animate={{ rotate: index * 60 }}
-        transition={{ type: "spring", stiffness: 60, damping: 16 }}
-      >
-        <path d="M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z" fill="none" stroke="currentColor" strokeWidth={0.6} />
-        <circle cx="50" cy="50" r="31" fill="none" stroke="currentColor" strokeWidth={0.6} />
-        <circle cx="50" cy="50" r="22" fill="none" stroke="currentColor" strokeWidth={0.6} />
-      </motion.svg>
-
       {planning ? (
         saved ? (
           <PlanSaved

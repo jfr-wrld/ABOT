@@ -37,11 +37,19 @@ values in either theme, in `globals.css`.
 
 ## Type
 
-- **Barlow** (body and every figure, tabular digits): the plain, slightly condensed grotesque of
-  gym signage and plate stamping. It replaces both Plus Jakarta Sans and the JetBrains Mono labels;
-  numbers are no longer set in a code font.
-- **Anton** (page titles, `h1`): a single-weight poster face, never faux-bolded.
-- JetBrains Mono remains only inside story cards that print receipts.
+- **Plus Jakarta Sans** for text, **JetBrains Mono** for figures (owner's choice, 2026-11-15: the
+  original faces, after trying Barlow and Anton).
+- Small labels (`field-label`) stay in the body face, sentence case, muted.
+- Page titles use the body face; Anton remains only in the Matchday story card.
+
+## Surfaces
+
+One card per screen for the one primary thing (Home's day hero or the running workout, the
+routine to start today, the phase check-in). Everything else is a list with hairline dividers:
+the week numbers, recent workouts, routines, templates and the phase sections. Radius by role:
+`rounded-card` (16px) for cards and sheets, `rounded-ctl` for controls, pills only for chips.
+The plate outlines behind Home's hero and the intro are gone; the plate shape stays where it
+carries data (weeks, sets) and as the avatar.
 
 ## Settings
 

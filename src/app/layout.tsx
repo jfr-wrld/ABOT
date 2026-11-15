@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import { Suspense } from "react";
 import "./globals.css";
@@ -26,14 +26,11 @@ import { RemoteConfigLoader } from "@/components/remote/RemoteConfigLoader";
 
 // next/font downloads both families at build time and serves them from this app,
 // so the browser never calls Google: the zero-network rule still holds.
-// Barlow: the plain, slightly condensed grotesque of gym signage and plate stamping, with tabular
-// figures for every number. JetBrains Mono stays for the story cards that print receipts.
-const sans = Barlow({ variable: "--font-sans-face", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], display: "swap" });
-const mono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], display: "swap", preload: false });
+const sans = Plus_Jakarta_Sans({ variable: "--font-sans-face", subsets: ["latin"], display: "swap" });
+const mono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], display: "swap" });
 // Story Studio's theme faces (src/fonts, OFL): declared on every page but not preloaded, so a
 // phone downloads one only when a story card draws with it. next/font needs literal options.
-// Anton: the poster face for page titles (and the Matchday story).
-const anton = localFont({ src: "../fonts/anton-latin.woff2", variable: "--font-anton", weight: "400", display: "swap" });
+const anton = localFont({ src: "../fonts/anton-latin.woff2", variable: "--font-anton", weight: "400", display: "swap", preload: false });
 const fraunces = localFont({ src: "../fonts/fraunces-latin.woff2", variable: "--font-fraunces", weight: "400 900", display: "swap", preload: false });
 const silkscreen = localFont({
   src: [

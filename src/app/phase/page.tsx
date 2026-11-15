@@ -79,7 +79,7 @@ function PhaseScreen() {
         <Fuel m={m} />
       </Rise>
       <Rise order={2} className="px-4">
-        <section aria-label={t("Today's protein and water")} className="rounded-card border border-line bg-surface">
+        <section aria-label={t("Today's protein and water")} className="border-y border-line">
           <Pacer proteinTarget={m.fuel.proteinG} waterTarget={m.waterMl} now={now} size={52} bordered={false} />
         </section>
       </Rise>
@@ -152,7 +152,7 @@ function Fuel({ m }: { m: PhaseTelemetry }) {
   const t = useT();
   const { fuel } = m;
   return (
-    <section aria-labelledby="fuel-heading" className="rounded-card border border-line bg-surface p-4">
+    <section aria-labelledby="fuel-heading" className="border-t border-line pt-4">
       <div className="flex items-center justify-between gap-2">
         <h2 id="fuel-heading" className="field-label">
           {m.phase.phaseType === "RECOMP" ? (m.trainingDay ? t("Today, training day") : t("Today, rest day")) : t("Today")}
@@ -210,7 +210,7 @@ function Weigh({ m, now }: { m: PhaseTelemetry; now: number }) {
   }));
 
   return (
-    <section aria-labelledby="weigh-heading" className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
+    <section aria-labelledby="weigh-heading" className="flex flex-col gap-3 border-t border-line pt-4">
       <div className="flex items-center justify-between gap-2">
         <h2 id="weigh-heading" className="field-label">
           {today ? t("Today's weigh-in") : t("Weigh in")}
@@ -259,7 +259,7 @@ function Strength({ m }: { m: PhaseTelemetry }) {
   const t = useT();
   const s = m.shield;
   return (
-    <section aria-labelledby="strength-heading" className="rounded-card border border-line bg-surface p-4">
+    <section aria-labelledby="strength-heading" className="border-t border-line pt-4">
       <h2 id="strength-heading" className="field-label">
         {t("Relative strength")}
       </h2>
