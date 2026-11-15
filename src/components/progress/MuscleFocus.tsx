@@ -27,7 +27,7 @@ export function MuscleFocus({ title, split }: { title: string; split: Partial<Re
       </figcaption>
       {rows.length === 0 ? (
         <p className="py-8 text-center text-sm text-text-muted">
-          {t("No working sets in this range. Sets you tick during a workout are counted here by muscle.")}
+          {t("No sets in this range yet.")}
         </p>
       ) : (
         <div className="mt-3 grid grid-cols-[minmax(0,5fr)_minmax(0,6fr)] items-center gap-3">

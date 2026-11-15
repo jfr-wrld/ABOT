@@ -220,7 +220,7 @@ export function WorkoutReminderSettings() {
             <p className="text-xs text-text-muted">
               {isNativeApp()
                 ? t("Reminders arrive even when ABOT is closed. You can also add the schedule to your calendar.")
-                : t("Reminders appear while ABOT is open, even in a background tab. For alerts when it is closed, add the schedule to your phone's calendar.")}
+                : t("Reminders show while ABOT is open. Add them to your calendar for the rest.")}
             </p>
             <Button onClick={exportCalendar} disabled={!anyDay} className="mt-2 w-full">
               <CalendarPlus aria-hidden="true" size={16} /> {t("Add to calendar (.ics)")}

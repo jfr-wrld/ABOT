@@ -76,11 +76,11 @@ export const exercises: Record<string, string> = {
   History: "Riwayat",
   "How to": "Cara",
   "Estimated 1RM over time ({unit}, Epley)": "Perkiraan 1RM dari waktu ke waktu ({unit}, Epley)",
-  "No data yet. The line starts after your first finished workout with this exercise.":
+  "The line starts after your first workout with this.":
     "Belum ada data. Garisnya muncul setelah latihan pertamamu dengan gerakan ini selesai.",
   "One point so far. A second workout draws the line.": "Baru satu titik. Latihan kedua akan membentuk garisnya.",
   "{value} {unit} (best set {best})": "{value} {unit} (set terbaik {best})",
-  "Not logged yet. Add it to a workout and finish the workout to see sets here.":
+  "Not logged yet.":
     "Belum pernah dicatat.",
   "Delete {name}?": "Hapus {name}?",
   "Past workouts keep their sets but will show “Removed exercise” for this one. Routines using it keep a dead reference until you edit them.":
@@ -105,7 +105,7 @@ export const exercises: Record<string, string> = {
   "Instructions from free-exercise-db (public domain).": "Instruksi dari free-exercise-db (domain publik).",
   "Personal records": "Rekor pribadi",
   "at {gym}": "di {gym}",
-  "No completed working sets yet. Records appear after you log this exercise in a finished workout.":
+  "No records yet. Log this exercise to see them.":
     "Belum ada rekor. Catat gerakan ini untuk melihatnya.",
   "Best 1RM (est.)": "1RM terbaik (perkiraan)",
   "Heaviest across all gyms: {weight} × {reps}": "Terberat di semua gym: {weight} × {reps}",
@@ -157,7 +157,7 @@ export const exercises: Record<string, string> = {
   "Edit routine": "Ubah rutinitas",
   Folder: "Folder",
   "(optional)": "(opsional)",
-  "No exercises in this routine yet. Add the first one below; each starts with three planned sets.":
+  "No exercises yet. Add the first one below.":
     "Belum ada gerakan. Tambahkan di bawah.",
   "Remove {name} from routine": "Hapus {name} dari rutinitas",
   "Remove {name} from superset": "Keluarkan {name} dari superset",
@@ -170,15 +170,13 @@ export const exercises: Record<string, string> = {
   "{name} target reps": "{name} target rep",
   "Changes save as you type.": "Tersimpan otomatis.",
   "Back to routines": "Kembali ke rutinitas",
-  "Do one set of each back to back. Rest starts after the last exercise of the superset.":
-    "Satu set tiap gerakan, berurutan. Istirahat setelah yang terakhir.",
 
   // Routine library and templates
   "Give the routine a name, like Push A or Leg day": "Beri nama rutinitasnya, misalnya Push A atau Leg day",
   "New routine": "Rutinitas baru",
   Routines: "Rutinitas",
   "My Routines": "Rutinitasku",
-  "No routines saved. Create one, add its exercises and target sets, and you can start the same workout in one tap next time.":
+  "No routines yet. Save one to start it in one tap.":
     "Belum ada rutinitas. Simpan satu agar bisa mulai dengan sekali ketuk.",
   "No folder": "Tanpa folder",
   "All routines": "Semua rutinitas",
@@ -268,7 +266,7 @@ export const exercises: Record<string, string> = {
   workouts: "latihan",
   "Time training per week, last {n} weeks (minutes)": "Waktu latihan per minggu, {n} minggu terakhir (menit)",
   min: "mnt",
-  "Nothing to chart yet. Finish a workout and your volume, streak, muscles and main lifts show up here.":
+  "Nothing to chart yet. Finish a workout to see progress.":
     "Belum ada grafik. Selesaikan satu latihan untuk melihat progres.",
   "Go to Workout": "Ke Latihan",
   Range: "Rentang",
@@ -297,7 +295,7 @@ export const exercises: Record<string, string> = {
   "{n} record": "{n} rekor",
   "{n} records": "{n} rekor",
   "Working sets; secondary muscles count half.": "Set kerja; otot pendukung dihitung setengah.",
-  "No working sets in this range. Sets you tick during a workout are counted here by muscle.":
+  "No sets in this range yet.":
     "Belum ada set di rentang ini.",
   "+{n} more": "+{n} lagi",
   "Volume, last {n} weeks": "Volume, {n} minggu terakhir",

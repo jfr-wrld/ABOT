@@ -56,8 +56,8 @@ export function LiveStatusSetting() {
           name={app ? t("live timer") : t("status outside the app")}
         >
           {app
-            ? t("While a workout runs, the status bar shows the rest countdown or the workout time, even with ABOT closed or the screen locked. Pull it down to add 30 seconds, skip rest or log the next set. It rings when rest is over.")
-            : t("While a workout runs and you leave ABOT, a notification shows the workout, when rest ends and your next set. Phones only give the Dynamic Island and live updates to installed native apps, so this is a notification.")}
+            ? t("Rest and workout time in the status bar, even when locked. Pull down to add 30 s, skip, or log a set.")
+            : t("Leave ABOT mid-workout and a notification shows your rest and next set.")}
         </InfoTip>
         <Switch id="live-status" checked={on} disabled={unsupported || (blocked && !app)} onChange={() => void toggle()} />
       </div>

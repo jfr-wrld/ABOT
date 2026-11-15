@@ -20,7 +20,7 @@ test("empty name shows an inline error", async ({ page }) => {
   // A device with no routines opens on the templates; the empty state is one tab away.
   await expect(page.getByRole("tab", { name: "Templates" })).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { name: "My Routines" }).click();
-  await expect(page.getByText("No routines saved.")).toBeVisible();
+  await expect(page.getByText("No routines yet.")).toBeVisible();
   await page.getByRole("button", { name: "New routine" }).click();
   await page.getByRole("button", { name: "Create and add exercises" }).click();
   await expect(page.getByText("Give the routine a name")).toBeVisible();
@@ -29,7 +29,7 @@ test("empty name shows an inline error", async ({ page }) => {
 
 test("creates a routine with targets and starts it", async ({ page }) => {
   await createRoutine(page, "Push A", "Push / Pull / Legs");
-  await expect(page.getByText("No exercises in this routine yet.")).toBeVisible();
+  await expect(page.getByText("No exercises yet. Add the first one below.")).toBeVisible();
   await page.getByRole("button", { name: "Add exercise" }).click();
   await page.getByLabel("Search exercises").fill("Bench Press (Barbell)");
   await page.getByRole("dialog").getByRole("button", { name: /^Bench Press \(Barbell\)/ }).click();

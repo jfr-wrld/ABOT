@@ -164,7 +164,7 @@ function WorkoutScreen() {
         {active.exercises.length === 0 && (
           <div className="panel flex flex-col gap-3 px-4 py-6 text-center">
             <EmptyArt icon={Dumbbell} />
-            <p className="text-sm text-text-muted">{t("This workout has no exercises yet. Add one below to start logging sets.")}</p>
+            <p className="text-sm text-text-muted">{t("No exercises yet. Add one below.")}</p>
           </div>
         )}
         <AnimatePresence initial={false}>

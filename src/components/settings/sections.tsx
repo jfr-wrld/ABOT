@@ -37,7 +37,7 @@ export function GeneralSection() {
       <Choice
         name="language"
         label={t("Language")}
-        info={t("Phone follows your phone's language: Indonesian when it is set to Indonesian, English otherwise.")}
+        info={t("Follows your phone's language.")}
         value={s.language}
         options={(["auto", "en", "id"] as const).map((v) => ({ value: v, label: v === "auto" ? t(LANGUAGE_LABEL[v]) : LANGUAGE_LABEL[v] }))}
         onChange={(language) => s.update({ language })}
@@ -54,7 +54,7 @@ export function GeneralSection() {
         name="effects"
         label={t("Visual effects")}
         info={t(
-          "Lite saves battery: no glass and no decorative animation. Exercise demos keep moving in both. Auto picks Lite on slower phones or with Data Saver on.",
+          "Lite saves battery: no glass, no decorative motion. Auto picks it on slower phones.",
         )}
         value={s.visualEffects}
         options={(["auto", "full", "lite"] as const).map((v) => ({
@@ -112,7 +112,7 @@ export function WorkoutSection() {
           }
           name={t("default rest")}
         >
-          {t("The rest timer an exercise starts with when you add it. Each exercise can change its own.")}
+          {t("Default rest for new exercises.")}
         </InfoTip>
         <Select
           id="default-rest"
@@ -125,14 +125,14 @@ export function WorkoutSection() {
       <Toggle
         id="show-rpe"
         label={t("RPE column")}
-        info={t("Rate of perceived exertion, 1 to 10: how hard each set felt. Shown in the logger next to weight and reps.")}
+        info={t("How hard each set felt, 1 to 10.")}
         checked={s.showRpe}
         onChange={(v) => s.update({ showRpe: v })}
       />
       <Toggle
         id="tap-feedback"
         label={t("Sounds & vibration")}
-        info={t("A tick on steppers and chips, a latch when a set is done, a chord for a new record, plus a sound when a workout starts and finishes, each with a short vibration. Synthesised on the phone; music keeps playing.")}
+        info={t("Soft clicks and vibration as you log. Your music keeps playing.")}
         checked={s.tapFeedback}
         onChange={(v) => {
           s.update({ tapFeedback: v });

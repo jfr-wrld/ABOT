@@ -33,7 +33,7 @@ export function LocationsSection() {
         }
         name={t("gyms")}
       >
-        {t("Machine and cable weights differ between gyms, so their records and previous sets are kept per gym.")}
+        {t("Machine weights differ by gym, so records are kept per gym.")}
       </InfoTip>
 
       {locations.length === 0 ? (

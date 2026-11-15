@@ -150,7 +150,7 @@ export function RoutineLibrary() {
               <EmptyArt icon={ListChecks} />
               <p className="text-sm text-text-muted">
                 {t(
-                  "No routines saved. Create one, add its exercises and target sets, and you can start the same workout in one tap next time.",
+                  "No routines yet. Save one to start it in one tap.",
                 )}
               </p>
             </div>

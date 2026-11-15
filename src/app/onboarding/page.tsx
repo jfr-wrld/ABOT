@@ -47,17 +47,17 @@ const SLIDES = (t: T) =>
   [
     {
       title: t("Log a set in one tap"),
-      body: t("Type the weight and reps, tap the check. Last time's numbers sit beside each set, and records light up as you beat them."),
+      body: t("Type weight and reps, tap the check. Last time sits beside each set."),
       Visual: LogSetScene,
     },
     {
       title: t("Rest sits by your thumb"),
-      body: t("Tick a set and the rest countdown opens just above the dock, on every screen, with 15-second nudges and skip."),
+      body: t("Tick a set and rest starts counting down, on every screen."),
       Visual: RestScene,
     },
     {
       title: t("Your training stays on this phone"),
-      body: t("Every workout saves to this device and works offline. Back it up to a file or your account whenever you like."),
+      body: t("Saved on this phone, works offline. Back up anytime."),
       Visual: DeviceScene,
     },
   ];
@@ -65,7 +65,7 @@ const SLIDES = (t: T) =>
 /** Android browsers only: the one thing the web cannot do, and the app to get it. */
 const APP_SLIDE = (t: T) => ({
   title: t("ABOT hits harder as an app (beta)"),
-  body: t("Your set and rest countdown on the lock screen, an alarm that rings with the screen off, reminders that always arrive. Free, no account. It is in beta, so your feedback shapes it."),
+  body: t("Rest timer on the lock screen, an alarm with the screen off, reminders that arrive. Free beta."),
   Visual: AppScene,
 });
 

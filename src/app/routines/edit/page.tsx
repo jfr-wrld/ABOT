@@ -139,7 +139,7 @@ function Editor() {
         {routine.exercises.length === 0 && (
           <div className="panel flex flex-col gap-3 px-4 py-6 text-center">
             <EmptyArt icon={ListPlus} />
-            <p className="text-sm text-text-muted">{t("No exercises in this routine yet. Add the first one below; each starts with three planned sets.")}</p>
+            <p className="text-sm text-text-muted">{t("No exercises yet. Add the first one below.")}</p>
           </div>
         )}
 
@@ -351,7 +351,7 @@ function Editor() {
         return (
           <Sheet open onClose={() => setSupersetFor(null)} title={t("Superset {name} with", { name: fromName })}>
             <p className="mb-3 text-sm text-text-muted">
-              {t("Do one set of each back to back. Rest starts after the last exercise of the superset.")}
+              {t("One set of each, back to back. Rest after the last.")}
             </p>
             <ul className="flex flex-col gap-1">
               {routine.exercises

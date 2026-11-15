@@ -168,7 +168,7 @@ function Detail() {
                 {chartData.length < 2 ? (
                   <p className="py-6 text-center text-sm text-text-muted">
                     {chartData.length === 0
-                      ? t("No data yet. The line starts after your first finished workout with this exercise.")
+                      ? t("The line starts after your first workout with this.")
                       : t("One point so far. A second workout draws the line.")}
                   </p>
                 ) : (
@@ -210,7 +210,7 @@ function Detail() {
           <section {...tabPanelProps("ex-detail", "history")} aria-label={t("History")} className="outline-none">
             {recent.length === 0 ? (
               <p className="mt-2 panel px-4 py-6 text-center text-sm text-text-muted">
-                {t("Not logged yet. Add it to a workout and finish the workout to see sets here.")}
+                {t("Not logged yet.")}
               </p>
             ) : (
               <>

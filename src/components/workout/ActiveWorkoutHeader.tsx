@@ -221,7 +221,7 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
       <p className="mb-4 text-xs text-text-muted">
         {paused
           ? t("The clock is stopped. Ticking a set also resumes it.")
-          : t("Stops the clock for a break. The rest timer is cleared; ticking a set resumes.")}
+          : t("Stops the clock. Tick a set to resume.")}
       </p>
       <label htmlFor="start-time" className="mb-1 block text-sm font-semibold">
         {t("Started at")}
@@ -244,7 +244,7 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
         </p>
       ) : (
         <p id="start-time-hint" className="mt-1 text-xs text-text-muted">
-          {t("Use this if you started the timer late. Duration is counted from this time.")}
+          {t("Started late? Set the real start time.")}
         </p>
       )}
     </Sheet>

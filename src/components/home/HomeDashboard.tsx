@@ -634,7 +634,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
             <h2 id="hero-heading" className="mt-1 text-2xl font-bold tracking-tight">
               {t("Free session")}
             </h2>
-            <p className="mt-1 text-sm text-text-muted">{t("Or set up your week: ABOT makes the workouts and reminds you.")}</p>
+            <p className="mt-1 text-sm text-text-muted">{t("Or plan your week and ABOT reminds you.")}</p>
           </div>
           <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <Button variant="primary" onClick={empty} className="min-h-12 text-base">
@@ -845,7 +845,7 @@ function NumbersRow({ now }: { now: number }) {
         )}
         <p className="mt-3 text-xs text-text-muted">
           {t(
-            "Each working set adds fatigue: 15% to the main muscles, 7.5% to the helpers, more at a high RPE. It fades by itself: big muscles are fresh again in 72 hours, small ones in 48.",
+            "Each set tires the muscles it works. Big muscles recover in 72 hours, small ones in 48.",
           )}
         </p>
       </Sheet>

@@ -29,7 +29,7 @@ export const settings: Record<string, string> = {
 
   // General
   Language: "Bahasa",
-  "Phone follows your phone's language: Indonesian when it is set to Indonesian, English otherwise.":
+  "Follows your phone's language.":
     "Ikuti bahasa HP-mu.",
   Theme: "Tema",
   "System follows your phone's light or dark mode.": "Sistem mengikuti mode terang atau gelap di HP-mu.",
@@ -43,18 +43,18 @@ export const settings: Record<string, string> = {
   // Workout settings
   "Default rest": "Istirahat bawaan",
   "default rest": "istirahat bawaan",
-  "The rest timer an exercise starts with when you add it. Each exercise can change its own.":
+  "Default rest for new exercises.":
     "Istirahat awal untuk gerakan baru.",
   "Rest alert": "Alarm istirahat",
   "Three short pips at 3, 2, 1, then a beep and a vibration when rest reaches zero.": "Tiga bunyi pendek di 3, 2, 1, lalu bunyi dan getar saat istirahat habis.",
   "RPE column": "Kolom RPE",
-  "Rate of perceived exertion, 1 to 10: how hard each set felt. Shown in the logger next to weight and reps.":
+  "How hard each set felt, 1 to 10.":
     "Seberat apa tiap set terasa, 1 sampai 10.",
 
   // Gyms
   Gyms: "Gym",
   gyms: "gym",
-  "Machine and cable weights differ between gyms, so their records and previous sets are kept per gym.":
+  "Machine weights differ by gym, so records are kept per gym.":
     "Beban mesin dan kabel beda di tiap gym, jadi rekor dan set sebelumnya disimpan per gym.",
   "No gyms yet.": "Belum ada gym.",
   "Enter a gym name": "Masukkan nama gym",
@@ -87,7 +87,7 @@ export const settings: Record<string, string> = {
   // Notifications and schedule
   "Status outside the app": "Status di luar aplikasi",
   "status outside the app": "status di luar aplikasi",
-  "While a workout runs, the status bar shows the rest countdown or the workout time, even with ABOT closed or the screen locked. Pull it down to add 30 seconds, skip rest or log the next set. It rings when rest is over.":
+  "Rest and workout time in the status bar, even when locked. Pull down to add 30 s, skip, or log a set.":
     "Istirahat dan waktu latihan tampil di status bar, meski layar terkunci. Tarik ke bawah untuk +30 detik, lewati, atau catat set.",
   "Live timer in the status bar": "Timer langsung di status bar",
   "live timer": "timer langsung",
@@ -98,7 +98,7 @@ export const settings: Record<string, string> = {
   "Second line": "Baris kedua",
   "Next set": "Set berikutnya",
   "Total volume": "Volume total",
-  "While a workout runs and you leave ABOT, a notification shows the workout, when rest ends and your next set. Phones only give the Dynamic Island and live updates to installed native apps, so this is a notification.":
+  "Leave ABOT mid-workout and a notification shows your rest and next set.":
     "Keluar dari ABOT saat latihan, notifikasi menampilkan istirahat dan set berikutnya.",
   "Notifications are off for ABOT; turn them on in Android settings.":
     "Notifikasi untuk ABOT mati; nyalakan di pengaturan Android.",
@@ -146,7 +146,7 @@ export const settings: Record<string, string> = {
     "Browser ini tidak bisa menampilkan notifikasi. Pakai kalender di bawah.",
   "Reminders arrive even when ABOT is closed. You can also add the schedule to your calendar.":
     "Pengingat tetap datang walau ABOT ditutup.",
-  "Reminders appear while ABOT is open, even in a background tab. For alerts when it is closed, add the schedule to your phone's calendar.":
+  "Reminders show while ABOT is open. Add them to your calendar for the rest.":
     "Pengingat muncul selama ABOT terbuka. Tambahkan ke kalender agar tetap muncul saat ditutup.",
   "Add to calendar (.ics)": "Tambah ke kalender (.ics)",
 
@@ -253,7 +253,7 @@ export const settings: Record<string, string> = {
   "A strength training log that works offline.": "Catatan latihan beban yang jalan tanpa internet.",
   "Version {version}": "Versi {version}",
   "Your data": "Datamu",
-  "Your training stays on this phone. Signing in copies it to your own backup space so you can restore it. Nothing is sold, and no one else sees it.":
+  "Your training stays on this phone. Sign in to back it up. Nothing is sold.":
     "Latihanmu tetap di HP ini. Masuk untuk backup. Data tidak dijual dan tidak dilihat orang lain.",
   Credits: "Kredit",
   "Exercise data and photos: free-exercise-db (public domain).": "Data dan foto gerakan: free-exercise-db (domain publik).",
@@ -263,7 +263,7 @@ export const settings: Record<string, string> = {
   // Backup & Sync
   "Backup & Sync": "Backup & Sinkronisasi",
   "backup and sync": "backup dan sinkronisasi",
-  "Optional. Sign in to copy your training to your own cloud space and keep your phones in step. ABOT works the same without it. Signing out keeps everything on this device.":
+  "Optional. Sign in to back up and sync your phones. Signing out keeps your data here.":
     "Opsional. Masuk untuk backup dan sinkron antar-HP. Keluar tidak menghapus data di HP ini.",
   "Cloud sync is not set up for this build. Your training is saved on this device; use Export backup below to keep a copy.":
     "Sinkron cloud belum aktif di versi ini. Data aman di HP ini; ekspor backup di bawah.",
@@ -380,13 +380,13 @@ export const settings: Record<string, string> = {
 
   // Intro, sign-in, permissions step
   "Log a set in one tap": "Catat set dengan sekali ketuk",
-  "Type the weight and reps, tap the check. Last time's numbers sit beside each set, and records light up as you beat them.":
+  "Type weight and reps, tap the check. Last time sits beside each set.":
     "Isi berat dan rep, ketuk centang. Angka sesi lalu ada di samping tiap set.",
   "Rest sits by your thumb": "Istirahat dekat jempolmu",
-  "Tick a set and the rest countdown opens just above the dock, on every screen, with 15-second nudges and skip.":
+  "Tick a set and rest starts counting down, on every screen.":
     "Centang set, timer istirahat langsung jalan di semua layar.",
   "Your training stays on this phone": "Latihanmu tetap di HP ini",
-  "Every workout saves to this device and works offline. Back it up to a file or your account whenever you like.":
+  "Saved on this phone, works offline. Back up anytime.":
     "Tersimpan di HP ini dan bisa offline. Backup kapan saja.",
   "Skip intro": "Lewati intro",
   Introduction: "Perkenalan",
@@ -428,7 +428,7 @@ export const settings: Record<string, string> = {
   "Turn on in Android settings": "Nyalakan di pengaturan Android",
   // Tactile feedback
   "Sounds & vibration": "Suara & getar",
-  "A tick on steppers and chips, a latch when a set is done, a chord for a new record, plus a sound when a workout starts and finishes, each with a short vibration. Synthesised on the phone; music keeps playing.":
+  "Soft clicks and vibration as you log. Your music keeps playing.":
     "Bunyi dan getar halus saat mencatat. Musikmu tetap jalan.",
   // Import from Hevy or Strong
   "Import from Hevy or Strong": "Impor dari Hevy atau Strong",
@@ -723,7 +723,7 @@ export const settings: Record<string, string> = {
   "No workout this day.": "Tidak ada latihan.",
   "Train anyway: {name}": "Tetap latihan: {name}",
   "Train anyway": "Tetap latihan",
-  "Or set up your week: ABOT makes the workouts and reminds you.": "Atau atur minggumu: ABOT menyusun latihannya dan mengingatkanmu.",
+  "Or plan your week and ABOT reminds you.": "Atau atur minggumu: ABOT menyusun latihannya dan mengingatkanmu.",
   "Next: {name}": "Berikutnya: {name}",
   // Route error screen
   "Something went wrong": "Ada yang salah",
@@ -734,7 +734,7 @@ export const settings: Record<string, string> = {
   "{n} workouts have an impossible date (before 1990 or in the future) and will be skipped.": "{n} latihan bertanggal tidak valid dan dilewati.",
   // Get the app
   "ABOT hits harder as an app": "ABOT lebih mantap sebagai app",
-  "Your set and rest countdown on the lock screen, an alarm that rings with the screen off, reminders that always arrive. Free, no account.": "Timer istirahat di layar kunci, alarm saat layar mati, pengingat yang pasti sampai. Gratis.",
+  "Rest timer on the lock screen, an alarm with the screen off, reminders that arrive. Free.": "Timer istirahat di layar kunci, alarm saat layar mati, pengingat yang pasti sampai. Gratis.",
   "Download for Android": "Unduh untuk Android",
   "Keep using the web": "Lanjut pakai versi web",
   "First workout done. In the Android app your next set and rest timer sit on the lock screen, so you never unlock between sets.": "Latihan pertama selesai! Di app Android, timer istirahat ada di layar kunci.",
@@ -788,7 +788,7 @@ export const settings: Record<string, string> = {
   "Skip": "Lewati",
   "ABOT for Android (beta)": "ABOT untuk Android (beta)",
   "ABOT hits harder as an app (beta)": "ABOT lebih mantap sebagai app (beta)",
-  "Your set and rest countdown on the lock screen, an alarm that rings with the screen off, reminders that always arrive. Free, no account. It is in beta, so your feedback shapes it.": "Timer istirahat di layar kunci, alarm saat layar mati, pengingat yang pasti sampai. Gratis, versi beta.",
+  "Rest timer on the lock screen, an alarm with the screen off, reminders that arrive. Free beta.": "Timer istirahat di layar kunci, alarm saat layar mati, pengingat yang pasti sampai. Gratis, versi beta.",
   "Beta: you are one of the first testers": "Beta: kamu termasuk penguji pertama",
   "Something broken, confusing or missing? Tell us from the app: Settings > Send beta feedback, or write to": "Ada yang rusak atau kurang? Kirim masukan dari Pengaturan, atau email ke",
   "Send beta feedback": "Kirim masukan beta",

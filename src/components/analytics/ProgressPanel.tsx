@@ -65,7 +65,7 @@ export function ProgressPanel() {
         <section className="panel flex flex-col items-center gap-3 p-6 text-center">
           <EmptyArt icon={TrendingUp} />
           <p className="text-sm text-text-muted">
-            {t("Nothing to chart yet. Finish a workout and your volume, streak, muscles and main lifts show up here.")}
+            {t("Nothing to chart yet. Finish a workout to see progress.")}
           </p>
           <Link
             href="/workout"

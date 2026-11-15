@@ -35,7 +35,7 @@ export function SyncSection() {
         name={t("backup and sync")}
       >
         {t(
-          "Optional. Sign in to copy your training to your own cloud space and keep your phones in step. ABOT works the same without it. Signing out keeps everything on this device.",
+          "Optional. Sign in to back up and sync your phones. Signing out keeps your data here.",
         )}
       </InfoTip>
 

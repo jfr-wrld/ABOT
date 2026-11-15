@@ -76,7 +76,7 @@ export function AboutSection() {
         </h2>
         <p className="mt-1 text-sm text-text-muted">
           {t(
-            "Your training stays on this phone. Signing in copies it to your own backup space so you can restore it. Nothing is sold, and no one else sees it.",
+            "Your training stays on this phone. Sign in to back it up. Nothing is sold.",
           )}
         </p>
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
