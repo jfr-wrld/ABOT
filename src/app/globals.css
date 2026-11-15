@@ -15,8 +15,9 @@
   --color-accent-solid: #ccff00;
   --color-on-accent: #000000;
   --color-accent-tint: rgb(204 255 0 / 0.08);
-  --color-pr: #00f0ff; /* Electric Cyan: personal records only */
-  --color-warmup: #facc15;
+  --color-pr: #f5c542; /* gold: personal records only (owner, 2026-11-15) */
+  --color-warmup: #7dd3fc; /* sky: light warm-up sets, kept clear of the record gold */
+  --color-caution: #fb923c; /* orange: the coach calling a step back */
   --color-dropset: #c084fc;
   --color-failure: #f87171;
   /* Theme-aware tints: "ink" is white on the dark theme and black on the light one, so
@@ -75,8 +76,9 @@
   --color-accent-text: #3f6212;
   --color-accent-tint: rgb(101 163 13 / 0.12);
   --color-accent-dim: #c9e59a;
-  --color-pr: #155e75;
-  --color-warmup: #a16207;
+  --color-pr: #8a5d00;
+  --color-warmup: #0369a1;
+  --color-caution: #c2410c;
   --color-dropset: #7e22ce;
   --color-failure: #b91c1c;
   --color-ink: #000000;
@@ -137,8 +139,9 @@
   --color-accent-text: #ccff00;
   --color-accent-tint: rgb(204 255 0 / 0.08);
   --color-accent-dim: #4d5c12;
-  --color-pr: #00f0ff;
-  --color-warmup: #facc15;
+  --color-pr: #f5c542;
+  --color-warmup: #7dd3fc;
+  --color-caution: #fb923c;
   --color-dropset: #c084fc;
   --color-failure: #f87171;
   --color-ink: #ffffff;

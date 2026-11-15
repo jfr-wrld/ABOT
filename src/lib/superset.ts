@@ -59,8 +59,8 @@ export function supersetNext(
 }
 
 /**
- * Four colours that differ from every other signal in the app (Volt = live, cyan = record,
- * yellow/purple/red = set types). Each is above 6:1 on the Carbon surface.
+ * Four colours that differ from every other signal in the app (Volt = live, gold = record,
+ * sky/purple/red = set types). Each is above 6:1 on the Carbon surface.
  */
 export const SUPERSET_COLORS = ["#fb923c", "#60a5fa", "#f472b6", "#34d399"] as const;
 

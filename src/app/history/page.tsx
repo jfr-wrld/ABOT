@@ -313,7 +313,7 @@ function Stat({
 
 /**
  * One exercise: photo, name and gear, its share of the workout's volume as a bar, and its sets.
- * Each set has a bar for its load against the heaviest set of the exercise; records are Cyan and
+ * Each set has a bar for its load against the heaviest set of the exercise; records are gold and
  * the best set by estimated 1RM is marked. Tap the header to fold the sets away.
  */
 function ExerciseCard({

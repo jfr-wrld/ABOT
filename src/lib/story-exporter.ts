@@ -969,7 +969,7 @@ function trophyVault(s: Scene) {
 /* Loaded Bar                                                          */
 /* ------------------------------------------------------------------ */
 
-/** Names of lifts that set a record in this story, to colour their plates Cyan. */
+/** Names of lifts that set a record in this story, to colour their plates gold. */
 function recordLifts(data: StoryData): Set<string> {
   return new Set(data.prs.map((p) => p.exerciseName));
 }
@@ -977,7 +977,8 @@ function recordLifts(data: StoryData): Set<string> {
 /**
  * Loaded Bar: the workout as a loaded barbell seen from the side. Each lift is a plate, heaviest
  * volume nearest the collar, its height set by its share of the volume, mirrored on both sleeves;
- * lifts that set a record are Cyan. A legend names the plates; totals sit below.
+ * lifts that set a record are gold, as records are across the app. A legend names the plates;
+ * totals sit below.
  */
 function loadedBar(s: Scene) {
   const { ctx, data, unit } = s;
@@ -1033,9 +1034,9 @@ function loadedBar(s: Scene) {
       ctx.strokeStyle = OBSIDIAN;
       ctx.lineWidth = 4;
       ctx.stroke();
-      // A record-setting lift wears a Cyan cap.
+      // A record-setting lift wears a gold cap.
       if (records.has(p.name)) {
-        ctx.fillStyle = CYAN;
+        ctx.fillStyle = GOLD;
         rrect(ctx, left + 4, cy - h / 2 + 4, w - 8, 18, 6);
         ctx.fill();
       }
@@ -1056,7 +1057,7 @@ function loadedBar(s: Scene) {
     rrect(ctx, m, y - 30, 20, 40, 5);
     ctx.fill();
     if (records.has(p.name)) {
-      ctx.fillStyle = CYAN;
+      ctx.fillStyle = GOLD;
       rrect(ctx, m, y - 30, 20, 10, 4);
       ctx.fill();
     }

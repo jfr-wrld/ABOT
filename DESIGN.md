@@ -15,8 +15,9 @@ and plain copy ("ABOT Pro", "Templates", "Upper day at 17:30").
 | `text` | `#f4f4f5` | `#18181b` | 16:1 on both. |
 | `text-muted` | `#a1a1aa` | `#52525b` | 7.7:1. |
 | `accent` | `#ccff00` Volt, black text | fill `#65a30d`, text `#3f6212` | The brand colour (owner's choice): the primary action, the current tab, progress. Neon text on white fails contrast, so light pages use a darker lime. |
-| `pr` | `#00f0ff` cyan | `#155e75` | Records only. |
-| `warmup` | `#facc15` | `#a16207` | |
+| `pr` | `#f5c542` gold | `#8a5d00` | Records only: the medal colour (owner, 2026-11-15). |
+| `warmup` | `#7dd3fc` sky | `#0369a1` | Warm-up sets, kept clear of the record gold. |
+| `caution` | `#fb923c` | `#c2410c` | The coach calling a step back (deload, one set fewer). |
 | `dropset` | `#c084fc` | `#7e22ce` | |
 | `failure` | `#f87171` | `#b91c1c` | |
 
@@ -153,7 +154,7 @@ app the page beeps while ABOT is on screen and the system notification rings whi
 ## Where the accent lands
 
 Volt is "live or primary". Per screen: the single primary action, the done state of a set, the
-running rest timer, and the current tab icon. Cyan appears only where a record was set.
+running rest timer, and the current tab icon. Gold appears only where a record was set.
 
 ## Labels
 
@@ -183,7 +184,7 @@ animation". So Home tells the week in pictures, each with one job:
 - **Days ring**: sessions this week as a ring that draws itself, against the schedule when one is
   set, else out of 7 days.
 - **Body map**: front and back, muscles worked in the last 48 hours lit (resting), with "4/6 ready".
-- **Recent workouts**: name, Cyan PR pill (only when a lift beat an earlier record), a relative day
+- **Recent workouts**: name, Gold PR pill (only when a lift beat an earlier record), a relative day
   (Today, Yesterday, Wed), the lifts as small photos, and duration, volume and sets as icons with
   mono figures. Cards slide in in order and give to 98% under the thumb.
 
@@ -277,7 +278,7 @@ Owner brief 2026-11-08:
   menu (delete lives there, off the thumb's path). Four icon tiles count up (duration, volume,
   sets, records), a body map lights the muscles worked, and each exercise card shows its photo,
   gear, share of the workout's volume as a bar, and its sets with a bar for load against the
-  heaviest set: records in Cyan, the best set by e1RM marked; tap to fold. A bottom action bar
+  heaviest set: records in Gold, the best set by e1RM marked; tap to fold. A bottom action bar
   holds Repeat (starts the same lifts with the same numbers) and Share story. Records count once
   per lift and only when they beat an earlier one, the same rule as the PR pill on Home.
 
@@ -285,12 +286,12 @@ Owner brief 2026-11-08:
 
 Owner brief 2026-11-08: a moment of completion, then the numbers, with motion.
 - **Completion mark**: the plate outline is traced shut, fills faintly, a check is drawn, and
-  twelve small plates burst outward, Cyan when a record fell, Volt otherwise (about 1.4 s). One
+  twelve small plates burst outward, Gold when a record fell, Volt otherwise (about 1.4 s). One
   short buzz on phones that vibrate, only if rest alerts are on and the page was reached by a tap.
 - Four icon tiles count up (duration, volume, sets, exercises).
 - **Volume vs last time**: the previous session of the same routine (or name) as two bars and a
   change pill (Volt when up).
-- **Records** pop in as Cyan cards, one per lift, one chip per record-setting set with the kinds
+- **Records** pop in as Gold cards, one per lift, one chip per record-setting set with the kinds
   it broke (WEIGHT, E1RM, VOLUME). **New lifts** (first time logged) are listed as the baseline,
   not as records: there was nothing to beat. Same rule as Home and the workout detail.
 - A body map of the muscles worked; a bottom bar with Share to IG Story, See every set, Home.
@@ -335,7 +336,7 @@ Owner brief 2026-11-08: revamp it with pictures, icons and motion.
   Offline it shows the photo bundled with the app; with no photo at all, the animated figure.
   Then the name, and muscle and gear with their icons. How to's Motion tab also opens on Photos,
   with Animation one tap away.
-- Four tiles count up: best e1RM (Cyan) or most reps for bodyweight, heaviest, workouts, last done.
+- Four tiles count up: best e1RM (Gold) or most reps for bodyweight, heaviest, workouts, last done.
 - Summary keeps the body map and records; the e1RM line draws itself and carries a trend chip
   (first to latest point, Volt when up). History cards show a relative day and a load bar per set.
 - A bottom bar: Start a workout with this, or, with a workout running, Add to workout (then
@@ -405,7 +406,7 @@ Added at the owner's request (2026-11-08), each with its job:
   context; if a Next upgrade moves that module, drop the exit and keep the enter.
 - **Intro** (`app/onboarding`, `components/onboarding/Illustrations.tsx`): three slides, each with
   an original illustration built from ABOT's own parts and acting out its sentence on a 3.6s loop:
-  a fingertip taps a set's check, the row lights, the band of light passes and a Cyan PR pops; a
+  a fingertip taps a set's check, the row lights, the band of light passes and a Gold PR pops; a
   phone with the rest capsule counting down above the dock, the thumb's reach traced as a dashed
   Volt arc; a barbell sleeve inside a phone loaded plate by plate (side view) and clamped, with the
   signal gone. The illustration travels further than the text between slides (90 vs 64 px), so

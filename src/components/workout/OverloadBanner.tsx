@@ -16,14 +16,14 @@ import { ProBadge } from "@/components/paywall/ProBadge";
 /**
  * Each call's colour, in theme tokens so it reads on chalk and on iron: good news (more load,
  * more reps, a return) in the accent, a pause in the muted text, a step back (deload, one set
- * fewer) in the warm-up amber.
+ * fewer) in the caution orange.
  */
 const LOOK: Record<OverloadKind, { color: string; Icon: typeof Zap; label: string }> = {
   load: { color: "var(--color-accent-text)", Icon: Zap, label: KIND_LABEL.load },
   reps: { color: "var(--color-accent-text)", Icon: TrendingUp, label: KIND_LABEL.reps },
-  deload: { color: "var(--color-warmup)", Icon: AlertTriangle, label: KIND_LABEL.deload },
+  deload: { color: "var(--color-caution)", Icon: AlertTriangle, label: KIND_LABEL.deload },
   hold: { color: "var(--color-text-muted)", Icon: Shield, label: KIND_LABEL.hold },
-  trim: { color: "var(--color-warmup)", Icon: Scissors, label: KIND_LABEL.trim },
+  trim: { color: "var(--color-caution)", Icon: Scissors, label: KIND_LABEL.trim },
   comeback: { color: "var(--color-accent-text)", Icon: RotateCcw, label: KIND_LABEL.comeback },
 };
 

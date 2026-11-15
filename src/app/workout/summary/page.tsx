@@ -44,7 +44,7 @@ export default function WorkoutSummaryPage() {
 
 /**
  * Shown right after Finish: a moment of completion first (the plate closes, a check, a burst of
- * small plates, Cyan when a record fell), then what the workout added up to, how it compares with
+ * small plates, gold when a record fell), then what the workout added up to, how it compares with
  * the last time, the records and first lifts, the muscles worked, and the way to share it.
  */
 function Summary() {
@@ -266,7 +266,7 @@ const HEX = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
 
 /**
  * The completion mark: the plate outline is traced shut, it fills faintly, a check is drawn, and a
- * ring of small plates bursts outward (Cyan when a record fell, Volt otherwise). About 1.4 s.
+ * ring of small plates bursts outward (gold when a record fell, Volt otherwise). About 1.4 s.
  */
 function Celebration({ record }: { record: boolean }) {
   const controls = useEntrance();
