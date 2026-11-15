@@ -820,6 +820,7 @@ export const settings: Record<string, string> = {
   "Missed yesterday: {name}": "Terlewat kemarin: {name}",
   "{n} new records in {name}": "{n} rekor baru di {name}",
   "Backup failed. Tap to try again.": "Backup gagal. Ketuk untuk coba lagi.",
+  "ABOT {version} is out. Tap to update.": "ABOT {version} sudah tersedia. Ketuk untuk memperbarui.",
   "{n} workouts are not backed up": "{n} latihan belum di-backup",
   "You're all caught up.": "Semua sudah dibaca.",
   "New": "Baru",

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { checkDue, checkForUpdate, LATER_MS, putOff, type UpdateCheck } from "@/lib/app-update";
 import { AppUpdate, errorText, followDownload } from "@/lib/native/app-updater";
+import { clearUpdateNotification, showUpdateNotification } from "@/lib/native/notify";
 
 /**
  * The Android app's update, shared by the pop-up, the ready banner and Settings > About: what
@@ -14,6 +15,8 @@ export type UpdatePhase = "idle" | "downloading" | "ready" | "permission" | "ope
 const CHECKED_KEY = "abot.update-checked-at";
 const LATER_KEY = "abot.update-later";
 const DOWNLOAD_KEY = "abot.update-download";
+/** The newest build Android's shade has announced, so each build is announced once. */
+const NOTIFIED_KEY = "abot.update-notified";
 
 function read<T>(key: string): T | null {
   try {
@@ -114,6 +117,12 @@ export const useAppUpdate = create<State>()((set, get) => {
       if (result.kind !== "error") write(CHECKED_KEY, now);
       if (result.kind === "available") dropStale(result.release.build);
       set({ result, checking: false });
+      if (auto && result.kind === "available" && result.release.build > (read<number>(NOTIFIED_KEY) ?? 0)) {
+        const { build, version } = result.release;
+        void showUpdateNotification(version)
+          .then((shown) => shown && write(NOTIFIED_KEY, build))
+          .catch(() => {});
+      }
       if (
         auto &&
         result.kind === "available" &&
@@ -135,6 +144,7 @@ export const useAppUpdate = create<State>()((set, get) => {
       const r = get().result;
       if (r?.kind !== "available") return;
       set({ modal: false });
+      void clearUpdateNotification().catch(() => {});
       dropStale(r.release.build);
       // The file on the phone is this very build: install it instead of downloading it again.
       if (get().phase === "ready" && get().build === r.release.build) return get().install();
