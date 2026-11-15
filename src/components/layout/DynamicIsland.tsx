@@ -23,6 +23,10 @@ import { supersetLabels, type SupersetHandoff } from "@/lib/superset";
 import { setNumbers } from "@/lib/sets";
 import { scrollToExercise } from "@/lib/scroll-to-exercise";
 import { useT } from "@/i18n";
+import { useLiquidGlass } from "@/components/layout/useLiquidGlass";
+
+/** The bar's liquid glass: a darker backdrop, a light blur, the rim bent like the dock's. */
+const BAR_GLASS = { bezel: 16, strength: 30, blur: 4 };
 
 /** Fast to settle, a little overshoot: the capsule should feel like hardware snapping open. */
 const ISLAND_SPRING = { type: "spring", stiffness: 520, damping: 38, mass: 0.9 } as const;
@@ -129,6 +133,7 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
   const open = openOn === pathname;
   const setOpen = (o: boolean) => setOpenOn(o ? pathname : null);
   const root = useRef<HTMLDivElement>(null);
+  useLiquidGlass(root, BAR_GLASS);
   const elapsed = formatDuration(sessionDurationSec(session, now));
   const paused = session.pausedAt !== undefined;
   const live = liveSet(session);
@@ -375,6 +380,8 @@ function HandoffCapsule({ session, handoff, onWorkoutPage }: { session: WorkoutS
   const n = setNumbers(ex.sets)[handoff.setIndex];
   const setText = n === null || n === undefined ? t("Warm-up") : t("Set {n}", { n });
   const aria = t("Next: {name}, {set}, no rest", { name, set: setText });
+  const glass = useRef<HTMLDivElement>(null);
+  useLiquidGlass(glass, BAR_GLASS);
   const body = (
     <motion.span {...fade} className="flex min-w-0 flex-1 items-center gap-3 pl-5 pr-5">
       <Zap aria-hidden="true" size={18} className="shrink-0 fill-accent text-accent" />
@@ -390,7 +397,7 @@ function HandoffCapsule({ session, handoff, onWorkoutPage }: { session: WorkoutS
     </motion.span>
   );
   return (
-    <motion.div layoutId="island" transition={ISLAND_SPRING} className={`${capsule} h-14 w-full rounded-[28px]`}>
+    <motion.div ref={glass} layoutId="island" transition={ISLAND_SPRING} className={`${capsule} h-14 w-full rounded-[28px]`}>
       <span role="status" className="sr-only">
         {aria}
       </span>
@@ -423,6 +430,8 @@ function RestCapsule() {
   const now = useNow(1000, timer !== null);
   const [, setZeroTick] = useState(0);
   const firedFor = useRef<number | null>(null);
+  const glass = useRef<HTMLDivElement>(null);
+  useLiquidGlass(glass, { ...BAR_GLASS, on: timer !== null });
 
   const remainingMs = timer ? Math.max(0, timer.endsAt - now) : 0;
   const remainingSec = Math.ceil(remainingMs / 1000);
@@ -461,6 +470,7 @@ function RestCapsule() {
 
   return (
     <motion.div
+      ref={glass}
       layoutId="island"
       transition={ISLAND_SPRING}
       role="timer"

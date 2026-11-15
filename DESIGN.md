@@ -340,7 +340,9 @@ switches being thrown.
   filter button bend the page at their rim like a lens (`src/lib/liquid-glass.ts`,
   `useLiquidGlass`), with a light blur and tint so labels stay readable and a specular edge
   brighter at the top left. The lens is clearer and bends harder, so it magnifies the tab under
-  it. Safari and Firefox keep the frosted glass; Visual effects: Light makes all of it solid.
+  it. The workout bar has it too, with its backdrop darkened rather than tinted so its figures
+  stay high-contrast. Safari and Firefox keep the frosted glass; Visual effects: Light makes all
+  of it solid.
 - Shadow: the dock only, as the elevation of the one floating layer.
 
 ## Motion
