@@ -145,7 +145,7 @@ function DownloadsPanel() {
         <Metric label="In-app updates" value={num(data?.updates)} />
       </dl>
       {data && data.releases.length > 0 && (
-        <table className="w-full font-mono text-xs tabular-nums">
+        <table className="w-full num text-xs tabular-nums">
           <caption className="sr-only">Downloads per build, newest first</caption>
           <thead>
             <tr className="text-left text-text-muted">
