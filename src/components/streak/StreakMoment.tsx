@@ -292,8 +292,11 @@ function Flame({ reduce, loops }: { reduce: boolean; loops: boolean }) {
 
 /** The old count slides up and away as the new one rises into place with a small pop. */
 function Count({ before, after, reduce }: { before: number; after: number; reduce: boolean }) {
-  // A line box of 1.3em: Saira's figures stand taller than `leading-none`, and the window below
-  // clips to this box, so a tighter one cut the top and bottom off the number (and its pop).
+  // The figures sit on a 1.3em line box. The window they roll through reaches 0.45em past it
+  // above and below (taken back with negative margins, so nothing around moves) and fades out
+  // there with a soft mask instead of a hard edge: its edge stays far from the glyphs, whatever
+  // size the phone draws them at (Android's font size setting) and through the pop. A window
+  // fitted to the line box cut the number's top and bottom off on phones.
   const big = "num block h-[1.3em] text-7xl leading-[1.3em] font-extrabold tracking-tight";
   if (reduce) {
     return (
@@ -302,8 +305,13 @@ function Count({ before, after, reduce }: { before: number; after: number; reduc
       </span>
     );
   }
+  const fade = "linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent)";
   return (
-    <span aria-hidden="true" className="relative mt-1 block h-[1.3em] overflow-hidden text-7xl">
+    <span
+      aria-hidden="true"
+      className="relative block overflow-hidden py-[0.45em] text-7xl"
+      style={{ marginTop: "calc(0.25rem - 0.45em)", marginBottom: "-0.45em", maskImage: fade, WebkitMaskImage: fade }}
+    >
       <motion.span
         className={`${big} text-text-muted`}
         style={{ y: "0%" }}
@@ -313,7 +321,7 @@ function Count({ before, after, reduce }: { before: number; after: number; reduc
         {before}
       </motion.span>
       <motion.span
-        className={`${big} absolute inset-x-0 top-0 text-accent`}
+        className={`${big} absolute inset-x-0 top-[0.45em] text-accent`}
         style={{ y: "110%", scale: 1 }}
         animate={{ y: "0%", scale: [1, 1.18, 1] }}
         transition={{ delay: ROLL + 0.12, duration: 0.5, ease: "easeOut", scale: { delay: ROLL + 0.3, duration: 0.35 } }}
