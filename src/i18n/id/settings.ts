@@ -825,4 +825,8 @@ export const settings: Record<string, string> = {
   "Switch to dark mode": "Ganti ke mode gelap",
   "Switch to light mode": "Ganti ke mode terang",
   "Notifications, {n} new": "Notifikasi, {n} baru",
+  "Schedule": "Jadwal",
+  "Updates": "Update",
+  "Backup": "Backup",
+  "Filter notifications": "Filter notifikasi",
 };

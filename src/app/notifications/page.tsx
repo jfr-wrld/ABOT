@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, CalendarDays, ChevronRight, CloudOff, Megaphone, Trophy, type IconComponent } from "@/components/icons";
+import { Bell, CalendarDays, ChevronRight, CloudOff, LayoutGrid, Megaphone, Trophy, type IconComponent } from "@/components/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { HydrationGate } from "@/components/ui/Loading";
 import { EmptyArt } from "@/components/ui/EmptyArt";
@@ -11,6 +11,15 @@ import { relativeDay } from "@/lib/home";
 import { useNow } from "@/lib/useNow";
 import { useT } from "@/i18n";
 import type { InboxItem, InboxKind } from "@/lib/inbox";
+
+/** The filter row: every kind, each with its icon, and how many it holds. */
+const FILTERS: { value: InboxKind | "all"; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "schedule", label: "Schedule" },
+  { value: "record", label: "Records" },
+  { value: "update", label: "Updates" },
+  { value: "backup", label: "Backup" },
+];
 
 const ICON: Record<InboxKind, { Icon: IconComponent; tone: string }> = {
   schedule: { Icon: CalendarDays, tone: "text-accent" },
@@ -45,13 +54,37 @@ function Inbox() {
     const id = setTimeout(() => mark.current(), 1500);
     return () => clearTimeout(id);
   }, []);
-  const fresh = items.filter((i) => !seen.has(i.id));
-  const older = items.filter((i) => seen.has(i.id));
+  const [kind, setKind] = useState<InboxKind | "all">("all");
+  const shown = kind === "all" ? items : items.filter((i) => i.kind === kind);
+  const fresh = shown.filter((i) => !seen.has(i.id));
+  const older = shown.filter((i) => seen.has(i.id));
   return (
     <main className="flex flex-1 flex-col pb-10">
       <PageHeader title={t("Notifications")} back={{ href: "/", label: t("Home") }} />
       <div className="flex flex-col gap-4 px-4 pt-4">
-        {items.length === 0 ? (
+        <div className="-mx-4 overflow-x-auto px-4" role="group" aria-label={t("Filter notifications")}>
+          <div className="flex w-max gap-1.5 pb-1">
+            {FILTERS.map((f) => {
+              const n = f.value === "all" ? items.length : items.filter((i) => i.kind === f.value).length;
+              const Icon = f.value === "all" ? LayoutGrid : ICON[f.value].Icon;
+              const on = kind === f.value;
+              return (
+                <button
+                  key={f.value}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setKind(f.value)}
+                  className={`chip flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold ${on ? "border-accent bg-accent-tint text-text" : "text-text-muted"}`}
+                >
+                  <Icon aria-hidden="true" size={16} className={f.value === "all" ? "" : ICON[f.value].tone} />
+                  {t(f.label)}
+                  <span className="num text-xs text-text-muted">{n}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {shown.length === 0 ? (
           <div className="panel flex flex-col items-center gap-3 px-4 py-8 text-center">
             <EmptyArt icon={Bell} />
             <p className="text-sm text-text-muted">{t("You're all caught up.")}</p>

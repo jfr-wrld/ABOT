@@ -17,6 +17,13 @@ import { usePhaseTelemetry } from "./usePhaseTelemetry";
 import { Ring } from "./visuals";
 
 export const PHASE_ICON: Record<BodyPhaseType, typeof Flame> = { CUTTING: Flame, BULKING: Hammer, RECOMP: Scale, STRENGTH_PEAK: Zap };
+/** Each phase's own colour (globals.css): the card takes it on, so Home is not green on green. */
+export const PHASE_COLOR: Record<BodyPhaseType, string> = {
+  CUTTING: "var(--color-phase-cut)",
+  BULKING: "var(--color-phase-bulk)",
+  RECOMP: "var(--color-phase-recomp)",
+  STRENGTH_PEAK: "var(--color-phase-peak)",
+};
 
 /**
  * The body phase on Home and Profile, read in a glance: phase and week, block bar, trend weight
@@ -38,7 +45,11 @@ export function PhaseCommandCard({ now }: { now: number }) {
           {(Object.keys(PHASE_ICON) as BodyPhaseType[]).map((p) => {
             const Icon = PHASE_ICON[p];
             return (
-              <span key={p} className="tile flex size-9 items-center justify-center rounded-full border-2 border-surface bg-surface-2 text-text-muted transition-colors group-hover:text-accent">
+              <span
+                key={p}
+                className="tile flex size-9 items-center justify-center rounded-full border-2 border-surface"
+                style={{ color: PHASE_COLOR[p], backgroundColor: `color-mix(in oklab, ${PHASE_COLOR[p]} 14%, var(--color-surface))` }}
+              >
                 <Icon size={16} />
               </span>
             );
@@ -58,6 +69,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
   }
 
   const Icon = PHASE_ICON[m.phase.phaseType];
+  const color = PHASE_COLOR[m.phase.phaseType];
   const { meso, fuel } = m;
   const checkIn = weeklyCheckIn(m.phase, m.points, now);
   const eaten = eatenToday;
@@ -66,11 +78,22 @@ export function PhaseCommandCard({ now }: { now: number }) {
   const left = fuel.kcal - eaten;
 
   return (
-    <section aria-labelledby="phase-heading" className="panel overflow-hidden">
+    <section
+      aria-labelledby="phase-heading"
+      className="panel overflow-hidden"
+      style={{
+        backgroundColor: `color-mix(in oklab, ${color} 9%, var(--color-surface))`,
+        borderColor: `color-mix(in oklab, ${color} 32%, transparent)`,
+      }}
+    >
       {/* Compact on purpose: phase and week, then two figures. Detail lives one tap away on /phase. */}
       <Link href="/phase" className="flex flex-col gap-2.5 px-3 pb-2.5 pt-3 hover:bg-ink/[0.02]">
         <div className="flex items-center gap-2">
-          <span aria-hidden="true" className="tile flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent">
+          <span
+            aria-hidden="true"
+            className="tile flex size-7 shrink-0 items-center justify-center rounded-full"
+            style={{ color, backgroundColor: `color-mix(in oklab, ${color} 18%, transparent)` }}
+          >
             <Icon size={14} />
           </span>
           <h2 id="phase-heading" className="min-w-0 truncate text-sm font-bold">
@@ -82,7 +105,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
           {meso.deload && !meso.finished && <span className="shrink-0 rounded-full bg-warmup/15 px-1.5 py-px text-[11px] font-bold text-warmup">{t("Deload")}</span>}
           {/* Something waits on the phase page: the week's check-in, or the end-of-block summary. */}
           {(meso.finished || (checkIn && checkIn.kind !== "need_weighins")) && (
-            <span className="shrink-0 rounded-full bg-accent px-1.5 py-px text-[11px] font-bold text-on-accent">
+            <span className="shrink-0 rounded-full px-1.5 py-px text-[11px] font-bold" style={{ backgroundColor: color, color: "var(--color-bg)" }}>
               {meso.finished ? t("See what's next") : t("Check-in")}
             </span>
           )}
@@ -95,7 +118,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
         <div className="grid grid-cols-2 gap-3">
           <div className="min-w-0">
             <p className="field-label">{left >= 0 ? t("Left today") : t("Over today")}</p>
-            <p className="num text-lg font-bold leading-tight text-accent">
+            <p className="num text-lg font-bold leading-tight" style={{ color }}>
               {Math.abs(left).toLocaleString(t.locale)}
               <span className="ml-0.5 text-xs font-semibold text-text-muted">{t("of {n} kcal", { n: fuel.kcal.toLocaleString(t.locale) })}</span>
             </p>

@@ -18,6 +18,12 @@
   --color-pr: #f5c542; /* gold: personal records only (owner, 2026-11-15) */
   --color-warmup: #7dd3fc; /* sky: light warm-up sets, kept clear of the record gold */
   --color-caution: #fb923c; /* orange: the coach calling a step back */
+  /* Body phase colours (owner, 2026-11-15: Home should not be all green): cut burns (orange),
+     lean bulk builds (blue), recomp balances (violet), strength peaks (red). */
+  --color-phase-cut: #fb923c;
+  --color-phase-bulk: #60a5fa;
+  --color-phase-recomp: #c084fc;
+  --color-phase-peak: #f87171;
   --color-dropset: #c084fc;
   --color-failure: #f87171;
   /* Theme-aware tints: "ink" is white on the dark theme and black on the light one, so
@@ -79,6 +85,10 @@
   --color-pr: #8a5d00;
   --color-warmup: #0369a1;
   --color-caution: #c2410c;
+  --color-phase-cut: #c2410c;
+  --color-phase-bulk: #1d4ed8;
+  --color-phase-recomp: #7e22ce;
+  --color-phase-peak: #b91c1c;
   --color-dropset: #7e22ce;
   --color-failure: #b91c1c;
   --color-ink: #000000;
@@ -142,6 +152,10 @@
   --color-pr: #f5c542;
   --color-warmup: #7dd3fc;
   --color-caution: #fb923c;
+  --color-phase-cut: #fb923c;
+  --color-phase-bulk: #60a5fa;
+  --color-phase-recomp: #c084fc;
+  --color-phase-peak: #f87171;
   --color-dropset: #c084fc;
   --color-failure: #f87171;
   --color-ink: #ffffff;

@@ -24,6 +24,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LIST_ITEM } from "@/components/motion/listItem";
 import { useShake } from "@/lib/useShake";
 import { EmptyArt } from "@/components/ui/EmptyArt";
+import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
 
 /**
  * The Workout tab when no workout is running: an empty start, then My Routines and the Template
@@ -55,6 +56,7 @@ export function RoutineLibrary() {
   const [startBlocked, setStartBlocked] = useState<Routine | null>(null);
   // Someone with no routines yet lands on the templates.
   const [tab, setTab] = useState<"mine" | "vault">(() => (routines.length > 0 ? "mine" : "vault"));
+  const [view, setView] = useViewMode("routines");
 
   const folders = new Map<string, Routine[]>();
   for (const r of [...routines].sort((a, b) => a.name.localeCompare(b.name))) {
@@ -125,16 +127,22 @@ export function RoutineLibrary() {
         >
           {t("Start an empty workout")}
         </Button>
-        <Tabs
-          id="routines"
-          label={t("Routines")}
-          tabs={[
-            { value: "mine", label: t("My Routines") },
-            { value: "vault", label: t("Templates") },
-          ]}
-          value={tab}
-          onChange={setTab}
-        />
+        <div className="flex items-end gap-2">
+          <div className="min-w-0 flex-1">
+            <Tabs
+              id="routines"
+              label={t("Routines")}
+              tabs={[
+                { value: "mine", label: t("My Routines") },
+                { value: "vault", label: t("Templates") },
+              ]}
+              value={tab}
+              onChange={setTab}
+            />
+          </div>
+          {/* List or a two-column grid, for both tabs; remembered on this phone. */}
+          <ViewToggle value={view} onChange={setView} />
+        </div>
         {tab === "mine" ? (
         <div {...tabPanelProps("routines", "mine")} className="flex flex-col gap-6 outline-none">
           {routines.length === 0 && (
@@ -153,11 +161,11 @@ export function RoutineLibrary() {
               <h2 id={`folder-${folder || "none"}`} className="text-sm font-semibold text-text-muted">
                 {folder || (folderNames.length > 1 ? t("No folder") : t("All routines"))}
               </h2>
-              <ul className="mt-2 flex flex-col gap-3">
+              <ul className={`mt-2 ${view === "grid" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}`}>
                 <AnimatePresence initial={false}>
                   {folders.get(folder)!.map((r) => (
                     <motion.li key={r.id} {...LIST_ITEM} className="overflow-hidden">
-                      <RoutineCard routine={r} byId={byId} lastDone={lastDoneText(lastDone[r.id], now, t)} onStart={() => start(r)} onDuplicate={() => duplicate(r.id)} onDelete={() => setToDelete(r)} />
+                      <RoutineCard grid={view === "grid"} routine={r} byId={byId} lastDone={lastDoneText(lastDone[r.id], now, t)} onStart={() => start(r)} onDuplicate={() => duplicate(r.id)} onDelete={() => setToDelete(r)} />
                     </motion.li>
                   ))}
                 </AnimatePresence>
@@ -167,7 +175,7 @@ export function RoutineLibrary() {
         </div>
         ) : (
           <div {...tabPanelProps("routines", "vault")} className="outline-none">
-            <TemplateVault onStart={start} />
+            <TemplateVault onStart={start} grid={view === "grid"} />
           </div>
         )}
       </div>

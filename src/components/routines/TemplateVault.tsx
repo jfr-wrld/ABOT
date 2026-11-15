@@ -19,7 +19,7 @@ import { feedback } from "@/lib/feedback";
 
 
 /** Ready-made programs: filter by split, start one now, or save an editable copy. */
-export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
+export function TemplateVault({ onStart, grid = false }: { onStart: (r: Routine) => void; grid?: boolean }) {
   const [split, setSplit] = useState<Split | "all">("all");
   const [saved, setSaved] = useState<Record<string, string>>({});
   const t = useT();
@@ -58,10 +58,10 @@ export function TemplateVault({ onStart }: { onStart: (r: Routine) => void }) {
         </div>
       </div>
 
-      <ul className="flex flex-col gap-3" aria-label={t("Templates")}>
+      <ul className={grid ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"} aria-label={t("Templates")}>
         {shown.map((tpl) => (
           <li key={tpl.id}>
-            <TemplateCard template={tpl} savedId={saved[tpl.id]} onStart={() => onStart(templateToRoutine(tpl))} onSave={() => save(tpl)} />
+            <TemplateCard grid={grid} template={tpl} savedId={saved[tpl.id]} onStart={() => onStart(templateToRoutine(tpl))} onSave={() => save(tpl)} />
           </li>
         ))}
       </ul>
@@ -87,7 +87,9 @@ function TemplateCard({
   savedId,
   onStart,
   onSave,
+  grid = false,
 }: {
+  grid?: boolean;
   template: RoutineTemplate;
   savedId?: string;
   onStart: () => void;
@@ -97,6 +99,40 @@ function TemplateCard({
   const phase = useSettingsStore((s) => (s.bodyPhase?.isActive ? s.bodyPhase.phaseType : null));
   const splitLabel = SPLITS.find((s) => s.value === tpl.split)?.label;
   const muscles = topMuscles(tpl);
+  if (grid) {
+    return (
+      <article aria-labelledby={`${tpl.id}-title`} className="flex h-full flex-col rounded-card border bg-surface p-3">
+        <ul aria-label={t("Muscles worked")} className="-ml-1 flex">
+          {muscles.map((m) => (
+            <li key={m} title={muscleLabel(m, t)}>
+              <MuscleIcon muscle={m} size={28} />
+              <span className="sr-only">{muscleLabel(m, t)}</span>
+            </li>
+          ))}
+        </ul>
+        <h3 id={`${tpl.id}-title`} className="mt-2 line-clamp-2 text-sm font-bold leading-snug text-text">
+          {tpl.name}
+        </h3>
+        <p className="num mt-0.5 text-xs text-text-muted">
+          {[splitLabel ? t(splitLabel) : "", `~${t("{n} min", { n: estimateMinutes(tpl) })}`].filter(Boolean).join(" · ")}
+        </p>
+        <div className="mt-auto flex gap-2 pt-3">
+          <Button variant="primary" onClick={onStart} aria-label={t("Start workout: {name}", { name: tpl.name })} className="min-h-10 min-w-0 flex-1 whitespace-nowrap">
+            <Play aria-hidden="true" size={16} /> {t("Start")}
+          </Button>
+          {savedId ? (
+            <Link href={routineEditPath(savedId)} aria-label={t("Saved, edit")} className="tap flex size-10 shrink-0 items-center justify-center rounded-lg raised text-accent">
+              <Check aria-hidden="true" size={16} />
+            </Link>
+          ) : (
+            <button type="button" onClick={onSave} aria-label={t("Save to My Routines: {name}", { name: tpl.name })} className="tap flex size-10 shrink-0 items-center justify-center rounded-lg raised text-text-muted hover:text-text">
+              <Copy aria-hidden="true" size={16} />
+            </button>
+          )}
+        </div>
+      </article>
+    );
+  }
   return (
     <article
       aria-labelledby={`${tpl.id}-title`}

@@ -23,9 +23,12 @@ export function RoutineCard({
   onDuplicate,
   onDelete,
   lastDone,
+  grid = false,
 }: {
   /** When it was last trained, for "Last done 3 days ago". */
   lastDone?: string;
+  /** A compact tile for the two-column grid view. */
+  grid?: boolean;
   routine: Routine;
   byId: Record<string, Exercise>;
   onStart: () => void;
@@ -37,6 +40,36 @@ export function RoutineCard({
   const ssCount = new Set(Object.values(supersetLabels(r.exercises)).map((x) => x.letter)).size;
   const empty = r.exercises.length === 0;
   const icon = "tap flex size-11 shrink-0 items-center justify-center rounded-xl raised text-text-muted hover:text-text";
+  if (grid) {
+    const small = "tap flex size-9 shrink-0 items-center justify-center rounded-lg raised text-text-muted hover:text-text";
+    return (
+      <article aria-labelledby={`routine-${r.id}`} className="flex h-full flex-col rounded-card border bg-surface p-3">
+        <MusclesWorked sum={sum} />
+        <h3 id={`routine-${r.id}`} className="mt-2 line-clamp-2 text-sm font-bold leading-snug tracking-tight">
+          {r.name}
+        </h3>
+        <p className="num mt-0.5 text-xs text-text-muted">
+          {empty ? t("No exercises yet") : [t.n(r.exercises.length, "{n} exercise", "{n} exercises"), sum.minutes > 0 ? `~${t("{n} min", { n: sum.minutes })}` : ""].filter(Boolean).join(" · ")}
+        </p>
+        <div className="mt-auto flex flex-col gap-2 pt-3">
+          <Button variant="primary" onClick={onStart} disabled={empty} aria-label={t("Start {name}", { name: r.name })} className="min-h-10 w-full whitespace-nowrap">
+            <Play aria-hidden="true" size={16} /> {t("Start")}
+          </Button>
+          <div className="flex justify-between">
+            <Link href={routineEditPath(r.id)} aria-label={t("Edit {name}", { name: r.name })} className={small}>
+              <Pencil aria-hidden="true" size={16} />
+            </Link>
+            <button type="button" onClick={onDuplicate} aria-label={t("Duplicate {name}", { name: r.name })} className={small}>
+              <Copy aria-hidden="true" size={16} />
+            </button>
+            <button type="button" onClick={onDelete} aria-label={t("Delete {name}", { name: r.name })} className={`${small} hover:!text-failure`}>
+              <Trash2 aria-hidden="true" size={16} />
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  }
   return (
     <article aria-labelledby={`routine-${r.id}`} className="rounded-card border bg-surface p-4">
       <header className="flex items-start justify-between gap-3">
