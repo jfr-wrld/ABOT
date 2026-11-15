@@ -154,11 +154,14 @@ async function main() {
   check("all three rows read On", onCount === 3, `${onCount} rows`);
 
   // 5. Turned down for good in Android: back in ABOT the row offers Settings, which opens
-  //    ABOT's notification page.
-  shell(`pm revoke ${PKG} android.permission.POST_NOTIFICATIONS`);
-  shell(`pm set-permission-flags ${PKG} android.permission.POST_NOTIFICATIONS user-set user-fixed`);
+  //    ABOT's notification page. In that order, like a lifter: ABOT goes to the background
+  //    first (Android saves its state), then the permission is turned off, which stops ABOT's
+  //    process; coming back recreates it on the page it left (MainActivity).
   shell("input keyevent KEYCODE_HOME");
   await sleep(1200);
+  shell(`pm revoke ${PKG} android.permission.POST_NOTIFICATIONS`);
+  shell(`pm set-permission-flags ${PKG} android.permission.POST_NOTIFICATIONS user-set user-fixed`);
+  await sleep(800);
   await openApp();
   page = await attach();
   watchPage(page);
