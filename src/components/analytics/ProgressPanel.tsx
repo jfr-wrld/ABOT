@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { motion, type Variants } from "framer-motion";
-import { CalendarDays, ChevronRight, Flame, Hammer } from "lucide-react";
+import { CalendarDays, ChevronRight, Flame, Hammer, TrendingUp } from "@/components/icons";
 import { PHASE_ICON } from "@/components/phase/PhaseCommandCard";
 import { usePhaseTelemetry } from "@/components/phase/usePhaseTelemetry";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -22,6 +22,7 @@ import { muscleSplit } from "@/lib/calc";
 import { relativeDay } from "@/lib/home";
 import { buildPeriodStoryData } from "@/lib/story-data";
 import { useT } from "@/i18n";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 /** Sections arrive in reading order, a beat apart, so the page settles top to bottom once. */
 const section: Variants = {
@@ -62,6 +63,7 @@ export function ProgressPanel() {
     <div className="flex flex-col gap-3">
       {d.completed.length === 0 ? (
         <section className="panel flex flex-col items-center gap-3 p-6 text-center">
+          <EmptyArt icon={TrendingUp} />
           <p className="text-sm text-text-muted">
             {t("Nothing to chart yet. Finish a workout and your volume, streak, muscles and main lifts show up here.")}
           </p>

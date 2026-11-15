@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Trash2 } from "@/components/icons";
 import type { SetType } from "@/types/workout";
 import { SET_TYPE_META } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";

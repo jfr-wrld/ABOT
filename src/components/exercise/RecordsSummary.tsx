@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Trophy } from "lucide-react";
+import { Trophy } from "@/components/icons";
 import type { Exercise, PersonalRecord, PRKind } from "@/types/workout";
 import { buildPRTable, variantKey } from "@/lib/calc";
 import { formatWeight } from "@/lib/units";

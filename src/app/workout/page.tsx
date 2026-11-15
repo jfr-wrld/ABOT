@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRoutineStore } from "@/store/useRoutineStore";
-import { Plus } from "lucide-react";
+import { Plus, Dumbbell } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { getActivePersistence } from "@/store/persistence";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -30,6 +30,7 @@ import { suggestNext, todaysTargets } from "@/lib/exercise-suggest";
 import { muscleText } from "@/lib/home";
 import { isTimeOfDayName, muscleWorkoutName } from "@/lib/workout-name";
 import { MUSCLE_GROUP_LABELS } from "@/types/workout";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 const NO_PRS: Record<string, PRKind[]> = {};
 
@@ -161,9 +162,10 @@ function WorkoutScreen() {
 
       <div className="flex flex-col gap-3 px-3 pt-4">
         {active.exercises.length === 0 && (
-          <p className="panel px-4 py-6 text-center text-sm text-text-muted">
-            {t("This workout has no exercises yet. Add one below to start logging sets.")}
-          </p>
+          <div className="panel flex flex-col gap-3 px-4 py-6 text-center">
+            <EmptyArt icon={Dumbbell} />
+            <p className="text-sm text-text-muted">{t("This workout has no exercises yet. Add one below to start logging sets.")}</p>
+          </div>
         )}
         <AnimatePresence initial={false}>
         {active.exercises.map((item, i) => (

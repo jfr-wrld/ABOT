@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BellRing, ChevronDown, Copy, Download, LockKeyhole, Share, SquarePlus, Timer, type LucideIcon } from "lucide-react";
+import { BellRing, ChevronDown, Copy, Download, LockKeyhole, Share, SquarePlus, Timer, type IconComponent } from "@/components/icons";
 import { Sheet } from "@/components/ui/Sheet";
 import { useGetApp } from "@/store/useGetApp";
 import { APK_URL, MIN_ANDROID } from "@/lib/get-app";
@@ -11,7 +11,7 @@ import { useT } from "@/i18n";
 import { CONTACT_EMAIL } from "@/lib/social";
 
 /** What the app does that a browser tab cannot: each line is a real native feature. */
-export const APP_PERKS: { icon: LucideIcon; title: string }[] = [
+export const APP_PERKS: { icon: IconComponent; title: string }[] = [
   { icon: LockKeyhole, title: "Your set and rest timer on the lock screen" },
   { icon: Timer, title: "Rest alarm with the screen off" },
   { icon: BellRing, title: "Reminders that arrive even when ABOT is closed" },

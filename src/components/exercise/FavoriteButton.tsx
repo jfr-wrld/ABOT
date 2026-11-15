@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Star } from "lucide-react";
+import { Star } from "@/components/icons";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
@@ -38,11 +38,11 @@ export function FavoriteButton({ id, name, tone = "plain" }: { id: string; name:
       }}
       className={`flex size-11 shrink-0 items-center justify-center transition-colors ${
         tone === "overlay"
-          ? `rounded-full bg-black/40 backdrop-blur hover:bg-black/60 ${on ? "text-accent" : "text-white"}`
+          ? `rounded-full glass-btn ${on ? "text-accent" : "text-white"}`
           : `rounded-ctl hover:bg-ink/[0.05] ${on ? "text-accent" : "text-text-muted hover:text-text"}`
       }`}
     >
-      <Star aria-hidden="true" size={18} fill={on ? "currentColor" : "none"} />
+      <Star aria-hidden="true" size={18} variant={on ? "duotone" : "linear"} />
     </button>
   );
 }

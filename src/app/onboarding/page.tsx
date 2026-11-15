@@ -10,7 +10,7 @@ import { markOnboardingSeen } from "@/lib/onboarding";
 import { AppScene, DeviceScene, LogSetScene, RestScene } from "@/components/onboarding/Illustrations";
 import { usePlatform } from "@/components/get-app/usePlatform";
 import { APK_URL } from "@/lib/get-app";
-import { Download } from "lucide-react";
+import { Download } from "@/components/icons";
 import { PlanSaved, PlanSetup, todaysPlanned } from "@/components/plan/PlanSetup";
 import { applyPlan, type AppliedPlan } from "@/lib/apply-plan";
 import { defaultAnswers } from "@/lib/training-plan";

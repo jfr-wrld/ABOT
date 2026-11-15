@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { LayoutGroup, MotionConfig, motion } from "framer-motion";
-import { ArrowUpRight, Check, Crosshair, Pause, Play, Plus, X, Zap } from "lucide-react";
+import { ArrowUpRight, Check, Crosshair, Pause, Play, Plus, X, Zap } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useHydration } from "@/store/hydration";
@@ -16,7 +16,7 @@ import type { WeightUnit, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { usePagePath } from "@/components/layout/usePagePath";
 import { feedback } from "@/lib/feedback";
 import { isNativeApp } from "@/lib/native/files";
-import { isAppActive, useAppActive } from "@/lib/native/app-active";
+import { isAppActive } from "@/lib/native/app-active";
 import { pageRingsRestOver } from "@/lib/rest-alert";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { supersetLabels, type SupersetHandoff } from "@/lib/superset";
@@ -193,7 +193,6 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
       transition={ISLAND_SPRING}
       className={`${capsule} w-full flex-col items-stretch ${open ? "!rounded-[28px]" : "h-14 rounded-[28px]"}`}
     >
-      <LiveWave paused={paused} beat={`${done}:${paused}`} />
       <button
         type="button"
         onClick={() => {
@@ -277,73 +276,6 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
         <div className="h-full bg-accent transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${fraction * 100}%` }} />
       </div>
     </motion.div>
-  );
-}
-
-/**
- * A filled wave across 0..400 (two bar widths) with whole periods, so sliding by half loops
- * cleanly: the crest runs along y = 8 +/- amp and the shape is filled down to the bottom (y = 40).
- */
-function wavePath(period: number, amp: number): string {
-  let d = "";
-  for (let x = 0; x <= 400; x += 4) d += `${x === 0 ? "M" : "L"}${x} ${(14 + amp * Math.sin((2 * Math.PI * x) / period)).toFixed(2)}`;
-  return `${d} L400 40 L0 40 Z`;
-}
-
-/** Three filled swells: a Volt back wave, a brighter Volt front wave the other way, a light crest. */
-const WAVES = [
-  { d: wavePath(200, 9), color: "var(--color-accent)", opacity: 0.16, run: "6s", breathe: "2.6s", reverse: true },
-  { d: wavePath(100, 7), color: "var(--color-accent)", opacity: 0.26, run: "3.8s", breathe: "1.9s", reverse: false },
-  { d: wavePath(400 / 6, 4), color: "#ffffff", opacity: 0.07, run: "2.8s", breathe: "3.2s", reverse: false },
-];
-
-/** How long the wave moves after something happens, before it holds still. */
-const WAVE_MOVES_MS = 4000;
-
-/**
- * The running bar's wave: solid swells along its bottom edge that rise and fall for a few
- * seconds whenever the workout moves on (a set ticked, a start, a resume), then hold still, and
- * sink to a thin floor when it is paused. A wave that never stopped kept the screen redrawing
- * for the whole workout, which cost real battery.
- */
-function LiveWave({ paused, beat }: { paused: boolean; beat: string }) {
-  const active = useAppActive();
-  const [movingFor, setMovingFor] = useState<string | null>(null);
-  useEffect(() => {
-    if (!active) return;
-    // A new beat (or coming back to the app) starts a few seconds of movement.
-    const start = setTimeout(() => setMovingFor(beat), 0);
-    const stop = setTimeout(() => setMovingFor(null), WAVE_MOVES_MS);
-    return () => {
-      clearTimeout(start);
-      clearTimeout(stop);
-    };
-  }, [beat, active]);
-  const still = movingFor !== beat;
-  return (
-    <span
-      aria-hidden="true"
-      data-paused={paused || undefined}
-      data-still={still || undefined}
-      className="live-wave pointer-events-none absolute inset-x-0 top-5 h-9 overflow-hidden"
-    >
-      {WAVES.map((w, i) => (
-        <span
-          key={i}
-          className="live-wave-amp absolute inset-0"
-          style={{ "--breathe": w.breathe, animationDelay: `${-i * 0.7}s` } as React.CSSProperties}
-        >
-          <svg
-            viewBox="0 0 400 40"
-            preserveAspectRatio="none"
-            className="live-wave-line absolute top-0 left-0 h-full w-[200%]"
-            style={{ "--run": w.run, animationDirection: w.reverse ? "reverse" : "normal" } as React.CSSProperties}
-          >
-            <path d={w.d} fill={w.color} fillOpacity={w.opacity} />
-          </svg>
-        </span>
-      ))}
-    </span>
   );
 }
 

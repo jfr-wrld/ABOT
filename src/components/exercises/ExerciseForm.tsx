@@ -13,7 +13,7 @@ import { usePhotoPicker } from "@/components/profile/usePhotoPicker";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { EXERCISE_PHOTO_TARGET } from "@/lib/photo";
 import { isOwnPhoto, ownPhotos } from "@/lib/exercise-photo";
-import { Camera, X } from "lucide-react";
+import { Camera, X } from "@/components/icons";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];

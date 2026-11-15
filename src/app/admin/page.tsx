@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowLeft, Cpu, Database, Dumbbell, Gauge, KeyRound, ListChecks, Lock, SlidersHorizontal, Smartphone, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Cpu, Database, Dumbbell, Gauge, KeyRound, ListChecks, Lock, SlidersHorizontal, Smartphone, type IconComponent } from "@/components/icons";
 import { adminMode, listCodes, stats, type AdminCode, type AdminMode, type AdminStats } from "@/lib/admin-api";
 import { HydrationGate } from "@/components/ui/Loading";
 import { OverviewModule, DatabaseModule, DeviceModule } from "@/components/admin/SystemModules";
@@ -27,7 +27,7 @@ const PIN = process.env.NEXT_PUBLIC_ABOT_ADMIN_PIN || (DEV_TOOLS ? "2026" : "");
 const UNLOCK_KEY = "abot.admin-unlocked";
 
 type ModuleId = "overview" | "money" | "licenses" | "algorithms" | "exercises" | "routines" | "database" | "device";
-const ALL_MODULES: { id: ModuleId; label: string; icon: LucideIcon }[] = [
+const ALL_MODULES: { id: ModuleId; label: string; icon: IconComponent }[] = [
   { id: "overview", label: "Overview", icon: Gauge },
   { id: "money", label: "Monetization", icon: SlidersHorizontal },
   { id: "licenses", label: "Licenses", icon: KeyRound },

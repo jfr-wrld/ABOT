@@ -4,7 +4,7 @@ import { safeReturnPath } from "@/lib/safe-path";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "@/components/icons";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { Button } from "@/components/ui/Button";
 import { SyncError } from "@/components/sync/SyncError";

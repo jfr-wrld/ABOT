@@ -7,7 +7,7 @@ import { animate, motion, useMotionValue, useReducedMotionConfig, useSpring, use
 import { feedback } from "@/lib/feedback";
 /** Softer than the press spring, so the lens overshoots a touch, like liquid settling. */
 const LENS_SPRING = { type: "spring", stiffness: 380, damping: 24, mass: 0.8 } as const;
-import { Dumbbell, House, Search } from "lucide-react";
+import { Dumbbell, House, Search } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useHydration } from "@/store/hydration";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -212,7 +212,8 @@ function NavBar({ pathname }: { pathname: string | null }) {
               >
                 <span className="relative">
                   {Icon ? (
-                    <Icon aria-hidden="true" size={21} strokeWidth={on ? 2.25 : 1.75} className={`transition-colors duration-150 ${on ? "text-accent" : ""}`} />
+                    // The lit tab is drawn solid (Bold Duotone), the others in line: a clear "you are here".
+                    <Icon aria-hidden="true" size={22} variant={on ? "duotone" : "linear"} className={`transition-colors duration-150 ${on ? "text-accent" : ""}`} />
                   ) : (
                     // The lifter's own plate; dimmed until it is the lit tab, like the other icons.
                     <span aria-hidden="true" className={`block transition-opacity ${on ? "" : "opacity-60 grayscale"}`}>

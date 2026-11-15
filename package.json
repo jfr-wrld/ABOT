@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.3",
+    "@iconify-json/solar": "^1.2.16",
     "@playwright/test": "1.63.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^22.20.5",

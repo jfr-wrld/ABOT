@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, Dumbbell, Home as HomeIcon, ListOrdered, PersonStanding, Play, Timer } from "lucide-react";
+import { ArrowLeft, Bell, CalendarDays, Check, ChevronDown, Dumbbell, Home as HomeIcon, ListOrdered, PersonStanding, Play, Timer } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";

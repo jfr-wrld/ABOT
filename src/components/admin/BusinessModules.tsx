@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Copy } from "lucide-react";
+import { Copy } from "@/components/icons";
 import { useRemoteConfig, type RemoteConfig } from "@/lib/remote-config";
 import { createCode, grantByEmail, listOrders, saveConfig, setCodeActive, simulateOrder, type AdminCode, type AdminMode, type AdminOrder, type SimulatedOutcome } from "@/lib/admin-api";
 import { generateCode, type Grant } from "@/lib/redeem-service";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Copy, ListOrdered, Play, Timer, Zap } from "lucide-react";
+import { Check, Copy, ListOrdered, Play, Timer, Zap } from "@/components/icons";
 import type { MuscleGroup, Routine } from "@/types/workout";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -80,7 +80,7 @@ function topMuscles(tpl: RoutineTemplate, n = 3): MuscleGroup[] {
 
 /**
  * One template, read at a glance: split, time and size as icons with figures, the muscles as
- * lit figures, and the lifts as one line of text with their sets x reps.
+ * lit figures, and the lifts folded under "See exercises".
  */
 function TemplateCard({
   template: tpl,

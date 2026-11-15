@@ -2,7 +2,7 @@
 
 import { GetAppNudge } from "@/components/get-app/GetAppNudge";
 import { useState } from "react";
-import { BellRing, CalendarDays, CalendarPlus } from "lucide-react";
+import { BellRing, CalendarDays, CalendarPlus } from "@/components/icons";
 import { useReminderStore, routineInfo } from "@/store/useReminderStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useNow } from "@/lib/useNow";

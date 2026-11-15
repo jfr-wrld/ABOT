@@ -54,6 +54,28 @@ hairlines), each routine and template, and each section of the phase page. Radiu
 `rounded-card` (16px) for cards and sheets, `rounded-ctl` for controls, pills only for chips. The
 plate outlines behind Home's hero and the intro stay gone.
 
+## Icons
+
+Solar by 480 Design (CC BY 4.0, credited in About), owner's choice 2026-11-15 over Lucide's thin
+default lines. Meaningful icons are Bold Duotone: a solid shape over a faded second layer, which
+sits well in the raised tiles. Small UI glyphs (arrows, chevrons, close, plus, minus, check,
+grips) are Linear so they stay light, and so is any icon drawn at 16 px or less, where the two
+duotone layers would close up into a blot. The dock draws the current tab solid and the others in
+line. Import from `@/components/icons` only; a new icon goes into `scripts/make-icons.mjs`, which
+writes `src/components/icons/solar.generated.tsx` from the `@iconify-json/solar` dev dependency
+(nothing is fetched at run time). Foods stay in Lucide, since Solar has almost none.
+
+## Empty states
+
+An empty state leads with `EmptyArt`: the subject's icon on a raised tile that floats with a
+slight tilt while a ring breathes out behind it (3.2 s loop, CSS only, still with reduced motion
+or Visual effects: Light), then one plain sentence and, where there is one, the next action.
+
+## Search
+
+Every search field is a soft grey pill (`search-pill`) set slightly into the page, with no
+outline until focused, as in GoPay.
+
 ## Settings
 
 A short list of groups (Account, Preferences, Support, Follow ABOT); each row opens its section
@@ -197,13 +219,8 @@ Owner brief 2026-11-08:
   empty it shows the set before it as the number to beat ("last 60 kg × 8"). Right: the clock
   with the live dot, and sets done ("7/16 sets"). The share of sets done runs as a Volt hairline
   along the bottom edge, the same mark the rest countdown uses.
-- **Wave while it runs** (owner brief 2026-11-10, "seperti wave Siri"; revised the same day: at
-  the bottom, solid, rising and falling). Along the bar's bottom edge, three filled swells (a Volt
-  back wave, a brighter Volt front wave running the other way, a faint light crest) drift sideways
-  at their own speeds while their height rises and falls from the floor, like a level breathing.
-  Paused, they sink to a thin floor: the bar reads as live or stopped at a glance. It is
-  transform-only CSS, so it costs the phone almost nothing; Lite effects and reduced motion hold
-  it still.
+- **No wave** (owner, 2026-11-15): the swells that used to run along the bar's bottom edge are
+  gone; the bar is calm glass, and the Volt hairline of sets done is the only moving mark.
 - **Shortcuts in the bar** (owner brief 2026-11-10). A tap opens the bar upward, the same shape
   growing (Dynamic Island), into four 56 px targets: Pause or Resume, Done set (Volt, the one
   primary; it ticks the set with the numbers the bar shows, so what you read is what is saved),

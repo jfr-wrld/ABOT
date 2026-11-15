@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { GymLocation } from "@/types/workout";
 import { InfoTip } from "@/components/ui/InfoTip";
-import { Check, LocateFixed, MapPin } from "lucide-react";
+import { Check, LocateFixed, MapPin } from "@/components/icons";
 import { currentPosition, openAppSettings, requestAccess } from "@/lib/native/permissions";
 import { isNativeApp } from "@/lib/native/files";
 import { findNearbyGyms, type NearbyGym } from "@/lib/nearby-gyms";
@@ -15,6 +15,7 @@ import { useT } from "@/i18n";
 import { NumberField } from "@/components/ui/NumberField";
 import { PLATE_SETS } from "@/lib/plate-calculator";
 import { equipmentUnit, gymSetup, setupPatch, standardSetup, type GymSetup } from "@/lib/gym-equipment";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 export function LocationsSection() {
   const { locations, add, update, setDefault } = useLocationStore();
@@ -36,7 +37,10 @@ export function LocationsSection() {
       </InfoTip>
 
       {locations.length === 0 ? (
-        <p className="text-sm text-text-muted">{t("No gyms yet.")}</p>
+        <div className="flex flex-col gap-2 text-center">
+          <EmptyArt icon={MapPin} />
+          <p className="text-sm text-text-muted">{t("No gyms yet.")}</p>
+        </div>
       ) : (
         <ul className="flex flex-col gap-2">
           {locations.map((l) => (

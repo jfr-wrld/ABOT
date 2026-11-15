@@ -5,7 +5,7 @@ import { GetAppNudge } from "@/components/get-app/GetAppNudge";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, useReducedMotionConfig } from "framer-motion";
-import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Pencil, Sparkles, Timer, Trophy } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Dumbbell, FileDown, Flame, House, Layers, ListOrdered, Pencil, Sparkles, Timer, Trophy } from "@/components/icons";
 import { RenameWorkoutSheet, SaveAsRoutineButton, UpdateRoutineCard } from "@/components/workout/SessionActions";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";

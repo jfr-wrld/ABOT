@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { create } from "zustand";
-import { KeyRound, X, Zap } from "lucide-react";
+import { KeyRound, X, Zap } from "@/components/icons";
 import { redeemLicenseCode, type Grant } from "@/lib/redeem-service";
 import { applyGrant } from "@/lib/entitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";

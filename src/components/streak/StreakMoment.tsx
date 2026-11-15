@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MotionConfig, motion, useReducedMotion } from "framer-motion";
-import { Share2 } from "lucide-react";
+import { Share2 } from "@/components/icons";
 import dynamic from "next/dynamic";
 
 // The share studio is not part of Home's first load; it is fetched in the background once the

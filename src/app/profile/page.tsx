@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Camera, Pencil, Settings } from "lucide-react";
+import { Camera, Pencil, Settings } from "@/components/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";

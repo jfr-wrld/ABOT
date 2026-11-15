@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
-import { ChevronDown, Mail, Smartphone } from "lucide-react";
+import { ChevronDown, Mail, Smartphone } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { useGetApp } from "@/store/useGetApp";
 import { usePlatform } from "@/components/get-app/usePlatform";
@@ -99,6 +99,7 @@ export function AboutSection() {
             {t("More exercises, mostly newer machines: Open Exercise Atlas (CC0 1.0).")}
           </li>
           <li>{t("Muscle map shapes: react-muscle-highlighter (MIT License).")}</li>
+          <li>{t("Icons: Solar by 480 Design (CC BY 4.0); foods in Lucide (ISC).")}</li>
           <li>{t("Type: Plus Jakarta Sans, Saira Semi Condensed, JetBrains Mono and Anton (SIL Open Font License).")}</li>
           <li>{t("Food values: Tabel Komposisi Pangan Indonesia (Kemenkes RI) and USDA FoodData Central (public domain).")}</li>
           <li>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, NotebookPen } from "lucide-react";
+import { ChevronDown, NotebookPen } from "@/components/icons";
 import type { Exercise, SessionExercise } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { variationLabel, variationsFor } from "@/data/variations";

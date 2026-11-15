@@ -1,5 +1,5 @@
 import { BackLink } from "@/components/navigation/BackLink";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "@/components/icons";
 import type { ReactNode } from "react";
 
 export function PageHeader({

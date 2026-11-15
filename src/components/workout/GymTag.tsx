@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, MapPin } from "lucide-react";
+import { Check, MapPin } from "@/components/icons";
 import { Sheet } from "@/components/ui/Sheet";
 import { useLocationStore } from "@/store/useLocationStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";

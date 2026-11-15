@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { Trophy } from "@/components/icons";
 import type { Exercise, WeightUnit, WorkoutSession } from "@/types/workout";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { Sparkline } from "@/components/phase/visuals";

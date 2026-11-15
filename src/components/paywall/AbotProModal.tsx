@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { Check, Minus, X, Zap } from "lucide-react";
+import { Check, Minus, X, Zap } from "@/components/icons";
 import { useEntitlements, usePaywallStore, updateEntitlement, autoClaimFounder } from "@/store/useEntitlements";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -141,7 +141,7 @@ export function AbotProModal() {
 
         {feature && (
           <p className="relative flex items-center gap-2 rounded-ctl border border-accent/40 bg-accent/[0.06] px-3 py-2 font-mono text-[11px] font-bold tracking-[0.1em] text-accent">
-            <Zap aria-hidden="true" size={14} className="shrink-0 fill-accent" />
+            <Zap aria-hidden="true" size={14} className="shrink-0 text-accent" />
             {t("Unlock feature: {name}", { name: t(PRO_FEATURE_LABEL[feature]) })}
           </p>
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Film, Image as ImageIcon, Share2 } from "lucide-react";
+import { Film, Image as ImageIcon, Share2 } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { ProBadge } from "@/components/paywall/ProBadge";
 import { feedback } from "@/lib/feedback";

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play, Plus } from "lucide-react";
+import { Play, Plus, ListChecks } from "@/components/icons";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -23,6 +23,7 @@ import { lastDoneByRoutine, lastDoneText } from "@/lib/routine-history";
 import { AnimatePresence, motion } from "framer-motion";
 import { LIST_ITEM } from "@/components/motion/listItem";
 import { useShake } from "@/lib/useShake";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 /**
  * The Workout tab when no workout is running: an empty start, then My Routines and the Template
@@ -137,11 +138,14 @@ export function RoutineLibrary() {
         {tab === "mine" ? (
         <div {...tabPanelProps("routines", "mine")} className="flex flex-col gap-6 outline-none">
           {routines.length === 0 && (
-            <p className="panel px-4 py-8 text-center text-sm text-text-muted">
-              {t(
-                "No routines saved. Create one, add its exercises and target sets, and you can start the same workout in one tap next time.",
-              )}
-            </p>
+            <div className="panel flex flex-col gap-3 px-4 py-8 text-center">
+              <EmptyArt icon={ListChecks} />
+              <p className="text-sm text-text-muted">
+                {t(
+                  "No routines saved. Create one, add its exercises and target sets, and you can start the same workout in one tap next time.",
+                )}
+              </p>
+            </div>
           )}
 
           {folderNames.map((folder) => (

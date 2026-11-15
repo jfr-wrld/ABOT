@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { BackLink } from "@/components/navigation/BackLink";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "@/components/icons";
 import { useT } from "@/i18n";
 import { CONTACT_EMAIL, type LegalDoc, type LegalLang } from "./legal-content";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Download, RefreshCw, Sparkles } from "lucide-react";
+import { Download, RefreshCw, Sparkles } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { isNativeApp } from "@/lib/native/files";
 import { useAppUpdate } from "@/store/useAppUpdate";

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
-import { Check, Dumbbell, House, Search, Trophy, WifiOff } from "lucide-react";
+import { Check, Dumbbell, House, Search, Trophy, WifiOff } from "@/components/icons";
 import { useT } from "@/i18n";
 
 /*

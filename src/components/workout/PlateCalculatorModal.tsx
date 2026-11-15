@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Minus, Plus, TriangleAlert } from "lucide-react";
+import { Minus, Plus, TriangleAlert } from "@/components/icons";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { useLocationStore } from "@/store/useLocationStore";

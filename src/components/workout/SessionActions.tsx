@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, ListPlus, RefreshCw } from "lucide-react";
+import { Check, ListPlus, RefreshCw } from "@/components/icons";
 import type { WorkoutSession } from "@/types/workout";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";

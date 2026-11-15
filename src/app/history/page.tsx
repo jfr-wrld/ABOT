@@ -8,7 +8,7 @@ import Link from "next/link";
 import { BackLink } from "@/components/navigation/BackLink";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { ChevronDown, ChevronLeft, Dumbbell, Layers, MoreHorizontal, Pencil, Play, Timer, Trash2, Trophy } from "lucide-react";
+import { ChevronDown, ChevronLeft, Dumbbell, Layers, MoreHorizontal, Pencil, Play, Timer, Trash2, Trophy } from "@/components/icons";
 import { RenameWorkoutSheet, SaveAsRoutineButton } from "@/components/workout/SessionActions";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Download, Image as ImageIcon, Trash2, X } from "lucide-react";
+import { Camera, Download, Image as ImageIcon, Trash2, X } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { getActiveRepository } from "@/store/persistence";

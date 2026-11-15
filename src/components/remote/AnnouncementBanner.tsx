@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { Megaphone, X } from "lucide-react";
+import { Megaphone, X } from "@/components/icons";
 import { useRemoteConfig } from "@/lib/remote-config";
 import { useT } from "@/i18n";
 

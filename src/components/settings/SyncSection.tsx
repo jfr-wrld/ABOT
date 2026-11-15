@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Cloud, CloudOff, RefreshCw } from "lucide-react";
+import { Cloud, CloudOff, RefreshCw } from "@/components/icons";
 import { useSyncStore } from "@/store/useSyncStore";
 import { useNow } from "@/lib/useNow";
 import { Button } from "@/components/ui/Button";

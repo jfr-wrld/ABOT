@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { Check, Dumbbell, ListChecks, Minus, Plus, ShoppingBasket } from "lucide-react";
+import { Check, Dumbbell, ListChecks, Minus, Plus, ShoppingBasket } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { MacroBar } from "@/components/phase/visuals";
 import { FoodPhoto } from "./FoodPhoto";

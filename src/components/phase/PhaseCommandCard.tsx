@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Beef, ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "lucide-react";
+import { ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "@/components/icons";
+import { Beef } from "lucide-react";
 import { addProtein, addWater, useTodayFuel } from "@/store/useFuelPacer";
 import { dayOf, useFoodLog } from "@/store/useFoodLog";
 import { useSettingsStore } from "@/store/useSettingsStore";

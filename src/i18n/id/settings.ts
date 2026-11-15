@@ -813,4 +813,5 @@ export const settings: Record<string, string> = {
   "Pro · beta": "Pro · beta",
   "Free": "Gratis",
   "Founder pass": "Founder pass",
+  "Icons: Solar by 480 Design (CC BY 4.0); foods in Lucide (ISC).": "Ikon: Solar oleh 480 Design (CC BY 4.0); makanan dari Lucide (ISC).",
 };

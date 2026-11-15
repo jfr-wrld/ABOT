@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "@/components/icons";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useLocationStore } from "@/store/useLocationStore";

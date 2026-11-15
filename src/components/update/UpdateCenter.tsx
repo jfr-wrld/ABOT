@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Download, Sparkles, X } from "lucide-react";
+import { Download, Sparkles, X } from "@/components/icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";

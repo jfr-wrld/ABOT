@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Image as ImageIcon, Share2, X } from "lucide-react";
+import { Download, Image as ImageIcon, Share2, X } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";

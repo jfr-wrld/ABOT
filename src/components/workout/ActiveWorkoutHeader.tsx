@@ -11,7 +11,7 @@ import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
 import { motion } from "framer-motion";
-import { MapPin, MoreHorizontal, Pause, Play, Timer, Trash2 } from "lucide-react";
+import { MapPin, MoreHorizontal, Pause, Play, Timer, Trash2 } from "@/components/icons";
 import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import { useT } from "@/i18n";
@@ -102,8 +102,9 @@ export function ActiveWorkoutHeader({
         </Link>
       )}
 
-      {/* Three figures and, right of Sets, the muscles worked so far as a small map. */}
-      <dl className="mt-3 grid grid-cols-[1.15fr_1fr_0.75fr_auto] gap-2">
+      {/* Three figures and, right of Sets, the muscles worked so far as a small map: four tiles
+          of one size, so the row reads as a set (volume shortens to "12.4k" past 10,000). */}
+      <dl className="mt-3 grid grid-cols-4 gap-2">
         <div className="tile min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
           <dt className="field-label flex items-center gap-1.5">
             {t("Duration")}

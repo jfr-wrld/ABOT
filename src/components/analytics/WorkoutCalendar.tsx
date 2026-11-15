@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/icons";
 import type { WorkoutSession } from "@/types/workout";
 import { monthGrid, sessionsByDay, startOfDay } from "@/lib/analytics";
 import { countSets, formatDuration, sessionDurationSec } from "@/lib/calc";

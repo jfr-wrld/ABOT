@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock } from "lucide-react";
+import { Lock } from "@/components/icons";
 import { useEntitlements } from "@/store/useEntitlements";
 import type { ProFeatureKey } from "@/lib/entitlements";
 import { useT } from "@/i18n";

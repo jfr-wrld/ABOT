@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Copy, ListOrdered, Pencil, Play, Timer, Trash2 } from "lucide-react";
+import { ChevronDown, Copy, ListOrdered, Pencil, Play, Timer, Trash2 } from "@/components/icons";
 import type { Exercise, Routine } from "@/types/workout";
 import { routineSummary, type RoutineSummary } from "@/lib/routine-summary";
 import { supersetLabels } from "@/lib/superset";
@@ -11,12 +11,10 @@ import { muscleLabel } from "@/components/exercise/MuscleTags";
 import { routineEditPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 
-/** Lifts named on a card; the rest show as "+N". */
-const PREVIEW = 5;
 
 /**
  * A saved routine, read like a Templates card: focus, time and size up top, the muscles as
- * lit figures, the lifts as one line of text with sets x reps, then Start and the edit actions.
+ * lit figures, the lifts folded under "See exercises", then Start and the edit actions.
  */
 export function RoutineCard({
   routine: r,
@@ -137,28 +135,30 @@ function LiftGrid({ sum, byId }: { sum: RoutineSummary; byId: Record<string, Exe
 }
 
 /**
- * The lifts as one quiet line of text (name and sets × reps), the first few and a count of the
- * rest: the card stays clean, with no photo strip (owner, 2026-11-15).
+ * The lifts folded away under one quiet row (owner, 2026-11-15: a simpler card). Opened, each
+ * lift is a line: its name, and sets × reps on the right (SS for a superset). A native
+ * <details>, so it opens by tap, keyboard or screen reader without any script.
  */
 export function LiftList({ items }: { items: { name: string; detail: string; superset?: boolean }[] }) {
   const t = useT();
-  const shown = items.slice(0, PREVIEW);
-  const more = items.length - shown.length;
+  if (items.length === 0) return null;
   return (
-    <ol aria-label={t("Exercises")} className="mt-3 flex flex-wrap gap-x-1 gap-y-0.5 border-t border-line pt-3 text-xs leading-relaxed text-text-muted">
-      {shown.map((l, i) => (
-        <li key={i} className="min-w-0">
-          <span className="text-text">{l.name}</span> <span className="num">{l.detail}</span>
-          {l.superset && <span className="ml-0.5 font-semibold text-text">SS</span>}
-          {(i < shown.length - 1 || more > 0) && <span aria-hidden="true"> ·</span>}
-        </li>
-      ))}
-      {more > 0 && (
-        <li className="num">
-          +{more}
-          <span className="sr-only"> {t.n(more, "more exercise", "more exercises")}</span>
-        </li>
-      )}
-    </ol>
+    <details className="group mt-3 border-t border-line">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 pt-1 text-sm font-semibold text-text-muted hover:text-text [&::-webkit-details-marker]:hidden">
+        {t("See exercises")}
+        <ChevronDown aria-hidden="true" size={18} className="transition-transform duration-200 group-open:rotate-180" />
+      </summary>
+      <ol aria-label={t("Exercises")} className="flex flex-col divide-y divide-line pb-1 text-sm">
+        {items.map((l, i) => (
+          <li key={i} className="flex min-h-9 items-center justify-between gap-3 py-1.5">
+            <span className="min-w-0 truncate">{l.name}</span>
+            <span className="num shrink-0 text-text-muted">
+              {l.superset && <span className="mr-1.5 rounded-full bg-accent-tint px-1.5 py-px text-[11px] font-bold text-text">SS</span>}
+              {l.detail}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </details>
   );
 }

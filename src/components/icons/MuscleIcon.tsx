@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { HeartPulse } from "lucide-react";
+import { HeartPulse } from "@/components/icons";
 import type { MuscleGroup } from "@/types/workout";
 import { regionLevels, type Region } from "@/components/anatomy/regions";
 import { BODY_BACK, BODY_FRONT } from "@/components/anatomy/bodyPaths.generated";

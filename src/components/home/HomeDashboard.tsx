@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, RotateCcw, Settings, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "lucide-react";
+import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, RotateCcw, Settings, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -48,6 +48,7 @@ import { asRoutine, comeback, dismissWelcomeBack, welcomeBackDismissed } from "@
 import { currentStreak, type StreakMoment as StreakMomentData } from "@/lib/streak-moment";
 import { StreakMoment } from "@/components/streak/StreakMoment";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 /** A machined module: Carbon fill, hairline edge, tight padding. */
 const TILE = "rounded-card border border-line bg-surface p-3";
@@ -790,7 +791,7 @@ function RecentWorkouts({ unit, byId, now }: { unit: "kg" | "lbs"; byId: Record<
       </div>
       {recent.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-card border bg-surface py-6 text-center">
-          <Dumbbell aria-hidden="true" size={22} className="text-text-muted" />
+          <EmptyArt icon={Dumbbell} />
           <p className="text-sm text-text-muted">{t("No workouts yet.")}</p>
         </div>
       ) : (

@@ -11,7 +11,7 @@ import { useT } from "@/i18n";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { ViewToggle, useViewMode, type ViewMode } from "@/components/ui/ViewToggle";
 import { muscleText } from "@/lib/home";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { ExerciseForm } from "@/components/exercises/ExerciseForm";
@@ -145,7 +145,7 @@ export function ExercisePicker({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t("Name, muscle or equipment")}
           autoComplete="off"
-          className="h-11 min-w-0 flex-1 rounded-ctl border border-line-strong bg-surface-2 px-3 text-base placeholder:text-text-muted"
+          className="h-11 min-w-0 flex-1 search-pill px-3 text-base placeholder:text-text-muted"
         />
         <ViewToggle value={view} onChange={setView} />
       </div>

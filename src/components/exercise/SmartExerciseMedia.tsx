@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { ExternalLink, Link2, Pause, Play, Trash2 } from "lucide-react";
+import { ExternalLink, Link2, Pause, Play, Trash2 } from "@/components/icons";
 import type { Exercise } from "@/types/workout";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { Button } from "@/components/ui/Button";

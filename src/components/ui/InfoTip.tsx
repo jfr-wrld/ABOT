@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type ReactNode } from "react";
-import { Info } from "lucide-react";
+import { Info } from "@/components/icons";
 import { useT } from "@/i18n";
 
 /**

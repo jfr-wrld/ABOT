@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BellOff } from "lucide-react";
+import { BellOff } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { syncPermission, useReminderStore } from "@/store/useReminderStore";
 import { isNativeApp } from "@/lib/native/files";

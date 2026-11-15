@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, Scale, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Scale, Trash2 } from "@/components/icons";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useBodyStore } from "@/store/useBodyStore";
 import { useSettingsStore } from "@/store/useSettingsStore";

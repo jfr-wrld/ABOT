@@ -5,7 +5,7 @@ import { Select } from "@/components/ui/Select";
 import { memo, useEffect, useRef, useState, type ComponentProps } from "react";
 import { setGridColumns } from "./setGrid";
 import { distanceUnit } from "@/lib/set-metrics";
-import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, BookOpen, Check, ChevronDown, ChevronUp, Flame, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpDown, BookOpen, Check, ChevronDown, ChevronUp, Flame, Link2, Link2Off, MoreHorizontal, Plus, Repeat, Timer, Trash2 } from "@/components/icons";
 import { useLocationStore } from "@/store/useLocationStore";
 import { gymSetup } from "@/lib/gym-equipment";
 import { warmupSets } from "@/lib/warmup";

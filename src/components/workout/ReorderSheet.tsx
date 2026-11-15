@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Reorder, useDragControls } from "framer-motion";
-import { ChevronDown, ChevronUp, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { Sheet } from "@/components/ui/Sheet";

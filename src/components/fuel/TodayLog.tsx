@@ -5,7 +5,7 @@ import { withMyFood } from "@/lib/my-foods";
 import { TargetBreakdown } from "@/components/phase/TargetBreakdown";
 import type { BodyPhaseType } from "@/lib/phase-engine";
 import { useMemo, useState } from "react";
-import { Copy, Plus, Trash2, Zap } from "lucide-react";
+import { Copy, Plus, Trash2, Zap, Utensils } from "@/components/icons";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
@@ -20,6 +20,7 @@ import type { FoodLogEntry } from "@/types/workout";
 import { newId } from "@/lib/id";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 const MEALS: MealSlot[] = ["breakfast", "lunch", "pre", "post", "dinner", "snack"];
 const BY_ID = Object.fromEntries(FOODS.map((f) => [f.id, f]));
@@ -114,9 +115,10 @@ export function TodayLog({
       </div>
 
       {entries.length === 0 ? (
-        <p className="rounded-card border border-line bg-surface p-5 text-center text-sm text-text-muted">
-          {t("Nothing logged today. Add a food, use a day plan, or copy yesterday.")}
-        </p>
+        <div className="flex flex-col gap-3 rounded-card border bg-surface p-5 text-center">
+          <EmptyArt icon={Utensils} />
+          <p className="text-sm text-text-muted">{t("Nothing logged today. Add a food, use a day plan, or copy yesterday.")}</p>
+        </div>
       ) : (
         MEALS.filter((m) => entries.some((e) => e.meal === m)).map((m) => {
           const rows = entries.filter((e) => e.meal === m);

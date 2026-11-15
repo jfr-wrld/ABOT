@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertTriangle, RotateCcw, Scissors, Shield, TrendingUp, Zap } from "lucide-react";
+import { AlertTriangle, RotateCcw, Scissors, Shield, TrendingUp, Zap } from "@/components/icons";
 import type { Exercise, SessionExercise, WeightUnit } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";

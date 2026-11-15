@@ -2,7 +2,7 @@
 
 import { useDeferredValue, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { LayoutGrid, List, Plus, Search, SlidersHorizontal, Star, X } from "lucide-react";
+import { LayoutGrid, List, Plus, Search, SlidersHorizontal, Star, X } from "@/components/icons";
 import { Sheet } from "@/components/ui/Sheet";
 import { feedback } from "@/lib/feedback";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
@@ -32,6 +32,7 @@ import { exercisePath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { muscleLabel, muscleNames } from "@/components/exercise/MuscleTags";
 import { useViewMode, type ViewMode } from "@/components/ui/ViewToggle";
+import { EmptyArt } from "@/components/ui/EmptyArt";
 
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
@@ -144,7 +145,7 @@ function LibraryScreen() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("Name, muscle or equipment")}
             autoComplete="off"
-            className="sunk h-11 w-full rounded-ctl border border-line-strong bg-surface-2 pl-9 pr-3 text-base placeholder:text-text-muted"
+            className="h-11 w-full search-pill pl-9 pr-4 text-base placeholder:text-text-muted"
           />
         </div>
       </div>
@@ -155,7 +156,7 @@ function LibraryScreen() {
           {t("All")}
         </Pill>
         <Pill pressed={favoritesOnly} onClick={() => { setFavoritesOnly(!favoritesOnly); setMuscle(""); }}>
-          <Star aria-hidden="true" size={15} className="text-accent" fill={favoritesOnly ? "currentColor" : "none"} />
+          <Star aria-hidden="true" size={15} className="text-accent" variant={favoritesOnly ? "duotone" : "linear"} />
           {t("My favorites")}
         </Pill>
         {MUSCLES.map((m) => (
@@ -220,6 +221,7 @@ function LibraryScreen() {
 
       {filtered.length === 0 ? (
         <div className="mx-4 mt-4 panel flex flex-col items-center gap-3 px-4 py-8 text-center">
+          <EmptyArt icon={favoritesOnly && favorites.size === 0 ? Star : Search} />
           <p className="text-sm text-text-muted">
             {favoritesOnly && favorites.size === 0 ? t("No favorites yet. Tap the star on an exercise to keep it here.") : t("No exercise matches these filters.")}
           </p>

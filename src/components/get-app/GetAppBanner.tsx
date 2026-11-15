@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { useGetApp } from "@/store/useGetApp";
 import { BANNER_LATER_MS, markSession, readMemory, shouldNudge, shownThisSession, writeMemory } from "@/lib/get-app";
