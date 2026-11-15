@@ -101,11 +101,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           <BottomNav />
           <SignInReturn />
-          {/* It reads the search params, which a prerendered page only has in the browser. */}
-          <Suspense fallback={null}>
-            <WebAnalytics />
-            <VisitCounter />
-          </Suspense>
+          {/* Web build only: the APK leaves both out entirely (next.config.ts sets the flag). They
+              read the search params, which a prerendered page only has in the browser. */}
+          {process.env.ABOT_WEB_ANALYTICS === "1" && (
+            <Suspense fallback={null}>
+              <WebAnalytics />
+              <VisitCounter />
+            </Suspense>
+          )}
         </MotionProvider>
       </body>
     </html>
