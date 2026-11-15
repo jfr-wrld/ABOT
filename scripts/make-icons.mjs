@@ -1,13 +1,13 @@
 // Builds src/components/icons/solar.generated.tsx from the Solar icon set (480 Design, CC BY 4.0,
 // via @iconify-json/solar, a dev dependency): one React component per icon the app uses, named
-// as the app calls it. Meaningful icons are drawn Bold Duotone; small UI glyphs (arrows,
+// as the app calls it. Meaningful icons are drawn Bold (solid); small UI glyphs (arrows,
 // chevrons, close, plus, minus, check, grips) are drawn Linear so they stay light. Every
 // component can also be asked for the other style (`variant`). Run: node scripts/make-icons.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 
 const set = JSON.parse(readFileSync(new URL("../node_modules/@iconify-json/solar/icons.json", import.meta.url), "utf8"));
 
-/** App name -> [Solar base name, default style]. "l" = linear by default, otherwise duotone. */
+/** App name -> [Solar base name, default style]. "l" = linear by default, otherwise bold. */
 const MAP = {
   Activity: ["pulse"],
   AlertTriangle: ["danger-triangle"],
@@ -140,10 +140,10 @@ const lines = [
   "",
 ];
 for (const [app, [base, style]] of Object.entries(MAP).sort(([a], [b]) => a.localeCompare(b))) {
-  const duo = body(`${base}-bold-duotone`);
+  const bold = body(`${base}-bold`);
   const lin = body(`${base}-linear`);
   lines.push(
-    `export const ${app} = /*#__PURE__*/ solarIcon(${JSON.stringify(app)}, ${JSON.stringify(style === "l" ? "linear" : "duotone")}, ${JSON.stringify(duo)}, ${JSON.stringify(lin)});`,
+    `export const ${app} = /*#__PURE__*/ solarIcon(${JSON.stringify(app)}, ${JSON.stringify(style === "l" ? "linear" : "bold")}, ${JSON.stringify(bold)}, ${JSON.stringify(lin)});`,
   );
 }
 writeFileSync(new URL("../src/components/icons/solar.generated.tsx", import.meta.url), lines.join("\n") + "\n");

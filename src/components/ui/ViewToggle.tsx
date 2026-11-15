@@ -47,7 +47,7 @@ export function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (v:
         value === v ? "tile bg-surface text-accent" : "text-text-muted hover:text-text"
       }`}
     >
-      <Icon aria-hidden="true" size={18} variant={value === v ? "duotone" : "linear"} />
+      <Icon aria-hidden="true" size={18} variant={value === v ? "bold" : "linear"} />
     </button>
   );
   return (

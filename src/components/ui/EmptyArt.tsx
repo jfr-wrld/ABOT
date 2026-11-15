@@ -11,7 +11,7 @@ export function EmptyArt({ icon: Icon }: { icon: IconComponent }) {
     <span aria-hidden="true" className="empty-art relative mx-auto flex size-20 items-center justify-center">
       <span className="empty-ring absolute inset-1 rounded-full bg-accent-tint" />
       <span className="empty-float tile relative flex size-14 items-center justify-center rounded-2xl border border-line bg-surface text-accent">
-        <Icon size={30} variant="duotone" />
+        <Icon size={30} variant="bold" />
       </span>
     </span>
   );

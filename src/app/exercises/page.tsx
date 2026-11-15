@@ -156,7 +156,7 @@ function LibraryScreen() {
           {t("All")}
         </Pill>
         <Pill pressed={favoritesOnly} onClick={() => { setFavoritesOnly(!favoritesOnly); setMuscle(""); }}>
-          <Star aria-hidden="true" size={15} className="text-accent" variant={favoritesOnly ? "duotone" : "linear"} />
+          <Star aria-hidden="true" size={15} className="text-accent" variant={favoritesOnly ? "bold" : "linear"} />
           {t("My favorites")}
         </Pill>
         {MUSCLES.map((m) => (

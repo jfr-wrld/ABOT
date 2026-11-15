@@ -42,7 +42,7 @@ export function FavoriteButton({ id, name, tone = "plain" }: { id: string; name:
           : `rounded-ctl hover:bg-ink/[0.05] ${on ? "text-accent" : "text-text-muted hover:text-text"}`
       }`}
     >
-      <Star aria-hidden="true" size={18} variant={on ? "duotone" : "linear"} />
+      <Star aria-hidden="true" size={18} variant={on ? "bold" : "linear"} />
     </button>
   );
 }

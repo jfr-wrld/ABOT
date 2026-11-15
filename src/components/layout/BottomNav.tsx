@@ -212,8 +212,8 @@ function NavBar({ pathname }: { pathname: string | null }) {
               >
                 <span className="relative">
                   {Icon ? (
-                    // The lit tab is drawn solid (Bold Duotone), the others in line: a clear "you are here".
-                    <Icon aria-hidden="true" size={22} variant={on ? "duotone" : "linear"} className={`transition-colors duration-150 ${on ? "text-accent" : ""}`} />
+                    // The lit tab is drawn solid (Bold), the others in outline: a clear "you are here".
+                    <Icon aria-hidden="true" size={22} variant={on ? "bold" : "linear"} className={`transition-colors duration-150 ${on ? "text-accent" : ""}`} />
                   ) : (
                     // The lifter's own plate; dimmed until it is the lit tab, like the other icons.
                     <span aria-hidden="true" className={`block transition-opacity ${on ? "" : "opacity-60 grayscale"}`}>
