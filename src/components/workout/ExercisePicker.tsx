@@ -4,7 +4,7 @@ import { useDeferredValue, useEffect, useId, useMemo, useState } from "react";
 import type { Equipment, Exercise, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
 import { Sheet } from "@/components/ui/Sheet";
-import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
+import { useAllExercises, useExerciseStore, useExtendedLibrary } from "@/store/useExerciseStore";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { MuscleTags } from "@/components/exercise/MuscleTags";
 import { useT } from "@/i18n";
@@ -56,6 +56,7 @@ export function ExercisePicker({
   inWorkout?: Set<string>;
 }) {
   const t = useT();
+  useExtendedLibrary(open);
   const { list, byId } = useAllExercises();
   const sessions = useWorkoutStore((s) => s.sessions);
   const { favorites } = useFavorites();

@@ -95,8 +95,11 @@ export async function hydrateStores(repo: Repository): Promise<void> {
   }
   // Today's protein and water taps, kept per device before they went into the food log.
   migrateFuelTally();
-  // The extended library loads beside the saved data, in its own chunk, once per page.
-  void useExerciseStore.getState().loadExtended();
+  // The extended library (about 850 KB of rows) is not needed for Home: it loads once the phone is
+  // idle after start, or at once when a screen that lists exercises opens (useExtendedLibrary).
+  const load = () => void useExerciseStore.getState().loadExtended();
+  if (typeof requestIdleCallback === "function") requestIdleCallback(load, { timeout: 5000 });
+  else setTimeout(load, 2000);
 }
 
 /** Everything the app holds in memory, which includes changes that could not be saved yet. */

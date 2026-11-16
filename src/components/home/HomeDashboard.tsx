@@ -76,9 +76,14 @@ export function HomeDashboard() {
   const routines = useRoutineStore((s) => s.routines);
   const schedule = useReminderStore((s) => s.schedule);
   const { weightUnit, firstDayOfWeek } = useSettingsStore();
-  const { byId } = useAllExercises();
+  const { byId: allById } = useAllExercises();
+  // Only the exercises Home shows. The full library (about 1,000 rows) lands after start; with
+  // the whole index here every figure on Home was worked out again when it arrived.
+  const byId = useLoggedById(allById, sessions, active, routines);
   // The running clock ticks inside ActiveCard; the rest of Home only needs the date.
   const now = useNow(60_000);
+  const sleep = useSettingsStore((s) => s.lastSleep);
+  const stats = useWeekStats(sessions, active, byId, now, firstDayOfWeek, schedule, sleep);
 
   const next = useMemo(() => nextProtocol(routines, sessions, schedule, now), [routines, sessions, schedule, now]);
   const days = useMemo(() => weekStrip(sessions, now, firstDayOfWeek), [sessions, now, firstDayOfWeek]);
@@ -118,8 +123,8 @@ export function HomeDashboard() {
         activeId={active?.id ?? null}
         today={active ? <ActiveCard /> : <DayHero day={day} next={next} byId={byId} now={now} />}
         todayStrip={<TodayStrip next={next} />}
-        week={<WeekCard now={now} />}
-        weekStrip={<NumbersRow now={now} />}
+        week={<WeekCard now={now} stats={stats} byId={byId} />}
+        weekStrip={<NumbersRow stats={stats} />}
       />
 
       <Rise step={0.07} order={2}>
@@ -994,22 +999,13 @@ const shortVolume = (n: number, locale: string) => (n >= 100_000 ? `${Math.round
  * The week in three figures on one row: sessions against the plan (or the 7 days), the volume
  * with its change on last week, and muscles ready, which opens the recovery map.
  */
-function NumbersRow({ now }: { now: number }) {
+function NumbersRow({ stats }: { stats: WeekStats }) {
   const onSwap = useContext(StackSwap);
   const t = useT();
   const playEntrance = usePlayEntrance();
-  const sessions = useWorkoutStore((s) => s.sessions);
-  const schedule = useReminderStore((s) => s.schedule);
-  const { weightUnit: unit, firstDayOfWeek } = useSettingsStore();
-  const { byId } = useAllExercises();
-  const active = useWorkoutStore((s) => s.active);
-  const sleep = useSettingsStore((s) => s.lastSleep);
+  const unit = useSettingsStore((s) => s.weightUnit);
   const [open, setOpen] = useState(false);
-
-  const volume = useMemo(() => weeklyVolume(sessions, now, firstDayOfWeek, byId), [sessions, now, firstDayOfWeek, byId]);
-  const freq = weeklyFrequency(sessions, schedule, now, firstDayOfWeek);
-  // Sets ticked in a workout still running tire the muscles too.
-  const recovery = useMemo(() => regionTelemetry(active ? [...sessions, active] : sessions, byId, now, sleep), [sessions, active, byId, now, sleep]);
+  const { volume, freq, recovery, now } = stats;
   const ready = REGIONS.filter((r) => recovery[r].stage === "fresh").length;
   const target = freq.target ?? 7;
   const perWeek = freq.target !== null;
@@ -1260,35 +1256,32 @@ const MUSCLE_GROUPS = (Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[]).filter
  * recovering lit, sets, time trained, and records in gold. Worked out from data Home already
  * holds; nothing animates but the sessions' dashes on the first visit.
  */
-function WeekCard({ now }: { now: number }) {
+function WeekCard({ now, stats, byId }: { now: number; stats: WeekStats; byId: Record<string, Exercise> }) {
   const t = useT();
   const play = usePlayEntrance();
   const sessions = useWorkoutStore((s) => s.sessions);
-  const active = useWorkoutStore((s) => s.active);
-  const schedule = useReminderStore((s) => s.schedule);
-  const { weightUnit: unit, firstDayOfWeek } = useSettingsStore();
-  const sleep = useSettingsStore((s) => s.lastSleep);
-  const { byId } = useAllExercises();
+  const unit = useSettingsStore((s) => s.weightUnit);
+  const firstDayOfWeek = useSettingsStore((s) => s.firstDayOfWeek);
   const [open, setOpen] = useState(false);
 
+  const at = stats.now;
   const fig = useMemo(() => {
-    const start = startOfWeek(now, firstDayOfWeek);
-    const week = sessions.filter((s) => s.status === "completed" && s.startedAt >= start && s.startedAt <= now);
+    const start = startOfWeek(at, firstDayOfWeek);
+    const week = sessions.filter((s) => s.status === "completed" && s.startedAt >= start && s.startedAt <= at);
     const perDay = Array.from({ length: 7 }, (_, i) =>
       week.filter((s) => s.startedAt >= start + i * DAY && s.startedAt < start + (i + 1) * DAY).reduce((n, s) => n + sessionVolume(s, byId), 0),
     );
     const records = Object.values(prCounts(week, sessions, byId)).reduce((a, b) => a + b, 0);
     return {
       perDay,
-      today: Math.min(6, Math.floor((now - start) / DAY)),
+      today: Math.min(6, Math.floor((at - start) / DAY)),
       sets: week.reduce((n, s) => n + countSets(s).completed, 0),
-      seconds: week.reduce((n, s) => n + sessionDurationSec(s, now), 0),
+      seconds: week.reduce((n, s) => n + sessionDurationSec(s, at), 0),
       records,
     };
-  }, [sessions, now, firstDayOfWeek, byId]);
-  const volume = useMemo(() => weeklyVolume(sessions, now, firstDayOfWeek, byId), [sessions, now, firstDayOfWeek, byId]);
-  const freq = weeklyFrequency(sessions, schedule, now, firstDayOfWeek);
-  const recovery = useMemo(() => regionTelemetry(active ? [...sessions, active] : sessions, byId, now, sleep), [sessions, active, byId, now, sleep]);
+    // The week's figures move with a set or the day, not the minute: worked out on the stats' clock.
+  }, [sessions, at, firstDayOfWeek, byId]);
+  const { volume, freq, recovery } = stats;
   const ready = REGIONS.filter((r) => recovery[r].stage === "fresh").length;
   const tired = MUSCLE_GROUPS.filter((m) => regionsFor(m).some((r) => recovery[r].stage !== "fresh"));
   const target = freq.target ?? 7;
@@ -1472,4 +1465,72 @@ function TodayStrip({ next }: { next: NextProtocol | null }) {
       </div>
     </section>
   );
+}
+
+/* ---------------------------------------------------------------- shared week stats */
+
+const STATS_STEP = 10 * 60_000;
+
+type WeekStats = {
+  /** The time the figures were worked out at. */
+  now: number;
+  volume: ReturnType<typeof weeklyVolume>;
+  freq: ReturnType<typeof weeklyFrequency>;
+  recovery: ReturnType<typeof regionTelemetry>;
+};
+
+/**
+ * The week's volume, sessions and muscle recovery, worked out once for both faces of the wallet
+ * (they are always mounted together) on a 10-minute clock: recovery moves over hours, and the
+ * minute tick used to redo every figure, twice, walking every set of every workout.
+ */
+function useWeekStats(
+  sessions: WorkoutSession[],
+  active: WorkoutSession | null,
+  byId: Record<string, Exercise>,
+  now: number,
+  firstDayOfWeek: Parameters<typeof weeklyVolume>[2],
+  schedule: Parameters<typeof weeklyFrequency>[1],
+  sleep: Parameters<typeof regionTelemetry>[3],
+): WeekStats {
+  // Worked out with the real time whenever something changes (a workout just finished counts at
+  // once); the minute tick alone only redoes them once per 10-minute slot.
+  const slot = Math.floor(now / STATS_STEP);
+  return useMemo(
+    () => ({
+      now,
+      volume: weeklyVolume(sessions, now, firstDayOfWeek, byId),
+      freq: weeklyFrequency(sessions, schedule, now, firstDayOfWeek),
+      // Sets ticked in a workout still running tire the muscles too.
+      recovery: regionTelemetry(active ? [...sessions, active] : sessions, byId, now, sleep),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `now` on purpose through `slot`
+    [sessions, active, byId, slot, firstDayOfWeek, schedule, sleep],
+  );
+}
+
+/**
+ * The exercises Home shows (logged, running, in a routine), as one object that keeps its
+ * identity while those stay the same, so a library that loads later changes nothing here.
+ */
+function useLoggedById(
+  all: Record<string, Exercise>,
+  sessions: WorkoutSession[],
+  active: WorkoutSession | null,
+  routines: { exercises: { exerciseId: string }[] }[],
+): Record<string, Exercise> {
+  const next = useMemo(() => {
+    const ids = new Set<string>();
+    for (const s of sessions) for (const e of s.exercises) ids.add(e.exerciseId);
+    for (const e of active?.exercises ?? []) ids.add(e.exerciseId);
+    for (const r of routines) for (const e of r.exercises) ids.add(e.exerciseId);
+    const out: Record<string, Exercise> = {};
+    for (const id of ids) if (all[id]) out[id] = all[id];
+    return out;
+  }, [all, sessions, active, routines]);
+  // The same entries keep the earlier object, so memos keyed on it stay put.
+  const [kept, setKept] = useState(next);
+  const same = kept === next || (Object.keys(kept).length === Object.keys(next).length && Object.keys(next).every((k) => kept[k] === next[k]));
+  if (!same) setKept(next);
+  return same ? kept : next;
 }

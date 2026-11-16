@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { create } from "zustand";
 import type { Exercise, ExerciseDraft } from "@/types/workout";
 import { normalizeExercise } from "@/data/normalize";
 import { buildExerciseIndex } from "@/lib/sets";
 import { newId } from "@/lib/id";
 import { loadExtendedLibrary, withoutBuiltIn } from "@/data/extended-library";
+
+let extendedLoading: Promise<void> | null = null;
 
 interface ExerciseState {
   /** The built-in library (data/exercises); empty until loadSeed, which startApp awaits. */
@@ -49,14 +51,19 @@ export const useExerciseStore = create<ExerciseState>()(
       extendedTried: false,
       loadExtended: async () => {
         if (useExerciseStore.getState().extended.length > 0) return;
-        try {
-          set({ extended: await loadExtendedLibrary() });
-        } catch {
-          // A chunk that fails to load (an old cached page after an update) leaves the seed
-          // library and any downloaded catalog; the next start tries again.
-        } finally {
-          set({ extendedTried: true });
-        }
+        // The idle load and a screen that needs the list may ask at once: one load serves both.
+        extendedLoading ??= (async () => {
+          try {
+            set({ extended: await loadExtendedLibrary() });
+          } catch {
+            // A chunk that fails to load (an old cached page after an update) leaves the seed
+            // library and any downloaded catalog; the next start tries again.
+          } finally {
+            set({ extendedTried: true });
+            extendedLoading = null;
+          }
+        })();
+        return extendedLoading;
       },
       mediaOverrides: {},
       setCustomVideo: (id, url) =>
@@ -99,6 +106,13 @@ export function useAllExercises() {
   const catalog = useExerciseStore((s) => s.catalog);
   const extended = useExerciseStore((s) => s.extended);
   return useMemo(() => sharedIndex(seed, custom, catalog, extended), [seed, custom, catalog, extended]);
+}
+
+/** Loads the extended library now, for a screen that lists or searches exercises (idempotent). */
+export function useExtendedLibrary(when = true): void {
+  useEffect(() => {
+    if (when) void useExerciseStore.getState().loadExtended();
+  }, [when]);
 }
 
 /** One exercise by id, outside React (seed, extended library or custom); undefined when unknown. */

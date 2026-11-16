@@ -10,7 +10,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { CalendarClock, ChevronLeft, Dumbbell, Play, Plus, Repeat, Trophy, TrendingDown, TrendingUp, Pencil, Trash2 } from "@/components/icons";
 import { m as motion, useReducedMotionConfig } from "framer-motion";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
+import { useAllExercises, useExerciseStore, useExtendedLibrary } from "@/store/useExerciseStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { HydrationGate } from "@/components/ui/Loading";
@@ -64,6 +64,8 @@ function Detail() {
   const params = useSearchParams();
   const id = params.get("id") ?? "";
   const router = useRouter();
+  // A library exercise opened by link may not be loaded yet.
+  useExtendedLibrary();
   const { byId } = useAllExercises();
   const { updateCustom, removeCustom } = useExerciseStore();
   const extendedTried = useExerciseStore((s) => s.extendedTried);

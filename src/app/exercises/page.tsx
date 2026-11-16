@@ -16,7 +16,7 @@ import { MuscleIcon } from "@/components/icons/MuscleIcon";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import type { Equipment, Exercise, MuscleGroup } from "@/types/workout";
 import { EQUIPMENT_LABELS, MUSCLE_GROUP_LABELS } from "@/types/workout";
-import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
+import { useAllExercises, useExerciseStore, useExtendedLibrary } from "@/store/useExerciseStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { filterExercises, shownWithoutSearch } from "@/lib/exercise-search";
@@ -39,9 +39,16 @@ import { EmptyArt } from "@/components/ui/EmptyArt";
 const MUSCLES = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
 const EQUIPMENT = Object.keys(EQUIPMENT_LABELS) as Equipment[];
 
+/** The full list belongs on this screen: it loads now instead of waiting for an idle moment. */
+function EnsureLibrary() {
+  useExtendedLibrary();
+  return null;
+}
+
 export default function ExercisesPage() {
   return (
     <HydrationGate>
+      <EnsureLibrary />
       <LibraryScreen />
     </HydrationGate>
   );
