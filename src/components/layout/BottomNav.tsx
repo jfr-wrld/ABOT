@@ -264,6 +264,8 @@ function NavBar({ pathname }: { pathname: string | null }) {
               <Link
                 href={href}
                 aria-current={current ? "page" : undefined}
+                // The lit tab (it follows the finger in a drag): light pages colour it for the black lens.
+                data-lit={on || undefined}
                 draggable={false}
                 className={`tap relative flex h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-medium transition-colors duration-150 hover:bg-ink/[0.05] ${
                   on ? "text-text" : "text-text-muted"

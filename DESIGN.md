@@ -14,7 +14,7 @@ and plain copy ("ABOT Pro", "Templates", "Upper day at 17:30").
 | `surface` | `#121215` | `#ffffff` | One step off the background. |
 | `text` | `#f4f4f5` | `#18181b` | 16:1 on both. |
 | `text-muted` | `#a1a1aa` | `#52525b` | 7.7:1. |
-| `accent` | `#ccff00` Volt, black text | Black and Volt only (owner, 2026-11-16): Volt `#ccff00` as a fill (buttons, selected pills and tabs, switches, the dock's lens and centre button, Home's Volt card) with a `#8db300` edge; every thin mark (icons, links, borders, rings, chart lines, muscle maps) black `#18181b` | The brand colour (owner's choice): the primary action, the current tab, progress. Volt on white is about 1.1:1, so on light pages it is only ever a fill with black content on it (17:1). The app icon tile is black with the Volt mark in both themes. |
+| `accent` | `#ccff00` Volt, black text | Volt only on black (owner, 2026-11-16): fills black `#18181b` with white content (buttons, selected pills and tabs, switches, progress bars, Home's card); thin marks black (icons, links, borders, rings, chart lines, muscle maps); Volt only on a black surface (logo tile, the dock's centre button, the current tab's icon, the ring on Home's card). Always-dark areas (`force-dark`) keep Volt fills | The brand colour (owner's choice). A Volt fill on white read as a highlighter, and Volt as a mark on white is about 1.1:1, so on light pages Volt lives on black, like the app icon. |
 | `pr` | `#f5c542` gold | `#8a5d00` | Records only: the medal colour (owner, 2026-11-15). |
 | `warmup` | `#7dd3fc` sky | `#0369a1` | Warm-up sets, kept clear of the record gold. |
 | `caution` | `#fb923c` | `#c2410c` | The coach calling a step back (deload, one set fewer). |

@@ -7,13 +7,36 @@
   const over = (top, bot) => { const a = top[3]; return [top[0] * a + bot[0] * (1 - a), top[1] * a + bot[1] * (1 - a), top[2] * a + bot[2] * (1 - a), 1]; };
   const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
   const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  // A positioned sibling drawn before an ancestor and covering the text's centre paints behind it
+  // (a sliding tab indicator, the dock's lens), so it counts as a layer too.
+  const behind = (n, x, y) => {
+    const out = [];
+    for (let s = n.previousElementSibling; s; s = s.previousElementSibling) {
+      const cs = getComputedStyle(s);
+      if (cs.position !== "absolute" && cs.position !== "fixed") continue;
+      // A positive z-index draws it above the text (an overlay, the splash), not behind.
+      if (cs.zIndex !== "auto" && parseInt(cs.zIndex) > 0) continue;
+      if (cs.display === "none" || cs.visibility === "hidden" || parseFloat(cs.opacity) < 0.5) continue;
+      const r = s.getBoundingClientRect();
+      if (x < r.left || x > r.right || y < r.top || y > r.bottom) continue;
+      // A photo layer behind the text (a blurred cover): skipped, like text over an image.
+      if (cs.backgroundImage !== "none" || s.querySelector("img, video, canvas, [style*='background-image']")) return "image";
+      const c = rgba(cs.backgroundColor);
+      if (c[3] > 0) out.push(c);
+    }
+    return out;
+  };
   function background(el) {
     const layers = [];
-    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+    const box = el.getBoundingClientRect(), x = box.left + box.width / 2, y = box.top + box.height / 2;
+    walk: for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
       const cs = getComputedStyle(n);
       if (cs.backgroundImage && cs.backgroundImage !== "none") return { image: true, el: n };
       const c = rgba(cs.backgroundColor);
       if (c[3] > 0) { layers.push(c); if (c[3] >= 0.999) break; }
+      const under = behind(n, x, y);
+      if (under === "image") return { image: true, el: n };
+      for (const b of under) { layers.push(b); if (b[3] >= 0.999) break walk; }
     }
     let bg = [255, 255, 255, 1];
     for (let i = layers.length - 1; i >= 0; i--) bg = over(layers[i], bg);
