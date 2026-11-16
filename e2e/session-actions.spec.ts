@@ -71,10 +71,10 @@ test("a past workout is renamed and saved as a routine from its page", async ({ 
   await page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first().click();
   await page.waitForURL(/\/history/);
   await page.getByRole("button", { name: "Workout options" }).click();
-  await page.getByRole("button", { name: "Rename workout" }).click();
-  const sheet = page.getByRole("dialog", { name: "Rename workout" });
-  await sheet.getByLabel("Workout name").fill("Leg Day");
-  await sheet.getByRole("button", { name: "Save name" }).click();
+  // Renaming is part of Edit workout, with the sets and the time.
+  await page.getByRole("button", { name: "Edit workout" }).click();
+  await page.getByLabel("Name").fill("Leg Day");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Leg Day" })).toBeVisible();
   await page.getByRole("button", { name: "Workout options" }).click();
   await page.getByRole("button", { name: "Save as routine" }).click();

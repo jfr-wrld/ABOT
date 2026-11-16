@@ -1,7 +1,9 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { Dumbbell, Search } from "@/components/icons";
+import Link from "next/link";
+import { Dumbbell, Plus, Search } from "@/components/icons";
+import { historyEditPath } from "@/lib/routes";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useLocationStore } from "@/store/useLocationStore";
@@ -60,6 +62,11 @@ function AllWorkouts() {
   return (
     <main className="flex flex-1 flex-col pb-6">
       <PageHeader title={t("All workouts")} back={{ href: "/", label: t("Home") }} />
+      {/* A workout done without the app (a forgotten phone, a gym without signal) still counts. */}
+      <Link href={historyEditPath()} className="section-link mx-4 -mb-2 flex min-h-11 w-fit items-center gap-1.5">
+        <Plus aria-hidden="true" size={16} />
+        {t("Log a past workout")}
+      </Link>
 
       <div className="flex flex-col gap-2 px-4 pt-4">
         <label htmlFor="history-search" className="sr-only">

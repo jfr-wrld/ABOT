@@ -302,6 +302,7 @@ export function SetRow({
       <NumberField
         ref={repsRef}
         aria-label={t("{set} reps", { set: a11yName })}
+        inputMode="numeric"
         aria-invalid={error ? true : undefined}
         placeholder={previous?.reps != null ? String(previous.reps) : "0"}
         value={set.reps}

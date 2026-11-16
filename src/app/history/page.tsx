@@ -9,7 +9,7 @@ import { BackLink } from "@/components/navigation/BackLink";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence, m as motion, useReducedMotionConfig } from "framer-motion";
 import { ChevronDown, ChevronLeft, Dumbbell, Layers, MoreHorizontal, Pencil, Play, Timer, Trash2, Trophy } from "@/components/icons";
-import { RenameWorkoutSheet, SaveAsRoutineButton } from "@/components/workout/SessionActions";
+import { SaveAsRoutineButton } from "@/components/workout/SessionActions";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -36,7 +36,7 @@ import {
   type WeightUnit,
   type WorkoutSession,
 } from "@/types/workout";
-import { exercisePath } from "@/lib/routes";
+import { exercisePath, historyEditPath } from "@/lib/routes";
 import { useT } from "@/i18n";
 import { variationLabel } from "@/data/variations";
 
@@ -61,7 +61,6 @@ function SessionDetail() {
   const { weightUnit } = useSettingsStore();
   const { byId } = useAllExercises();
   const [menu, setMenu] = useState(false);
-  const [renameOpen, setRenameOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
   useActionBarSpace(76);
 
@@ -150,11 +149,11 @@ function SessionDetail() {
           type="button"
           onClick={() => {
             setMenu(false);
-            setRenameOpen(true);
+            router.push(historyEditPath(session.id));
           }}
           className="flex h-12 w-full items-center gap-3 rounded-ctl px-3 text-left text-base font-semibold hover:bg-surface-2"
         >
-          <Pencil aria-hidden="true" size={18} /> {t("Rename workout")}
+          <Pencil aria-hidden="true" size={18} /> {t("Edit workout")}
         </button>
         <SaveAsRoutineButton session={session} className="mb-2 mt-1 w-full justify-start !min-h-12 !rounded-ctl !text-base" />
         <button
@@ -169,7 +168,6 @@ function SessionDetail() {
         </button>
       </Sheet>
 
-      <RenameWorkoutSheet session={session} open={renameOpen} onClose={() => setRenameOpen(false)} />
 
       <Sheet
         open={confirm}

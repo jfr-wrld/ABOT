@@ -15,6 +15,7 @@ import { activePhase, peakRestSec } from "@/lib/phase-engine";
 import { exerciseById } from "./useExerciseStore";
 import { useSettingsStore } from "./useSettingsStore";
 import { bodyLoadFor } from "@/data/bodyweight-load";
+import { hasMeasure } from "@/lib/set-metrics";
 
 /** A ticked set records the body weight it lifted (bodyweight exercises); unticking clears it. */
 function ticked(st: WorkoutSet, exerciseId: string, completed: boolean, at: number): WorkoutSet {
@@ -107,6 +108,32 @@ interface WorkoutState {
   renameSession: (id: string, name: string) => void;
   /** Changes the gym of a finished workout; undefined clears it. */
   setSessionLocation: (id: string, locationId: string | undefined) => void;
+  /**
+   * Writes a finished workout from the editor (history edit, or a workout logged afterwards):
+   * replaces the one with the same id, or adds it. Sets without a measure and exercises left
+   * with no sets are dropped; false (nothing written) when no set is left.
+   */
+  saveSession: (session: WorkoutSession) => boolean;
+}
+
+/** A finished workout as the editor hands it in, cleaned to what a finished workout holds. */
+export function finishedFromDraft(draft: WorkoutSession): WorkoutSession | null {
+  const at = draft.finishedAt ?? draft.startedAt;
+  const exercises = draft.exercises
+    .map((ex) => {
+      const logType = exerciseById(ex.exerciseId)?.logType;
+      const sets = ex.sets
+        .filter((st) => hasMeasure(st, logType))
+        // A set added in the editor is done work: it is ticked with the workout's end time, and a
+        // bodyweight lift takes today's body weight (a set from the original keeps its own).
+        .map((st) => (st.completed && st.completedAt !== undefined ? st : ticked(st, ex.exerciseId, true, at)));
+      return { ...ex, sets };
+    })
+    .filter((ex) => ex.sets.length > 0);
+  if (exercises.length === 0) return null;
+  const { pausedAt: _p, ...rest } = draft;
+  void _p;
+  return { ...rest, status: "completed", finishedAt: at, pausedMs: 0, exercises };
 }
 
 /** The first rep range planned for a routine exercise, to show while logging it. */
@@ -460,6 +487,15 @@ export const useWorkoutStore = create<WorkoutState>()(
         const trimmed = name.trim();
         if (!trimmed) return;
         set((s) => ({ sessions: s.sessions.map((x) => (x.id === id && x.name !== trimmed ? { ...x, name: trimmed } : x)) }));
+      },
+
+      saveSession: (draft) => {
+        const done = finishedFromDraft(draft);
+        if (!done) return false;
+        set((s) => ({
+          sessions: s.sessions.some((x) => x.id === done.id) ? s.sessions.map((x) => (x.id === done.id ? done : x)) : [...s.sessions, done],
+        }));
+        return true;
       },
 
       setSessionLocation: (id, locationId) =>

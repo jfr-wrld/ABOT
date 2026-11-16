@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useWorkoutStore } from "./useWorkoutStore";
 import { sessionDurationSec } from "@/lib/calc";
+import type { WorkoutSession } from "@/types/workout";
 
 const initial = useWorkoutStore.getState();
 
@@ -365,5 +366,49 @@ describe("restoreSet", () => {
     const sets = useWorkoutStore.getState().active!.exercises[0]!.sets;
     expect(sets.map((x) => x.id)).toEqual(setIds);
     expect(sets[1]!.weightKg).toBe(70);
+  });
+});
+
+describe("saveSession", () => {
+  const base: WorkoutSession = {
+    id: "w1",
+    name: "Push",
+    startedAt: 1_000_000,
+    finishedAt: 1_000_000 + 3_600_000,
+    status: "completed" as const,
+    exercises: [
+      {
+        id: "e1",
+        exerciseId: "bench-press-barbell",
+        restSeconds: 90,
+        sets: [
+          { id: "s1", type: "normal" as const, weightKg: 600, reps: 8, rpe: null, completed: true, completedAt: 1_000_500 },
+          { id: "s2", type: "normal" as const, weightKg: 60, reps: null, rpe: null, completed: false },
+        ],
+      },
+    ],
+  };
+
+  it("replaces the workout with the same id, drops sets without a measure, ticks new sets", () => {
+    useWorkoutStore.setState({ sessions: [structuredClone(base)] });
+    const draft = structuredClone(base);
+    draft.exercises[0]!.sets[0]!.weightKg = 60; // the typo fixed
+    draft.exercises[0]!.sets.push({ id: "s3", type: "normal", weightKg: 60, reps: 6, rpe: null, completed: false });
+    expect(useWorkoutStore.getState().saveSession(draft)).toBe(true);
+    const [saved] = useWorkoutStore.getState().sessions;
+    expect(useWorkoutStore.getState().sessions).toHaveLength(1);
+    expect(saved!.exercises[0]!.sets.map((s) => [s.id, s.weightKg, s.completed])).toEqual([
+      ["s1", 60, true],
+      ["s3", 60, true],
+    ]);
+    expect(saved!.exercises[0]!.sets[1]!.completedAt).toBe(base.finishedAt);
+  });
+
+  it("adds a workout logged afterwards, and refuses one with no sets", () => {
+    const later = { ...structuredClone(base), id: "w2" };
+    expect(useWorkoutStore.getState().saveSession(later)).toBe(true);
+    expect(useWorkoutStore.getState().sessions.map((s) => s.id)).toContain("w2");
+    expect(useWorkoutStore.getState().saveSession({ ...later, id: "w3", exercises: [] })).toBe(false);
+    expect(useWorkoutStore.getState().sessions.map((s) => s.id)).not.toContain("w3");
   });
 });
