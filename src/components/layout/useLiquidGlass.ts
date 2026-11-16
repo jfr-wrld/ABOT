@@ -2,6 +2,7 @@
 
 import { useEffect, useId, type RefObject } from "react";
 import { displacementPixels, liquidGlassSupported } from "@/lib/liquid-glass";
+import { useEffectsMode } from "./EffectsController";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -40,9 +41,12 @@ function mapUrl(w: number, h: number, radius: number, bezel: number): string {
  */
 export function useLiquidGlass(ref: RefObject<HTMLElement | null>, { bezel, strength, blur = 0.6, on = true }: { bezel: number; strength: number; blur?: number; on?: boolean }) {
   const id = `liquid-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  // Lite effects (chosen, or picked for a slow phone) skip the filter: it re-filters whatever
+  // scrolls under the dock on every frame. The CSS already shows plain frosted glass there.
+  const full = useEffectsMode() === "full";
   useEffect(() => {
     const el = ref.current;
-    if (!on || !el || !liquidGlassSupported(navigator.userAgent)) return;
+    if (!on || !full || !el || !liquidGlassSupported(navigator.userAgent)) return;
     if (matchMedia("(prefers-reduced-transparency: reduce)").matches) return;
     document.documentElement.dataset.liquid = "on";
 
@@ -82,5 +86,5 @@ export function useLiquidGlass(ref: RefObject<HTMLElement | null>, { bezel, stre
       filter.remove();
       el.style.removeProperty("--liquid-filter");
     };
-  }, [ref, id, bezel, strength, blur, on]);
+  }, [ref, id, bezel, strength, blur, on, full]);
 }

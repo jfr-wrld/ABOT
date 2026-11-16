@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { memo, useId } from "react";
 import type { MuscleGroup } from "@/types/workout";
 import { useT } from "@/i18n";
 import { muscleNames } from "@/components/exercise/MuscleTags";
@@ -10,7 +10,7 @@ import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT, type BodyPart } fro
 /** Parts that are body, not muscle: drawn flat and never highlighted. */
 const NON_MUSCLE = new Set(["hair", "head", "hands", "feet", "ankles", "knees"]);
 
-function Parts({ parts, levels, glowId }: { parts: BodyPart[]; levels: Partial<Record<Region, Level>>; glowId: string }) {
+function Parts({ parts, levels, glowId }: { parts: BodyPart[]; levels: Partial<Record<Region, Level>>; glowId: string | undefined }) {
   return (
     <>
       {parts.map((p) => {
@@ -20,7 +20,7 @@ function Parts({ parts, levels, glowId }: { parts: BodyPart[]; levels: Partial<R
             key={p.slug}
             data-region={p.slug}
             data-level={NON_MUSCLE.has(p.slug) ? "body" : (level ?? "none")}
-            filter={level === "primary" ? `url(#${glowId})` : undefined}
+            filter={level === "primary" && glowId ? `url(#${glowId})` : undefined}
           >
             {p.d.map((d, i) => (
               <path
@@ -41,7 +41,7 @@ function Parts({ parts, levels, glowId }: { parts: BodyPart[]; levels: Partial<R
  * Anatomical front and back body (paths from react-muscle-highlighter, MIT) with the exercise's
  * primary muscles in the accent colour with a soft glow, secondary muscles at 40%.
  */
-export function MuscleMap({
+function MuscleMapView({
   primary,
   secondary = [],
   width = 280,
@@ -55,6 +55,8 @@ export function MuscleMap({
 }) {
   const uid = useId().replace(/:/g, "");
   const levels = regionLevels(primary, secondary);
+  // The glow is a blur over every lit path: costly to draw and invisible on a thumbnail.
+  const glow = width >= 64;
   const t = useT();
   const names = (ms: MuscleGroup[]) => muscleNames(ms, t, ", ") || t("none");
   const description = t("Primary: {primary}. Secondary: {secondary}.", { primary: names(primary), secondary: names(secondary) });
@@ -62,18 +64,20 @@ export function MuscleMap({
     <figure className="mx-auto" style={{ maxWidth: width }}>
       <svg role="img" aria-labelledby={`${uid}-t`} viewBox="0 30 1448 1360" className="block h-auto w-full">
         <title id={`${uid}-t`}>{description}</title>
-        <defs>
-          {/* Glow marks the primary muscles only: the focal point of the figure. */}
-          <filter id={`${uid}-glow`} x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        <Parts parts={BODY_FRONT} levels={levels} glowId={`${uid}-glow`} />
-        <Parts parts={BODY_BACK} levels={levels} glowId={`${uid}-glow`} />
+        {glow && (
+          <defs>
+            {/* Glow marks the primary muscles only: the focal point of the figure. */}
+            <filter id={`${uid}-glow`} x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+        )}
+        <Parts parts={BODY_FRONT} levels={levels} glowId={glow ? `${uid}-glow` : undefined} />
+        <Parts parts={BODY_BACK} levels={levels} glowId={glow ? `${uid}-glow` : undefined} />
         <g fill="none" stroke="var(--color-line-strong)" strokeWidth={2.5}>
           <path d={OUTLINE_FRONT} />
           <path d={OUTLINE_BACK} />
@@ -87,3 +91,15 @@ export function MuscleMap({
     </figure>
   );
 }
+
+const same = (a: readonly string[] = [], b: readonly string[] = []) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+/**
+ * About 160 paths per figure: drawn again only when the muscles or size change, not whenever the
+ * page around it renders (Home holds up to five of them). Arrays compare by their muscles, since
+ * callers often build them fresh each render.
+ */
+export const MuscleMap = memo(
+  MuscleMapView,
+  (a, b) => a.width === b.width && a.captions === b.captions && same(a.primary, b.primary) && same(a.secondary, b.secondary),
+);

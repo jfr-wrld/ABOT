@@ -103,7 +103,9 @@ const DRAG_FROM = 6;
 function NavBar({ pathname }: { pathname: string | null }) {
   const hydrated = useHydration((s) => s.hydrated);
   const hasActive = useWorkoutStore((s) => s.active !== null);
-  const { profileName, profilePhoto } = useSettingsStore();
+  // Two fields, not the whole store: any setting changed used to redraw the dock.
+  const profileName = useSettingsStore((s) => s.profileName);
+  const profilePhoto = useSettingsStore((s) => s.profilePhoto);
   const t = useT();
   const router = useRouter();
   const reduceMotion = useReducedMotionConfig();

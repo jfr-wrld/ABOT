@@ -75,7 +75,8 @@ export function HomeDashboard() {
   const active = useWorkoutStore((s) => s.active);
   const routines = useRoutineStore((s) => s.routines);
   const schedule = useReminderStore((s) => s.schedule);
-  const { weightUnit, firstDayOfWeek } = useSettingsStore();
+  const weightUnit = useSettingsStore((s) => s.weightUnit);
+  const firstDayOfWeek = useSettingsStore((s) => s.firstDayOfWeek);
   const { byId: allById } = useAllExercises();
   // Only the exercises Home shows. The full library (about 1,000 rows) lands after start; with
   // the whole index here every figure on Home was worked out again when it arrived.

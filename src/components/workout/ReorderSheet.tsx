@@ -9,6 +9,10 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { useT } from "@/i18n";
+import type { SessionExercise } from "@/types/workout";
+
+/** One empty list: a fresh [] on every read re-renders forever once the workout ends (Zustand 5). */
+const NO_EXERCISES: SessionExercise[] = [];
 
 /**
  * Reorder the workout's exercises: drag a row by its handle, or use the arrows (the keyboard and
@@ -16,7 +20,7 @@ import { useT } from "@/i18n";
  */
 export function ReorderSheet({ onClose }: { onClose: () => void }) {
   const t = useT();
-  const exercises = useWorkoutStore((s) => s.active?.exercises ?? []);
+  const exercises = useWorkoutStore((s) => s.active?.exercises ?? NO_EXERCISES);
   const reorder = useWorkoutStore((s) => s.reorderExercises);
   const { byId } = useAllExercises();
   const [order, setOrder] = useState(() => exercises.map((e) => e.id));

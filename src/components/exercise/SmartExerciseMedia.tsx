@@ -147,13 +147,9 @@ function PhotoMotion({ exercise }: { exercise: Exercise }) {
   }
   if (first?.kind === "file" && first.media === "video") {
     return (
-      <video
+      <LoopVideo
         src={first.url}
         autoPlay={!prefersReducedMotion()}
-        loop
-        muted
-        playsInline
-        controls
         className="aspect-[4/3] w-full rounded-ctl bg-black object-contain"
         aria-label={t("{name} demonstration", { name: exercise.name })}
       />
@@ -278,13 +274,9 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
         <p className="px-2 py-8 text-center text-sm text-text-muted">{t("Video needs a connection. It plays once you are online.")}</p>
       ) : video.kind === "file" ? (
         video.media === "video" ? (
-          <video
+          <LoopVideo
             src={video.url}
             autoPlay
-            loop
-            muted
-            playsInline
-            controls
             aria-label={t("Video tutorial: {name}", { name: exercise.name })}
             className="aspect-video w-full rounded-ctl bg-black object-contain"
           />
@@ -387,5 +379,50 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * A muted demo on loop that stops while nobody can see it: scrolled away, or the app in the
+ * background (a How-to sheet left open during a workout kept decoding with the screen off).
+ * It plays again when it comes back into view, unless the lifter paused it.
+ */
+function LoopVideo({ src, autoPlay, className, "aria-label": label }: { src: string; autoPlay: boolean; className: string; "aria-label": string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const active = useAppActive();
+  const [seen, setSeen] = useState(true);
+  const userPaused = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setSeen(!!e?.isIntersecting), { threshold: 0.1 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!active || !seen) el.pause();
+    else if (autoPlay && !userPaused.current) void el.play().catch(() => {});
+  }, [active, seen, autoPlay]);
+  return (
+    <video
+      ref={ref}
+      src={src}
+      autoPlay={autoPlay}
+      loop
+      muted
+      playsInline
+      controls
+      // A pause the lifter made stays; one this component made does not count.
+      onPause={() => {
+        if (active && seen) userPaused.current = true;
+      }}
+      onPlay={() => {
+        userPaused.current = false;
+      }}
+      aria-label={label}
+      className={className}
+    />
   );
 }

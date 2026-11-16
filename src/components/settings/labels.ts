@@ -26,7 +26,7 @@ export const THEME_LABEL: Record<AppTheme, string> = { system: "System", dark: "
 export const FAQ: { q: string; a: string }[] = [
   {
     q: "Does ABOT work without internet?",
-    a: "Yes. Workouts, routines and records are saved on your phone. Only exercise photos, the full catalog download and backup need a connection.",
+    a: "Yes. Workouts, routines, records and the whole exercise library are on your phone. Only full-size exercise photos, video links and backup need a connection.",
   },
   {
     q: "Do I need an account?",

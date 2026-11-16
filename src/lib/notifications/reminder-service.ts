@@ -83,6 +83,9 @@ let timer: ReturnType<typeof setInterval> | null = null;
  * minutes), and a snoozed reminder whose 30 minutes are up. Runs only in the writing tab, so two
  * open tabs never show the same reminder twice.
  */
+/** When the loop last looked while reminders were off (not written to storage). */
+let idleCheck: number | null = null;
+
 export function startReminderLoop(repo: Repository, routine: (id: string | null) => RoutineInfo | null): () => void {
   stopReminderLoop();
   // The app hands the whole week to Android's scheduler instead, which fires while ABOT is closed.
@@ -93,7 +96,15 @@ export function startReminderLoop(repo: Repository, routine: (id: string | null)
   const tick = async () => {
     const now = Date.now();
     const schedule = (await repo.kv.get("reminders")) ?? DEFAULT_SCHEDULE;
-    const state = (await repo.kv.get("reminderState")) ?? { lastCheck: now - CHECK_MS, fired: [] };
+    // Reminders off and nothing snoozed: no storage writes, only the time of this check, kept in
+    // memory, so a reminder due right after they are switched on still falls inside the window.
+    if (!schedule.enabled && !(await repo.kv.get("reminderSnooze"))) {
+      idleCheck = now;
+      return;
+    }
+    const stored = await repo.kv.get("reminderState");
+    const state = stored ? { ...stored, lastCheck: Math.max(stored.lastCheck, idleCheck ?? 0) } : { lastCheck: idleCheck ?? now - CHECK_MS, fired: [] };
+    idleCheck = null;
     const fired = new Set(state.fired);
     const due: DueReminder[] = dueReminders(schedule, state.lastCheck, now).filter((r) => !fired.has(r.key));
 

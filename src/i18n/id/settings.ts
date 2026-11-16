@@ -229,8 +229,8 @@ export const settings: Record<string, string> = {
 
   // FAQ and About
   "Does ABOT work without internet?": "Apakah ABOT bisa dipakai tanpa internet?",
-  "Yes. Workouts, routines and records are saved on your phone. Only exercise photos, the full catalog download and backup need a connection.":
-    "Bisa. Semua tersimpan di HP. Hanya foto, katalog lengkap, dan backup yang butuh internet.",
+  "Yes. Workouts, routines, records and the whole exercise library are on your phone. Only full-size exercise photos, video links and backup need a connection.":
+    "Ya. Latihan, rutinitas, rekor, dan seluruh pustaka gerakan ada di HP-mu. Hanya foto gerakan ukuran penuh, link video, dan backup yang butuh koneksi.",
   "Do I need an account?": "Apakah aku perlu akun?",
   "No. Sign in with Google only if you want a backup in the cloud or the same data on two phones.":
     "Tidak. Masuk Google hanya untuk backup cloud atau sinkron dua HP.",

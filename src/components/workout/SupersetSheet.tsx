@@ -7,10 +7,13 @@ import { Sheet } from "@/components/ui/Sheet";
 import { ExerciseThumb } from "@/components/exercise/ExerciseThumb";
 import { useT } from "@/i18n";
 
+/** One empty list: a fresh [] on every read re-renders forever once the workout ends (Zustand 5). */
+const NO_EXERCISES: SessionExercise[] = [];
+
 /** Pick the exercise to pair with. Rest then starts only after the last one of the pair. */
 export function SupersetSheet({ item, name, onClose }: { item: SessionExercise; name: string; onClose: () => void }) {
   const t = useT();
-  const exercises = useWorkoutStore((s) => s.active?.exercises ?? []);
+  const exercises = useWorkoutStore((s) => s.active?.exercises ?? NO_EXERCISES);
   const link = useWorkoutStore((s) => s.linkSuperset);
   const { byId } = useAllExercises();
   const others = exercises.filter((e) => e.id !== item.id);
