@@ -132,13 +132,11 @@ export function SetRow({
       onComplete(true);
       return;
     }
-    let reps = set.reps;
-    let weightKg = set.weightKg;
-    if (reps === null && previous?.reps != null) {
-      reps = previous.reps;
-      weightKg = weightKg ?? previous.weightKg;
-      onUpdate({ reps, weightKg });
-    }
+    // A blank box counts as what it shows: last time's number, in grey. Weight and reps fill
+    // on their own, so reps typed over a blank weight keep last time's weight.
+    const reps = set.reps ?? previous?.reps ?? null;
+    const weightKg = set.weightKg ?? previous?.weightKg ?? null;
+    if (reps !== set.reps || weightKg !== set.weightKg) onUpdate({ reps, weightKg });
     if (reps === null || reps <= 0) {
       setError(t("Enter reps before completing this set"));
       repsRef.current?.focus();

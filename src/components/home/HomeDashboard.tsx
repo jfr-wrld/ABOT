@@ -743,7 +743,7 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
             </span>
             <span className="inline-flex items-center gap-1">
               <Dumbbell aria-hidden="true" size={14} />
-              {formatVolume(toDisplay(kg, unit), unit)}
+              {formatVolume(kg, unit)}
             </span>
           </p>
         </div>

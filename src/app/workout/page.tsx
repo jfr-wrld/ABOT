@@ -258,7 +258,7 @@ function WorkoutScreen() {
         exercisesById={byId}
         unit={weightUnit}
         onClose={() => setFinishOpen(false)}
-        onMarkRemaining={() => completeAllRemaining()}
+        onMarkRemaining={() => completeAllRemaining(previousByExercise)}
         onConfirm={async () => {
           // A second tap while the save is awaited would find no workout and go Home instead.
           if (finishing.current) return;

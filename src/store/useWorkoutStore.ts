@@ -92,7 +92,8 @@ interface WorkoutState {
   completeSet: (sessionExerciseId: string, setId: string, completed: boolean) => void;
 
   /** Ticks every unticked set that has reps, a time or a distance; returns how many. Does not start the rest timer. */
-  completeAllRemaining: () => number;
+  /** Ticks every set with a measure; a blank weight takes last time's (by set position), as the rows show it. */
+  completeAllRemaining: (previous?: Record<string, WorkoutSet[] | null>) => number;
   /** Moves the workout start earlier, e.g. when the timer was started late or left running. */
   setStartedAt: (ts: number) => { ok: true } | { ok: false; reason: string };
 
@@ -391,18 +392,19 @@ export const useWorkoutStore = create<WorkoutState>()(
           return { active, restTimer, handoff };
         }),
 
-      completeAllRemaining: () => {
+      completeAllRemaining: (previous) => {
         const a = get().active;
         if (!a) return 0;
         const now = Date.now();
         let n = 0;
         const exercises = a.exercises.map((ex) => ({
           ...ex,
-          sets: ex.sets.map((st) => {
+          sets: ex.sets.map((st, i) => {
             const measured = (st.reps ?? 0) > 0 || (st.durationSec ?? 0) > 0 || (st.distanceM ?? 0) > 0;
             if (st.completed || !measured) return st;
             n++;
-            return ticked(st, ex.exerciseId, true, now);
+            const weightKg = st.weightKg ?? previous?.[ex.exerciseId]?.[i]?.weightKg ?? null;
+            return ticked(weightKg === st.weightKg ? st : { ...st, weightKg }, ex.exerciseId, true, now);
           }),
         }));
         if (n > 0) set({ active: { ...a, exercises } });

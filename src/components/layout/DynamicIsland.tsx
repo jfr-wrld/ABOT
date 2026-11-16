@@ -183,7 +183,8 @@ function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; o
 
   function tick() {
     if (!live || !canTick) return;
-    if (live.set.reps === null) store().updateSet(live.exercise.id, live.set.id, { reps, weightKg: live.set.weightKg ?? live.last?.weightKg ?? null });
+    const weightKg = live.set.weightKg ?? live.last?.weightKg ?? null;
+    if (live.set.reps === null || live.set.weightKg !== weightKg) store().updateSet(live.exercise.id, live.set.id, { reps, weightKg });
     feedback.setComplete();
     store().completeSet(live.exercise.id, live.set.id, true);
     setOpen(false);

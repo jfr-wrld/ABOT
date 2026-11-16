@@ -32,6 +32,23 @@ describe("completeAllRemaining", () => {
     expect(useWorkoutStore.getState().restTimer).toBeNull();
   });
 
+  it("fills a blank weight from last time's set at the same position, and keeps a typed one", () => {
+    const { exId, setIds } = setup();
+    const s = useWorkoutStore.getState();
+    s.updateSet(exId, setIds[0]!, { reps: 8 }); // weight left blank: last time's 60 shows in grey
+    s.updateSet(exId, setIds[1]!, { weightKg: 70, reps: 8 });
+    s.updateSet(exId, setIds[2]!, { reps: 12 }); // last time was bodyweight-only at this position
+    const last = [
+      { id: "a", type: "normal", weightKg: 60, reps: 8, completed: true },
+      { id: "b", type: "normal", weightKg: 65, reps: 8, completed: true },
+      { id: "c", type: "normal", weightKg: null, reps: 12, completed: true },
+    ] as never;
+    useWorkoutStore.getState().completeAllRemaining({ "bench-press-barbell": last });
+    const sets = useWorkoutStore.getState().active!.exercises[0]!.sets;
+    expect(sets.map((x) => x.weightKg)).toEqual([60, 70, null]);
+    expect(sets.every((x) => x.completed)).toBe(true);
+  });
+
   it("returns 0 with no active workout", () => {
     expect(useWorkoutStore.getState().completeAllRemaining()).toBe(0);
   });

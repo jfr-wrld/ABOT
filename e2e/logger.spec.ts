@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
+import { addExercise, expectNoHorizontalOverflow, finishWorkout, freshStart, logSet, startEmptyWorkout, reachSummary, waitForSavedSetting } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await freshStart(page);
@@ -132,6 +132,37 @@ test("mark remaining sets done from the finish dialog", async ({ page }) => {
   await page.getByRole("link", { name: "Back to Home" }).click();
   await page.waitForURL((u) => u.pathname === "/");
   await expect(page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first()).toContainText(/960 kg\s*2 sets/);
+});
+
+test("reps typed over a blank weight keep last time's weight, as the grey box shows", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await finishWorkout(page);
+
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  // Only reps typed; the weight box shows last time's 60 in grey.
+  await logSet(page, 1, null, "8");
+  await expect(page.getByLabel("Set 1 weight in kg")).toHaveValue("60");
+  await finishWorkout(page);
+  const recent = page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first();
+  await expect(recent).toContainText(/480 kg\s*1 set/);
+});
+
+test("Home's finished-day card shows volume in lbs once, not converted twice", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await finishWorkout(page);
+  await page.goto("/settings");
+  await page.getByRole("link", { name: /^General/ }).click();
+  await page.getByText("lbs", { exact: true }).click();
+  await waitForSavedSetting(page, "weightUnit", "lbs");
+  await page.goto("/");
+  // 480 kg is 1,058 lbs; converted twice it read about 5,200.
+  await expect(page.getByText("Done · Today")).toBeVisible();
+  await expect(page.locator("section").filter({ has: page.locator("#hero-heading") }).last()).toContainText("1,058 lbs");
 });
 
 test("adjust start time", async ({ page }) => {

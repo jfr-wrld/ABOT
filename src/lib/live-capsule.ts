@@ -85,7 +85,7 @@ export function nextTarget(
 
 function target(session: WorkoutSession, sessions: WorkoutSession[], byId: Record<string, Exercise>, t: T, ex: WorkoutSession["exercises"][number], i: number): CapsuleTarget {
   const st = ex.sets[i]!;
-  const before = st.reps === null ? previousSets(ex.exerciseId, sessions, session.id, { byId, locationId: session.locationId })?.[i] : undefined;
+  const before = st.reps === null || st.weightKg === null ? previousSets(ex.exerciseId, sessions, session.id, { byId, locationId: session.locationId })?.[i] : undefined;
   const ticked = session.exercises.map((e) => (e.id === ex.id ? { ...e, sets: e.sets.map((s, j) => (j === i ? { ...s, completed: true } : s)) } : e));
   return {
     sessionExerciseId: ex.id,
