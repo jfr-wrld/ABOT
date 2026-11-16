@@ -14,7 +14,7 @@ and plain copy ("ABOT Pro", "Templates", "Upper day at 17:30").
 | `surface` | `#121215` | `#ffffff` | One step off the background. |
 | `text` | `#f4f4f5` | `#18181b` | 16:1 on both. |
 | `text-muted` | `#a1a1aa` | `#52525b` | 7.7:1. |
-| `accent` | `#ccff00` Volt, black text | fill `#65a30d`, text `#3f6212` | The brand colour (owner's choice): the primary action, the current tab, progress. Neon text on white fails contrast, so light pages use a darker lime. |
+| `accent` | `#ccff00` Volt, black text | large fills Volt `#ccff00` with a `#8db300` edge; text `#3f6212`, lines and small marks `#65a30d` | The brand colour (owner's choice): the primary action, the current tab, progress. Light pages keep Volt on buttons, selected pills, the dock's centre button and Home's Volt card (owner, 2026-11-16), black text on it at 17:1. Neon text or thin marks on white fail contrast, so those use the darker lime. The app icon tile is black with the Volt mark in both themes. |
 | `pr` | `#f5c542` gold | `#8a5d00` | Records only: the medal colour (owner, 2026-11-15). |
 | `warmup` | `#7dd3fc` sky | `#0369a1` | Warm-up sets, kept clear of the record gold. |
 | `caution` | `#fb923c` | `#c2410c` | The coach calling a step back (deload, one set fewer). |
