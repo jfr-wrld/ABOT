@@ -124,6 +124,18 @@
   color: var(--color-accent-text);
 }
 
+/* The app icon as a small tile (Get the app): black with the Volt mark, as on the phone. On light
+   pages the mark turns dark green, which vanished on black, so the tile turns white there. */
+.logo-tile {
+  background: #000;
+  color: var(--color-accent);
+}
+[data-theme="light"] .logo-tile {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  color: var(--color-accent-text);
+}
+
 /* Superset labels: the group colour (--ss) as text. On white the pastel group colours fall under
    4.5:1, so light mode darkens them toward black. */
 .ss-text {

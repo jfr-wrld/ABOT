@@ -106,10 +106,9 @@ export function ActiveWorkoutHeader({
           of one size, so the row reads as a set (volume shortens to "12.4k" past 10,000). */}
       <dl className="mt-3 grid grid-cols-4 gap-2">
         <div className="tile min-w-0 rounded-xl border border-ink/10 bg-surface px-2 py-2.5">
-          <dt className="field-label flex items-center gap-1.5">
-            {t("Duration")}
-            {paused && <span className="rounded bg-accent px-1.5 text-[11px] font-bold normal-case tracking-normal text-on-accent">{t("Paused")}</span>}
-          </dt>
+          {/* While paused the label says so in place of "Duration": a chip beside it overflowed
+              the quarter-width tile on phones. */}
+          <dt className={`field-label truncate ${paused ? "!text-accent-text" : ""}`}>{paused ? t("Paused") : t("Duration")}</dt>
           <dd>
             <DurationButton session={session} paused={paused} onOpen={() => setStartOpen(true)} />
           </dd>
@@ -265,7 +264,7 @@ function DurationButton({ session, paused, onOpen }: { session: WorkoutSession; 
           ? t("Duration {time}, paused. Pause or adjust the timer", { time: formatDuration(duration) })
           : t("Duration {time}. Pause or adjust the timer", { time: formatDuration(duration) })
       }
-      className="num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-lg font-bold tracking-tight text-text underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2"
+      className={`num -mx-1 flex min-h-11 w-[calc(100%+8px)] items-center rounded-ctl px-1 text-lg font-bold tracking-tight ${paused ? "text-text-muted" : "text-text"} underline decoration-line-strong decoration-dotted underline-offset-4 hover:bg-surface-2`}
     >
       {formatDuration(duration)}
     </button>
