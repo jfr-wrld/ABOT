@@ -13,7 +13,10 @@ import dynamic from "next/dynamic";
 const AbotProModal = dynamic(() => import("./AbotProModal").then((m) => m.AbotProModal), { ssr: false });
 import { RedeemCodeModal } from "./RedeemCodeModal";
 import { PaymentReturn } from "./PaymentReturn";
-import { ProCelebration } from "./ProCelebration";
+import { useCelebrationStore } from "./celebration-store";
+
+// Loaded only after a purchase, when there is something to celebrate.
+const ProCelebration = dynamic(() => import("./ProCelebration").then((m) => m.ProCelebration), { ssr: false });
 
 /**
  * Once saved settings have loaded: stamps the Founder pass on installs made during the beta,
@@ -36,12 +39,13 @@ export function EntitlementsProvider() {
   // Mounted only while open. Left in the page closed, the full-screen <dialog> made links on
   // other screens (the workout summary's) never settle for a click in the e2e browser.
   const open = usePaywallStore((s) => s.open);
+  const celebrating = useCelebrationStore((s) => s.unlocked !== null);
   return (
     <>
       {open && <AbotProModal />}
       <RedeemCodeModal />
       {hydrated && <PaymentReturn />}
-      <ProCelebration />
+      {celebrating && <ProCelebration />}
     </>
   );
 }

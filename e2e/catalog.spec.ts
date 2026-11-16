@@ -12,11 +12,17 @@ test("the built-in library: free-exercise-db photos offline, Atlas machines with
   await expect(page.getByText("873 exercises", { exact: true })).toBeVisible();
   // No download to make any more.
   await expect(page.getByRole("button", { name: "Catalog", exact: true })).toHaveCount(0);
-  await context.setOffline(true);
   const search = page.getByLabel("Search exercises");
 
+  // The bundled photo loads once while the test server is reachable (offline in the browser cuts
+  // it off too, so a first load offline races the image error), then still shows offline.
   await search.fill("zercher");
   const zercher = page.getByRole("link", { name: /^Zercher Squats/ });
+  const photo = zercher.locator('[data-thumb="photo"] img[src^="/thumbs/fedb/"]');
+  await expect(photo).toHaveJSProperty("complete", true);
+  await context.setOffline(true);
+  await search.fill("");
+  await search.fill("zercher");
   await expect(zercher.locator('[data-thumb="photo"]')).toBeVisible();
 
   await search.fill("pendulum squat");

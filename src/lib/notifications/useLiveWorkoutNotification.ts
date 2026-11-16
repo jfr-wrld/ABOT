@@ -5,7 +5,7 @@ import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { LIVE_TAG, liveContent } from "./live-workout";
 import { capsuleContent, capsulePhoto, useCapsulePrefs } from "@/lib/live-capsule";
-import { exercisePhoto } from "@/components/exercise/ExerciseThumb";
+import { exercisePhoto } from "@/lib/exercise-photo";
 import { askPermission, notificationPermission, registerReminderWorker } from "./reminder-service";
 import { syncPermission, useReminderStore } from "@/store/useReminderStore";
 import { useSettingsStore } from "@/store/useSettingsStore";

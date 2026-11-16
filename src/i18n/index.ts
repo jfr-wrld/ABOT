@@ -1,7 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import type { AppLanguage } from "@/types/workout";
-import { ID } from "./id";
 
 /**
  * English and Bahasa Indonesia. The English text is the key: `t("Start an empty workout")`
@@ -20,8 +19,45 @@ export function resolveLang(setting: AppLanguage, phone?: string): Lang {
   return tag.startsWith("id") || tag.startsWith("in") ? "id" : "en";
 }
 
+/** Mirrors the language setting for the first load, which runs before saved settings are read. */
+export const LANG_KEY = "abot.lang";
+
+// The Indonesian dictionary is its own chunk: English readers never download it.
+let ID: Record<string, string> | null = null;
+let idLoad: Promise<void> | null = null;
+const idListeners = new Set<() => void>();
+
+/** Loads the Indonesian dictionary once. Never rejects; a failed load is tried again on the next call. */
+export function loadIndonesian(): Promise<void> {
+  idLoad ??= import("./id")
+    .then((m) => {
+      ID = m.ID;
+      for (const fn of idListeners) fn();
+    })
+    .catch(() => {
+      idLoad = null;
+    });
+  return idLoad;
+}
+
+/** Indonesian is probably wanted: the last saved choice, else the phone's language. */
+export function indonesianLikely(): boolean {
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(LANG_KEY);
+  } catch {}
+  return resolveLang(saved === "en" || saved === "id" ? saved : "auto") === "id";
+}
+
+if (typeof window !== "undefined" && indonesianLikely()) void loadIndonesian();
+
+const onIndonesian = (fn: () => void) => {
+  idListeners.add(fn);
+  return () => void idListeners.delete(fn);
+};
+
 export function translate(lang: Lang, text: string, vars?: Vars): string {
-  const s = lang === "id" ? (ID[text] ?? text) : text;
+  const s = lang === "id" ? (ID?.[text] ?? text) : text;
   return vars ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : s;
 }
 
@@ -39,14 +75,18 @@ export interface T {
   locale: string;
 }
 
-const noop = () => () => {};
-
-/** The current language. Static HTML is English; the app switches right after it loads. */
+/**
+ * The current language. Static HTML is English; the app switches right after it loads, and to
+ * Indonesian only once its dictionary is in, so a screen is never half translated.
+ */
 export function useLang(): Lang {
   const setting = useSettingsStore((s) => s.language);
   return useSyncExternalStore(
-    noop,
-    () => resolveLang(setting),
+    onIndonesian,
+    () => {
+      const lang = resolveLang(setting);
+      return lang === "id" && !ID ? "en" : lang;
+    },
     () => "en",
   );
 }

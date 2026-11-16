@@ -1,7 +1,6 @@
 import type { Exercise } from "@/types/workout";
 import { normalizeExercise } from "./normalize";
 import { mapCatalogEntry } from "./catalog";
-import { SEED_EXERCISES } from "./exercises";
 
 /**
  * The library beyond the seed exercises, shipped with the app and loaded in its own chunks after
@@ -17,7 +16,11 @@ import { SEED_EXERCISES } from "./exercises";
 export const isAtlas = (e: Pick<Exercise, "id">) => e.id.startsWith("atlas-");
 
 export async function loadExtendedLibrary(): Promise<Exercise[]> {
-  const [{ FEDB_ROWS }, { ATLAS_INPUTS }] = await Promise.all([import("./fedb-library.generated"), import("./atlas-catalog.generated")]);
+  const [{ FEDB_ROWS }, { ATLAS_INPUTS }, { SEED_EXERCISES }] = await Promise.all([
+    import("./fedb-library.generated"),
+    import("./atlas-catalog.generated"),
+    import("./exercises"),
+  ]);
   const seedSources = new Set(SEED_EXERCISES.map((e) => e.sourceId).filter((x): x is string => !!x));
   const fedb = FEDB_ROWS.map((r) => mapCatalogEntry(r, seedSources)).filter((x): x is Exercise => x !== null);
   const atlas = ATLAS_INPUTS.map((row) => ({ ...normalizeExercise(row), isCatalog: true }));

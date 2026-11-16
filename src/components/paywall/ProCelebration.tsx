@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { animate } from "framer-motion";
-import { create } from "zustand";
 import { motion, useReducedMotionConfig } from "framer-motion";
 import { Activity, ArrowRight, Brain, Mic, Sparkles } from "@/components/icons";
 import type { Unlocked } from "@/lib/celebration";
@@ -12,12 +11,7 @@ import { feedback } from "@/lib/feedback";
 import { onBack } from "@/lib/native/back-stack";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useT } from "@/i18n";
-
-export const useCelebrationStore = create<{ unlocked: Unlocked | null; show: (u: Unlocked) => void; close: () => void }>()((set) => ({
-  unlocked: null,
-  show: (unlocked) => set({ unlocked }),
-  close: () => set({ unlocked: null }),
-}));
+import { useCelebrationStore } from "./celebration-store";
 
 const SPARKS = 24;
 const EMBERS = 18;

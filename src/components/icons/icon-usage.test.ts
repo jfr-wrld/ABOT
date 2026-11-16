@@ -1,10 +1,12 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { iconUsage } from "../../../scripts/icon-usage.mjs";
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
-const generated = readFileSync(here("./solar.generated.tsx"), "utf8");
+const generated = readdirSync(here("./solar"))
+  .map((f) => readFileSync(here(`./solar/${f}`), "utf8"))
+  .join("\n");
 const shipped = Object.fromEntries(
   [...generated.matchAll(/export const (\w+) = .*?solarIcon\("\w+", "(bold|linear)", (null|\{)[^;]*?, (null|\{)/g)].map((m) => [
     m[1],

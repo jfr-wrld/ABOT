@@ -3,23 +3,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
-import { Check, DumbbellLarge, Play, Timer } from "@/components/icons";
-import { MuscleMap } from "@/components/anatomy/MuscleMap";
-import { LiftList } from "@/components/routines/RoutineCard";
-import { Sheet } from "@/components/ui/Sheet";
-import { Button } from "@/components/ui/Button";
+import { Check, DumbbellLarge, Timer } from "@/components/icons";
+import dynamic from "next/dynamic";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useReminderStore } from "@/store/useReminderStore";
-import { useAllExercises } from "@/store/useExerciseStore";
 import { setProgress } from "@/lib/live-set";
 import { Ring } from "@/components/phase/visuals";
 import { nextProtocol } from "@/lib/home";
-import { routineSummary } from "@/lib/routine-summary";
 import { useNow } from "@/lib/useNow";
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
-import type { Routine } from "@/types/workout";
+
+// The sheet and its muscle map load on the first tap, not with every page.
+const loadSheet = () => import("./TodaySheet");
+const TodaySheet = dynamic(() => loadSheet().then((m) => m.TodaySheet), { ssr: false });
 
 const DAY = 86_400_000;
 const startOfDay = (t: number) => new Date(new Date(t).setHours(0, 0, 0, 0)).getTime();
@@ -76,6 +74,8 @@ export function TodayButton() {
   const setsDone = useWorkoutStore((s) => (s.active ? setProgress(s.active).done : 0));
   const setsTotal = useWorkoutStore((s) => (s.active ? setProgress(s.active).total : 0));
   const [open, setOpen] = useState(false);
+  // Set on the first tap; the sheet stays mounted after that.
+  const [opened, setOpened] = useState(false);
   // "done" first when today's workout is finished and the tick has not played yet today.
   const [phase, setPhase] = useState<"plan" | "done">("plan");
   useEffect(() => {
@@ -117,8 +117,13 @@ export function TodayButton() {
         onClick={() => {
           feedback.tick();
           if (live) router.push("/workout");
-          else setOpen(true);
+          else {
+            setOpened(true);
+            setOpen(true);
+          }
         }}
+        onPointerEnter={() => void loadSheet()}
+        onFocus={() => void loadSheet()}
         aria-label={live && setsTotal > 0 ? `${label}. ${t("{done} of {total} sets done", { done: setsDone, total: setsTotal })}` : label}
         aria-haspopup={live ? undefined : "dialog"}
         className={`today-fab ${live ? "today-fab-live" : ""} absolute left-1/2 top-0 z-10 flex size-[60px] -translate-x-1/2 -translate-y-[18px] items-center justify-center overflow-hidden rounded-full`}
@@ -163,61 +168,7 @@ export function TodayButton() {
           )}
         </AnimatePresence>
       </button>
-      <TodaySheet open={open} onClose={() => setOpen(false)} routine={routine} doneToday={doneToday} />
+      {opened && <TodaySheet open={open} onClose={() => setOpen(false)} routine={routine} doneToday={doneToday} />}
     </>
-  );
-}
-
-function TodaySheet({ open, onClose, routine, doneToday }: { open: boolean; onClose: () => void; routine: Routine | null; doneToday: boolean }) {
-  const t = useT();
-  const router = useRouter();
-  const { byId } = useAllExercises();
-  const active = useWorkoutStore((s) => s.active);
-  const startFromRoutine = useWorkoutStore((s) => s.startFromRoutine);
-  const sum = routine ? routineSummary(routine, byId) : null;
-  const title = routine ? (doneToday ? t("Next: {name}", { name: routine.name }) : routine.name) : t("No workout planned");
-  return (
-    <Sheet
-      open={open}
-      onClose={onClose}
-      title={title}
-      footer={
-        routine && (
-          <Button
-            variant="primary"
-            className="min-h-12 w-full text-base"
-            onClick={() => {
-              onClose();
-              if (!active) startFromRoutine(routine);
-              router.push("/workout");
-            }}
-          >
-            <Play aria-hidden="true" size={18} />
-            {active ? t("Continue workout") : t("Start")}
-          </Button>
-        )
-      }
-    >
-      {routine && sum ? (
-        <div className="flex flex-col gap-3">
-          {doneToday && <p className="text-sm font-semibold text-accent">{t("Today's workout is done.")}</p>}
-          {sum.muscles.length > 0 && (
-            <div className="mx-auto w-full max-w-[260px]">
-              <MuscleMap primary={sum.muscles} width={260} />
-            </div>
-          )}
-          <LiftList
-            open
-            items={sum.lines.map((l) => ({
-              name: byId[l.exerciseId]?.name ?? t("Removed exercise"),
-              detail: l.reps ? `${l.sets}×${l.reps}` : t("{n} sets", { n: l.sets }),
-              superset: !!l.superset,
-            }))}
-          />
-        </div>
-      ) : (
-        <p className="text-sm text-text-muted">{t("Set up your week to see today's workout here.")}</p>
-      )}
-    </Sheet>
   );
 }
