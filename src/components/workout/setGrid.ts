@@ -8,7 +8,7 @@ import type { LogType } from "@/types/workout";
  * a cardio set has distance ("12.25") and time ("28:10").
  */
 export function setGridColumns(showRpe: boolean, logType?: LogType): string {
-  const rpe = showRpe ? "40px " : "";
+  const rpe = showRpe ? "44px " : "";
   if (logType === "duration") return `44px minmax(0,1fr) 108px ${rpe}44px`;
   if (logType === "distance_duration") return `44px minmax(0,1fr) 52px 64px ${rpe}44px`;
   return `44px minmax(0,1fr) 60px 44px ${rpe}44px`;

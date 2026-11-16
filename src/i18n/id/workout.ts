@@ -588,4 +588,5 @@ export const workout: Record<string, string> = {
   "Enter how long the workout took": "Isi berapa lama latihannya",
   "Give the workout a name": "Beri nama latihannya",
   "Add at least one set with reps or a time": "Tambahkan minimal satu set dengan repetisi atau waktu",
+  "Finish and save": "Selesai dan simpan",
 };

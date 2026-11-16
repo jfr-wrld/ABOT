@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRoutineStore } from "@/store/useRoutineStore";
-import { Plus, Dumbbell } from "@/components/icons";
+import { Check, Plus, Dumbbell } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { getActivePersistence } from "@/store/persistence";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -224,6 +224,15 @@ function WorkoutScreen() {
           <Plus aria-hidden="true" size={18} className="text-accent" />
           {t("Add exercise")}
         </button>
+
+        {/* After the last set the thumb is down here: Finish is too, once a set is done, so the
+            lifter does not scroll back to the header for it. */}
+        {furthest >= 0 && (
+          <Button variant="primary" onClick={() => setFinishOpen(true)} className="mt-3 min-h-12 w-full text-base">
+            <Check aria-hidden="true" size={18} />
+            {t("Finish and save")}
+          </Button>
+        )}
 
         {/* Kept quiet on purpose: Finish is the one action this screen should pull the eye to. */}
         <button

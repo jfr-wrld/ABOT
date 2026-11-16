@@ -83,7 +83,7 @@ export async function migrateFromLocalStorage(
       biologicalSex: null,
       myFoods: [],
       trainingPlan: null,
-      showRpe: typeof s.showRpe === "boolean" ? s.showRpe : true,
+      showRpe: typeof s.showRpe === "boolean" ? s.showRpe : false,
     });
   }
   await repo.kv.set("migratedFromLocalStorage", true);

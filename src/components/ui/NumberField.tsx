@@ -45,7 +45,8 @@ export function NumberField({
         let next = n === null || Number.isNaN(n) ? null : n;
         if (next !== null && max !== undefined && next > max) next = max;
         if (next !== null && next < min) next = min;
-        setDraft(raw);
+        // Past the limit, the box shows the limit at once instead of what was typed until blur.
+        setDraft(next !== null && next !== n ? String(next) : raw);
         setSeenValue(next);
         onCommit(next);
       }}

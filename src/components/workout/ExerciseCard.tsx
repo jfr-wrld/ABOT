@@ -154,6 +154,27 @@ function ExerciseCardView({
 
   const allDone = item.sets.length > 0 && item.sets.every((x) => x.completed);
   const foldable = allDone && movedOn;
+  // Removing the last open set can fold the card or move focus on at once; the Undo for it stays
+  // under the card in every form until it times out (it used to vanish with the open card).
+  const undoBar = (
+    <div role="status" aria-live="polite">
+      {removed && (
+        <div className="mt-1 flex items-center justify-between gap-3 rounded-ctl bg-surface-2 py-1 pl-3 pr-1 text-sm">
+          <span>{t("Set removed")}</span>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              store.restoreSet(item.id, removed.set, removed.index);
+              setRemoved(null);
+            }}
+            className="text-accent"
+          >
+            {t("Undo")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
   if (preview && onFocus) {
     // The name stays a heading and the superset keeps its label; the whole row is one button
     // laid over it, named for what it does.
@@ -189,6 +210,7 @@ function ExerciseCardView({
           }}
           className="absolute inset-0 rounded-card hover:bg-ink/[0.03]"
         />
+        {removed && <div className="relative pb-1">{undoBar}</div>}
       </section>
     );
   }
@@ -223,6 +245,7 @@ function ExerciseCardView({
           <Check aria-label={t("Done")} size={18} className="shrink-0 text-accent" />
           <ChevronDown aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
         </button>
+        {undoBar}
       </section>
     );
   }
@@ -374,23 +397,7 @@ function ExerciseCardView({
           />
         ))}
       </ol>
-      <div role="status" aria-live="polite">
-        {removed && (
-          <div className="mt-1 flex items-center justify-between gap-3 rounded-ctl bg-surface-2 py-1 pl-3 pr-1 text-sm">
-            <span>{t("Set removed")}</span>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                store.restoreSet(item.id, removed.set, removed.index);
-                setRemoved(null);
-              }}
-              className="text-accent"
-            >
-              {t("Undo")}
-            </Button>
-          </div>
-        )}
-      </div>
+      {undoBar}
 
       <div className={`mt-2 grid gap-2 ${warmups.length ? "grid-cols-[minmax(0,1fr)_auto]" : ""}`}>
         <button

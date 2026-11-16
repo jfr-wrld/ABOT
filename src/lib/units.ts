@@ -20,14 +20,23 @@ export function ftInToCm(ft: number, inch: number): number {
   return Math.round((ft * 12 + inch) * CM_PER_INCH * 10) / 10;
 }
 
+/**
+ * A stored weight as it fills an input box. kg keeps two decimals (1.25 kg plates); lbs keeps one,
+ * so a weight logged in kg reads 220.5 lbs instead of 220.46, while 222.3 typed in lbs stays 222.3.
+ */
+export function toInput(kg: number, unit: WeightUnit): number {
+  const v = unit === "kg" ? kg : kgToLbs(kg);
+  return unit === "kg" ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10;
+}
+
 /** Typed value in the user's unit -> kg for storage. */
 export function fromDisplay(value: number, unit: WeightUnit): number {
   return unit === "kg" ? value : lbsToKg(value);
 }
 
 export function formatWeight(kg: number, unit: WeightUnit, withUnit = true): string {
-  const v = toDisplay(kg, unit);
-  const s = Number.isInteger(v) ? v.toString() : v.toFixed(1).replace(/\.0$/, "");
+  // The same rounding as the input boxes: 102.25 kg reads 102.25 (it read 102.3), 100 kg in lbs 220.5.
+  const s = String(toInput(kg, unit));
   return withUnit ? `${s} ${unit}` : s;
 }
 

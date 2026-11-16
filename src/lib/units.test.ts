@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cmToFtIn, fromDisplay, ftInToCm, toDisplay } from "./units";
+import { cmToFtIn, formatWeight, fromDisplay, ftInToCm, toDisplay, toInput } from "./units";
 
 describe("unit round trip", () => {
   it("62.5 kg survives a trip through lbs within 0.001", () => {
@@ -24,5 +24,21 @@ describe("height in feet and inches", () => {
   });
   it("5 ft 7 in is 170.2 cm", () => {
     expect(ftInToCm(5, 7)).toBe(170.2);
+  });
+});
+
+describe("toInput and formatWeight", () => {
+  it("shows a kg weight in lbs with one decimal, not two", () => {
+    expect(toInput(100, "lbs")).toBe(220.5);
+    expect(formatWeight(100, "lbs")).toBe("220.5 lbs");
+  });
+  it("keeps what was typed in lbs", () => {
+    expect(toInput(fromDisplay(222.3, "lbs"), "lbs")).toBe(222.3);
+    expect(toInput(fromDisplay(225, "lbs"), "lbs")).toBe(225);
+  });
+  it("keeps small kg plates", () => {
+    expect(toInput(102.25, "kg")).toBe(102.25);
+    expect(formatWeight(102.25, "kg")).toBe("102.25 kg");
+    expect(formatWeight(60, "kg", false)).toBe("60");
   });
 });

@@ -13,7 +13,7 @@ import { newSet, useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { isTimed } from "@/lib/set-metrics";
-import { fromDisplay, toDisplay } from "@/lib/units";
+import { fromDisplay, toInput } from "@/lib/units";
 import { newId } from "@/lib/id";
 import { historyPath } from "@/lib/routes";
 import { useT } from "@/i18n";
@@ -214,7 +214,7 @@ function SessionEditor() {
                               aria-label={t("Set {n} weight in {unit}", { n, unit })}
                               placeholder={unit}
                               step={0.5}
-                              value={st.weightKg === null ? null : toDisplay(Math.abs(st.weightKg), unit)}
+                              value={st.weightKg === null ? null : toInput(Math.abs(st.weightKg), unit)}
                               onCommit={(v) => patchSet(ex.id, st.id, { weightKg: v === null ? null : sign * fromDisplay(Math.abs(v), unit) })}
                             />
                           )}

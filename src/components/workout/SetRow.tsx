@@ -11,7 +11,7 @@ import { clockText, distanceUnit, fromDistance, hasMeasure, isTimed, setText, to
 import { press } from "@/components/ui/Button";
 import { SetTypeChip, setTypeA11yName } from "./SetTypeChip";
 import { SetTypeMenu } from "./SetTypeMenu";
-import { formatWeight, fromDisplay, toDisplay } from "@/lib/units";
+import { formatWeight, fromDisplay, toInput } from "@/lib/units";
 import { useT } from "@/i18n";
 import { feedback } from "@/lib/feedback";
 import { stepped } from "@/lib/set-steps";
@@ -89,7 +89,7 @@ export function SetRow({
       : null;
   // The field shows the amount; the sign comes from the exercise's Added / Assisted choice.
   const sign = isBodyweight && assisted ? -1 : 1;
-  const shown = (kg: number) => toDisplay(Math.abs(kg), unit);
+  const shown = (kg: number) => toInput(Math.abs(kg), unit);
 
   function fillFromPrevious() {
     if (!previous) return;
@@ -432,7 +432,7 @@ function StepButton({ label, onClick, children }: { label: string; onClick: () =
         feedback.tick();
         onClick();
       }}
-      className="min-h-[40px] min-w-[52px] rounded-ctl border border-line-strong bg-surface-2 px-2 font-mono text-sm font-bold tabular-nums text-text transition-transform duration-100 hover:bg-press active:scale-95 motion-reduce:active:scale-100"
+      className="min-h-11 min-w-[52px] rounded-ctl border border-line-strong bg-surface-2 px-2 font-mono text-sm font-bold tabular-nums text-text transition-transform duration-100 hover:bg-press active:scale-95 motion-reduce:active:scale-100"
     >
       {children}
     </button>

@@ -138,7 +138,7 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     restTimerAlert: typeof raw.restTimerAlert === "boolean" ? raw.restTimerAlert : DEFAULT_SETTINGS.restTimerAlert,
     firstDayOfWeek: raw.firstDayOfWeek === 0 ? 0 : 1,
     activeLocationId: typeof raw.activeLocationId === "string" ? raw.activeLocationId : null,
-    showRpe: typeof raw.showRpe === "boolean" ? raw.showRpe : true,
+    showRpe: typeof raw.showRpe === "boolean" ? raw.showRpe : false,
     profileName: typeof raw.profileName === "string" ? raw.profileName.trim().slice(0, PROFILE_LIMITS.nameMax) : "",
     profileHandle: typeof raw.profileHandle === "string" ? normalizeHandle(raw.profileHandle) : "",
     language: raw.language === "en" || raw.language === "id" ? raw.language : "auto",
