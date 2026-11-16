@@ -3,7 +3,7 @@
 Next.js 16 (App Router) + TypeScript + Tailwind v4 + Zustand (persist) + Recharts + Lucide.
 Weights are stored in kg everywhere; convert at the UI edge. See `src/types/workout.ts`.
 Icons: Solar (CC BY 4.0), imported only from `@/components/icons`; add one in `scripts/make-icons.mjs`
-(it writes `src/components/icons/solar.generated.tsx` from the `@iconify-json/solar` dev dependency, with only
+(it writes one file per icon in `src/components/icons/solar/`, re-exported by `solar.generated.tsx`, from the `@iconify-json/solar` dev dependency, with only
 the Bold/Linear styles the source draws; rerun it when `src/components/icons/icon-usage.test.ts` fails).
 
 Commands: `npm run dev`, `npm test` (vitest), `npm run e2e` (Playwright), `npm run lint`, `npm run build`.

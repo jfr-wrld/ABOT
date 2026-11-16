@@ -4,6 +4,8 @@ import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { createTabLock, type TabLock } from "@/lib/tabLock";
 import { bootstrapStores } from "./persistence";
 import { useHydration } from "./hydration";
+import { useExerciseStore } from "./useExerciseStore";
+import { indonesianLikely, loadIndonesian } from "@/i18n";
 
 /**
  * Starts ABOT in this tab: claim the writer lock, open storage, load the stores, attach
@@ -13,6 +15,7 @@ let started: Promise<void> | null = null;
 let lock: TabLock | null = null;
 let opened: OpenedRepository | null = null;
 let detach: (() => void) | null = null;
+let seedLoad: Promise<void> | null = null;
 const startedHooks: (() => void)[] = [];
 
 /** Runs `fn` each time this tab becomes the writer (first start and every take-over). */
@@ -22,6 +25,8 @@ export function onTabStarted(fn: () => void): void {
 
 export function startApp(): Promise<void> {
   started ??= (async () => {
+    // The library downloads while the lock and storage open; attach waits for it.
+    seedLoad ??= useExerciseStore.getState().loadSeed();
     lock = createTabLock();
     const claim = await lock.claim();
     if (claim === "busy") {
@@ -43,6 +48,7 @@ export async function takeOverHere(): Promise<void> {
 
 async function attach(): Promise<void> {
   opened ??= await getRepository();
+  await Promise.all([(seedLoad ??= useExerciseStore.getState().loadSeed()), indonesianLikely() ? loadIndonesian() : null]);
   const { persistence } = await bootstrapStores(opened, window.localStorage);
   useHydration.getState().setTab("owner");
   if (!persistence) return;

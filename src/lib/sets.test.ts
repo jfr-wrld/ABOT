@@ -19,7 +19,7 @@ describe("setNumbers", () => {
 
 describe("buildExerciseIndex", () => {
   it("contains every seed exercise sorted by name", () => {
-    const { list, byId } = buildExerciseIndex([]);
+    const { list, byId } = buildExerciseIndex(SEED_EXERCISES, []);
     expect(list).toHaveLength(SEED_EXERCISES.length);
     expect(Object.keys(byId)).toHaveLength(SEED_EXERCISES.length);
     const names = list.map((e) => e.name);
@@ -41,7 +41,7 @@ describe("buildExerciseIndex", () => {
       logType: "weight_reps",
       isMachineDependent: false,
     };
-    const { list, byId } = buildExerciseIndex([custom]);
+    const { list, byId } = buildExerciseIndex(SEED_EXERCISES, [custom]);
     expect(list).toHaveLength(SEED_EXERCISES.length + 1);
     expect(byId["custom-1"]).toBe(custom);
   });
@@ -59,7 +59,7 @@ describe("buildExerciseIndex with the catalog", () => {
     const a = cat("fedb-Zercher_Squats", "Zercher Squats");
     const b = cat("fedb-Bicycling", "Bicycling");
     const ownedB = { ...b, name: "Bicycling (mine)" };
-    const { list, byId } = buildExerciseIndex([ownedB], [a, b]);
+    const { list, byId } = buildExerciseIndex(SEED_EXERCISES, [ownedB], [a, b]);
     expect(list).toHaveLength(SEED_EXERCISES.length + 2);
     expect(byId["fedb-Bicycling"]!.name).toBe("Bicycling (mine)");
     expect(byId["fedb-Zercher_Squats"]).toBe(a);

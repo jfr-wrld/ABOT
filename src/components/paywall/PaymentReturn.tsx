@@ -9,7 +9,7 @@ import { useAppResumed } from "@/lib/native/useAppResumed";
 import { updateEntitlement } from "@/store/useEntitlements";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useT } from "@/i18n";
-import { useCelebrationStore } from "./ProCelebration";
+import { useCelebrationStore } from "./celebration-store";
 import { celebrationCase } from "@/lib/celebration";
 
 /**

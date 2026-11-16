@@ -7,6 +7,9 @@ import { newId } from "@/lib/id";
 import { loadExtendedLibrary, withoutBuiltIn } from "@/data/extended-library";
 
 interface ExerciseState {
+  /** The built-in library (data/exercises); empty until loadSeed, which startApp awaits. */
+  seed: Exercise[];
+  loadSeed: () => Promise<void>;
   /** Custom exercises plus catalog exercises the user has logged (persisted, backed up). */
   custom: Exercise[];
   /** The optional downloaded catalog (stored separately, not backed up). */
@@ -29,6 +32,16 @@ interface ExerciseState {
 
 export const useExerciseStore = create<ExerciseState>()(
     (set) => ({
+      seed: [],
+      loadSeed: async () => {
+        if (useExerciseStore.getState().seed.length > 0) return;
+        try {
+          const { SEED_EXERCISES } = await import("@/data/exercises");
+          set({ seed: SEED_EXERCISES });
+        } catch {
+          // Same as loadExtended: a chunk that fails to load must not stop the app starting.
+        }
+      },
       custom: [],
       catalog: [],
       setCatalog: (catalog) => set({ catalog }),
@@ -68,28 +81,28 @@ export const useExerciseStore = create<ExerciseState>()(
     }),
 );
 
-/** Seed + custom, as a sorted list and an id lookup. Stable while `custom` is unchanged. */
 /**
  * One index for the whole app, rebuilt only when the custom or catalog lists change. Built per
  * component before, so a workout with eight cards sorted about 1,000 exercises eight times.
  */
-let cached: { custom: unknown; catalog: unknown; extended: unknown; index: ReturnType<typeof buildExerciseIndex> } | null = null;
-function sharedIndex(custom: Exercise[], catalog: Exercise[], extended: Exercise[]) {
-  if (!cached || cached.custom !== custom || cached.catalog !== catalog || cached.extended !== extended) {
-    cached = { custom, catalog, extended, index: buildExerciseIndex(custom, withoutBuiltIn(extended, catalog)) };
+let cached: { seed: unknown; custom: unknown; catalog: unknown; extended: unknown; index: ReturnType<typeof buildExerciseIndex> } | null = null;
+function sharedIndex(seed: Exercise[], custom: Exercise[], catalog: Exercise[], extended: Exercise[]) {
+  if (!cached || cached.seed !== seed || cached.custom !== custom || cached.catalog !== catalog || cached.extended !== extended) {
+    cached = { seed, custom, catalog, extended, index: buildExerciseIndex(seed, custom, withoutBuiltIn(extended, catalog)) };
   }
   return cached.index;
 }
 
 export function useAllExercises() {
+  const seed = useExerciseStore((s) => s.seed);
   const custom = useExerciseStore((s) => s.custom);
   const catalog = useExerciseStore((s) => s.catalog);
   const extended = useExerciseStore((s) => s.extended);
-  return useMemo(() => sharedIndex(custom, catalog, extended), [custom, catalog, extended]);
+  return useMemo(() => sharedIndex(seed, custom, catalog, extended), [seed, custom, catalog, extended]);
 }
 
 /** One exercise by id, outside React (seed, extended library or custom); undefined when unknown. */
 export function exerciseById(id: string): Exercise | undefined {
-  const { custom, catalog, extended } = useExerciseStore.getState();
-  return sharedIndex(custom, catalog, extended).byId[id];
+  const { seed, custom, catalog, extended } = useExerciseStore.getState();
+  return sharedIndex(seed, custom, catalog, extended).byId[id];
 }

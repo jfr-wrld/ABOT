@@ -26,8 +26,8 @@ import { runBack } from "@/lib/native/back-stack";
  */
 /** Every exercise, read when a notification button needs a name or a previous set. */
 const exerciseIndex = () => {
-  const { custom, catalog } = useExerciseStore.getState();
-  return buildExerciseIndex(custom, catalog);
+  const { seed, custom, catalog } = useExerciseStore.getState();
+  return buildExerciseIndex(seed, custom, catalog);
 };
 
 export function NativeShell() {
