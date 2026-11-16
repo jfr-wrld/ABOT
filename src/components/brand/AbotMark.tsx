@@ -24,8 +24,10 @@ export function AbotMark({ size = 24, title }: { size?: number; title?: string }
 export function AbotWordmark({ size = 28 }: { size?: number }) {
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="text-accent">
-        <AbotMark size={size} />
+      {/* The mark on the app icon's black tile, Volt in both themes (owner, 2026-11-16): on light
+          pages a bare mark could only be the darker lime. On dark pages the tile melts into the page. */}
+      <span className="logo-tile flex items-center justify-center rounded-[10px]" style={{ width: size + 6, height: size + 6 }}>
+        <AbotMark size={size - 4} />
       </span>
       <span className="text-2xl font-extrabold leading-none tracking-tight">ABOT</span>
     </span>
