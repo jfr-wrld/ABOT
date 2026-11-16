@@ -410,8 +410,20 @@ export const settings: Record<string, string> = {
   "About {name}": "Tentang {name}",
   Loading: "Memuat",
   "Loading saved workouts from this device": "Memuat latihan tersimpan dari perangkat ini",
-  "ABOT keeps your changes in memory and retries when you come back to the app. Export a backup from Settings to keep a copy now.":
-    "Perubahanmu disimpan sementara dan dicoba lagi nanti. Ekspor backup dari Pengaturan untuk jaga-jaga.",
+  // Storage trouble (layout/StorageAlert)
+  "Your saved workouts could not be read, so nothing you log now will be saved. Reload ABOT to try again; your earlier workouts are still on this device.":
+    "Latihan tersimpan tidak bisa dibaca, jadi yang kamu catat sekarang tidak akan tersimpan. Muat ulang ABOT untuk mencoba lagi; latihan sebelumnya masih ada di perangkat ini.",
+  "This browser does not let ABOT save data (private browsing, or storage turned off). Workouts stay only until this tab closes. Export a backup from Settings to keep a copy.":
+    "Browser ini tidak mengizinkan ABOT menyimpan data (mode privat, atau penyimpanan dimatikan). Latihan hanya bertahan sampai tab ini ditutup. Ekspor backup dari Pengaturan untuk menyimpan salinan.",
+  "This device is out of storage, so your last change was not saved. Free up some space; ABOT keeps your changes and tries again when you come back. Export a backup from Settings to keep a copy now.":
+    "Penyimpanan perangkat penuh, jadi perubahan terakhirmu belum tersimpan. Kosongkan sedikit ruang; ABOT menyimpan perubahanmu sementara dan mencoba lagi saat kamu kembali. Ekspor backup dari Pengaturan untuk menyimpan salinan sekarang.",
+  "Your last change could not be saved to this device. ABOT keeps your changes and tries again when you come back. Export a backup from Settings to keep a copy now.":
+    "Perubahan terakhirmu gagal disimpan di perangkat ini. ABOT menyimpan perubahanmu sementara dan mencoba lagi saat kamu kembali. Ekspor backup dari Pengaturan untuk menyimpan salinan sekarang.",
+  "Reload ABOT": "Muat ulang ABOT",
+  "This workout will not be saved": "Latihan ini tidak akan tersimpan",
+  "ABOT could not read your saved workouts, so anything you log now is lost when the app closes. Reload first; your earlier workouts are still on this device.":
+    "ABOT tidak bisa membaca latihan tersimpan, jadi yang kamu catat sekarang hilang saat aplikasi ditutup. Muat ulang dulu; latihan sebelumnya masih ada di perangkat ini.",
+  "Log anyway": "Tetap catat",
   // Errors from data and photo helpers, translated where they are shown
   "This file is not valid JSON": "File ini bukan JSON yang valid",
   "This is not an ABOT backup": "Ini bukan file backup ABOT",

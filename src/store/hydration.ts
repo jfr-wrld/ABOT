@@ -2,6 +2,16 @@ import { create } from "zustand";
 import type { PersistStatus } from "@/lib/storagePersistence";
 
 /**
+ * A problem reading or keeping saved data. `kind` picks the message the lifter sees (translated
+ * in StorageAlert); `detail` is the browser's own error text, shown folded for support.
+ * unreadable: saved data exists but could not be read, so nothing new is saved.
+ * memory-only: the browser blocks storage (private mode, storage off), data lasts this tab.
+ */
+export type StorageIssue = { kind: "unreadable" | "memory-only"; detail: string };
+/** A change that could not be written: the device is full, or the write failed otherwise. */
+export type WriteIssue = { kind: "full" | "failed"; detail: string };
+
+/**
  * Stores start empty so server and first client render agree. `StoreHydrator` loads
  * them from the repository after mount and flips `hydrated`; pages show a loading state
  * until then. `durable` is false when data only lives in memory (IndexedDB blocked).
@@ -9,12 +19,12 @@ import type { PersistStatus } from "@/lib/storagePersistence";
 interface HydrationState {
   hydrated: boolean;
   durable: boolean;
-  error: string | null;
-  setHydrated: (r: { durable: boolean; error: string | null }) => void;
-  reportError: (message: string) => void;
+  error: StorageIssue | null;
+  setHydrated: (r: { durable: boolean; error: StorageIssue | null }) => void;
+  reportError: (issue: StorageIssue) => void;
   /** Set while some change could not be written; cleared when every retry has succeeded. */
-  writeError: string | null;
-  setWriteError: (message: string | null) => void;
+  writeError: WriteIssue | null;
+  setWriteError: (issue: WriteIssue | null) => void;
   /** Whether the browser promised not to clear IndexedDB on its own; null until asked. */
   persistStatus: PersistStatus | null;
   setPersistStatus: (s: PersistStatus) => void;
@@ -28,7 +38,7 @@ export const useHydration = create<HydrationState>((set) => ({
   durable: true,
   error: null,
   setHydrated: ({ durable, error }) => set({ hydrated: true, durable, error }),
-  reportError: (message) => set({ error: message }),
+  reportError: (issue) => set({ error: issue }),
   writeError: null,
   setWriteError: (writeError) => set({ writeError }),
   persistStatus: null,

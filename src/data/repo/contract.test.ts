@@ -169,7 +169,8 @@ describe("getRepository", () => {
     try {
       const r = await getRepository(`t-${crypto.randomUUID()}`);
       expect(r.durable).toBe(false);
-      expect(r.error).toMatch(/IndexedDB/);
+      expect(r.error?.kind).toBe("memory-only");
+      expect(r.error?.detail).toMatch(/IndexedDB/);
       await r.repo.sessions.put(session("still-works"));
       expect(await r.repo.sessions.all()).toHaveLength(1);
     } finally {

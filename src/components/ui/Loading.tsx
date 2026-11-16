@@ -13,9 +13,9 @@ export function LoadingStatus() {
   );
 }
 
-/** Shown while persisted stores load; also surfaces storage read and write errors inline. */
+/** Shown while persisted stores load. Storage errors show on every page (layout/StorageAlert). */
 export function HydrationGate({ children }: { children: React.ReactNode }) {
-  const { hydrated, error, writeError } = useHydration();
+  const hydrated = useHydration((s) => s.hydrated);
   const t = useT();
   if (!hydrated) {
     return (
@@ -24,20 +24,5 @@ export function HydrationGate({ children }: { children: React.ReactNode }) {
       </p>
     );
   }
-  return (
-    <>
-      {error && (
-        <p role="alert" className="mx-4 mt-3 rounded-ctl border border-failure/60 px-3 py-2 text-sm text-failure">
-          {error}
-        </p>
-      )}
-      {writeError && (
-        <p role="alert" className="mx-4 mt-3 rounded-ctl border border-failure/60 px-3 py-2 text-sm text-failure">
-          {writeError}{" "}
-          {t("ABOT keeps your changes in memory and retries when you come back to the app. Export a backup from Settings to keep a copy now.")}
-        </p>
-      )}
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

@@ -191,6 +191,12 @@ function changedIds<T extends { id: string }>(prev: T[], next: T[]): string[] {
   return [...out, ...before.keys()];
 }
 
+/** A full device: the browser's QuotaExceededError, also when Dexie wraps it. */
+function isFull(e: unknown): boolean {
+  const names = [e, (e as { inner?: unknown })?.inner].map((x) => (x instanceof Error ? `${x.name} ${x.message}` : String(x)));
+  return names.some((s) => /quota/i.test(s));
+}
+
 function describe(e: unknown): string {
   if (e instanceof Error) return e.name && e.name !== "Error" ? `${e.name}: ${e.message}` : e.message;
   return String(e);
@@ -217,7 +223,7 @@ export function attachPersistence(repo: Repository): PersistenceHandle {
         },
         (e: unknown) => {
           failed.add(key);
-          useHydration.getState().setWriteError(`Could not save to this device (${describe(e)}).`);
+          useHydration.getState().setWriteError({ kind: isFull(e) ? "full" : "failed", detail: describe(e) });
         },
       );
   };
@@ -344,7 +350,7 @@ export async function bootstrapStores(
   } catch (e) {
     useHydration.getState().setHydrated({
       durable: false,
-      error: `Saved data could not be read (${describe(e)}). Nothing new will be saved until it loads. Reload ABOT to try again.`,
+      error: { kind: "unreadable", detail: describe(e) },
     });
     return { persistence: null };
   }

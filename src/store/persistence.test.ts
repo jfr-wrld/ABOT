@@ -170,7 +170,7 @@ describe("attachPersistence", () => {
     const { exId, setId } = startWithExercise();
     useWorkoutStore.getState().updateSet(exId, setId, { reps: 5 });
     await p.flush();
-    expect(useHydration.getState().writeError).toMatch(/QuotaExceededError/);
+    expect(useHydration.getState().writeError).toEqual({ kind: "full", detail: "QuotaExceededError" });
     expect(useWorkoutStore.getState().active!.exercises[0]!.sets[0]!.reps).toBe(5);
   });
 });
@@ -249,7 +249,8 @@ describe("write failures (final review #1)", () => {
     // Storage never ends up with the workout in neither place.
     const stored = await repo.snapshot();
     expect(stored.sessions.length + (stored.activeWorkout ? 1 : 0)).toBeGreaterThan(0);
-    expect(useHydration.getState().writeError).toMatch(/Connection to Indexed Database server lost/);
+    expect(useHydration.getState().writeError?.kind).toBe("failed");
+    expect(useHydration.getState().writeError?.detail).toMatch(/Connection to Indexed Database server lost/);
     await p.retryFailed();
     const after = await repo.snapshot();
     expect(after.sessions.map((s) => s.id)).toEqual([done.id]);
@@ -306,7 +307,7 @@ describe("bootstrapStores (final review #3)", () => {
     };
     const r = await bootstrapStores({ repo, durable: true, error: null }, { getItem: () => null });
     expect(r.persistence).toBeNull();
-    expect(useHydration.getState().error).toMatch(/read failed/);
+    expect(useHydration.getState().error).toEqual({ kind: "unreadable", detail: "read failed" });
     expect(useHydration.getState().hydrated).toBe(true);
     // Logging in memory must not overwrite the unread workout.
     useWorkoutStore.getState().startEmpty(90);
