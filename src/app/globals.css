@@ -882,19 +882,14 @@ input.bg-well:not(:focus) {
     0 3px 12px rgb(0 0 0 / 0.25);
 }
 
-/* On light pages the dock's lens over the current tab is black (owner, 2026-11-16), the tab's
-   icon Volt and its label white on it. Placed after the liquid rule so it wins there too. */
-[data-theme="light"] .glass-lens {
-  background: #18181b;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.16),
-    0 3px 8px -2px rgb(0 0 0 / 0.4);
+/* On light pages the dock keeps its clear glass lens (owner, 2026-11-16): the current tab is
+   solid black, a bold icon and label, and the other tabs' icons fade back, so the lit one reads
+   without a fill. Their labels stay the muted grey, which still reads at 7.7:1. */
+[data-theme="light"] nav [data-tab] a:not([data-lit]) svg {
+  opacity: 0.45;
 }
-[data-theme="light"] [data-lit] {
-  color: #ffffff;
-}
-[data-theme="light"] [data-lit] .text-accent {
-  color: #ccff00;
+[data-theme="light"] nav [data-tab] a[data-lit] {
+  font-weight: 700;
 }
 
 /* The workout bar in liquid glass: a lower tint so the bend shows, and the backdrop itself
