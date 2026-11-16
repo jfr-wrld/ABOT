@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MotionConfig, motion, useReducedMotion } from "framer-motion";
+import { MotionConfig, m as motion, useReducedMotion } from "framer-motion";
 import { Share2 } from "@/components/icons";
 import dynamic from "next/dynamic";
 

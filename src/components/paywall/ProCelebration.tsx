@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { animate } from "framer-motion";
-import { motion, useReducedMotionConfig } from "framer-motion";
+import { m as motion, useReducedMotionConfig } from "framer-motion";
 import { Activity, ArrowRight, Brain, Mic, Sparkles } from "@/components/icons";
 import type { Unlocked } from "@/lib/celebration";
 import { AbotMark } from "@/components/brand/AbotMark";

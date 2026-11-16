@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Download, Sparkles, X } from "@/components/icons";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { usePagePath } from "@/components/layout/usePagePath";

@@ -8,7 +8,7 @@ import Link from "next/link";
 import { BackLink } from "@/components/navigation/BackLink";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CalendarClock, ChevronLeft, Dumbbell, Play, Plus, Repeat, Trophy, TrendingDown, TrendingUp, Pencil, Trash2 } from "@/components/icons";
-import { motion, useReducedMotionConfig } from "framer-motion";
+import { m as motion, useReducedMotionConfig } from "framer-motion";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAllExercises, useExerciseStore } from "@/store/useExerciseStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";

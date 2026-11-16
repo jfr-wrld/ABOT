@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
+import { AnimatePresence, m as motion, useReducedMotionConfig } from "framer-motion";
 import { Check, DumbbellLarge, Timer } from "@/components/icons";
 import dynamic from "next/dynamic";
 import { useWorkoutStore } from "@/store/useWorkoutStore";

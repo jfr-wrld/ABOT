@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight, ChevronRight, Droplets, Flame, Hammer, Plus, Scale, Zap } from "@/components/icons";
 import { Beef } from "lucide-react";
 import { addProtein, addWater, useTodayFuel } from "@/store/useFuelPacer";

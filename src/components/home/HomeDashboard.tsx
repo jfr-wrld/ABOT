@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, animate, motion, useMotionValue, useReducedMotionConfig, useTransform, type MotionValue } from "framer-motion";
+import { AnimatePresence, animate, m as motion, useMotionValue, useReducedMotionConfig, useTransform, type MotionValue } from "framer-motion";
 import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Bell, RotateCcw, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy, Pause } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";

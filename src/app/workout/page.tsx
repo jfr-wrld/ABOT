@@ -12,7 +12,7 @@ import { HydrationGate } from "@/components/ui/Loading";
 import { Button } from "@/components/ui/Button";
 import { ActiveWorkoutHeader } from "@/components/workout/ActiveWorkoutHeader";
 import { ExerciseCard } from "@/components/workout/ExerciseCard";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { LIST_ITEM } from "@/components/motion/listItem";
 import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { FinishDialog } from "@/components/workout/FinishDialog";

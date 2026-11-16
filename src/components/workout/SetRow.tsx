@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { setGridColumns } from "./setGrid";
 import { Trash2, Trophy } from "@/components/icons";
-import { animate, motion, useMotionValue, useReducedMotionConfig, useTransform } from "framer-motion";
+import { animate, m as motion, useMotionValue, useReducedMotionConfig, useTransform } from "framer-motion";
 import type { LogType, PRKind, SetType, WeightUnit, WorkoutSet } from "@/types/workout";
 import { NumberField } from "@/components/ui/NumberField";
 import { TimeField } from "@/components/ui/TimeField";

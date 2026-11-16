@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import type { MuscleGroup } from "@/types/workout";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { useT } from "@/i18n";

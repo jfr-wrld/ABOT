@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotionConfig } from "framer-motion";
+import { AnimatePresence, m as motion, useReducedMotionConfig } from "framer-motion";
 import { Moon, Sun } from "@/components/icons";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { feedback } from "@/lib/feedback";

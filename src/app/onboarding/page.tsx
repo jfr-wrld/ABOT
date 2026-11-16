@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, type PanInfo, type Variants } from "framer-motion";
+import { AnimatePresence, m as motion, type PanInfo, type Variants } from "framer-motion";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { Button } from "@/components/ui/Button";
 import { markOnboardingSeen } from "@/lib/onboarding";

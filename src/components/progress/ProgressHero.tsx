@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import type { WeightUnit } from "@/types/workout";
 import type { WeekBucket } from "@/lib/analytics";
 import { formatDuration } from "@/lib/calc";

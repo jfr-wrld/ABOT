@@ -20,7 +20,7 @@ import { useReminderStore } from "@/store/useReminderStore";
 import { useNow } from "@/lib/useNow";
 import { nextProtocol, type NextProtocol } from "@/lib/home";
 import { lastDoneByRoutine, lastDoneText } from "@/lib/routine-history";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { LIST_ITEM } from "@/components/motion/listItem";
 import { useShake } from "@/lib/useShake";
 import { EmptyArt } from "@/components/ui/EmptyArt";

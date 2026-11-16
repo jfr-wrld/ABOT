@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { animate, motion, type MotionValue, useMotionValue, useReducedMotionConfig, useSpring, useTransform, useVelocity } from "framer-motion";
+import { animate, m as motion, type MotionValue, useMotionValue, useReducedMotionConfig, useSpring, useTransform, useVelocity } from "framer-motion";
 import { feedback } from "@/lib/feedback";
 /** Softer than the press spring, so the lens overshoots a touch, like liquid settling. */
 const LENS_SPRING = { type: "spring", stiffness: 380, damping: 24, mass: 0.8 } as const;

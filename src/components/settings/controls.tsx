@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { feedback } from "@/lib/feedback";
 import { InfoTip } from "@/components/ui/InfoTip";
 import { useT } from "@/i18n";
