@@ -60,6 +60,9 @@ export const metadata: Metadata = {
   // A static file: the web build (cacheComponents) and the Android export (output: export)
   // disagree on how a manifest route is configured.
   manifest: "/manifest.webmanifest",
+  // Search Console ownership of the web domain, which Google's OAuth branding check requires.
+  // The value is the content of Google's HTML tag; it is public, not a secret.
+  ...(process.env.GOOGLE_SITE_VERIFICATION && { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }),
 };
 
 export const viewport: Viewport = {
