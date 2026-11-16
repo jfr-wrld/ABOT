@@ -3,13 +3,10 @@
 import { useMemo } from "react";
 import { create } from "zustand";
 import { buildInbox, unread, type InboxItem } from "@/lib/inbox";
-import { weekStreak } from "@/lib/analytics";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useReminderStore } from "@/store/useReminderStore";
-import { useSettingsStore } from "@/store/useSettingsStore";
 import { useSyncStore } from "@/store/useSyncStore";
-import { useAllExercises } from "@/store/useExerciseStore";
 import { useRemoteConfig } from "@/lib/remote-config";
 import { useAppUpdate } from "@/store/useAppUpdate";
 import { useNow } from "@/lib/useNow";
@@ -49,13 +46,11 @@ export function useInbox(): { items: InboxItem[]; unreadCount: number; seen: Rea
   const sessions = useWorkoutStore((s) => s.sessions);
   const routines = useRoutineStore((s) => s.routines);
   const schedule = useReminderStore((s) => s.schedule);
-  const firstDayOfWeek = useSettingsStore((s) => s.firstDayOfWeek);
   const phase = useSyncStore((s) => s.phase);
   const pendingCount = useSyncStore((s) => s.pendingCount ?? 0);
   const announcement = useRemoteConfig((s) => s.config.announcement);
   const update = useAppUpdate((s) => s.result);
   const release = update?.kind === "available" ? update.release : null;
-  const { byId } = useAllExercises();
   const now = useNow(60_000);
   const { ids, load, markAll } = useSeen();
   if (ids === null && typeof window !== "undefined") queueMicrotask(load);
@@ -66,14 +61,12 @@ export function useInbox(): { items: InboxItem[]; unreadCount: number; seen: Rea
         now,
         sessions,
         routines,
-        byId,
         schedule,
-        streak: weekStreak(sessions, now, firstDayOfWeek),
         announcement,
         sync: { phase, pendingCount },
         appUpdate: release,
       }),
-    [now, sessions, routines, byId, schedule, firstDayOfWeek, announcement, phase, pendingCount, release],
+    [now, sessions, routines, schedule, announcement, phase, pendingCount, release],
   );
   const seen = useMemo(() => new Set(ids ?? []), [ids]);
   return { items, unreadCount: ids === null ? 0 : unread(items, seen), seen, markAllSeen: () => markAll(items.map((i) => i.id)) };

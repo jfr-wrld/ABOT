@@ -128,7 +128,7 @@ export function HomeDashboard() {
       />
 
       <Rise step={0.07} order={2}>
-        <PhaseCommandCard now={now} />
+        <PhaseCommandCard now={now} onlyWhenRunning />
       </Rise>
 
       <Rise step={0.07} order={3}>

@@ -12,9 +12,27 @@ import { MUSCLE_GROUP_LABELS, type PRKind, type WeightUnit } from "@/types/worko
 import { regionsFor, type Region } from "@/components/anatomy/regions";
 import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT } from "@/components/anatomy/bodyPaths.generated";
 import type { StoryData, StorySet } from "@/lib/story-data";
+import { currentT } from "@/i18n";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 import { MARK_PATH } from "@/components/brand/mark-path";
 import { END_CARD_AT, STILL_TIME, STORY_SECONDS, backOut, beat, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
+
+/**
+ * Story text in the app's language (shared stories were drawn in English in Indonesian mode).
+ * tl: as written; TL: upper case, for the slips and posters set in capitals. Keys: STORY_KEYS.
+ */
+const tl = (key: string, params?: Record<string, string | number>) => currentT()(key, params);
+const TL = (key: string, params?: Record<string, string | number>) => tl(key, params).toLocaleUpperCase(currentT().locale);
+
+/** Every text the stories pass to tl/TL, for the translation coverage test (i18n/dynamic-keys). */
+export const STORY_KEYS = [
+  "Front", "Back (side)", "Fewer sets", "No muscle sets logged", "{n} working sets", "Volume", "Time", "Sets",
+  "Thermal matrix // muscle load", "Lift log", "Strength receipt", "... +{n} more set", "... +{n} more sets",
+  "{n} new record", "{n} new records", "{n} sets on file", "Keep this slip.", "Next time, beat it.", "Trophy vault",
+  "Vault unchanged", "Also lifted", "New record", "No record fell this time. Top sets from the session:",
+  "No loaded sets in this workout.", "Total volume", "Line-up", "Strength edition", "The cover story", "{n} sets",
+  "Logged with ABOT",
+];
 
 export const STORY_WIDTH = 1080;
 export const STORY_HEIGHT = 1920;
@@ -560,7 +578,7 @@ function thermalMatrix(s: Scene) {
 
   const x = 84;
   wordmark(s, x, SAFE_TOP - 40, 56, VOLT);
-  caps(s, "Thermal matrix // muscle load", x, SAFE_TOP + 20, { color: VOLT });
+  caps(s, tl("Thermal matrix // muscle load"), x, SAFE_TOP + 20, { color: VOLT });
   caps(s, dateLabel(data), W - x, SAFE_TOP + 20, { align: "right" });
   text(s, data.title, x, SAFE_TOP + 100, { size: fitSize(s, data.title, W - 2 * x, 72, 44, 700, "grotesk"), weight: 700, family: "grotesk", maxWidth: W - 2 * x });
 
@@ -595,8 +613,8 @@ function thermalMatrix(s: Scene) {
     ctx.stroke();
   }
   ctx.restore();
-  caps(s, "Front", mapX + mapW * 0.25, mapY + mapH + 64, { align: "center" });
-  caps(s, "Back", mapX + mapW * 0.75, mapY + mapH + 64, { align: "center" });
+  caps(s, tl("Front"), mapX + mapW * 0.25, mapY + mapH + 64, { align: "center" });
+  caps(s, tl("Back (side)"), mapX + mapW * 0.75, mapY + mapH + 64, { align: "center" });
 
   // Scale: the colour steps are set counts, so the legend says how many.
   let y = mapY + mapH + 120;
@@ -607,12 +625,12 @@ function thermalMatrix(s: Scene) {
     ctx.fillStyle = withAlpha(VOLT, 0.28 + (0.72 * i) / (steps - 1));
     ctx.fillRect(barX + (barW / steps) * i, y, barW / steps - 4, 18);
   }
-  caps(s, max > 0 ? "Fewer sets" : "No muscle sets logged", barX, y + 56);
-  if (max > 0) caps(s, `${setsNumber(max)} working sets`, barX + barW, y + 56, { align: "right" });
+  caps(s, max > 0 ? tl("Fewer sets") : tl("No muscle sets logged"), barX, y + 56);
+  if (max > 0) caps(s, tl("{n} working sets", { n: setsNumber(max) }), barX + barW, y + 56, { align: "right" });
 
   y += 110;
   for (const { muscle, sets } of data.muscles.slice(0, 3)) {
-    text(s, MUSCLE_GROUP_LABELS[muscle], x, y, { size: 36, weight: 500, family: "grotesk" });
+    text(s, tl(MUSCLE_GROUP_LABELS[muscle]), x, y, { size: 36, weight: 500, family: "grotesk" });
     const frac = (max > 0 ? sets / max : 0) * beat(s.time, 2.4, 1.2);
     ctx.fillStyle = CARBON_2;
     ctx.fillRect(x + 330, y - 22, 480, 16);
@@ -626,9 +644,9 @@ function thermalMatrix(s: Scene) {
   hline(ctx, x, W - x, fy - 64, STEEL);
   const [vol, u] = volumeParts(data.volumeKg, unit);
   const cols = [
-    ["Volume", `${vol} ${u}`],
-    ["Time", formatDuration(data.durationSec)],
-    ["Sets", String(data.setsDone)],
+    [tl("Volume"), `${vol} ${u}`],
+    [tl("Time"), formatDuration(data.durationSec)],
+    [tl("Sets"), String(data.setsDone)],
   ];
   cols.forEach(([label, value], i) => {
     const cx = x + i * ((W - 2 * x) / 3);
@@ -679,7 +697,7 @@ function brutalistReceipt(s: Scene) {
   const dashed = (y: number) => hline(ctx, x, r, y, INK, 3, [12, 10]);
 
   let y = py + 130;
-  if (s.opts.hideWatermark) text(s, "LIFT LOG", W / 2, y, { size: 84, weight: 800, color: INK, align: "center", tracking: -2 });
+  if (s.opts.hideWatermark) text(s, TL("Lift log"), W / 2, y, { size: 84, weight: 800, color: INK, align: "center", tracking: -2 });
   else {
     // Mark and name centred together, like a shop logo at the head of a till slip.
     const size = 76;
@@ -690,7 +708,7 @@ function brutalistReceipt(s: Scene) {
     text(s, "ABOT", left + size + 20, y, { size: 84, weight: 800, color: INK, tracking: -2 });
   }
   y += 52;
-  text(s, "STRENGTH RECEIPT", W / 2, y, { ...ink, size: 34, align: "center", tracking: 6 });
+  text(s, TL("Strength receipt"), W / 2, y, { ...ink, size: 34, align: "center", tracking: 6 });
   y += 64;
   const d = new Date(data.startedAt);
   const slash = (t: Date) => `${pad(t.getDate())}/${pad(t.getMonth() + 1)}/${t.getFullYear()}`;
@@ -737,7 +755,7 @@ function brutalistReceipt(s: Scene) {
   }
   if (remaining > 0) {
     y += line;
-    text(s, `... +${remaining} MORE ${remaining === 1 ? "SET" : "SETS"}`, x + 20, y, { ...ink, size: 38, color: INK_MUTED });
+    text(s, TL(remaining === 1 ? "... +{n} more set" : "... +{n} more sets", { n: remaining }), x + 20, y, { ...ink, size: 38, color: INK_MUTED });
   }
 
   y = totalsTop + 30;
@@ -749,7 +767,7 @@ function brutalistReceipt(s: Scene) {
     y += big ? 64 : 44;
   };
   if (data.kind === "period") row("WORKOUTS", String(data.workouts));
-  row("SETS", String(data.setsDone));
+  row(TL("Sets"), String(data.setsDone));
   row("DURATION", formatDuration(data.durationSec));
   row("RECORDS", String(data.prs.length));
   row(`TOTAL ${unit.toUpperCase()}`, formatVolume(data.volumeKg, unit).replace(` ${unit}`, ""), true);
@@ -776,7 +794,7 @@ function brutalistReceipt(s: Scene) {
     color: STAMP_INK,
     align: "center",
   });
-  text(s, broke ? `${data.prs.length} NEW ${data.prs.length === 1 ? "RECORD" : "RECORDS"}` : `${data.setsDone} SETS ON FILE`, 0, 38, {
+  text(s, broke ? TL(data.prs.length === 1 ? "{n} new record" : "{n} new records", { n: data.prs.length }) : TL("{n} sets on file", { n: data.setsDone }), 0, 38, {
     size: 32,
     family: "receipt",
     color: STAMP_INK,
@@ -796,8 +814,8 @@ function brutalistReceipt(s: Scene) {
     ctx.fillRect(bx, by, bw, 90);
     bx += bw + 3 + ((seed >> 8) % 3) * 2;
   }
-  text(s, "KEEP THIS SLIP.", r, by + 36, { ...ink, size: 24, align: "right" });
-  text(s, "NEXT TIME, BEAT IT.", r, by + 72, { ...ink, size: 24, align: "right" });
+  text(s, TL("Keep this slip."), r, by + 36, { ...ink, size: 24, align: "right" });
+  text(s, TL("Next time, beat it."), r, by + 72, { ...ink, size: 24, align: "right" });
   ctx.restore();
 }
 
@@ -856,7 +874,7 @@ function trophyVault(s: Scene) {
   const prs = data.prs;
 
   wordmark(s, x, SAFE_TOP - 64, 52, VOLT);
-  caps(s, "Trophy vault", x, SAFE_TOP, { color: GOLD });
+  caps(s, tl("Trophy vault"), x, SAFE_TOP, { color: GOLD });
   caps(s, dateLabel(data), W - x, SAFE_TOP, { align: "right" });
 
   // One medal and one card per lift: a lift can break weight, 1RM and set volume at once.
@@ -872,7 +890,7 @@ function trophyVault(s: Scene) {
   if (lifts.length > 5) caps(s, `+${lifts.length - 5} more`, W - x, SAFE_TOP + 240, { align: "right", color: GOLD });
 
   let y = SAFE_TOP + 330;
-  const heading = prs.length > 0 ? `${prs.length} new ${prs.length === 1 ? "record" : "records"}` : "Vault unchanged";
+  const heading = prs.length > 0 ? tl(prs.length === 1 ? "{n} new record" : "{n} new records", { n: prs.length }) : tl("Vault unchanged");
   text(s, heading, x, y, { size: fitSize(s, heading, inner, 112, 60, 900, "serif"), weight: 900, family: "serif", tracking: -2 });
   y += 56;
   const sub = prs.length > 0 ? `on ${lifts.length} ${lifts.length === 1 ? "lift" : "lifts"}, ${data.title}` : data.title;
@@ -899,7 +917,7 @@ function trophyVault(s: Scene) {
       ctx.stroke();
       const lead = lift.records[0];
       const v = prValue(lead, unit);
-      text(s, "NEW RECORD", x + 36, y + 58, { size: 28, weight: 600, family: "serif", color: GOLD, tracking: 6 });
+      text(s, TL("New record"), x + 36, y + 58, { size: 28, weight: 600, family: "serif", color: GOLD, tracking: 6 });
       caps(s, lift.records.map((p) => SHORT_KIND[p.kind]).join(" + "), x + inner - 36, y + 58, { align: "right" });
       const vw = text(s, v.main, x + inner - 36, y + 144, { size: 68, weight: 900, family: "serif", color: GOLD, align: "right" });
       text(s, lift.name, x + 36, y + 138, { size: 44, weight: 600, family: "serif", maxWidth: inner - vw - 100 });
@@ -919,7 +937,7 @@ function trophyVault(s: Scene) {
       const rest = data.exercises.filter((e) => !lifts.some((l) => l.name === e.name) && e.best);
       if (rest.length && y + 160 < SAFE_BOTTOM) {
         y += 40;
-        caps(s, "Also lifted", x, y, { color: GOLD });
+        caps(s, tl("Also lifted"), x, y, { color: GOLD });
         y += 30;
         for (const ex of rest.slice(0, Math.floor((SAFE_BOTTOM - y) / 84))) {
           hline(ctx, x, W - x, y, STEEL);
@@ -930,7 +948,7 @@ function trophyVault(s: Scene) {
       }
     }
   } else {
-    text(s, "No record fell this time. Top sets from the session:", x, y + 30, { size: 32, color: MUTED, maxWidth: inner });
+    text(s, tl("No record fell this time. Top sets from the session:"), x, y + 30, { size: 32, color: MUTED, maxWidth: inner });
     y += 80;
     const top = [...data.exercises].filter((e) => e.best).sort((a, b) => (b.best?.volumeKg ?? 0) - (a.best?.volumeKg ?? 0));
     for (const ex of top.slice(0, 4)) {
@@ -939,7 +957,7 @@ function trophyVault(s: Scene) {
       text(s, ex.name, x, y + 66, { size: 38, weight: 600, maxWidth: inner - rw - 30 });
       y += 100;
     }
-    if (top.length === 0) text(s, "No loaded sets in this workout.", x, y + 40, { size: 32, color: MUTED });
+    if (top.length === 0) text(s, tl("No loaded sets in this workout."), x, y + 40, { size: 32, color: MUTED });
   }
 
   const best = data.exercises.reduce((m, e) => Math.max(m, ...e.sets.map((st) => st.volumeKg)), 0);
@@ -1058,12 +1076,12 @@ function loadedBar(s: Scene) {
   const by = SAFE_BOTTOM - 40;
   hline(ctx, m, W - m, by - 150, STEEL);
   const [vol, u] = volumeParts(data.volumeKg, unit);
-  caps(s, "Total volume", m, by - 92);
+  caps(s, tl("Total volume"), m, by - 92);
   const vw = text(s, vol, m, by, { size: 96, weight: 800, family: "grotesk", tracking: -2 });
   text(s, u, m + vw + 10, by, { size: 40, weight: 700, family: "grotesk", color: MUTED });
-  caps(s, "Time", W - m - 300, by - 92);
+  caps(s, tl("Time"), W - m - 300, by - 92);
   text(s, formatDuration(data.durationSec), W - m - 300, by, { size: 56, weight: 800, family: "grotesk" });
-  caps(s, "Sets", W - m, by - 92, { align: "right" });
+  caps(s, tl("Sets"), W - m, by - 92, { align: "right" });
   text(s, String(data.setsDone), W - m, by, { size: 56, weight: 800, family: "grotesk", align: "right" });
 }
 
@@ -1107,8 +1125,8 @@ function voltPoster(s: Scene) {
 
   // Full-width lines.
   const rows: [string, string][] = [
-    [String(data.setsDone), "SETS"],
-    [formatDuration(data.durationSec).toUpperCase(), "TIME"],
+    [String(data.setsDone), TL("Sets")],
+    [formatDuration(data.durationSec).toUpperCase(), TL("Time")],
     [String(recordLifts(data).size), recordLifts(data).size === 1 ? "RECORD" : "RECORDS"],
   ];
   for (const [value, label] of rows) {
@@ -1212,8 +1230,8 @@ function matchday(s: Scene) {
 
   // Match stats: three boxed figures.
   const stats: [string, string][] = [
-    ["TIME", formatDuration(data.durationSec).toUpperCase()],
-    ["SETS", String(data.setsDone)],
+    [TL("Time"), formatDuration(data.durationSec).toUpperCase()],
+    [TL("Sets"), String(data.setsDone)],
     [recordLifts(data).size === 1 ? "GOAL" : "GOALS", String(recordLifts(data).size)],
   ];
   // Time reads longest ("45M 00S"), so it gets the widest column.
@@ -1233,7 +1251,7 @@ function matchday(s: Scene) {
   hline(ctx, m, W - m, 1176, STEEL, 3);
 
   // The line-up: numbered like shirts, each record marked as a goal.
-  text(s, "LINE-UP", m, 1236, { size: 34, family: "display", color: VOLT, tracking: 4 });
+  text(s, TL("Line-up"), m, 1236, { size: 34, family: "display", color: VOLT, tracking: 4 });
   const records = recordLifts(data);
   let y = 1300;
   const room = Math.max(1, Math.floor((SAFE_BOTTOM - y) / 70));
@@ -1322,7 +1340,7 @@ function editorial(s: Scene) {
     hline(ctx, m, W - m, SAFE_TOP + ms * 0.72 + 10, fg, 3);
     const issue = `ISSUE ${dateLabel(data)}${data.locationName ? `  ·  ${data.locationName.toUpperCase()}` : ""}`;
     text(s, issue, m, SAFE_TOP + ms * 0.72 + 56, { size: 26, weight: 600, family: "serif", color: sub, tracking: 3, maxWidth: inner });
-    text(s, "STRENGTH EDITION", W - m, SAFE_TOP + ms * 0.72 + 56, { size: 26, weight: 600, family: "serif", color: accent, align: "right", tracking: 3 });
+    text(s, TL("Strength edition"), W - m, SAFE_TOP + ms * 0.72 + 56, { size: 26, weight: 600, family: "serif", color: accent, align: "right", tracking: 3 });
   });
 
   // Without a photo the cover image is the day's volume, set huge in the serif.
@@ -1338,7 +1356,7 @@ function editorial(s: Scene) {
   const top = [...data.exercises].filter((e) => e.best).sort((a, c) => (c.best?.volumeKg ?? 0) - (a.best?.volumeKg ?? 0))[0];
   let y = 1020;
   fade(b(0.8, 0.8), 40, () => {
-    text(s, "THE COVER STORY", m, y, { size: 26, weight: 600, family: "serif", color: accent, tracking: 4 });
+    text(s, TL("The cover story"), m, y, { size: 26, weight: 600, family: "serif", color: accent, tracking: 4 });
     const lines = wrap(s, top ? top.name : data.title, inner, 104, 600, 2, "serif");
     lines.forEach((l, i) => text(s, l, m, y + 100 + i * 104, { size: 104, weight: 600, family: "serif", color: fg, tracking: -2 }));
     if (top) text(s, `${bestLabel(s, top)}, set by set.`, m, y + 100 + lines.length * 104, { size: 40, weight: 400, family: "serif", color: sub, maxWidth: inner });
@@ -1349,7 +1367,7 @@ function editorial(s: Scene) {
   const [vol, u] = volumeParts(data.volumeKg, unit);
   const teasers: [string, string][] = [
     [`${vol} ${u}`, "moved, in all"],
-    [formatDuration(data.durationSec), `${data.setsDone} sets`],
+    [formatDuration(data.durationSec), tl("{n} sets", { n: data.setsDone })],
     ...data.prs.slice(0, 2).map((pr): [string, string] => [prValue(pr, unit).main, `new record, ${pr.exerciseName}`]),
   ];
   teasers.slice(0, 4).forEach(([big, small], i) => {
@@ -1430,8 +1448,8 @@ function arcade(s: Scene) {
   y += 50;
   const boxW = (inner - 40) / 3;
   const stats: [string, string][] = [
-    ["TIME", formatDuration(data.durationSec).toUpperCase()],
-    ["SETS", String(data.setsDone)],
+    [TL("Time"), formatDuration(data.durationSec).toUpperCase()],
+    [TL("Sets"), String(data.setsDone)],
     ["PR", String(data.prs.length)],
   ];
   stats.forEach(([label, value], i) => {
@@ -1607,7 +1625,7 @@ function endCard(s: Scene) {
   mark(ctx, W / 2 - size / 2, H / 2 - size, size, VOLT);
   s.onPhoto = false;
   text(s, "ABOT", W / 2, H / 2 + 120, { size: 120, family: "display", align: "center", tracking: 6 });
-  text(s, "Logged with ABOT", W / 2, H / 2 + 200, { size: 40, weight: 500, family: "grotesk", color: MUTED, align: "center" });
+  text(s, tl("Logged with ABOT"), W / 2, H / 2 + 200, { size: 40, weight: 500, family: "grotesk", color: MUTED, align: "center" });
   const handle = s.data.handle?.trim();
   if (handle) text(s, `@${handle}`, W / 2, H / 2 + 270, { size: 40, weight: 700, family: "grotesk", color: VOLT, align: "center" });
   ctx.restore();

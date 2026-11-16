@@ -6,7 +6,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("the setup wizard starts a cut, and the phase page logs weight, protein and water", async ({ page }) => {
-  await page.getByRole("link", { name: "Choose a body phase" }).click();
+  // Home shows the phase card only while a phase runs; Profile keeps the way in.
+  await expect(page.getByRole("link", { name: "Choose a body phase" })).toHaveCount(0);
+  await page.goto("/profile");
+  await page.getByRole("link", { name: /Body phase/ }).first().click();
   await page.waitForURL("**/phase/setup");
   // The first question is the goal in plain words; nothing is picked for the lifter.
   await expect(page.getByRole("heading", { level: 1, name: "What is your goal?" })).toBeVisible();

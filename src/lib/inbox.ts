@@ -1,15 +1,15 @@
 /**
  * The notifications page, built on the phone from what ABOT already knows: no server, nothing
- * sent. Four kinds (owner, 2026-11-15): the day's plan and a missed session, new records and the
- * weekly streak, the admin's announcement and a newer Android build, and backup or sync trouble.
+ * sent. Only what no other screen says (owner, 2026-11-16): a planned workout that was missed,
+ * the admin's announcement, a newer Android build, and backup or sync trouble. Today's plan,
+ * records and the streak have their own places (Home, the summary, the week rail).
  * Titles are English keys with their values, translated where they are shown.
  */
-import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
-import { nextSession, type WorkoutSchedule, type Weekday } from "@/lib/notifications/schedule";
-import { prCounts } from "@/lib/home";
-import { historyPath } from "@/lib/routes";
+import type { Routine, WorkoutSession } from "@/types/workout";
+import { type WorkoutSchedule, type Weekday } from "@/lib/notifications/schedule";
+import { historyEditPath } from "@/lib/routes";
 
-export type InboxKind = "schedule" | "record" | "update" | "backup";
+export type InboxKind = "schedule" | "update" | "backup";
 
 export interface InboxItem {
   /** Stable, so a seen item stays seen. */
@@ -27,10 +27,7 @@ export interface InboxInput {
   now: number;
   sessions: WorkoutSession[];
   routines: Routine[];
-  byId: Record<string, Exercise>;
   schedule: WorkoutSchedule;
-  /** Whole weeks in a row with a workout, as on Home. */
-  streak: number;
   announcement: string | null;
   sync: { phase: string; pendingCount: number };
   /** A newer Android build than the one installed, as the update check last found it. */
@@ -49,37 +46,11 @@ export function buildInbox(x: InboxInput): InboxItem[] {
   const name = (id: string | null) => (id && x.routines.find((r) => r.id === id)?.name) || "Free session";
   const today = dayStart(x.now);
 
-  // The day's plan, until it is trained.
-  const next = nextSession(x.schedule, today - 1);
-  if (next && next.at < today + DAY && !trainedOn(today)) {
-    const at = new Date(next.at);
-    out.push({
-      id: `plan:${today}`,
-      kind: "schedule",
-      at: today,
-      title: "Today: {name} at {time}",
-      params: { name: name(next.routineId), time: `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}` },
-      href: "/",
-    });
-  }
-  // Yesterday's planned session, if it did not happen.
+  // Yesterday's planned session, if it did not happen: trained without the app, it can be logged.
   const yesterday = today - DAY;
   const yDay = x.schedule.days[new Date(yesterday).getDay() as Weekday];
   if (x.schedule.enabled && yDay?.on && !trainedOn(yesterday)) {
-    out.push({ id: `missed:${yesterday}`, kind: "schedule", at: yesterday, title: "Missed yesterday: {name}", params: { name: name(yDay.routineId) }, href: "/workout" });
-  }
-
-  // New records from the last two weeks, one item per workout.
-  const recent = done.filter((s) => s.startedAt > x.now - 14 * DAY);
-  const prs = prCounts(recent, x.sessions, x.byId);
-  for (const s of recent) {
-    const n = prs[s.id] ?? 0;
-    if (n > 0) out.push({ id: `pr:${s.id}`, kind: "record", at: s.finishedAt ?? s.startedAt, title: "{n} new records in {name}", params: { n, name: s.name }, href: historyPath(s.id) });
-  }
-  // The streak, once it is two weeks or more; a new item each week it grows.
-  if (x.streak >= 2) {
-    const last = done.reduce((m, s) => Math.max(m, s.startedAt), 0);
-    out.push({ id: `streak:${x.streak}`, kind: "record", at: last, title: "{n}-week streak", params: { n: x.streak } });
+    out.push({ id: `missed:${yesterday}`, kind: "schedule", at: yesterday, title: "Missed yesterday: {name}", params: { name: name(yDay.routineId) }, href: historyEditPath(undefined, yesterday + 18 * 3_600_000) });
   }
 
   if (x.announcement) out.push({ id: `ann:${hash(x.announcement)}`, kind: "update", at: x.now, title: x.announcement, plain: true });

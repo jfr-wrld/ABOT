@@ -7,8 +7,8 @@ import { feedback } from "@/lib/feedback";
 
 /**
  * "ABOT v1.0.15" at the foot of Settings: the installed version for bug
- * reports. Five taps within three seconds open Mission Control (/admin), which asks for the
- * founder PIN.
+ * reports. On the web, five taps within three seconds open Mission Control (/admin), which asks
+ * for the founder PIN.
  */
 export function BuildTag() {
   const version = useAppVersion();
@@ -21,7 +21,8 @@ export function BuildTag() {
         const now = Date.now();
         taps.current = [...taps.current.filter((t) => now - t < 3000), now];
         feedback.tick();
-        if (taps.current.length >= 5) {
+        // Mission Control is web-only: the APK has nothing behind the five taps.
+        if (taps.current.length >= 5 && process.env.ABOT_NATIVE_APP !== "1") {
           taps.current = [];
           router.push("/admin");
         }

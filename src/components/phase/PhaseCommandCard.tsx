@@ -30,7 +30,7 @@ export const PHASE_COLOR: Record<BodyPhaseType, string> = {
  * with its last weeks as a line, today's calories split by macro, and protein and water rings
  * that fill with a tap. Everything else is one tap away on /phase.
  */
-export function PhaseCommandCard({ now }: { now: number }) {
+export function PhaseCommandCard({ now, onlyWhenRunning = false }: { now: number; /** Home: nothing until a phase runs (owner, 2026-11-16); Profile keeps the way in. */ onlyWhenRunning?: boolean }) {
   const t = useT();
   const m = usePhaseTelemetry(now);
   const unit = useSettingsStore((s) => s.weightUnit);
@@ -39,6 +39,7 @@ export function PhaseCommandCard({ now }: { now: number }) {
   const eatenToday = useFoodLog((s) => Math.round(s.entries.reduce((n, e) => (e.day === today ? n + e.kcal : n), 0)));
 
   if (!m) {
+    if (onlyWhenRunning) return null;
     return (
       <Link href="/phase/setup" aria-label={t("Choose a body phase")} className="panel group flex items-center gap-3 p-4 hover:border-ink/[0.15]">
         <span aria-hidden="true" className="flex -space-x-2">

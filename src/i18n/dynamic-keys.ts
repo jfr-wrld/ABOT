@@ -17,12 +17,15 @@ import { SETTINGS_INDEX } from "@/components/settings/search-index";
 import { SORT_LABEL } from "@/components/exercises/labels";
 import { AXIS_LABEL, DIAGNOSTIC_KEYS } from "@/lib/symmetry-analyzer";
 import { VARIATION_LABEL } from "@/data/variations";
+import { STORY_KEYS } from "@/lib/story-exporter";
 
 /**
  * English texts that reach t() through a variable (labels kept in constants and maps), so the
  * coverage test can see them too. Add each such constant's values here.
  */
 export const DYNAMIC_KEYS: string[] = [
+  // Shared story images (lib/story-exporter)
+  ...STORY_KEYS,
   // Notifications (lib/inbox)
   "Today: {name} at {time}", "Missed yesterday: {name}", "{n} new records in {name}", "{n}-week streak",
   "Backup failed. Tap to try again.", "{n} workouts are not backed up", "ABOT {version} is out. Tap to update.",

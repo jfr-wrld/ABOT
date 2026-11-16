@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, CalendarDays, ChevronRight, CloudOff, LayoutGrid, Megaphone, Trophy, type IconComponent } from "@/components/icons";
+import { Bell, CalendarDays, ChevronRight, CloudOff, LayoutGrid, Megaphone, type IconComponent } from "@/components/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { HydrationGate } from "@/components/ui/Loading";
 import { EmptyArt } from "@/components/ui/EmptyArt";
@@ -16,14 +16,12 @@ import type { InboxItem, InboxKind } from "@/lib/inbox";
 const FILTERS: { value: InboxKind | "all"; label: string }[] = [
   { value: "all", label: "All" },
   { value: "schedule", label: "Schedule" },
-  { value: "record", label: "Records" },
   { value: "update", label: "Updates" },
   { value: "backup", label: "Backup" },
 ];
 
 const ICON: Record<InboxKind, { Icon: IconComponent; tone: string }> = {
   schedule: { Icon: CalendarDays, tone: "text-accent" },
-  record: { Icon: Trophy, tone: "text-pr" },
   update: { Icon: Megaphone, tone: "text-text" },
   backup: { Icon: CloudOff, tone: "text-failure" },
 };
@@ -37,7 +35,7 @@ export default function NotificationsPage() {
 }
 
 /**
- * Notifications, newest first: the day's plan, records and streaks, announcements, and backup
+ * Notifications, newest first: a missed workout, announcements, app updates and backup
  * trouble, all worked out on this phone. Opening the page marks them seen, after this visit
  * shows which were new.
  */

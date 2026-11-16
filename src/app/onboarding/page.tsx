@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, m as motion, type PanInfo, type Variants } from "framer-motion";
@@ -18,6 +18,9 @@ import type { Routine } from "@/types/workout";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useReminderStore } from "@/store/useReminderStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { useHydration } from "@/store/hydration";
+import { guessUnit } from "@/lib/units";
 import { useT, type T } from "@/i18n";
 
 const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
@@ -79,6 +82,19 @@ export default function OnboardingPage() {
   // After the slides: set up the week, then start today's workout or go Home.
   const [planning, setPlanning] = useState(false);
   const [saved, setSaved] = useState<AppliedPlan | null>(null);
+  // The weight unit, asked on the first slide (the one about weights) and guessed from the
+  // phone's region until the lifter picks: lbs in the United States, kg elsewhere.
+  const unit = useSettingsStore((s) => s.weightUnit);
+  const hydrated = useHydration((s) => s.hydrated);
+  const guessed = useRef(false);
+  useEffect(() => {
+    // Once saved settings are in (they would overwrite it), and on a new device only: replaying
+    // the intro later never changes a unit someone already logs in.
+    if (!hydrated || guessed.current) return;
+    guessed.current = true;
+    if (useWorkoutStore.getState().sessions.length > 0) return;
+    useSettingsStore.getState().update({ weightUnit: guessUnit(navigator.languages?.length ? navigator.languages : [navigator.language]) });
+  }, [hydrated]);
   const last = index === slides.length - 1;
   const slide = slides[index]!;
 
@@ -194,6 +210,23 @@ export default function OnboardingPage() {
             <motion.p variants={itemVariants} className="mt-2 max-w-[34ch] text-base leading-relaxed text-text-muted">
               {slide.body}
             </motion.p>
+            {index === 0 && (
+              <motion.div variants={itemVariants} role="radiogroup" aria-label={t("Weights in")} className="mt-4 flex items-center gap-2">
+                <span className="text-sm font-semibold text-text-muted">{t("Weights in")}</span>
+                {(["kg", "lbs"] as const).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    role="radio"
+                    aria-checked={unit === u}
+                    onClick={() => useSettingsStore.getState().update({ weightUnit: u })}
+                    className={`min-h-11 min-w-16 rounded-full px-4 text-base font-bold ${unit === u ? "bg-accent text-on-accent" : "glass-icon text-text"}`}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </motion.div>
+            )}
           </motion.div>
         </AnimatePresence>
       </section>

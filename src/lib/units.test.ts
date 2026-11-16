@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cmToFtIn, formatWeight, fromDisplay, ftInToCm, toDisplay, toInput } from "./units";
+import { cmToFtIn, formatWeight, fromDisplay, ftInToCm, guessUnit, toDisplay, toInput } from "./units";
 
 describe("unit round trip", () => {
   it("62.5 kg survives a trip through lbs within 0.001", () => {
@@ -40,5 +40,14 @@ describe("toInput and formatWeight", () => {
     expect(toInput(102.25, "kg")).toBe(102.25);
     expect(formatWeight(102.25, "kg")).toBe("102.25 kg");
     expect(formatWeight(60, "kg", false)).toBe("60");
+  });
+});
+
+describe("guessUnit", () => {
+  it("guesses lbs in the United States and kg elsewhere", () => {
+    expect(guessUnit(["en-US"])).toBe("lbs");
+    expect(guessUnit(["id-ID", "en-US"])).toBe("kg");
+    expect(guessUnit(["en-GB"])).toBe("kg");
+    expect(guessUnit(["en"])).toBe("kg");
   });
 });

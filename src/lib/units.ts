@@ -29,6 +29,18 @@ export function toInput(kg: number, unit: WeightUnit): number {
   return unit === "kg" ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10;
 }
 
+/** Where pounds are the everyday gym unit: the United States, Liberia and Myanmar. */
+const LBS_REGIONS = new Set(["US", "LR", "MM"]);
+
+/** The unit a new lifter most likely uses, from the phone's region ("en-US" gives lbs). */
+export function guessUnit(locales: readonly string[]): WeightUnit {
+  for (const l of locales) {
+    const region = /[-_]([A-Za-z]{2})\b/.exec(l)?.[1]?.toUpperCase();
+    if (region) return LBS_REGIONS.has(region) ? "lbs" : "kg";
+  }
+  return "kg";
+}
+
 /** Typed value in the user's unit -> kg for storage. */
 export function fromDisplay(value: number, unit: WeightUnit): number {
   return unit === "kg" ? value : lbsToKg(value);
