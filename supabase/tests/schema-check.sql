@@ -31,6 +31,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261114_founder_seat_lock.sql
 \i supabase/migrations/20261115_admin_growth.sql
 \i supabase/migrations/20261116_admin_customers_visits.sql
+\i supabase/migrations/20261117_records_writes_through_rpc.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
@@ -42,8 +43,12 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261114_founder_seat_lock.sql
 \i supabase/migrations/20261115_admin_growth.sql
 \i supabase/migrations/20261116_admin_customers_visits.sql
+\i supabase/migrations/20261117_records_writes_through_rpc.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
+-- Supabase grants these when the table is made, before the migrations run; applying the
+-- 20261117 file again leaves the table as a project has it: writes only through the function.
+\i supabase/migrations/20261117_records_writes_through_rpc.sql
 insert into auth.users values
   ('00000000-0000-0000-0000-00000000000a', 'a@example.com', now()),
   ('00000000-0000-0000-0000-00000000000b', 'boss@example.com', now()),
@@ -75,6 +80,17 @@ begin
   if (select server_updated_at <= created from public.abot_records, (select now() - interval '1 hour' as created) c where id = 's1') then
     raise exception 'server_updated_at not set';
   end if;
+end $$;
+
+-- Direct writes bypass the function's caps, so they are refused (security review 2026-11-16).
+do $$
+begin
+  begin
+    insert into public.abot_records (user_id, kind, id, payload, updated_at, deleted)
+      values (auth.uid(), 'session', 'direct', '{}'::jsonb, 1, false);
+    raise exception 'a direct insert into abot_records was allowed';
+  exception when insufficient_privilege then null;
+  end;
 end $$;
 
 -- User B sees none of A's rows and cannot overwrite them.

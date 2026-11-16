@@ -61,6 +61,11 @@ public class FileSaverPlugin extends Plugin {
             call.reject("data and fileName are required.");
             return;
         }
+        // A bare name only: a path ("../x") would write outside Download/ABOT on Android 9 and older.
+        if (fileName.isEmpty() || fileName.contains("/") || fileName.contains("\\") || fileName.equals(".") || fileName.equals("..")) {
+            call.reject("fileName must be a plain file name.");
+            return;
+        }
         boolean image = mimeType.startsWith("image/");
         boolean video = mimeType.startsWith("video/");
         String base = image ? Environment.DIRECTORY_PICTURES : video ? Environment.DIRECTORY_MOVIES : Environment.DIRECTORY_DOWNLOADS;

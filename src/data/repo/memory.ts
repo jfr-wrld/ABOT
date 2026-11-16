@@ -176,7 +176,7 @@ export function createMemoryRepository(): Repository {
             if (rec.kind === "session") dropPhotos(rec.id);
           } else map.set(rec.id, clone(rec.payload));
         } else if (!(rec.kind === "settings" && rec.deleted)) {
-          const { key: k, value } = kvApply(rec, { bodyweightLog: kv.get("bodyweightLog"), exerciseMedia: kv.get("exerciseMedia") });
+          const { key: k, value } = kvApply(rec, { bodyweightLog: kv.get("bodyweightLog"), exerciseMedia: kv.get("exerciseMedia"), settings: kv.get("settings") });
           setKv(k, value, false);
         }
         status.set(key(rec.kind, rec.id), {

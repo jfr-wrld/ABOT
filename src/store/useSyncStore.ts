@@ -118,6 +118,10 @@ export const useSyncStore = create<SyncStoreState>()((set, get) => ({
     const state = (await repo?.kv.get("syncState")) ?? SIGNED_OUT;
     // userId and the cursor stay, so signing back in as the same person continues where it was.
     await repo?.kv.set("syncState", { ...state, phase: "signed_out" });
+    // The signed licence belongs to the account: it leaves with it, so a refunded or shared
+    // account's PRO does not stay on this device until the token expires.
+    const e = useSettingsStore.getState().entitlement;
+    if (e?.licenseToken) useSettingsStore.getState().update({ entitlement: { ...e, licenseToken: null } });
     set({ phase: "signed_out", email: null, name: null, lastError: null, errorStage: null });
   },
 

@@ -227,6 +227,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
             const { key, value } = kvApply(rec, {
               bodyweightLog: await kvValue("bodyweightLog"),
               exerciseMedia: await kvValue("exerciseMedia"),
+              settings: await kvValue("settings"),
             });
             await setKv(key, value, false);
           }

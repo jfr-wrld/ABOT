@@ -46,6 +46,14 @@ jobs:
         if: ${{ vars.NEXT_PUBLIC_SUPABASE_URL == '' || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY == '' }}
         run: echo "::warning::NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set in the repository's Actions variables. This APK runs local-only (no Google sign-in)."
 
+      # A live build without the licence public key trusts the tier stored on the phone, which
+      # anyone can edit (security review 2026-11-16). Stop such a build instead of shipping it.
+      - name: Check the licence settings
+        if: ${{ vars.NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR == 'COMMERCIAL_LIVE' && vars.NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY == '' }}
+        run: |
+          echo "::error::NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR is COMMERCIAL_LIVE but NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY is not set. Set the key (docs/payments-setup.md, Signed licences) before a live build."
+          exit 1
+
       - name: Export the web app and copy it into the Android project
         run: npm run build:android
         # Cloud sync: the project URL and anon key (public by design), from the repository's

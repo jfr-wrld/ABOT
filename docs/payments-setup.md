@@ -161,6 +161,13 @@ Leave it unset during the Founders beta.
    commit;
    ```
    Accounts that got PRO from a code or a manual grant keep it.
+6. Lock PRO to signed licences, in Vercel and in the repository's Actions variables, then redeploy
+   and rebuild the APK:
+   - `NEXT_PUBLIC_ABOT_LICENSE_PUBLIC_KEY` (see Signed licences above). Without it a build trusts the
+     tier stored on the phone, which anyone can edit.
+   - `NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR=COMMERCIAL_LIVE`. Without it, editing the cached remote
+     config back to beta reopens every PRO feature.
+   The APK build stops with an error when the floor is live and the key is missing.
 
 The seat cap is in `app_remote_config.founder_seats`, for example `update public.app_remote_config set founder_seats = 300;`. A pending founder order holds a seat for 30 minutes, and its Midtrans payment page closes after the same 30 minutes. Seats are taken under a database lock, so two buyers cannot both get the last one. If a founders payment still settles past the cap (Midtrans grace, a manual settlement), the buyer gets lifetime and the order is marked `over_cap` for you to review or refund: `select order_id, user_id, paid_at from public.payment_orders where over_cap;`. Mission Control shows it as OVER CAP.
 

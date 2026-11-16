@@ -248,9 +248,17 @@ export function kvPayload(kind: SyncKind, id: string, kv: { settings?: unknown; 
 /** Puts one remote kv item into the stored kv value and returns the key and new value. */
 export function kvApply(
   rec: SyncRecord,
-  kv: { bodyweightLog?: unknown; exerciseMedia?: unknown },
+  kv: { bodyweightLog?: unknown; exerciseMedia?: unknown; settings?: unknown },
 ): { key: KvKey; value: unknown } {
-  if (rec.kind === "settings") return { key: "settings", value: rec.payload };
+  if (rec.kind === "settings") {
+    // PRO comes from the server's entitlement (lib/entitlement-sync) and the signed licence, never
+    // from a settings row: a row is the account's own data, writable through the API, so a tier
+    // in it would be a self-granted one. This device's entitlement stays as it is.
+    const { entitlement: _remote, ...rest } = (rec.payload ?? {}) as Record<string, unknown>;
+    void _remote;
+    const local = (kv.settings as { entitlement?: unknown } | undefined)?.entitlement;
+    return { key: "settings", value: local === undefined ? rest : { ...rest, entitlement: local } };
+  }
   if (rec.kind === "bodyweight") {
     const rest = ((kv.bodyweightLog as BodyweightEntry[] | undefined) ?? []).filter((e) => e.id !== rec.id);
     return { key: "bodyweightLog", value: rec.deleted ? rest : mergeLog(rest, [rec.payload as BodyweightEntry]) };
