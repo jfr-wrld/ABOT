@@ -19,6 +19,7 @@ export type CheckoutFailure =
   | "checkout_off"
   | "not_founder"
   | "seats_gone"
+  | "seats_held"
   | "already_lifetime"
   | "gateway"
   | "busy"
@@ -30,6 +31,7 @@ export const CHECKOUT_MESSAGE: Record<CheckoutFailure, string> = {
   checkout_off: "Payments are paused right now. Try again later.",
   not_founder: "The founder price is for founders only. Choose lifetime or annual.",
   seats_gone: "The founder seats are all taken. Lifetime and annual are still open.",
+  seats_held: "Many people are paying for a founder seat right now. Try again in a few minutes.",
   already_lifetime: "You already hold a lifetime license.",
   gateway: "The payment page could not be opened. Try again in a moment.",
   busy: "Your payment page is still being made. Try again in a few seconds.",

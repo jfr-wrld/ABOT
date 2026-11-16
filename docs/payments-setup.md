@@ -142,6 +142,21 @@ When ABOT sells for real, also set `NEXT_PUBLIC_ABOT_MONETIZATION_FLOOR=COMMERCI
 two places. The mode then stays live even if someone edits the cached remote config back to beta.
 Leave it unset during the Founders beta.
 
+## Payments and admin hardening (2026-11-18)
+
+Apply `supabase/migrations/20261118_payments_admin_hardening.sql` in the SQL editor, then redeploy
+the checkout: `supabase functions deploy midtrans-checkout`. After it:
+
+- The Mission Control payment simulator works only on orders made while `payments_sandbox` was on;
+  a real order can never be marked paid from there.
+- Unpaid founders orders hold at most a fifth of the unsold seats at once (always at least one); a
+  buyer past that is asked to try again in a few minutes.
+- An admin must have signed in with Google; an Email-provider account with the same address is not
+  an admin.
+- A refund never removes a lifetime that an admin granted by hand.
+- The web visit counter stops at 1,000,000 per day and page. Treat those numbers as indicative:
+  anyone holding the public key can call it.
+
 ## Going live
 
 1. Turn the test buttons off: run `update public.app_remote_config set payments_sandbox = false;`.

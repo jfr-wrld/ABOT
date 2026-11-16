@@ -107,6 +107,8 @@ Deno.serve(async (req) => {
       ? await db.rpc("abot_create_founders_order", { p_order_id: orderId, p_user_id: user.id, p_amount_idr: amount })
       : await db.from("payment_orders").insert({ order_id: orderId, user_id: user.id, plan, amount_idr: amount }).then((r) => ({ data: true, error: r.error }));
   if (!insertError && created === false) return refuse(req, 409, "seats_gone");
+  // Unpaid founders orders already hold their share of the unsold seats (20261118 migration).
+  if (insertError?.code === "55P03") return refuse(req, 409, "seats_held");
   if (insertError) {
     // A second tap racing the first meets the unique index.
     if (insertError.code === "23505") return refuse(req, 409, "busy");

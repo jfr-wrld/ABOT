@@ -6,6 +6,7 @@ set client_min_messages = warning;
 -- Minimal stand-in for what Supabase provides: the auth schema, auth.uid() and the API role.
 create schema if not exists auth;
 create table if not exists auth.users (id uuid primary key, email text, email_confirmed_at timestamptz);
+create table if not exists auth.identities (user_id uuid not null, provider text not null);
 create or replace function auth.uid() returns uuid language sql stable as
   $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 create or replace function auth.jwt() returns jsonb language sql stable as
@@ -32,6 +33,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261115_admin_growth.sql
 \i supabase/migrations/20261116_admin_customers_visits.sql
 \i supabase/migrations/20261117_records_writes_through_rpc.sql
+\i supabase/migrations/20261118_payments_admin_hardening.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
@@ -44,6 +46,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261115_admin_growth.sql
 \i supabase/migrations/20261116_admin_customers_visits.sql
 \i supabase/migrations/20261117_records_writes_through_rpc.sql
+\i supabase/migrations/20261118_payments_admin_hardening.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
 -- Supabase grants these when the table is made, before the migrations run; applying the
@@ -56,6 +59,8 @@ insert into auth.users values
 -- B is the admin; seeded as the owner, the way the migration says to. C is listed too but never
 -- confirmed their email.
 insert into public.app_admins (email) values ('boss@example.com'), ('boss2@example.com');
+-- B signed in with Google, as ABOT's sign-in does.
+insert into auth.identities values ('00000000-0000-0000-0000-00000000000b', 'google'), ('00000000-0000-0000-0000-00000000000a', 'google');
 
 set role authenticated;
 
@@ -546,6 +551,97 @@ begin
   select * into t from public.admin_order_totals();
   if t.revenue_idr <> real_revenue or t.failed <> (select count(*) from public.payment_orders o where status in ('failed', 'expired') and not exists (select 1 from public.payment_events ev where ev.order_id = o.order_id and ev.transaction_status like 'simulated\_%')) then raise exception 'totals wrong (simulated expiry counted?): %', t; end if;
   if exists (select 1 from public.admin_customers() where last_status = 'expired' and email = 'boss@example.com') then raise exception 'simulated expiry shown as the admin''s last order'; end if;
+end $$;
+
+reset role;
+
+-- 20261118: payments and admin hardening.
+insert into auth.users values
+  ('00000000-0000-0000-0000-0000000000d1', 'boss3@example.com', now()),
+  ('00000000-0000-0000-0000-0000000000d2', 'd2@example.com', now()),
+  ('00000000-0000-0000-0000-0000000000d3', 'd3@example.com', now()),
+  ('00000000-0000-0000-0000-0000000000d4', 'd4@example.com', now());
+-- D1 has an admin's address, confirmed, but registered through the Email provider.
+insert into public.app_admins (email) values ('boss3@example.com');
+insert into auth.identities values ('00000000-0000-0000-0000-0000000000d1', 'email');
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000d1';
+set request.jwt.claim.email = 'boss3@example.com';
+do $$ begin
+  if public.is_abot_admin() then raise exception 'an Email-provider account with an admin address counted as admin'; end if;
+end $$;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+set request.jwt.claim.email = 'boss@example.com';
+do $$ begin
+  if not public.is_abot_admin() then raise exception 'the Google-signed-in admin lost admin'; end if;
+end $$;
+
+-- A real order (made with sandbox off) is never simulated, even after sandbox is turned on.
+reset role;
+update public.app_remote_config set payments_sandbox = false;
+insert into public.payment_orders (order_id, user_id, plan, amount_idr) values ('ABOT-ANNUAL-REAL-901', '00000000-0000-0000-0000-0000000000d2', 'annual', 199000);
+update public.app_remote_config set payments_sandbox = true;
+insert into public.payment_orders (order_id, user_id, plan, amount_idr) values ('ABOT-ANNUAL-TEST-902', '00000000-0000-0000-0000-0000000000d3', 'annual', 199000);
+do $$ begin
+  if (select sandbox from public.payment_orders where order_id = 'ABOT-ANNUAL-REAL-901') then raise exception 'real order marked as a test'; end if;
+  if not (select sandbox from public.payment_orders where order_id = 'ABOT-ANNUAL-TEST-902') then raise exception 'test order not marked'; end if;
+end $$;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+set request.jwt.claim.email = 'boss@example.com';
+do $$ begin
+  begin
+    perform public.admin_simulate_payment('ABOT-ANNUAL-REAL-901', 'paid');
+    raise exception 'a real order was simulated as paid';
+  exception when insufficient_privilege then null;
+  end;
+  if not public.admin_simulate_payment('ABOT-ANNUAL-TEST-902', 'paid') then raise exception 'test order not simulated'; end if;
+end $$;
+
+-- A refunded lifetime purchase keeps a lifetime an admin granted earlier.
+do $$ begin
+  if not public.admin_grant('d4@example.com', 'lifetime', null) then raise exception 'admin grant failed'; end if;
+end $$;
+reset role;
+set role service_role;
+insert into public.payment_orders (order_id, user_id, plan, amount_idr) values ('ABOT-LIFETIME-D4-903', '00000000-0000-0000-0000-0000000000d4', 'lifetime', 599000);
+do $$ begin
+  if not public.abot_order_paid('ABOT-LIFETIME-D4-903', 'qris', 't903') then raise exception 'lifetime purchase not granted'; end if;
+  if not public.abot_order_reversed('ABOT-LIFETIME-D4-903') then raise exception 'refund not applied'; end if;
+  if (select tier from public.user_entitlements where user_id = '00000000-0000-0000-0000-0000000000d4') <> 'lifetime' then
+    raise exception 'refund took away an admin-granted lifetime';
+  end if;
+end $$;
+
+-- Unpaid founders orders hold at most a fifth of the unsold seats (10 left: two holds).
+reset role;
+update public.payment_orders set status = 'expired' where plan = 'founders' and status = 'pending';
+update public.app_remote_config set founder_seats = (
+  select count(*)::integer + 10 from public.payment_orders where plan = 'founders' and status = 'paid'
+) where id = 'global';
+set role service_role;
+do $$ begin
+  if not public.abot_create_founders_order('ABOT-LIFETIME-H1-904', '00000000-0000-0000-0000-0000000000d1', 399000) then raise exception 'first hold refused'; end if;
+  if not public.abot_create_founders_order('ABOT-LIFETIME-H2-905', '00000000-0000-0000-0000-0000000000d2', 399000) then raise exception 'second hold refused'; end if;
+  begin
+    perform public.abot_create_founders_order('ABOT-LIFETIME-H3-906', '00000000-0000-0000-0000-0000000000d3', 399000);
+    raise exception 'a third hold was allowed';
+  exception when lock_not_available then null;
+  end;
+end $$;
+
+-- The visit counter stops at its ceiling.
+reset role;
+update public.web_visits set views = 999999, visitors = 999999 where path = '/workout';
+set role anon;
+do $$ begin
+  perform public.track_visit('/workout', true);
+  perform public.track_visit('/workout', true);
+end $$;
+reset role;
+do $$ begin
+  if (select max(views) from public.web_visits where path = '/workout') <> 1000000 then raise exception 'views passed the ceiling'; end if;
+  if exists (select 1 from public.web_visits where visitors > views) then raise exception 'more visitors than views'; end if;
 end $$;
 
 reset role;

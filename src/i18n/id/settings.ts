@@ -525,6 +525,7 @@ export const settings: Record<string, string> = {
   "Payments are paused right now. Try again later.": "Pembayaran sedang dijeda. Coba lagi nanti.",
   "The founder price is for founders only. Choose lifetime or annual.": "Harga founder hanya untuk founder. Pilih lifetime atau tahunan.",
   "The founder seats are all taken. Lifetime and annual are still open.": "Kursi founder sudah habis. Lifetime dan tahunan masih tersedia.",
+  "Many people are paying for a founder seat right now. Try again in a few minutes.": "Banyak orang sedang membayar kursi founder. Coba lagi beberapa menit lagi.",
   "You already hold a lifetime license.": "Kamu sudah punya lisensi lifetime.",
   "The payment page could not be opened. Try again in a moment.": "Halaman pembayaran tidak bisa dibuka. Coba lagi sebentar lagi.",
   "This file is too large to be an ABOT export.": "File ini terlalu besar untuk sebuah ekspor ABOT.",
