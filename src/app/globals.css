@@ -81,7 +81,7 @@
   /* Volt only on black (owner, 2026-11-16). A Volt fill on white read as a highlighter, so on
      light pages the accent is black: black fills with white content, black thin marks (icons,
      text, borders, rings, chart lines, the muscle maps). Volt appears only on black: the logo
-     tile, the dock's centre button, the current tab and the ring on Home's card. */
+     tile, the dock's centre button and Home's Volt week card. */
   --color-accent: #18181b;
   --color-accent-text: #18181b;
   --color-on-accent: #ffffff;
@@ -140,8 +140,8 @@
   color: #ccff00;
 }
 
-/* Volt on black, on light pages: the dock's centre button carries a Volt dumbbell (like the live
-   disc's Volt stopwatch), and the ring and marks on Home's black card are Volt. */
+/* Volt on black, on light pages: the dock's centre button carries a Volt dumbbell, like the live
+   disc's Volt stopwatch. */
 [data-theme="light"] .today-fab:not(.today-fab-live) {
   color: #ccff00;
   background-image: radial-gradient(120% 70% at 50% 0%, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0) 60%);
@@ -150,14 +150,15 @@
     inset 0 -3px 3px rgb(0 0 0 / 0.35),
     0 6px 14px -4px rgb(0 0 0 / 0.45);
 }
+/* Home's week card stays Volt on light pages too (owner, 2026-11-16): one bright card gives the
+   page its colour. Its figures, ring and icons are black on it (17:1); a darker lime edge and a
+   lime shadow hold its shape against the white page. */
 [data-theme="light"] .wallet-card {
-  background-image: radial-gradient(120% 90% at 0% 0%, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0) 55%);
-}
-[data-theme="light"] .wallet-card .text-accent {
-  color: #ccff00;
-}
-[data-theme="light"] .wallet-card [stroke="var(--color-accent)"] {
-  stroke: #ccff00;
+  --color-accent: #ccff00;
+  --color-on-accent: #000000;
+  --color-accent-edge: #8db300;
+  --neo-accent-face: linear-gradient(180deg, rgb(255 255 255 / 0.35), rgb(255 255 255 / 0) 55%, rgb(0 0 0 / 0.06));
+  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 1px rgb(80 110 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.12), 0 5px 12px -5px rgb(110 150 0 / 0.55);
 }
 
 /* Superset labels: the group colour (--ss) as text. On white the pastel group colours fall under
