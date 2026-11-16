@@ -16,12 +16,6 @@ import { tunables } from "./tunables";
  * It is an estimate: no heart rate goes into it.
  */
 
-export const MET_MIN = 3.5;
-export const MET_MAX = 6.5;
-/** Used when no body weight is known yet, and reported as such. */
-export const FALLBACK_BODYWEIGHT_KG = 75;
-
-
 export interface CalorieEstimate {
   kcal: number;
   met: number;

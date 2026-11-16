@@ -13,8 +13,6 @@ import { mapCatalogEntry } from "./catalog";
  * (useExerciseStore.adopt), so history never depends on these files.
  */
 
-export const isAtlas = (e: Pick<Exercise, "id">) => e.id.startsWith("atlas-");
-
 export async function loadExtendedLibrary(): Promise<Exercise[]> {
   const [{ FEDB_ROWS }, { ATLAS_INPUTS }, { SEED_EXERCISES }] = await Promise.all([
     import("./fedb-library.generated"),

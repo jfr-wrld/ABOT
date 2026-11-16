@@ -211,12 +211,6 @@ export interface GymLocation {
   platePairs?: Record<string, number>;
 }
 
-export interface RoutineFolder {
-  id: string;
-  name: string;
-  order: number;
-}
-
 /* ------------------------------------------------------------------ */
 /* Derived / analytics types                                           */
 /* ------------------------------------------------------------------ */
@@ -232,15 +226,6 @@ export interface PersonalRecord {
   sessionId: string;
   setId: string;
   achievedAt: number;
-}
-
-export interface SessionSummary {
-  totalVolumeKg: number;
-  totalSets: number;
-  completedSets: number;
-  durationSec: number;
-  /** Set ids that established a new PR in this session, by kind. */
-  prs: PersonalRecord[];
 }
 
 export interface ExerciseHistoryPoint {

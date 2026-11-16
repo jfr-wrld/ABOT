@@ -40,7 +40,7 @@ describe("routine templates", () => {
 
   it("lists the muscles a template trains, most-worked first", () => {
     const push = ROUTINE_TEMPLATES.find((t) => t.id === "tpl-push-a")!;
-    expect(templateMuscles(push).slice(0, 3)).toEqual(["Chest", "Shoulders", "Triceps"]);
+    expect(templateMuscles(push).slice(0, 3)).toEqual(["chest", "shoulders", "triceps"]);
   });
 
   it("a copy for My Routines gets fresh ids, target reps and kept supersets", () => {

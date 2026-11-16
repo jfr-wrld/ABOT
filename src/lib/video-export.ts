@@ -58,11 +58,6 @@ function recorderType(): string | null {
   return null;
 }
 
-/** Whether this device can make a video at all (WebCodecs, or recording a canvas). */
-export async function canMakeVideo(width: number, height: number, fps: number): Promise<boolean> {
-  return (await pickCodec(width, height, fps)) !== null || recorderType() !== null;
-}
-
 function aborted(signal?: AbortSignal) {
   if (signal?.aborted) throw new DOMException("The video was cancelled.", "AbortError");
 }

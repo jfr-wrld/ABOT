@@ -46,11 +46,6 @@ export function checkoutBlock(): "not_connected" | "checkout_off" | null {
   return c.checkoutEnabled && (!isNativeApp() || c.checkoutOnAndroid) ? null : "checkout_off";
 }
 
-/** Payments are offered on this device: set up, switched on, and allowed on this platform. */
-export function checkoutAvailable(): boolean {
-  return checkoutBlock() === null;
-}
-
 const PENDING_KEY = "abot.pending-order";
 
 export function rememberPendingOrder(orderId: string | null): void {

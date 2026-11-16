@@ -44,23 +44,6 @@ export const STORY_PRESETS: { id: StoryPresetId; name: string; blurb: string }[]
   { id: "volt-poster", name: "Volt Poster", blurb: "Swiss poster in black on Volt" },
 ];
 
-/** Layouts that were retired, mapped to the closest one still offered. */
-export const RETIRED_PRESETS: Record<string, StoryPresetId> = {
-  "obsidian-raw": "matchday",
-  "cyber-volt-hud": "arcade",
-  "monochrome-steel": "editorial",
-  "pr-trophy-vault": "trophy-vault",
-  "photo-backdrop": "editorial",
-  "split-spec-sheet": "matchday",
-  "plate-grid": "loaded-bar",
-};
-
-/** A saved or linked layout id as one still offered. */
-export function presetId(id: string | null | undefined): StoryPresetId {
-  if (id && STORY_PRESETS.some((p) => p.id === id)) return id as StoryPresetId;
-  return (id && RETIRED_PRESETS[id]) || "matchday";
-}
-
 /** Font stacks for `ctx.font`: the app's two faces and the five Story Studio theme faces. */
 export interface StoryFonts {
   sans: string;

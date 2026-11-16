@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exerciseKey } from "./exerciseKey.mjs";
-import { isAtlas, loadExtendedLibrary, withoutBuiltIn } from "./extended-library";
+import { loadExtendedLibrary, withoutBuiltIn } from "./extended-library";
 import { SEED_EXERCISES } from "./exercises";
 import { normalizeExercise } from "./normalize";
 
@@ -18,7 +18,7 @@ describe("exerciseKey", () => {
 describe("the extended library", async () => {
   const lib = await loadExtendedLibrary();
   const fedb = lib.filter((e) => e.id.startsWith("fedb-"));
-  const atlas = lib.filter(isAtlas);
+  const atlas = lib.filter((e) => e.id.startsWith("atlas-"));
 
   it("ships hundreds of photo exercises from free-exercise-db and the gaps from the Atlas", () => {
     expect(fedb.length).toBeGreaterThan(650);

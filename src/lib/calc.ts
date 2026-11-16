@@ -1,7 +1,6 @@
 import type {
   PersonalRecord,
   PRKind,
-  SessionSummary,
   WorkoutSession,
   WorkoutSet,
   ExerciseHistoryPoint,
@@ -14,9 +13,6 @@ const KG_PER_LB = 0.45359237;
 
 export const kgToLbs = (kg: number) => kg / KG_PER_LB;
 export const lbsToKg = (lbs: number) => lbs * KG_PER_LB;
-
-/** Round to the nearest 0.5 for display. */
-export const roundHalf = (n: number) => Math.round(n * 2) / 2;
 
 /**
  * Epley formula: 1RM = w × (1 + r / 30).
@@ -245,22 +241,6 @@ export function detectSessionPRs(
     for (const pr of Object.values(byKind)) if (pr) found.push(pr);
   }
   return found;
-}
-
-export function summarizeSession(
-  session: WorkoutSession,
-  allSessions: WorkoutSession[],
-  now = Date.now(),
-  byId?: Record<string, Exercise>,
-): SessionSummary {
-  const { total, completed } = countSets(session);
-  return {
-    totalVolumeKg: sessionVolume(session, byId),
-    totalSets: total,
-    completedSets: completed,
-    durationSec: sessionDurationSec(session, now),
-    prs: detectSessionPRs(session, allSessions, byId),
-  };
 }
 
 /* ------------------------------------------------------------------ */

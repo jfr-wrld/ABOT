@@ -18,11 +18,6 @@ import { recoveryModifier } from "./phase-engine";
  * recovery time (lib/phase-engine).
  */
 
-/** Shipped defaults; the values in force come from tunables().recovery. */
-export const PRIMARY_FATIGUE = 15;
-export const SECONDARY_FATIGUE = 7.5;
-export const READY_AT = 20;
-
 const BIG: ReadonlySet<MuscleGroup> = new Set(["chest", "back", "lats", "quads", "hamstrings", "glutes", "lower_back"]);
 
 /**
@@ -153,7 +148,7 @@ export interface RegionTelemetry {
   lastTrainedAt: number | null;
   /** Counted sets that trained it in that last session. */
   lastSets: number;
-  /** Hours until it is back to READY_AT or below; 0 when ready. */
+  /** Hours until it is back to tunables().recovery.readyAtPct or below; 0 when ready. */
   readyInHours: number;
 }
 

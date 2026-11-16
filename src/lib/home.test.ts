@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextProtocol, prCounts, relativeDay, weekDayVolumes, weekStrip, weeklyFrequency, weeklyVolume } from "./home";
+import { nextProtocol, prCounts, relativeDay, weekStrip, weeklyFrequency, weeklyVolume } from "./home";
 import { DEFAULT_SCHEDULE, type WorkoutSchedule } from "@/lib/notifications/schedule";
 import type { Exercise, Routine, WorkoutSession, WorkoutSet } from "@/types/workout";
 import { SEED_EXERCISES } from "@/data/exercises";
@@ -103,11 +103,6 @@ describe("recent workout tags", () => {
 });
 
 describe("home visuals", () => {
-  it("splits this week's volume by day", () => {
-    const v = weekDayVolumes([session("x", now - 2 * DAY, [["bench-press-barbell", [set(100, 5)]]])], now, 1, byId);
-    expect(v).toEqual([500, 0, 0, 0, 0, 0, 0]);
-  });
-
   it("names nearby days in words", () => {
     expect(relativeDay(now, now)).toBe("Today");
     expect(relativeDay(now - DAY, now)).toBe("Yesterday");

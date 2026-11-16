@@ -1,5 +1,5 @@
 import type { Routine } from "@/types/workout";
-import { MUSCLE_GROUP_LABELS, type MuscleGroup } from "@/types/workout";
+import type { MuscleGroup } from "@/types/workout";
 import { SEED_EXERCISES_BY_ID } from "@/data/exercises";
 import { newId } from "@/lib/id";
 
@@ -327,12 +327,12 @@ export function estimateMinutes(t: RoutineTemplate): number {
 }
 
 /** Primary muscles by working sets, most first. */
-export function templateMuscles(t: RoutineTemplate): string[] {
+export function templateMuscles(t: RoutineTemplate): MuscleGroup[] {
   const sets = new Map<MuscleGroup, number>();
   for (const e of t.exercises) {
     for (const m of SEED_EXERCISES_BY_ID[e.exerciseId]?.primaryMuscles ?? []) sets.set(m, (sets.get(m) ?? 0) + e.sets);
   }
-  return [...sets.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => MUSCLE_GROUP_LABELS[m]);
+  return [...sets.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => m);
 }
 
 /** An ordinary routine (fresh ids) for My Routines or for starting a workout. */

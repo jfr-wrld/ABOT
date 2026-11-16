@@ -179,22 +179,6 @@ export function prCounts(
 
 /* ---------------------------------------------------------------- visual helpers */
 
-/** Volume per day of the current week, in the lifter's week order (7 numbers, kg). */
-export function weekDayVolumes(
-  sessions: WorkoutSession[],
-  now: number,
-  firstDay: 0 | 1 = 1,
-  byId?: Record<string, Exercise>,
-): number[] {
-  const days = weekStrip([], now, firstDay).map((d) => d.start);
-  const out = days.map(() => 0);
-  for (const s of completed(sessions)) {
-    const i = days.indexOf(startOfDay(s.startedAt));
-    if (i >= 0) out[i] += sessionVolume(s, byId);
-  }
-  return out;
-}
-
 /**
  * "Today", "Yesterday", a weekday within the week, else a short date. Pass `t` for the chosen
  * language; without it the words are English and dates follow the system locale.
