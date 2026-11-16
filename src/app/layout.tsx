@@ -13,6 +13,7 @@ import { DynamicIsland } from "@/components/layout/DynamicIsland";
 import { SplashScreen } from "@/components/animations/SplashScreen";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { MotionProvider } from "@/components/animations/MotionProvider";
+import { MotionFeatures } from "@/components/animations/MotionFeatures";
 import { SignInReturn } from "@/components/sync/SignInReturn";
 import { NativeShell } from "@/components/layout/NativeShell";
 import { AutoGym } from "@/components/layout/AutoGym";
@@ -76,41 +77,43 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
-        <ThemeController />
-        <EffectsController />
-        <LangAttr />
-        <AudioUnlock />
-        <RemoteConfigLoader />
-        <EntitlementsProvider />
-        <MotionProvider>
-          <StoreHydrator />
-          <TabNotice />
-          <SplashScreen />
-          <DynamicIsland />
-          <UpdateCenter />
-          <GetAppSheet />
-          <ScrollMemory />
-          <NativeShell />
-          <AutoGym />
-          {/* Edge-to-edge on Android: a solid strip behind the status bar, content starts below it. */}
-          <div aria-hidden="true" className="fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top)] bg-bg" />
-          <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pt-[env(safe-area-inset-top)] pb-[calc(var(--dock-h,96px)+var(--live-bar,0px)+env(safe-area-inset-bottom))]">
-            <Suspense fallback={<LoadingStatus />}>
-              <PageTransition>{children}</PageTransition>
-            </Suspense>
-          </div>
-          <BottomNav />
-          <SignInReturn />
-          {/* Web build only: the APK leaves both out entirely (next.config.ts sets the flag). They
-              read the search params, which a prerendered page only has in the browser. Vercel Web
-              Analytics also needs a build on Vercel: /_vercel/insights exists only there. */}
-          {process.env.ABOT_WEB_ANALYTICS === "1" && (
-            <Suspense fallback={null}>
-              {process.env.VERCEL && <WebAnalytics />}
-              <VisitCounter />
-            </Suspense>
-          )}
-        </MotionProvider>
+        <MotionFeatures>
+          <ThemeController />
+          <EffectsController />
+          <LangAttr />
+          <AudioUnlock />
+          <RemoteConfigLoader />
+          <EntitlementsProvider />
+          <MotionProvider>
+            <StoreHydrator />
+            <TabNotice />
+            <SplashScreen />
+            <DynamicIsland />
+            <UpdateCenter />
+            <GetAppSheet />
+            <ScrollMemory />
+            <NativeShell />
+            <AutoGym />
+            {/* Edge-to-edge on Android: a solid strip behind the status bar, content starts below it. */}
+            <div aria-hidden="true" className="fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top)] bg-bg" />
+            <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col pt-[env(safe-area-inset-top)] pb-[calc(var(--dock-h,96px)+var(--live-bar,0px)+env(safe-area-inset-bottom))]">
+              <Suspense fallback={<LoadingStatus />}>
+                <PageTransition>{children}</PageTransition>
+              </Suspense>
+            </div>
+            <BottomNav />
+            <SignInReturn />
+            {/* Web build only: the APK leaves both out entirely (next.config.ts sets the flag). They
+                read the search params, which a prerendered page only has in the browser. Vercel Web
+                Analytics also needs a build on Vercel: /_vercel/insights exists only there. */}
+            {process.env.ABOT_WEB_ANALYTICS === "1" && (
+              <Suspense fallback={null}>
+                {process.env.VERCEL && <WebAnalytics />}
+                <VisitCounter />
+              </Suspense>
+            )}
+          </MotionProvider>
+        </MotionFeatures>
       </body>
     </html>
   );

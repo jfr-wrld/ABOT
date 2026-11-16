@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { motion, type Variants } from "framer-motion";
+import { m as motion, type Variants } from "framer-motion";
 import { CalendarDays, ChevronRight, Flame, Hammer, TrendingUp } from "@/components/icons";
 import { PHASE_ICON } from "@/components/phase/PhaseCommandCard";
 import { usePhaseTelemetry } from "@/components/phase/usePhaseTelemetry";

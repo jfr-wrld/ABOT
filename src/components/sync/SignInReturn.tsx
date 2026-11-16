@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { CloudAlert, CloudCheck, X } from "@/components/icons";
 import { takeSignInReturn, useSyncStore } from "@/store/useSyncStore";
 import { friendlyError } from "@/lib/syncStatus";

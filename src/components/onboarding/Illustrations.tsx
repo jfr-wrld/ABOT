@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { motion, useReducedMotionConfig } from "framer-motion";
+import { m as motion, useReducedMotionConfig } from "framer-motion";
 import { Check, ClipboardList, CloudCheck, DumbbellLarge, Home, Search, Trophy, WifiOff } from "@/components/icons";
 import { AbotMark } from "@/components/brand/AbotMark";
 import { useT } from "@/i18n";

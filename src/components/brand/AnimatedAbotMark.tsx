@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useSyncExternalStore } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 
 import { MARK_A, MARK_BAR, MARK_PATH, MARK_PLATE_LEFT, MARK_PLATE_RIGHT } from "./mark-path";
 

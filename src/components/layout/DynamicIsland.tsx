@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LayoutGroup, MotionConfig, motion } from "framer-motion";
+import { LayoutGroup, MotionConfig, m as motion } from "framer-motion";
 import { ArrowUpRight, Check, Crosshair, Pause, Play, Plus, X, Zap } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";

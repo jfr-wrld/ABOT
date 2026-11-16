@@ -11,7 +11,7 @@ import { DEFAULT_ENTITLEMENT } from "@/lib/entitlements";
 import { feedback } from "@/lib/feedback";
 import { newId } from "@/lib/id";
 import { useT } from "@/i18n";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { useShake } from "@/lib/useShake";
 
 /** One redeem sheet for the app: opened from the paywall and from the founder card. */

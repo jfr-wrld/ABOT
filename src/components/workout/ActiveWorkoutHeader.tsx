@@ -10,7 +10,7 @@ import { useLocationStore } from "@/store/useLocationStore";
 import { useNow } from "@/lib/useNow";
 import { countSets, formatDuration, sessionDurationSec, sessionVolume } from "@/lib/calc";
 import { formatVolume } from "@/lib/units";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { MapPin, MoreHorizontal, Pause, Play, Timer, Trash2 } from "@/components/icons";
 import { Button, press } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";

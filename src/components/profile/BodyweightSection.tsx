@@ -15,7 +15,7 @@ import { PROFILE_LIMITS, type BodyweightEntry } from "@/types/workout";
 import { useT } from "@/i18n";
 import { Sparkline } from "@/components/phase/visuals";
 import { DrawnCheck } from "@/components/ui/DrawnCheck";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { LIST_ITEM } from "@/components/motion/listItem";
 import { feedback } from "@/lib/feedback";
 import { useShake } from "@/lib/useShake";

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { animate, motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
+import { animate, m as motion, useAnimationControls, useReducedMotionConfig } from "framer-motion";
 
 const SPRING = { type: "spring", stiffness: 380, damping: 30 } as const;
 

@@ -16,7 +16,7 @@ import { BodyChip } from "@/components/profile/BodyLink";
 import { usePhotoPicker } from "@/components/profile/usePhotoPicker";
 import { profileStats } from "@/lib/profile";
 import { PlanBadge } from "@/components/paywall/PlanBadge";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { PRESS_SPRING } from "@/components/ui/Button";
 import { weeklyBuckets } from "@/lib/analytics";
 import { useNow } from "@/lib/useNow";

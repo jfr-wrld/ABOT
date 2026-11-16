@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 
 /** The set-done tick (SetRow), drawn once where it mounts: a save that worked. */
 export function DrawnCheck({ size = 16 }: { size?: number }) {

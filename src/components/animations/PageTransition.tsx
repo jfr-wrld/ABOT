@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { FirstVisitProvider } from "@/components/motion/Entrance";
 
 /** Pages opened so far this session, so a page's entrance plays only the first time. */
