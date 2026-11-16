@@ -61,7 +61,8 @@ function SettingsScreen() {
   if (!section) {
     return (
       <main className="flex flex-1 flex-col">
-        <PageHeader title={t("Settings")} back={{ href: "/", label: t("Home") }} />
+        {/* Settings opens from the gear on Profile, so Back returns there. */}
+        <PageHeader title={t("Settings")} back={{ href: "/profile", label: t("Profile") }} />
         <SettingsHome />
       </main>
     );

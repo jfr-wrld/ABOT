@@ -102,9 +102,17 @@ export function ExercisePicker({
   const usage = useMemo(() => exerciseUsage(sessions), [sessions]);
   // As in the library: browsing lists exercises with a real photo, plus favourites and ones done.
   const keep = useMemo(() => new Set([...favorites, ...Object.keys(usage.uses)]), [favorites, usage]);
+  // Browsing hides exercises without a photo; "Show all" lists them too, until the filters change.
+  const [showAllFor, setShowAllFor] = useState<string | null>(null);
+  const browseKey = `${open}|${muscle}|${equipment}`;
+  const showAll = showAllFor === browseKey;
   const filtered = useMemo(
-    () => filterExercises(list, { query: search, muscle, equipment, photos: { keep } }, { favorites, uses: usage.uses }),
-    [list, search, muscle, equipment, favorites, usage, keep],
+    () => filterExercises(list, { query: search, muscle, equipment, photos: showAll ? undefined : { keep } }, { favorites, uses: usage.uses }),
+    [list, search, muscle, equipment, favorites, usage, keep, showAll],
+  );
+  const hidden = useMemo(
+    () => (search.trim() || showAll ? 0 : filterExercises(list, { query: "", muscle, equipment }).length - filtered.length),
+    [list, search, muscle, equipment, showAll, filtered.length],
   );
   const filtering = query.trim() !== "" || muscle !== null || equipment !== null;
   const [limit, more, setSentinel] = useIncremental(filtered.length, `${open}|${search}|${muscle}|${equipment}|${view}`);
@@ -216,6 +224,12 @@ export function ExercisePicker({
           ))}
           {more && <li ref={setSentinel} aria-hidden="true" className="h-px" />}
         </ul>
+      )}
+      {/* The rest are there, just without a photo: say so instead of letting the list look complete. */}
+      {!more && hidden > 0 && (
+        <Button onClick={() => setShowAllFor(browseKey)} className="mt-2 w-full">
+          {t.n(hidden, "Show {n} more without a photo", "Show {n} more without photos")}
+        </Button>
       )}
 
       {query.trim() && (

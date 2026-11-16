@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, m as motion, useMotionValue, useReducedMotionConfig, useTransform, type MotionValue } from "framer-motion";
-import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Play, Plus, Bell, RotateCcw, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy, Pause } from "@/components/icons";
+import { Activity, CalendarDays, Check, ChevronRight, Dumbbell, Flame, Layers, MapPin, Pencil, Play, Plus, Bell, RotateCcw, SlidersHorizontal, Timer, TrendingDown, TrendingUp, Trophy, Pause } from "@/components/icons";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -41,7 +41,7 @@ import {
 import type { Exercise, MuscleGroup, Routine, WorkoutSession } from "@/types/workout";
 import { MUSCLE_GROUP_LABELS } from "@/types/workout";
 import type { Weekday } from "@/lib/notifications/schedule";
-import { historyPath } from "@/lib/routes";
+import { historyEditPath, historyPath } from "@/lib/routes";
 import { isoTime } from "@/lib/safe-date";
 import { Ring } from "@/components/phase/visuals";
 import { liveSet } from "@/lib/live-set";
@@ -738,13 +738,14 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
             <Check aria-hidden="true" size={13} strokeWidth={3} className="text-accent" />
             {t("Done")} · {whenLabel(t, day.start, now, null)}
           </p>
+          {/* Two workouts in a day: one name and the day's totals, so the figures match each other. */}
           <h2 id="hero-heading" className="mt-1 truncate text-2xl font-bold tracking-tight">
-            {s.name}
+            {done.length > 1 ? t.n(done.length, "{n} workout", "{n} workouts") : s.name}
           </h2>
           <p className="num mt-1 flex items-center gap-3 text-sm text-text-muted">
             <span className="inline-flex items-center gap-1">
               <Timer aria-hidden="true" size={14} />
-              {formatDuration(sessionDurationSec(s))}
+              {formatDuration(done.reduce((n, x) => n + sessionDurationSec(x), 0))}
             </span>
             <span className="inline-flex items-center gap-1">
               <Dumbbell aria-hidden="true" size={14} />
@@ -785,8 +786,12 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
     // The workout this card offers: the day's planned one, or (today, without one) the next.
     const routine = plannedRoutine ?? (day.isToday && !(hasPlan && !planned) ? (next?.routine ?? null) : null);
     const rest = !routine && (hasPlan || !day.isToday);
+    // A planned day already gone with nothing logged: it was missed, not still to come.
+    const missed = !!plannedRoutine && !day.isToday && !day.isFuture;
     if (routine) {
-      const label = plannedRoutine
+      const label = missed
+        ? t("Missed · {day}", { day: whenLabel(t, day.start, now, null) })
+        : plannedRoutine
         ? whenLabel(t, day.start, now, schedule.time)
         : next && (next.why.kind === "tomorrow" || next.why.kind === "weekday")
           ? whenLabel(t, startOfNext(next, now), now, null)
@@ -815,10 +820,18 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
           </div>
           <HeroLifts routine={routine} byId={byId} />
           <div className="relative grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <Button variant="primary" onClick={() => start(routine)} aria-label={t("Start {name}", { name: routine.name })} className="min-h-12 text-base">
-              <Play aria-hidden="true" size={18} />
-              {t("Start")}
-            </Button>
+            {missed ? (
+              // Trained that day without the app? It can still be logged on its own day.
+              <Button variant="primary" onClick={() => router.push(historyEditPath(undefined, day.start + dayMinutes(schedule.time)))} className="min-h-12 text-base">
+                <Pencil aria-hidden="true" size={18} />
+                {t("Log it")}
+              </Button>
+            ) : (
+              <Button variant="primary" onClick={() => start(routine)} aria-label={t("Start {name}", { name: routine.name })} className="min-h-12 text-base">
+                <Play aria-hidden="true" size={18} />
+                {t("Start")}
+              </Button>
+            )}
             <Button onClick={empty} aria-label={t("Start an empty workout")} className="size-12 !bg-transparent !px-0">
               <Plus aria-hidden="true" size={20} />
             </Button>
@@ -877,12 +890,13 @@ function DayHero({ day, next, byId, now }: { day: ReturnType<typeof weekStrip>[n
               <Play aria-hidden="true" size={18} />
               {t("Start an empty workout")}
             </Button>
+            {/* "+" means start an empty workout everywhere on Home; this one opens the routines. */}
             <Link
               href="/workout"
-              aria-label={t("Create a routine")}
+              aria-label={t("Your routines")}
               className="raised flex size-12 items-center justify-center rounded-xl"
             >
-              <Plus aria-hidden="true" size={20} />
+              <Layers aria-hidden="true" size={20} />
             </Link>
           </div>
           <Link href="/plan" className="relative -mb-1 flex min-h-11 items-center justify-center gap-1.5 text-sm font-semibold text-accent">
@@ -1369,7 +1383,7 @@ function WeekCard({ now, stats, byId }: { now: number; stats: WeekStats; byId: R
           <span className={label}>{t("Training time")}</span>
         </Link>
 
-        <Link href="/history/all" className={tile}>
+        <Link href="/profile?tab=lifts" className={tile}>
           <span aria-hidden="true" className={`${pic} text-pr`}>
             <Trophy size={18} />
           </span>
@@ -1533,4 +1547,10 @@ function useLoggedById(
   const same = kept === next || (Object.keys(kept).length === Object.keys(next).length && Object.keys(next).every((k) => kept[k] === next[k]));
   if (!same) setKept(next);
   return same ? kept : next;
+}
+
+/** "18:30" as milliseconds after midnight; 18:00 when the plan has no time. */
+function dayMinutes(time: string | null): number {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(time ?? "");
+  return ((m ? Number(m[1]) * 60 + Number(m[2]) : 18 * 60) * 60_000);
 }

@@ -9,4 +9,5 @@ export const historyPath = (id: string) => withId("/history", id);
 export const summaryPath = (id: string) => withId("/workout/summary", id);
 export const routineEditPath = (id: string) => withId("/routines/edit", id);
 /** The editor for a finished workout; without an id it logs a past one. */
-export const historyEditPath = (id?: string) => (id ? withId("/history/edit", id) : "/history/edit");
+export const historyEditPath = (id?: string, at?: number) =>
+  id ? withId("/history/edit", id) : at !== undefined ? `/history/edit?at=${Math.round(at)}` : "/history/edit";

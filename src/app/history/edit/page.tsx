@@ -37,10 +37,13 @@ const timeValue = (ms: number) => {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-/** A workout logged afterwards: an hour that ended now, until the lifter says when it was. */
-function blankWorkout(name: string): WorkoutSession {
-  const end = Date.now();
-  return { id: newId(), name, startedAt: end - 60 * 60_000, finishedAt: end, status: "completed", exercises: [] };
+/**
+ * A workout logged afterwards: an hour that ended now, or that started at `at` (a missed day on
+ * Home passes its planned time), until the lifter says when it was.
+ */
+function blankWorkout(name: string, at: number | null): WorkoutSession {
+  const start = at !== null && at <= Date.now() ? at : Date.now() - 60 * 60_000;
+  return { id: newId(), name, startedAt: start, finishedAt: start + 60 * 60_000, status: "completed", exercises: [] };
 }
 
 /**
@@ -51,14 +54,16 @@ function blankWorkout(name: string): WorkoutSession {
 function SessionEditor() {
   const t = useT();
   const router = useRouter();
-  const id = useSearchParams().get("id");
+  const params = useSearchParams();
+  const id = params.get("id");
+  const atParam = Number(params.get("at"));
   const sessions = useWorkoutStore((s) => s.sessions);
   const saveSession = useWorkoutStore((s) => s.saveSession);
   const unit = useSettingsStore((s) => s.weightUnit);
   const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
   const { byId } = useAllExercises();
   const original = id ? sessions.find((s) => s.id === id) : undefined;
-  const [draft, setDraft] = useState<WorkoutSession | null>(() => (id ? (original ? structuredClone(original) : null) : blankWorkout(t("Workout"))));
+  const [draft, setDraft] = useState<WorkoutSession | null>(() => (id ? (original ? structuredClone(original) : null) : blankWorkout(t("Workout"), Number.isFinite(atParam) && atParam > 0 ? atParam : null)));
   const [minutes, setMinutes] = useState<number | null>(() => (draft ? Math.max(1, Math.round(((draft.finishedAt ?? draft.startedAt) - draft.startedAt - (draft.pausedMs ?? 0)) / 60_000)) : 60));
   const [picker, setPicker] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Play } from "@/components/icons";
+import { CalendarDays, Play } from "@/components/icons";
 import { MuscleMap } from "@/components/anatomy/MuscleMap";
 import { LiftList } from "@/components/routines/RoutineCard";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
 import { routineSummary } from "@/lib/routine-summary";
 import { useT } from "@/i18n";
@@ -18,6 +19,8 @@ export function TodaySheet({ open, onClose, routine, doneToday }: { open: boolea
   const { byId } = useAllExercises();
   const active = useWorkoutStore((s) => s.active);
   const startFromRoutine = useWorkoutStore((s) => s.startFromRoutine);
+  const startEmpty = useWorkoutStore((s) => s.startEmpty);
+  const defaultRest = useSettingsStore((s) => s.defaultRestSeconds);
   const sum = routine ? routineSummary(routine, byId) : null;
   const title = routine ? (doneToday ? t("Next: {name}", { name: routine.name }) : routine.name) : t("No workout planned");
   return (
@@ -26,7 +29,7 @@ export function TodaySheet({ open, onClose, routine, doneToday }: { open: boolea
       onClose={onClose}
       title={title}
       footer={
-        routine && (
+        routine ? (
           <Button
             variant="primary"
             className="min-h-12 w-full text-base"
@@ -39,6 +42,32 @@ export function TodaySheet({ open, onClose, routine, doneToday }: { open: boolea
             <Play aria-hidden="true" size={18} />
             {active ? t("Continue workout") : t("Start")}
           </Button>
+        ) : (
+          // Nothing planned: the two ways forward, so the dock's big button never leads nowhere.
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={() => {
+                onClose();
+                router.push("/plan");
+              }}
+              className="min-h-12 text-base"
+            >
+              <CalendarDays aria-hidden="true" size={18} />
+              {t("Set up week")}
+            </Button>
+            <Button
+              variant="primary"
+              className="min-h-12 text-base"
+              onClick={() => {
+                onClose();
+                if (!active) startEmpty(defaultRest);
+                router.push(active ? "/workout" : "/workout?add=1");
+              }}
+            >
+              <Play aria-hidden="true" size={18} />
+              {active ? t("Continue workout") : t("Start empty")}
+            </Button>
+          </div>
         )
       }
     >

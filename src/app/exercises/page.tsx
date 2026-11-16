@@ -80,10 +80,18 @@ function LibraryScreen() {
   const usage = useMemo(() => exerciseUsage(sessions), [sessions]);
   // Browsing lists exercises with a real photo; favourites and anything already done stay listed.
   const keep = useMemo(() => new Set([...favorites, ...Object.keys(usage.uses)]), [favorites, usage]);
+  // Browsing hides exercises without a photo; "Show all" lists them too, until the filters change.
+  const [showAllFor, setShowAllFor] = useState<string | null>(null);
+  const browseKey = `${muscle}|${equipment}|${favoritesOnly}`;
+  const showAll = showAllFor === browseKey;
   const filtered = useMemo(() => {
-    const rows = filterExercises(list, { query: search, muscle, equipment, photos: { keep } }, { favorites, uses: usage.uses });
+    const rows = filterExercises(list, { query: search, muscle, equipment, photos: showAll ? undefined : { keep } }, { favorites, uses: usage.uses });
     return favoritesOnly ? rows.filter((e) => favorites.has(e.id)) : rows;
-  }, [list, search, muscle, equipment, favorites, usage, keep, favoritesOnly]);
+  }, [list, search, muscle, equipment, favorites, usage, keep, favoritesOnly, showAll]);
+  const hidden = useMemo(
+    () => (search.trim() || showAll || favoritesOnly ? 0 : filterExercises(list, { query: "", muscle, equipment }).length - filtered.length),
+    [list, search, muscle, equipment, showAll, favoritesOnly, filtered.length],
+  );
   const browsable = useMemo(() => list.filter((e) => shownWithoutSearch(e, keep)).length, [list, keep]);
   const searching = search.trim().length > 0;
   const filtering = searching || muscle !== "" || equipment !== "" || favoritesOnly;
@@ -310,6 +318,14 @@ function LibraryScreen() {
         </div>
       )}
       {more && <div ref={setSentinel} aria-hidden="true" className="h-px" />}
+      {/* The rest are there, just without a photo: say so instead of letting the list look complete. */}
+      {!more && hidden > 0 && (
+        <div className="px-4 pt-2">
+          <Button onClick={() => setShowAllFor(browseKey)} className="w-full">
+            {t.n(hidden, "Show {n} more without a photo", "Show {n} more without photos")}
+          </Button>
+        </div>
+      )}
       {/* Room for the floating Sort & filter button, so the last row scrolls clear of it. */}
       <div aria-hidden="true" className="h-20" />
 

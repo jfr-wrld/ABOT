@@ -589,4 +589,11 @@ export const workout: Record<string, string> = {
   "Give the workout a name": "Beri nama latihannya",
   "Add at least one set with reps or a time": "Tambahkan minimal satu set dengan repetisi atau waktu",
   "Finish and save": "Selesai dan simpan",
+  // Home and navigation fixes from the audit
+  "Missed · {day}": "Terlewat · {day}",
+  "Log it": "Catat",
+  "Your routines": "Rutinitasmu",
+  "Start empty": "Mulai kosong",
+  "Show {n} more without a photo": "Tampilkan {n} lagi tanpa foto",
+  "Show {n} more without photos": "Tampilkan {n} lagi tanpa foto",
 };
