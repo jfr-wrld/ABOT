@@ -52,6 +52,10 @@ const grotesk = localFont({ src: "../fonts/space-grotesk-latin.woff2", variable:
 const vt323 = localFont({ src: "../fonts/vt323-latin.woff2", variable: "--font-vt323", weight: "400", display: "swap", preload: false });
 const storyFaces = [anton, fraunces, silkscreen, grotesk, vt323].map((f) => f.variable).join(" ");
 
+// Takes the content value, or the whole tag Search Console shows if that was pasted instead.
+const rawVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim() ?? "";
+const googleSiteVerification = rawVerification.match(/content=["']([^"']+)["']/)?.[1] ?? rawVerification;
+
 export const metadata: Metadata = {
   title: "ABOT",
   description: "Log sets, rest, and progress for strength training.",
@@ -62,7 +66,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   // Search Console ownership of the web domain, which Google's OAuth branding check requires.
   // The value is the content of Google's HTML tag; it is public, not a secret.
-  ...(process.env.GOOGLE_SITE_VERIFICATION && { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }),
+  ...(googleSiteVerification && { verification: { google: googleSiteVerification } }),
 };
 
 export const viewport: Viewport = {
