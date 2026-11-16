@@ -320,8 +320,8 @@ Contact us in the app (it fills in your app version). Social accounts are coming
   domain).
 - Fonts: Plus Jakarta Sans and JetBrains Mono (SIL Open Font License).
 
-Full notices: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). No license has been chosen for
-ABOT's own code yet, so all rights are reserved by its author.
+Full notices: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). ABOT's own code is released under
+the [MIT License](LICENSE); the assets above keep their own licenses.
 
 ## Ringkasan (Bahasa Indonesia)
 
