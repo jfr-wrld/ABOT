@@ -1,15 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { isMidtransPage, startMidtransCheckout, waitForOrder, checkoutAvailable, whenForeground, type OrderStatus } from "./checkout";
+import { checkoutBlock, isMidtransPage, startMidtransCheckout, waitForOrder, whenForeground, type OrderStatus } from "./checkout";
 import { DEFAULT_REMOTE_CONFIG, useRemoteConfig } from "./remote-config";
 
 afterEach(() => useRemoteConfig.setState({ config: DEFAULT_REMOTE_CONFIG, source: "default" }));
 
 describe("checkout", () => {
   it("is honest when payments are not set up: no Supabase in the build, or switched off", async () => {
-    expect(checkoutAvailable()).toBe(false);
+    expect(checkoutBlock()).not.toBeNull();
     useRemoteConfig.setState({ config: { ...DEFAULT_REMOTE_CONFIG, checkoutEnabled: true } });
     // This test build has no Supabase URL, so still nothing to pay through.
-    expect(checkoutAvailable()).toBe(false);
+    expect(checkoutBlock()).toBe("not_connected");
     expect(await startMidtransCheckout("annual")).toEqual({ ok: false, reason: "not_connected" });
   });
 

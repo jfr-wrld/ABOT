@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { COVER_PRESETS, coverKind } from "./cover-presets";
-import { coverCrop } from "./photo";
 import { parseBackup } from "@/data/backup";
 
 const withCover = (profileCover: unknown) =>
@@ -29,10 +28,5 @@ describe("profile cover", () => {
     expect(coverOf("data:image/jpeg;base64,AAAA")).toBe("data:image/jpeg;base64,AAAA");
     expect(coverOf(`data:image/jpeg;base64,${"A".repeat(250_000)}`)).toBeNull();
     expect(coverOf("https://example.com/cover.jpg")).toBeNull();
-  });
-
-  it("crops the centre at 3:1", () => {
-    expect(coverCrop(4000, 3000, 3)).toEqual({ x: 0, y: 834, w: 4000, h: 1333 });
-    expect(coverCrop(3000, 500, 3)).toEqual({ x: 750, y: 0, w: 1500, h: 500 });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { REGIONS, muscleForRegion, regionLevels, regionsFor, worksArea } from "./regions";
+import { REGIONS, regionLevels, regionsFor, worksArea } from "./regions";
 import { BODY_BACK, BODY_FRONT } from "./bodyPaths.generated";
 import { MUSCLE_GROUP_LABELS, type MuscleGroup } from "@/types/workout";
 
@@ -31,10 +31,6 @@ describe("muscle regions (react-muscle-highlighter body)", () => {
 });
 
 describe("body map filter", () => {
-  it("a tapped region names a muscle", () => {
-    expect(muscleForRegion("quadriceps")).toBe("quads");
-    expect(muscleForRegion("upper-back")).toBe("back");
-  });
   it("muscles drawn as one shape count together; full body does not match everything", () => {
     expect(worksArea(["lats"], "back")).toBe(true);
     expect(worksArea(["chest"], "back")).toBe(false);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WorkoutSession, WorkoutSet } from "@/types/workout";
-import { FALLBACK_BODYWEIGHT_KG, estimateCalories, kcalFrom, metFor } from "./calorie-estimator";
+import { estimateCalories, kcalFrom, metFor } from "./calorie-estimator";
 
 const MIN = 60_000;
 const set = (weightKg: number, reps: number, rpe: number | null = null, type: WorkoutSet["type"] = "normal"): WorkoutSet => ({
@@ -55,7 +55,7 @@ describe("estimateCalories", () => {
 
   it("falls back to 75 kg when no body weight is known, and says so", () => {
     const e = estimateCalories(session(45, [set(60, 10)]), { bodyweightKg: null });
-    expect(e.bodyweightKg).toBe(FALLBACK_BODYWEIGHT_KG);
+    expect(e.bodyweightKg).toBe(75);
     expect(e.bodyweightKnown).toBe(false);
   });
 

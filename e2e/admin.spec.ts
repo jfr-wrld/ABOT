@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { addExercise, finishWorkout, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
+import { addExercise, freshStart, logSet, startEmptyWorkout, reachSummary } from "./helpers";
 
 /** The build under test has Supabase when .env carries it; then the console is in server mode. */
 function supabaseConfigured(): boolean {

@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Check, Copy, ListOrdered, Play, Timer, Zap } from "@/components/icons";
-import type { MuscleGroup, Routine } from "@/types/workout";
+import type { Routine } from "@/types/workout";
 import { useRoutineStore } from "@/store/useRoutineStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { PHASE_LABEL, templateFitsPhase } from "@/lib/phase-engine";
 import { SEED_EXERCISES_BY_ID } from "@/data/exercises";
-import { ROUTINE_TEMPLATES, SPLITS, estimateMinutes, templateToRoutine, type RoutineTemplate, type Split } from "@/lib/seed-routines";
+import { ROUTINE_TEMPLATES, SPLITS, estimateMinutes, templateMuscles, templateToRoutine, type RoutineTemplate, type Split } from "@/lib/seed-routines";
 import { Button } from "@/components/ui/Button";
 import { LiftList } from "@/components/routines/RoutineCard";
 import { MuscleIcon } from "@/components/icons/MuscleIcon";
@@ -69,15 +69,6 @@ export function TemplateVault({ onStart, grid = false }: { onStart: (r: Routine)
   );
 }
 
-/** Muscle groups a template works most, by planned sets. */
-function topMuscles(tpl: RoutineTemplate, n = 3): MuscleGroup[] {
-  const sets = new Map<MuscleGroup, number>();
-  for (const e of tpl.exercises) {
-    for (const m of SEED_EXERCISES_BY_ID[e.exerciseId]?.primaryMuscles ?? []) sets.set(m, (sets.get(m) ?? 0) + e.sets);
-  }
-  return [...sets.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([m]) => m);
-}
-
 /**
  * One template, read at a glance: split, time and size as icons with figures, the muscles as
  * lit figures, and the lifts folded under "See exercises".
@@ -98,7 +89,7 @@ function TemplateCard({
   const t = useT();
   const phase = useSettingsStore((s) => (s.bodyPhase?.isActive ? s.bodyPhase.phaseType : null));
   const splitLabel = SPLITS.find((s) => s.value === tpl.split)?.label;
-  const muscles = topMuscles(tpl);
+  const muscles = templateMuscles(tpl).slice(0, 3);
   if (grid) {
     return (
       <article aria-labelledby={`${tpl.id}-title`} className="flex h-full flex-col rounded-card border bg-surface p-3">
