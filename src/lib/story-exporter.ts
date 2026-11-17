@@ -16,6 +16,7 @@ import { currentT, type T } from "@/i18n";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 import { MARK_PATH } from "@/components/brand/mark-path";
 import { LIFT_SHAPES, type ObjectLayer, type ObjectTone } from "@/lib/story-objects";
+import { AXES, AXIS_MUSCLES, type Axis } from "@/lib/symmetry-analyzer";
 import { END_CARD_AT, STILL_TIME, STORY_SECONDS, backOut, beat, clamp01, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
 
 /**
@@ -32,7 +33,7 @@ export const STORY_KEYS = [
   "{n} new record", "{n} new records", "{n} sets on file", "Keep this slip.", "Next time, beat it.", "Trophy vault",
   "Vault unchanged", "Also lifted", "New record", "No record fell this time. Top sets from the session:",
   "No loaded sets in this workout.", "Total volume", "Line-up", "Strength edition", "The cover story", "{n} sets",
-  "Logged with ABOT", "{n} set",
+  "Logged with ABOT", "{n} set", "Most worked: {axis}", "Push", "Pull", "Quads", "Hamstrings", "Arms", "Core",
   "{n} cat lifted!", "{n} cats lifted!", "Not one of them was impressed.",
   "{n} bike lifted!", "{n} bikes lifted!", "Leg day? Arms did the pedalling.",
   "{n} fridge lifted!", "{n} fridges lifted!", "Moving day, sorted.",
@@ -122,13 +123,32 @@ function clampSize(k: number | undefined): number {
   return Math.min(SIZE_RANGE.max, Math.max(SIZE_RANGE.min, k ?? SIZE_RANGE.initial));
 }
 
-export type CleanExtra = "none" | "muscles" | "compare";
+export type CleanExtra = "none" | "muscles" | "radar" | "compare";
 
+/** Short, so four fit across a phone. */
 export const CLEAN_EXTRAS: { id: CleanExtra; label: string }[] = [
-  { id: "none", label: "Text only" },
-  { id: "muscles", label: "Muscle map" },
-  { id: "compare", label: "Comparison" },
+  { id: "none", label: "Text" },
+  { id: "muscles", label: "Muscles" },
+  { id: "radar", label: "Radar" },
+  { id: "compare", label: "Compare" },
 ];
+
+/** The radar's six axes, as on the Progress balance radar, with labels short enough to sit around it. */
+const RADAR_LABEL: Record<Axis, string> = { push: "Push", pull: "Pull", knee: "Quads", hip: "Hamstrings", arms: "Arms", core: "Core" };
+
+/**
+ * Sets per axis from the card's muscles (secondary muscles count half), each as a share of the
+ * most worked axis, and that axis. A muscle on two axes (biceps: pull and arms) counts on both.
+ */
+export function radarAxes(data: Pick<StoryData, "muscles">): { sets: Record<Axis, number>; share: Record<Axis, number>; dominant: Axis | null } {
+  const sets = Object.fromEntries(AXES.map((a) => [a, 0])) as Record<Axis, number>;
+  for (const { muscle, sets: n } of data.muscles)
+    for (const a of AXES) if (AXIS_MUSCLES[a].includes(muscle)) sets[a] += n;
+  const max = Math.max(0, ...AXES.map((a) => sets[a]));
+  const share = Object.fromEntries(AXES.map((a) => [a, max > 0 ? sets[a] / max : 0])) as Record<Axis, number>;
+  const dominant = max > 0 ? AXES.reduce((best, a) => (sets[a] > sets[best] ? a : best), AXES[0]!) : null;
+  return { sets, share, dominant };
+}
 
 /**
  * Everyday things by their weight, for "2 elephants lifted!" and a line to go with it. Rounded, typical weights:
@@ -1644,6 +1664,92 @@ const CLEAN_MARGIN = 72;
 const CLEAN_MAP_W = 440;
 const CLEAN_MAP_H = Math.round((CLEAN_MAP_W * 1360) / 1448);
 const CLEAN_OBJECT = 210;
+const CLEAN_RADAR_W = 680;
+const CLEAN_RADAR_H = 500;
+const RADAR_R = 190;
+
+/**
+ * How far out an axis reaches: the square root of its share, so a workout that is mostly pull
+ * still draws a shape and not a line, and the order of the axes stays the same.
+ */
+function radarReach(share: number): number {
+  return 0.1 + 0.9 * Math.sqrt(share);
+}
+
+/**
+ * The radar in a CLEAN_RADAR_W x CLEAN_RADAR_H box at (x, y): a steel web, the lifter's shape in
+ * Volt grown to `grow` (0 to 1), and the axis labels, the dominant one in Volt.
+ */
+function drawRadar(s: Scene, x: number, y: number, share: Record<Axis, number>, dominant: Axis | null, grow: number, labels: number) {
+  const { ctx } = s;
+  const cx = x + CLEAN_RADAR_W / 2;
+  const cy = y + CLEAN_RADAR_H / 2;
+  const at = (i: number, r: number) => {
+    const a = ((i * 60 - 90) * Math.PI) / 180;
+    return [cx + Math.cos(a) * r, cy + Math.sin(a) * r] as const;
+  };
+  const ring = (r: number) => {
+    ctx.beginPath();
+    AXES.forEach((_, i) => {
+      const [px, py] = at(i, r);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+  };
+  ctx.save();
+  ctx.strokeStyle = "rgba(244, 244, 245, 0.22)";
+  ctx.lineWidth = 2;
+  for (const f of [1 / 3, 2 / 3, 1]) {
+    ring(RADAR_R * f);
+    ctx.stroke();
+  }
+  AXES.forEach((_, i) => {
+    const [px, py] = at(i, RADAR_R);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+  });
+  // The lifter's shape.
+  if (grow > 0) {
+    ctx.beginPath();
+    AXES.forEach((a, i) => {
+      const [px, py] = at(i, radarReach(share[a]) * RADAR_R * grow);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+    ctx.fillStyle = withAlpha(VOLT, 0.22);
+    ctx.fill();
+    ctx.strokeStyle = VOLT;
+    ctx.lineWidth = 4;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    AXES.forEach((a, i) => {
+      const [px, py] = at(i, radarReach(share[a]) * RADAR_R * grow);
+      ctx.beginPath();
+      ctx.arc(px, py, a === dominant ? 9 : 6, 0, Math.PI * 2);
+      ctx.fillStyle = VOLT;
+      ctx.fill();
+    });
+  }
+  ctx.restore();
+  // Labels just outside the web, aligned away from the centre.
+  if (labels > 0) {
+    ctx.save();
+    ctx.globalAlpha = labels;
+    AXES.forEach((a, i) => {
+      const [px, py] = at(i, RADAR_R + 26);
+      const dx = px - cx;
+      const align: CanvasTextAlign = Math.abs(dx) < 4 ? "center" : dx > 0 ? "left" : "right";
+      const baseline: CanvasTextBaseline = i === 0 ? "bottom" : i === 3 ? "top" : "middle";
+      const on = a === dominant;
+      text(s, tl(RADAR_LABEL[a]), px, py, { size: 26, weight: on ? 700 : 500, family: "grotesk", color: on ? VOLT : "rgba(244, 244, 245, 0.75)", align, baseline });
+    });
+    ctx.restore();
+  }
+}
 
 const shapeCache = new Map<string, { path: Path2D; layer: ObjectLayer }[]>();
 const TONE: Record<Exclude<ObjectTone, "main">, string> = {
@@ -1713,7 +1819,8 @@ function clean(s: Scene) {
   const handle = data.handle?.trim();
   const showMark = !opts.hideWatermark;
   // Above the text, in its own units: the muscle map, or the thing lifted with its two lines.
-  const extraH = extra === "muscles" ? CLEAN_MAP_H + 36 : compare ? CLEAN_OBJECT + 18 + 52 + 12 + 32 + 40 : 0;
+  const radar = extra === "radar" ? radarAxes(data) : null;
+  const extraH = extra === "muscles" ? CLEAN_MAP_H + 36 : radar ? CLEAN_RADAR_H + 18 + 44 + 36 : compare ? CLEAN_OBJECT + 18 + 52 + 12 + 32 + 40 : 0;
   const textH = (lines: number) => 28 + 24 + 72 + (lines - 1) * 80 + 18 + 34 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
   let title = wrap(s, data.title, inner / kText, 72, 800, 2);
   const room = SAFE_BOTTOM - SAFE_TOP;
@@ -1788,6 +1895,16 @@ function clean(s: Scene) {
       });
       ctx.globalAlpha = beat(time, 0, 0.4);
       drawBody(ctx, leftOf(CLEAN_MAP_W), 0, CLEAN_MAP_W, lit);
+    } else if (radar) {
+      // The web fades in, the shape grows out of the centre, then the labels and the verdict.
+      ctx.save();
+      ctx.globalAlpha = beat(time, 0, 0.4);
+      drawRadar(s, leftOf(CLEAN_RADAR_W), 0, radar.share, radar.dominant, beat(time, 0.4, 1, backOut), beat(time, 1.1, 0.4));
+      ctx.restore();
+      const verdict = radar.dominant ? t("Most worked: {axis}", { axis: t(RADAR_LABEL[radar.dominant]) }) : t("No muscle sets logged");
+      enter(1.5, () =>
+        text(s, verdict, 0, CLEAN_RADAR_H + 18 + 44, { size: 44, weight: 800, color: radar.dominant ? VOLT : "rgba(244, 244, 245, 0.75)", align, maxWidth: width, tracking: -0.5 }),
+      );
     } else if (compare) {
       // The thing lands with a little bounce, then floats gently until the still.
       const pop = beat(time, 0.05, 0.6, backOut);
@@ -1825,7 +1942,7 @@ function clean(s: Scene) {
   ctx.scale(kText, kText);
   const width = inner / kText;
   // The text follows the picture, line by line.
-  const from = extra === "none" ? 0.15 : extra === "muscles" ? 1.5 : 2.05;
+  const from = extra === "none" ? 0.15 : extra === "muscles" ? 1.5 : extra === "radar" ? 2 : 2.05;
   let y = 28;
   enter(from, () => text(s, dateLabel(data), 0, 28, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 }));
   y += 24 + 72;

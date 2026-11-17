@@ -17,7 +17,7 @@ import { tunables } from "./tunables";
 export type Axis = "push" | "pull" | "knee" | "hip" | "arms" | "core";
 export const AXES: Axis[] = ["push", "pull", "knee", "hip", "arms", "core"];
 
-const AXIS_MUSCLES: Record<Axis, MuscleGroup[]> = {
+export const AXIS_MUSCLES: Record<Axis, MuscleGroup[]> = {
   push: ["chest", "shoulders", "triceps"],
   pull: ["lats", "back", "traps", "biceps"],
   knee: ["quads", "calves", "adductors"],

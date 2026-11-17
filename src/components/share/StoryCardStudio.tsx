@@ -882,7 +882,7 @@ function CleanTextControls({
       <div className="flex gap-3">
         <SizeSlider id="clean-text-size" label={t("Text")} value={textScale} onChange={onTextScale} />
         {extra !== "none" && (
-          <SizeSlider id="clean-extra-size" label={extra === "muscles" ? t("Map") : t("Picture")} value={extraScale} onChange={onExtraScale} />
+          <SizeSlider id="clean-extra-size" label={extra === "muscles" ? t("Map") : extra === "radar" ? t("Radar") : t("Picture")} value={extraScale} onChange={onExtraScale} />
         )}
       </div>
     </div>

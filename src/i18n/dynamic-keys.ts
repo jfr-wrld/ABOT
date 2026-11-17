@@ -91,7 +91,7 @@ export const DYNAMIC_KEYS: string[] = [
   "Top left", "Top", "Top right", "Left", "Center", "Right", "Bottom left", "Bottom", "Bottom right",
   "Middle",
   // CLEAN_EXTRAS labels
-  "Text only", "Muscle map", "Comparison",
+  "Text", "Muscles", "Radar", "Compare",
   "Full-time scoreboard: your volume is the score",
   "Muscle map lit by sets worked",
   "Every set itemised like a till slip",

@@ -100,9 +100,9 @@ test("Clean puts its few lines where the lifter chooses, and only Clean has the 
 
   // Above the text: the muscles worked, or what the volume equals; each with its own size.
   const above = dialog.getByRole("radiogroup", { name: "Above the text" });
-  await expect(above.getByRole("radio", { name: "Text only" })).toHaveAttribute("aria-checked", "true");
+  await expect(above.getByRole("radio", { name: "Text" })).toHaveAttribute("aria-checked", "true");
   await expect(dialog.getByLabel("Picture")).toHaveCount(0);
-  for (const name of ["Muscle map", "Comparison"]) {
+  for (const name of ["Muscles", "Radar", "Compare"]) {
     before = await drawn();
     await above.getByRole("radio", { name }).click();
     await expect(above.getByRole("radio", { name })).toHaveAttribute("aria-checked", "true");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STORY_HEIGHT, STORY_PRESETS, STORY_WIDTH, TEXT_POSITIONS, cleanBlockOrigin, liftComparison } from "./story-exporter";
+import { STORY_HEIGHT, STORY_PRESETS, STORY_WIDTH, TEXT_POSITIONS, cleanBlockOrigin, liftComparison, radarAxes } from "./story-exporter";
 
 /** Instagram's top bar and reply box; the founder badge ends above the top one (y 206). */
 const SAFE_TOP = 230;
@@ -44,5 +44,20 @@ describe("what the volume equals", () => {
     expect(liftComparison(14_000).count).toBe(1.2);
     expect(liftComparison(5_000_000).count).toBe(33);
     expect(liftComparison(2)).toMatchObject({ object: { id: "cat" }, count: 0.5 });
+  });
+});
+
+describe("the muscle radar", () => {
+  it("puts the most worked axis on the rim and names it", () => {
+    const r = radarAxes({ muscles: [{ muscle: "lats", sets: 8 }, { muscle: "biceps", sets: 4 }, { muscle: "chest", sets: 2 }] });
+    expect(r.dominant).toBe("pull");
+    expect(r.share.pull).toBe(1);
+    // Biceps count on both pull and arms.
+    expect(r.sets.arms).toBe(4);
+    expect(r.share.push).toBeCloseTo(2 / 12);
+  });
+
+  it("has no dominant axis without muscle sets", () => {
+    expect(radarAxes({ muscles: [] }).dominant).toBeNull();
   });
 });
