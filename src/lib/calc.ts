@@ -8,6 +8,7 @@ import type {
   Exercise,
   LoadMode,
 } from "@/types/workout";
+import { currentT, type T } from "@/i18n";
 
 const KG_PER_LB = 0.45359237;
 
@@ -392,13 +393,14 @@ export function muscleSplit(
   return out;
 }
 
-export function formatDuration(sec: number): string {
+/** "1h 5m", "5m 03s"; in Indonesian "1 j 5 mnt", where a bare "m" reads as metres. */
+export function formatDuration(sec: number, t: T = currentT()): string {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s.toString().padStart(2, "0")}s`;
-  return `${s}s`;
+  if (h > 0) return t("{h}h {m}m", { h, m });
+  if (m > 0) return t("{m}m {s}s", { m, s: s.toString().padStart(2, "0") });
+  return t("{s}s", { s });
 }
 
 export function formatClock(sec: number): string {

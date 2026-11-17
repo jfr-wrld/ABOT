@@ -15,7 +15,7 @@ export type Vars = Record<string, string | number>;
 /** "auto" follows the phone: Indonesian when its language is Indonesian, English otherwise. */
 export function resolveLang(setting: AppLanguage, phone?: string): Lang {
   if (setting === "en" || setting === "id") return setting;
-  const tag = (phone ?? (typeof navigator !== "undefined" ? navigator.language : "en")).toLowerCase();
+  const tag = (phone ?? (typeof navigator !== "undefined" && navigator.language ? navigator.language : "en")).toLowerCase();
   return tag.startsWith("id") || tag.startsWith("in") ? "id" : "en";
 }
 

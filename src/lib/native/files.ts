@@ -9,11 +9,21 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 interface FileSaverPlugin {
   save(opts: { data: string; fileName: string; mimeType: string }): Promise<{ folder: string; uri: string }>;
   open(opts: { uri: string; mimeType: string }): Promise<void>;
+  clearCaptures(): Promise<{ removed: number }>;
 }
 
 const FileSaver = registerPlugin<FileSaverPlugin>("FileSaver");
 
 export const isNativeApp = () => Capacitor.isNativePlatform();
+
+/**
+ * Removes the full-size JPEGs the app's camera picker leaves behind (possibly body photos,
+ * readable over USB). The app keeps its own shrunk copy in its database. No-op on the web.
+ */
+export async function clearCameraShots(): Promise<void> {
+  if (!isNativeApp()) return;
+  await FileSaver.clearCaptures().catch(() => {});
+}
 
 export type SaveResult = { kind: "downloaded" } | { kind: "saved"; folder: string; uri: string; mimeType: string };
 

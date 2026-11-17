@@ -127,7 +127,8 @@ function targetText(set: WorkoutSet, unit: WeightUnit, t: ReturnType<typeof useT
  */
 function CompactCapsule({ session, onWorkoutPage }: { session: WorkoutSession; onWorkoutPage: boolean }) {
   const t = useT();
-  const now = useNow(1000);
+  // Paused, the clock shows the frozen time: no need to redraw the glass bar every second.
+  const now = useNow(1000, session.pausedAt === undefined);
   const { byId } = useAllExercises();
   const unit = useSettingsStore((st) => st.weightUnit);
   const store = useWorkoutStore.getState;

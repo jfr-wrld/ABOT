@@ -73,7 +73,7 @@ export function RoutineCard({
               ? t("No exercises yet")
               : [
                   t.n(r.exercises.length, "{n} exercise", "{n} exercises"),
-                  t("{n} sets", { n: sum.sets }),
+                  t.n(sum.sets, "{n} set", "{n} sets"),
                   ...(ssCount ? [t.n(ssCount, "{n} superset", "{n} supersets")] : []),
                 ].join(" · ")}
           </p>
@@ -196,7 +196,7 @@ function LiftGrid({ sum, byId }: { sum: RoutineSummary; byId: Record<string, Exe
     <LiftList
       items={sum.lines.map((l) => ({
         name: byId[l.exerciseId]?.name ?? t("Removed exercise"),
-        detail: l.reps ? `${l.sets}×${l.reps}` : t("{n} sets", { n: l.sets }),
+        detail: l.reps ? `${l.sets}×${l.reps}` : t.n(l.sets, "{n} set", "{n} sets"),
         superset: !!l.superset,
       }))}
     />
@@ -220,9 +220,9 @@ export function LiftList({ items, open }: { items: { name: string; detail: strin
       <ol aria-label={t("Exercises")} className="flex flex-col divide-y divide-line pb-1 text-sm">
         {items.map((l, i) => (
           <li key={i} className="flex min-h-9 items-center justify-between gap-3 py-1.5">
-            <span className="min-w-0 truncate">{l.name}</span>
+            <span className="min-w-0 line-clamp-2">{l.name}</span>
             <span className="num shrink-0 text-text-muted">
-              {l.superset && <span className="mr-1.5 rounded-full bg-accent-tint px-1.5 py-px text-[11px] font-bold text-text">SS</span>}
+              {l.superset && <span className="mr-1.5 rounded-full bg-accent-tint px-1.5 py-px text-[11px] font-bold text-text">{t("Superset")}</span>}
               {l.detail}
             </span>
           </li>

@@ -19,8 +19,6 @@ import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 
 const THUMB_W = 108;
-/** What the share sheet says with a streak, image or video. */
-const STREAK_SHARE = { title: "ABOT Streak", text: "My week streak with ABOT 🔥" };
 const THUMB_H = (THUMB_W * STORY_HEIGHT) / STORY_WIDTH;
 
 type Message = { kind: "info" | "error"; text: string; saved?: Extract<SaveResult, { kind: "saved" }> };
@@ -79,7 +77,7 @@ function Studio({ onClose }: { onClose: () => void }) {
     key: videoKey,
     draw: drawFrame,
     fileName: data ? streakFileName(data, theme).replace(/\.png$/, "") : "abot-streak",
-    shareText: STREAK_SHARE,
+    shareText: { title: t("ABOT Streak"), text: t("My week streak with ABOT 🔥") },
   });
   const [videoShareable] = useState(() => canShareFiles(new File([new Uint8Array(1)], "abot.mp4", { type: "video/mp4" })));
 
@@ -156,7 +154,7 @@ function Studio({ onClose }: { onClose: () => void }) {
   async function share() {
     if (!blob) return;
     try {
-      const r = await shareStoryPng(blob, fileName, STREAK_SHARE);
+      const r = await shareStoryPng(blob, fileName, { title: t("ABOT Streak"), text: t("My week streak with ABOT 🔥") });
       if (r === "shared") setMessage({ kind: "info", text: t("Sent to the share sheet.") });
       else if (r !== "cancelled") setMessage({ kind: "error", text: t("This browser cannot share images. Download the PNG and post it from your gallery.") });
     } catch {

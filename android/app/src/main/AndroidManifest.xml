@@ -107,7 +107,6 @@
     <!-- Health Connect (Settings, Health apps): finished workouts and their calories out,
          body weight and last night's sleep in. Asked for only when the user connects. -->
     <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
-    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.WRITE_ACTIVE_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />

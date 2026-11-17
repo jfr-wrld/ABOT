@@ -211,14 +211,31 @@ export default function OnboardingPage() {
               {slide.body}
             </motion.p>
             {index === 0 && (
-              <motion.div variants={itemVariants} role="radiogroup" aria-label={t("Weights in")} className="mt-4 flex items-center gap-2">
+              <motion.div
+                variants={itemVariants}
+                role="radiogroup"
+                aria-label={t("Weights in")}
+                // Arrows move between the two units here, as in any radio group, instead of
+                // reaching the carousel around it and changing slides.
+                onKeyDown={(e) => {
+                  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const next = unit === "kg" ? "lbs" : "kg";
+                  useSettingsStore.getState().update({ weightUnit: next });
+                  e.currentTarget.querySelector<HTMLButtonElement>(`[data-unit="${next}"]`)?.focus();
+                }}
+                className="mt-4 flex items-center gap-2"
+              >
                 <span className="text-sm font-semibold text-text-muted">{t("Weights in")}</span>
                 {(["kg", "lbs"] as const).map((u) => (
                   <button
                     key={u}
                     type="button"
                     role="radio"
+                    data-unit={u}
                     aria-checked={unit === u}
+                    tabIndex={unit === u ? 0 : -1}
                     onClick={() => useSettingsStore.getState().update({ weightUnit: u })}
                     className={`min-h-11 min-w-16 rounded-full px-4 text-base font-bold ${unit === u ? "bg-accent text-on-accent" : "glass-icon text-text"}`}
                   >

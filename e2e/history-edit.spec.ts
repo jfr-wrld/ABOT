@@ -68,3 +68,30 @@ test("a weighted pull-up's added load can be corrected afterwards", async ({ pag
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await page.waitForURL(/\/history\?id=/);
 });
+
+test("leaving the editor with changes asks first, and Cancel goes back without a new page", async ({ page }) => {
+  await startEmptyWorkout(page);
+  await addExercise(page, "Bench Press (Barbell)");
+  await logSet(page, 1, "60", "8");
+  await finishWorkout(page);
+  await page.getByRole("region", { name: "Recent workouts" }).getByRole("list").getByRole("link").first().click();
+  await page.waitForURL(/\/history\?id=/);
+  await page.getByRole("button", { name: /^(More|Options|Workout options)/ }).first().click();
+  await page.getByRole("button", { name: "Edit workout" }).click();
+  await page.waitForURL(/\/history\/edit\?id=/);
+
+  // A warm-up is marked from the set's number.
+  await page.getByRole("button", { name: "Set 1, change type" }).click();
+  await expect(page.getByRole("button", { name: "Warm-up set, change type" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Cancel" }).click();
+  const ask = page.getByRole("dialog", { name: "Discard your changes?" });
+  await ask.getByRole("button", { name: "Keep editing" }).click();
+  await expect(ask).toHaveCount(0);
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await ask.getByRole("button", { name: "Discard" }).click();
+  await page.waitForURL(/\/history\?id=/);
+  // Back from the workout page leaves it, rather than reopening the editor.
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/history\/edit/);
+});

@@ -420,6 +420,7 @@ export const settings: Record<string, string> = {
   "Your last change could not be saved to this device. ABOT keeps your changes and tries again when you come back. Export a backup from Settings to keep a copy now.":
     "Perubahan terakhirmu gagal disimpan di perangkat ini. ABOT menyimpan perubahanmu sementara dan mencoba lagi saat kamu kembali. Ekspor backup dari Pengaturan untuk menyimpan salinan sekarang.",
   "Reload ABOT": "Muat ulang ABOT",
+  "Export a backup": "Ekspor backup",
   "This workout will not be saved": "Latihan ini tidak akan tersimpan",
   "ABOT could not read your saved workouts, so anything you log now is lost when the app closes. Reload first; your earlier workouts are still on this device.":
     "ABOT tidak bisa membaca latihan tersimpan, jadi yang kamu catat sekarang hilang saat aplikasi ditutup. Muat ulang dulu; latihan sebelumnya masih ada di perangkat ini.",
@@ -633,7 +634,17 @@ export const settings: Record<string, string> = {
   "Delete from phone": "Hapus dari HP",
   "What to delete": "Yang dihapus",
   "Cloud accounts are not set up in this version of ABOT.": "Akun cloud belum tersedia di versi ABOT ini.",
+  "Put this phone's data in a different account?": "Masukkan data di HP ini ke akun lain?",
+  "No, sign out": "Tidak, keluar",
+  "Yes, add it": "Ya, masukkan",
+  "This phone last synced with another account. Signing in as {email} would copy every workout, gym and body weight here into {email}.":
+    "HP ini terakhir tersinkron dengan akun lain. Masuk sebagai {email} akan menyalin semua latihan, gym, dan berat badan di sini ke {email}.",
+  "This phone last synced with another account. Signing in now would copy every workout, gym and body weight here into this one.":
+    "HP ini terakhir tersinkron dengan akun lain. Masuk sekarang akan menyalin semua latihan, gym, dan berat badan di sini ke akun ini.",
+  "To start this account empty instead, sign out, delete this phone's data in Settings, then sign in again.":
+    "Untuk memulai akun ini dari kosong, keluar, hapus data HP ini di Settings, lalu masuk lagi.",
   "Sign in again first, so ABOT knows the account is yours.": "Masuk lagi dulu, supaya ABOT tahu akun ini milikmu.",
+  "To delete the account, sign out and sign in again first. Then delete it within 10 minutes.": "Untuk menghapus akun, keluar lalu masuk lagi dulu. Setelah itu hapus dalam 10 menit.",
   "Could not reach the server. Check the connection and try again. Nothing was deleted.": "Server tidak terjangkau. Cek koneksi lalu coba lagi. Belum ada yang dihapus.",
   "The account could not be deleted. Try again later. Nothing on this phone was deleted.": "Akun gagal dihapus. Coba lagi nanti. Data di HP ini belum dihapus.",
   "All weigh-ins": "Semua timbangan",

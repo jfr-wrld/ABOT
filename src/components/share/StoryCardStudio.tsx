@@ -28,6 +28,7 @@ import {
   loadStoryFonts,
   renderStory,
   shareStoryPng,
+  workoutShareText,
   storyFileName,
   type StoryFonts,
   type StoryOptions,
@@ -238,7 +239,7 @@ function Studio({
     key: exportKey,
     draw: drawFrame,
     fileName: videoFile,
-    shareText: { title: "ABOT Workout Story", text: "Crushed today's workout with ABOT ⚡" },
+    shareText: workoutShareText(t),
   });
   const [videoShareable] = useState(() => canShareFiles(new File([new Uint8Array(1)], "abot.mp4", { type: "video/mp4" })));
   const png: PngState = made.from === exportKey ? { blob: made.blob, fileName: made.fileName, busy: false } : { blob: null, fileName: "", busy: true };

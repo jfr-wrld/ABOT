@@ -34,6 +34,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261116_admin_customers_visits.sql
 \i supabase/migrations/20261117_records_writes_through_rpc.sql
 \i supabase/migrations/20261118_payments_admin_hardening.sql
+\i supabase/migrations/20261119_keep_paid_orders_and_record_caps.sql
 -- Applying it twice must work: the file is meant to be rerun safely.
 \i supabase/migrations/0001_abot_records.sql
 \i supabase/migrations/0002_bodyweight_and_media.sql
@@ -47,6 +48,7 @@ alter default privileges for role postgres in schema public grant execute on fun
 \i supabase/migrations/20261116_admin_customers_visits.sql
 \i supabase/migrations/20261117_records_writes_through_rpc.sql
 \i supabase/migrations/20261118_payments_admin_hardening.sql
+\i supabase/migrations/20261119_keep_paid_orders_and_record_caps.sql
 
 grant select, insert, update, delete on public.abot_records to authenticated;
 -- Supabase grants these when the table is made, before the migrations run; applying the
@@ -642,6 +644,53 @@ reset role;
 do $$ begin
   if (select max(views) from public.web_visits where path = '/workout') <> 1000000 then raise exception 'views passed the ceiling'; end if;
   if exists (select 1 from public.web_visits where visitors > views) then raise exception 'more visitors than views'; end if;
+end $$;
+
+-- 20261119: a deleted account keeps its paid orders, and founder seats stay sold.
+reset role;
+insert into auth.users (id, email, email_confirmed_at) values ('00000000-0000-0000-0000-0000000000e1', 'gone@example.com', now());
+insert into public.payment_orders (order_id, user_id, plan, amount_idr, status, paid_at)
+  values ('ABOT-LIFETIME-E1-907', '00000000-0000-0000-0000-0000000000e1', 'founders', 399000, 'paid', now());
+create temp table seats_before as select public.founder_seats_left() as n;
+delete from auth.users where id = '00000000-0000-0000-0000-0000000000e1';
+do $$ begin
+  if not exists (select 1 from public.payment_orders where order_id = 'ABOT-LIFETIME-E1-907' and user_id is null and status = 'paid') then
+    raise exception 'a paid order went with the account';
+  end if;
+  if public.founder_seats_left() <> (select n from seats_before) then raise exception 'a deleted founder freed a sold seat'; end if;
+end $$;
+-- A payment that settles after the buyer left is recorded, with no one to grant to.
+insert into public.payment_orders (order_id, user_id, plan, amount_idr) values ('ABOT-ANNUAL-E2-908', null, 'annual', 199000);
+set role service_role;
+do $$ begin
+  if not public.abot_order_paid('ABOT-ANNUAL-E2-908', 'qris', 't908') then raise exception 'orphan payment not recorded'; end if;
+end $$;
+
+-- Records: a time far ahead is refused, a malformed one raises a clear error.
+reset role;
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000d1';
+do $$
+declare res record;
+begin
+  select * into res from public.upsert_if_newer(jsonb_build_array(jsonb_build_object(
+    'kind', 'session', 'id', 'future-1', 'payload', '{}'::jsonb, 'updated_at', 99999999999999)));
+  if array_length(res.accepted, 1) is not null then raise exception 'a record from the far future was accepted'; end if;
+  begin
+    perform public.upsert_if_newer(jsonb_build_array(jsonb_build_object(
+      'kind', 'session', 'id', 'bad-1', 'payload', '{}'::jsonb, 'updated_at', 'soon')));
+    raise exception 'a malformed updated_at was accepted';
+  exception when invalid_parameter_value then null;
+  end;
+end $$;
+reset request.jwt.claim.sub;
+
+-- anon cannot even call admin_grant.
+reset role;
+do $$ begin
+  if has_function_privilege('anon', 'public.admin_grant(text, text, integer)', 'execute') then
+    raise exception 'anon can call admin_grant';
+  end if;
 end $$;
 
 reset role;

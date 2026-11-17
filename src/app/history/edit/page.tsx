@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2, X } from "@/components/icons";
 import { HydrationGate } from "@/components/ui/Loading";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { NumberField } from "@/components/ui/NumberField";
 import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { useActionBarSpace } from "@/components/layout/useActionBarSpace";
+import { autoSyncFinished } from "@/store/useHealthSyncStore";
 import { newSet, useWorkoutStore } from "@/store/useWorkoutStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useAllExercises } from "@/store/useExerciseStore";
@@ -16,8 +17,15 @@ import { isTimed } from "@/lib/set-metrics";
 import { fromDisplay, toInput } from "@/lib/units";
 import { newId } from "@/lib/id";
 import { historyPath } from "@/lib/routes";
+import { previousIs } from "@/lib/nav-memory";
+import { Sheet } from "@/components/ui/Sheet";
+import { SetTypeChip, setTypeA11yName } from "@/components/workout/SetTypeChip";
+import type { SessionExercise, SetType } from "@/types/workout";
 import { useT } from "@/i18n";
 import type { WorkoutSession, WorkoutSet } from "@/types/workout";
+
+/** A tap on a set's number steps through the types. */
+const NEXT_TYPE: Record<SetType, SetType> = { normal: "warmup", warmup: "dropset", dropset: "failure", failure: "normal" };
 
 export default function EditSessionPage() {
   return (
@@ -68,6 +76,11 @@ function SessionEditor() {
   const [picker, setPicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [today] = useState(() => dateValue(Date.now()));
+  // What the page opened with, to tell whether leaving would lose anything.
+  const [initial] = useState(() => JSON.stringify({ draft, minutes }));
+  const [asking, setAsking] = useState(false);
+  const [removed, setRemoved] = useState<{ ex: SessionExercise; at: number; name: string } | null>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
   useActionBarSpace(76);
   const inWorkout = useMemo(() => new Set(draft?.exercises.map((e) => e.exerciseId) ?? []), [draft]);
 
@@ -81,6 +94,14 @@ function SessionEditor() {
   }
 
   const back = id ? { href: historyPath(id), label: t("Workout") } : { href: "/history/all", label: t("All workouts") };
+  const dirty = JSON.stringify({ draft, minutes }) !== initial;
+  // Back to where the editor was opened from, without a new history entry: Cancel used to push
+  // the workout page, so the phone's Back then reopened the editor.
+  const leave = () => {
+    if (previousIs(back.href.split(/[?#]/)[0]!)) router.back();
+    else router.replace(back.href);
+  };
+  const tryLeave = () => (dirty ? setAsking(true) : leave());
   const patch = (fn: (d: WorkoutSession) => WorkoutSession) => {
     setError(null);
     setDraft((d) => (d ? fn(d) : d));
@@ -106,18 +127,34 @@ function SessionEditor() {
   function save() {
     if (!draft) return;
     const dur = Math.round((minutes ?? 0) * 60_000);
-    if (dur <= 0) return setError(t("Enter how long the workout took"));
-    if (draft.startedAt > Date.now()) return setError(t("The start time cannot be in the future"));
-    if (!draft.name.trim()) return setError(t("Give the workout a name"));
+    // The message shows in the bar beside Save, where the eye already is.
+    const fail = (m: string) => {
+      setError(m);
+      requestAnimationFrame(() => errorRef.current?.focus());
+    };
+    if (dur <= 0) return fail(t("Enter how long the workout took"));
+    if (draft.startedAt > Date.now()) return fail(t("The start time cannot be in the future"));
+    if (!draft.name.trim()) return fail(t("Give the workout a name"));
     // Logged afterwards, "started 30 minutes ago, 90 minutes long" would end in the future.
     const ok = saveSession({ ...draft, name: draft.name.trim(), finishedAt: Math.min(draft.startedAt + dur, Date.now()) });
-    if (!ok) return setError(t("Add at least one set with reps or a time"));
+    if (!ok) return fail(t("Add at least one set with reps or a time"));
+    // With Auto-sync on, the health apps get the corrected workout (it replaces the old record).
+    const saved = useWorkoutStore.getState().sessions.find((s) => s.id === draft.id);
+    if (saved) autoSyncFinished(saved, byId);
     router.replace(historyPath(draft.id));
   }
 
   return (
     <main className="flex flex-1 flex-col">
-      <PageHeader title={id ? t("Edit workout") : t("Log a past workout")} back={back} />
+      <PageHeader
+        title={id ? t("Edit workout") : t("Log a past workout")}
+        back={back}
+        onBack={(e) => {
+          if (!dirty) return;
+          e.preventDefault();
+          setAsking(true);
+        }}
+      />
       <div className="flex flex-col gap-4 px-4 pt-2">
         <section aria-label={t("When")} className="panel grid grid-cols-2 gap-3 p-3">
           <div className="col-span-2">
@@ -181,7 +218,10 @@ function SessionEditor() {
                 <button
                   type="button"
                   aria-label={t("Remove {name}", { name })}
-                  onClick={() => patch((d) => ({ ...d, exercises: d.exercises.filter((e) => e.id !== ex.id) }))}
+                  onClick={() => {
+                    setRemoved({ ex, at: draft.exercises.indexOf(ex), name });
+                    patch((d) => ({ ...d, exercises: d.exercises.filter((e) => e.id !== ex.id) }));
+                  }}
                   className="flex size-11 items-center justify-center rounded-ctl text-text-muted hover:text-failure"
                 >
                   <Trash2 aria-hidden="true" size={18} />
@@ -189,7 +229,7 @@ function SessionEditor() {
               </div>
               {/* Column names, so a filled row still says which number is which. */}
               <div aria-hidden="true" className="field-label flex items-center gap-2">
-                <span className="w-6 shrink-0 text-center">{t("Set")}</span>
+                <span className="w-11 shrink-0 text-center">{t("Set")}</span>
                 {timed ? (
                   <>
                     <span className="flex-1 text-center">{t("min")}</span>
@@ -206,9 +246,21 @@ function SessionEditor() {
               <ol className="flex flex-col gap-1.5">
                 {ex.sets.map((st, i) => {
                   const n = i + 1;
+                  // Working sets are numbered 1, 2, 3; warm-ups show W, as in the logger.
+                  function number(j: number) {
+                    return ex.sets.slice(0, j + 1).filter((x) => x.type !== "warmup").length;
+                  }
                   return (
                     <li key={st.id} className="flex items-center gap-2">
-                      <span className="num w-6 shrink-0 text-center text-sm font-bold text-text-muted">{n}</span>
+                      {/* Tap to change the type: warm-ups count apart from the working sets in records. */}
+                      <button
+                        type="button"
+                        aria-label={t("{set}, change type", { set: setTypeA11yName(st.type, number(i), t) })}
+                        onClick={() => patchSet(ex.id, st.id, { type: NEXT_TYPE[st.type] })}
+                        className="flex size-11 shrink-0 items-center justify-center rounded-ctl"
+                      >
+                        <SetTypeChip type={st.type} number={number(i)} />
+                      </button>
                       {timed ? (
                         <>
                           <NumberField
@@ -289,17 +341,37 @@ function SessionEditor() {
         <Button onClick={() => setPicker(true)} className="min-h-12 text-base">
           <Plus aria-hidden="true" size={18} /> {t("Add exercise")}
         </Button>
-        {error && (
-          <p role="alert" className="text-sm font-semibold text-failure">
-            {error}
-          </p>
-        )}
       </div>
 
       <div className="h-24" aria-hidden="true" />
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-[640px] border-t border-line bg-bg/85 px-4 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
+        {error && (
+          <p ref={errorRef} tabIndex={-1} role="alert" className="mb-2 text-sm font-semibold text-failure outline-none">
+            {error}
+          </p>
+        )}
+        {removed && !error && (
+          <div role="status" className="mb-2 flex items-center gap-2 text-sm">
+            <span className="min-w-0 flex-1 truncate">{t("Removed {name}", { name: removed.name })}</span>
+            <button
+              type="button"
+              onClick={() => {
+                const r = removed;
+                setRemoved(null);
+                patch((d) => {
+                  const list = [...d.exercises];
+                  list.splice(Math.min(r.at, list.length), 0, r.ex);
+                  return { ...d, exercises: list };
+                });
+              }}
+              className="min-h-11 rounded-ctl px-3 font-semibold text-accent-text"
+            >
+              {t("Undo")}
+            </button>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => router.push(back.href)} className="min-h-12 text-base">
+          <Button onClick={tryLeave} className="min-h-12 text-base">
             {t("Cancel")}
           </Button>
           <Button variant="primary" onClick={save} className="min-h-12 text-base">
@@ -308,15 +380,33 @@ function SessionEditor() {
         </div>
       </div>
 
-      <ExercisePicker
-        open={picker}
-        onClose={() => setPicker(false)}
-        inWorkout={inWorkout}
-        onPick={(e) => {
-          setPicker(false);
-          patch((d) => ({ ...d, exercises: [...d.exercises, { id: newId(), exerciseId: e.id, restSeconds: defaultRest, sets: [newSet()] }] }));
-        }}
-      />
+      <Sheet
+        open={asking}
+        onClose={() => setAsking(false)}
+        title={t("Discard your changes?")}
+        footer={
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => setAsking(false)}>{t("Keep editing")}</Button>
+            <Button variant="danger" onClick={leave}>
+              {t("Discard")}
+            </Button>
+          </div>
+        }
+      >
+        <p className="pb-2 text-sm text-text-muted">{t("The workout stays as it was before you opened it.")}</p>
+      </Sheet>
+
+      {picker && (
+        <ExercisePicker
+          open={picker}
+          onClose={() => setPicker(false)}
+          inWorkout={inWorkout}
+          onPick={(e) => {
+            setPicker(false);
+            patch((d) => ({ ...d, exercises: [...d.exercises, { id: newId(), exerciseId: e.id, restSeconds: defaultRest, sets: [newSet()] }] }));
+          }}
+        />
+      )}
     </main>
   );
 }

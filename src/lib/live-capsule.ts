@@ -130,7 +130,7 @@ export interface CapsuleInput {
 export function capsuleContent({ session, sessions, byId, rest, now, unit, mode, detail, ring, handoff = null }: CapsuleInput, t: T = currentT()): NativeLive {
   const next = nextTarget(session, sessions, byId, t, handoff);
   const lift = next ? t("{name} · {set}/{of}", { name: shortName(next.name), set: next.set, of: next.of }) : null;
-  const load = next && next.reps !== null ? (next.weightKg !== null && next.weightKg > 0 ? `${formatWeight(next.weightKg, unit)} × ${next.reps}` : t("{n} reps", { n: next.reps })) : null;
+  const load = next && next.reps !== null ? (next.weightKg !== null && next.weightKg > 0 ? `${formatWeight(next.weightKg, unit)} × ${next.reps}` : t.n(next.reps, "{n} rep", "{n} reps")) : null;
   const second =
     detail === "volume"
       ? t("Volume {volume}", { volume: formatVolume(sessionVolume(session, byId), unit) })
@@ -143,6 +143,8 @@ export function capsuleContent({ session, sessions, byId, rest, now, unit, mode,
     clockStart,
     pausedTitle: lift ? `${t("Paused")} · ${lift}` : t("Paused"),
     pausedChip: t("Paused"),
+    lockTitle: t("Workout in progress"),
+    lockRest: t("Resting"),
     ring,
     restOnly: mode === "rest",
     canLog: loggable(next) && session.pausedAt === undefined,

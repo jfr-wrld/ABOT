@@ -2,7 +2,7 @@
 
 import { setNumbers } from "@/lib/sets";
 import { Select } from "@/components/ui/Select";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowDown, ArrowUp, Link2, Link2Off, Plus, Trash2, ListPlus } from "@/components/icons";
@@ -53,6 +53,7 @@ function Editor() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [menu, setMenu] = useState<{ exId: string; setId: string } | null>(null);
   const [supersetFor, setSupersetFor] = useState<string | null>(null);
+  const nameBefore = useRef("");
   const t = useT();
 
   if (!routine) {
@@ -101,6 +102,11 @@ function Editor() {
               id="r-name"
               value={routine.name}
               onChange={(e) => update(routine.id, { name: e.target.value })}
+              onFocus={(e) => (nameBefore.current = e.target.value.trim() || nameBefore.current)}
+              // A cleared name left cards, the Today sheet and reminders (" at 17:30") blank.
+              onBlur={(e) => {
+                if (!e.target.value.trim()) update(routine.id, { name: nameBefore.current || t("Untitled routine") });
+              }}
               className="h-11 w-full rounded-ctl border border-line-strong bg-surface-2 px-3 text-base"
             />
           </div>
@@ -331,19 +337,21 @@ function Editor() {
         </p>
       </div>
 
-      <ExercisePicker
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        inWorkout={new Set(routine.exercises.map((e) => e.exerciseId))}
-        onPick={(e) => {
-          setExercises(routine.id, [...routine.exercises, newRoutineExercise(e.id, defaultRestSeconds)]);
-          setPickerOpen(false);
-        }}
-        onPickMany={(list) => {
-          setExercises(routine.id, [...routine.exercises, ...list.map((e) => newRoutineExercise(e.id, defaultRestSeconds))]);
-          setPickerOpen(false);
-        }}
-      />
+      {pickerOpen && (
+        <ExercisePicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          inWorkout={new Set(routine.exercises.map((e) => e.exerciseId))}
+          onPick={(e) => {
+            setExercises(routine.id, [...routine.exercises, newRoutineExercise(e.id, defaultRestSeconds)]);
+            setPickerOpen(false);
+          }}
+          onPickMany={(list) => {
+            setExercises(routine.id, [...routine.exercises, ...list.map((e) => newRoutineExercise(e.id, defaultRestSeconds))]);
+            setPickerOpen(false);
+          }}
+        />
+      )}
 
       {supersetFor && (() => {
         const from = routine.exercises.find((e) => e.id === supersetFor);
@@ -400,7 +408,7 @@ function RoutineOverview({ routine, byId }: { routine: Routine; byId: Record<str
     <section aria-label={t("Routine overview")} className="flex items-center justify-between gap-3 rounded-card border border-ink/[0.07] bg-surface p-3">
       <div className="min-w-0">
         <SummaryMeta sum={sum} count={routine.exercises.length} />
-        <p className="num mt-1.5 text-xs text-text-muted">{t("{n} sets", { n: sum.sets })}</p>
+        <p className="num mt-1.5 text-xs text-text-muted">{t.n(sum.sets, "{n} set", "{n} sets")}</p>
       </div>
       <MusclesWorked sum={sum} />
     </section>

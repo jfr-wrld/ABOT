@@ -38,6 +38,9 @@ class LiveState {
     String resumeLabel;
     /** Status bar chip text while paused, when no clock runs. */
     String pausedChip;
+    /** What a locked screen shows instead of the exercise: a generic title while lifting or resting. */
+    String lockTitle;
+    String lockRest;
     /** Sets per exercise, comma separated, and sets done: the segmented progress bar. */
     String progressSegments;
     int progressDone;
@@ -70,6 +73,8 @@ class LiveState {
             .putString("pauseLabel", pauseLabel)
             .putString("resumeLabel", resumeLabel)
             .putString("pausedChip", pausedChip)
+            .putString("lockTitle", lockTitle)
+            .putString("lockRest", lockRest)
             .putString("progressSegments", progressSegments)
             .putInt("progressDone", progressDone)
             .putString("photo", photo)
@@ -104,6 +109,8 @@ class LiveState {
         s.pauseLabel = p.getString("pauseLabel", "Pause");
         s.resumeLabel = p.getString("resumeLabel", "Resume");
         s.pausedChip = p.getString("pausedChip", "Paused");
+        s.lockTitle = p.getString("lockTitle", "Workout in progress");
+        s.lockRest = p.getString("lockRest", "Resting");
         s.progressSegments = p.getString("progressSegments", "");
         s.progressDone = p.getInt("progressDone", 0);
         s.photo = p.getString("photo", null);

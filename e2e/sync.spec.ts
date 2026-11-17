@@ -31,9 +31,9 @@ test("Settings explains Backup & Sync and keeps Export available", async ({ page
 test.describe("signed in (Supabase answered by the test)", () => {
   test.skip(!configured, "needs a build with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
-  async function signInAs(page: Page) {
+  async function signInAs(page: Page, who = { id: "00000000-0000-0000-0000-0000000000aa", email: "lifter@example.com" }) {
     const ref = new URL(SUPABASE!).hostname.split(".")[0];
-    await page.evaluate((key) => {
+    await page.evaluate(({ key, who }) => {
       const now = Math.floor(Date.now() / 1000);
       localStorage.setItem(
         key,
@@ -44,17 +44,17 @@ test.describe("signed in (Supabase answered by the test)", () => {
           expires_at: now + 3600,
           refresh_token: "test-refresh-token",
           user: {
-            id: "00000000-0000-0000-0000-0000000000aa",
+            id: who.id,
             aud: "authenticated",
             role: "authenticated",
-            email: "lifter@example.com",
+            email: who.email,
             app_metadata: { provider: "google" },
             user_metadata: { full_name: "Test Lifter" },
             created_at: new Date().toISOString(),
           },
         }),
       );
-    }, `sb-${ref}-auth-token`);
+    }, { key: `sb-${ref}-auth-token`, who });
   }
 
   test("a signed-in device uploads guest data, pulls the cloud's, and keeps both after signing out", async ({ page }) => {
@@ -123,6 +123,54 @@ test.describe("signed in (Supabase answered by the test)", () => {
     await page.goto("/routines");
     await expect(page.getByRole("heading", { name: "Cloud Pull Day" })).toBeVisible();
   });
+  test("signing in as a different account asks before this phone's data goes into it", async ({ page }) => {
+    const pushedBy: string[] = [];
+    await page.route("**/rest/v1/abot_records**", (route: Route) => route.fulfill({ json: [] }));
+    await page.route("**/rest/v1/rpc/upsert_if_newer", async (route: Route) => {
+      const rows = (route.request().postDataJSON() as { rows: { kind: string; id: string }[] }).rows;
+      pushedBy.push(...rows.map(() => String(route.request().headers()["authorization"] ?? "")));
+      await route.fulfill({ json: [{ accepted: rows.map((r) => `${r.kind}:${r.id}`), rejected: [] }] });
+    });
+    await page.route("**/auth/v1/**", (route) => route.fulfill({ status: 204, body: "" }));
+
+    await freshStart(page);
+    await startEmptyWorkout(page);
+    await addExercise(page, "Bench Press (Barbell)");
+    await logSet(page, 1, "80", "5");
+    await page.getByRole("button", { name: "Skip rest" }).click();
+    await finishWorkout(page);
+
+    // Synced once as the first account, then signed out.
+    await signInAs(page);
+    await page.goto("/settings?section=data");
+    const section = page.getByRole("region", { name: "Backup & Sync" });
+    await expect(section.getByRole("status")).toHaveText(/Backed up just now/);
+    await page.goto("/settings");
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Sign out" }).click();
+    await expect(page.getByRole("button", { name: "Sign out" })).toHaveCount(0);
+    const afterFirst = pushedBy.length;
+
+    // Someone else signs in on this phone: asked, and "No" uploads nothing.
+    const other = { id: "00000000-0000-0000-0000-0000000000bb", email: "friend@example.com" };
+    await signInAs(page, other);
+    await page.goto("/settings?section=data");
+    const ask = page.getByRole("dialog", { name: "Put this phone's data in a different account?" });
+    await expect(ask).toContainText("friend@example.com");
+    await ask.getByRole("button", { name: "No, sign out" }).click();
+    await expect(ask).toHaveCount(0);
+    await expect(section.getByRole("button", { name: "Sign in with Google to Backup & Sync" })).toBeVisible();
+    expect(pushedBy.length).toBe(afterFirst);
+
+    // Asked again, "Yes" copies this phone's workouts into that account.
+    await signInAs(page, other);
+    await page.goto("/settings?section=data");
+    await ask.getByRole("button", { name: "Yes, add it" }).click();
+    await expect(section.getByText("Signed in as friend@example.com")).toBeVisible();
+    await expect(section.getByRole("status")).toHaveText(/Backed up just now/);
+    expect(pushedBy.length).toBeGreaterThan(afterFirst);
+  });
+
   async function mockSupabase(page: Page, opts: { failSync?: boolean } = {}) {
     await page.route("**/rest/v1/**", (route: Route) =>
       opts.failSync

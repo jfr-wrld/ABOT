@@ -78,13 +78,13 @@ export function SetRow({
   // Bodyweight: "BW × 10", "BW+10 × 8", "BW−20 × 10" (assisted). Timed: "1:30", "5 km · 28:10".
   const prevLabel = timed
     ? previous && (previous.durationSec || previous.distanceM)
-      ? setText(previous, logType, unit, { reps: (n) => t("{n} reps", { n }) })
+      ? setText(previous, logType, unit, { reps: (n) => t.n(n, "{n} rep", "{n} reps") })
       : null
     : previous && previous.reps !== null
       ? isBodyweight
         ? `BW${!previous.weightKg ? "" : previous.weightKg > 0 ? `+${formatWeight(previous.weightKg, unit, false)}` : `−${formatWeight(-previous.weightKg, unit, false)}`} × ${previous.reps}`
         : previous.weightKg === null || previous.weightKg <= 0
-          ? t("{n} reps", { n: previous.reps })
+          ? t.n(previous.reps, "{n} rep", "{n} reps")
           : `${formatWeight(previous.weightKg, unit, false)} × ${previous.reps}`
       : null;
   // The field shows the amount; the sign comes from the exercise's Added / Assisted choice.

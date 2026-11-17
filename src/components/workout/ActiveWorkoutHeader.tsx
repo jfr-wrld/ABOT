@@ -253,7 +253,7 @@ function StartTimeSheet({ startedAt, paused, onClose }: { startedAt: number; pau
 /** The ticking clock on its own, so only this button re-renders each second, not the header. */
 function DurationButton({ session, paused, onOpen }: { session: WorkoutSession; paused: boolean; onOpen: () => void }) {
   const t = useT();
-  const duration = sessionDurationSec(session, useNow(1000));
+  const duration = sessionDurationSec(session, useNow(1000, !paused));
   return (
     <button
       type="button"

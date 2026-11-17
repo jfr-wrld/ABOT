@@ -41,6 +41,11 @@ Deno.serve(async (req) => {
   }
   if (body.confirm !== "DELETE") return respond(req, 400, { error: "bad_request" });
 
+  // A stolen or forgotten-open session must not be enough to erase an account: the owner signs in
+  // again within the last 10 minutes first. Access tokens refresh for weeks without a sign-in.
+  const signedIn = Date.parse(user.last_sign_in_at ?? "");
+  if (!Number.isFinite(signedIn) || Date.now() - signedIn > 10 * 60_000) return respond(req, 403, { error: "reauth" });
+
   const { error } = await db.auth.admin.deleteUser(user.id);
   if (error) {
     console.error("delete failed", error.message);

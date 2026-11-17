@@ -49,7 +49,7 @@ export function WorkoutReminderSettings() {
 
   function exportCalendar() {
     const names = Object.fromEntries(routines.map((r) => [r.id, r.name]));
-    const blob = new Blob([buildIcs(schedule, names, Date.now())], { type: "text/calendar" });
+    const blob = new Blob([buildIcs(schedule, names, Date.now(), t)], { type: "text/calendar" });
     saveFile(blob, "abot-workout-schedule.ics").then(
       (saved) => setCalendarNote(saved.kind === "saved" ? t("Saved to {folder}. Open it with your calendar app.", { folder: saved.folder }) : null),
       () => setCalendarNote(t("The calendar file could not be saved. Try again.")),

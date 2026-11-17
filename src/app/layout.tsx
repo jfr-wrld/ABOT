@@ -12,6 +12,7 @@ import { ScrollMemory } from "@/components/navigation/ScrollMemory";
 import { DynamicIsland } from "@/components/layout/DynamicIsland";
 import { SplashScreen } from "@/components/animations/SplashScreen";
 import { StorageAlert } from "@/components/layout/StorageAlert";
+import { AccountSwitchDialog } from "@/components/settings/AccountSwitchDialog";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { MotionProvider } from "@/components/animations/MotionProvider";
 import { MotionFeatures } from "@/components/animations/MotionFeatures";
@@ -99,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <DynamicIsland />
             <UpdateCenter />
             <GetAppSheet />
+            <AccountSwitchDialog />
             <ScrollMemory />
             <NativeShell />
             <AutoGym />

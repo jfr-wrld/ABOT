@@ -18,6 +18,7 @@ import { feedback } from "@/lib/feedback";
 import { useNow } from "@/lib/useNow";
 import type { FocusLabel } from "@/lib/training-focus";
 import { useT } from "@/i18n";
+import { Button } from "@/components/ui/Button";
 import { EmptyArt } from "@/components/ui/EmptyArt";
 
 /** Rows drawn at first and per "Show more": a long log stays quick to open. */
@@ -135,6 +136,19 @@ function AllWorkouts() {
         <div className="mx-4 mt-3 flex flex-col items-center gap-2 rounded-xl border border-line bg-surface p-6 text-center">
           <EmptyArt icon={total === 0 ? Dumbbell : Search} />
           <p className="text-sm text-text-muted">{total === 0 ? t("No workouts yet.") : t("No workout matches. Try another name, or clear the filters.")}</p>
+          {total > 0 && filtered && (
+            <Button
+              onClick={() => {
+                setQuery("");
+                setFocus("");
+                setGym("");
+                setShown(PAGE);
+              }}
+              className="min-h-11"
+            >
+              {t("Clear filters")}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-4 px-4 pt-3">

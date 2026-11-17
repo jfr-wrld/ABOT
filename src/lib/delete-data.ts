@@ -3,19 +3,21 @@ import { isCloudSyncConfigured } from "@/data/sync/supabase";
 import { getActivePersistence, getActiveRepository } from "@/store/persistence";
 import { stopReminderLoop } from "@/lib/notifications/reminder-service";
 import { DEFAULT_SCHEDULE } from "@/lib/notifications/schedule";
-import { isNativeApp } from "@/lib/native/files";
+import { clearCameraShots, isNativeApp } from "@/lib/native/files";
 
 /**
  * Delete my data (Settings > Data & backup). Two depths: this device only, or this device and
  * the ABOT account. The account goes through the delete-account Edge Function, which removes the
- * sign-in itself; every cloud row (workouts, settings, licence, payment orders) cascades with it.
+ * sign-in itself; every cloud row (workouts, settings, licence) cascades with it. Paid orders stay,
+ * with no account attached, as the record of what was paid.
  */
 
-export type DeleteAccountFailure = "not_connected" | "sign_in" | "network" | "failed";
+export type DeleteAccountFailure = "not_connected" | "sign_in" | "reauth" | "network" | "failed";
 
 export const DELETE_ACCOUNT_MESSAGE: Record<DeleteAccountFailure, string> = {
   not_connected: "Cloud accounts are not set up in this version of ABOT.",
   sign_in: "Sign in again first, so ABOT knows the account is yours.",
+  reauth: "To delete the account, sign out and sign in again first. Then delete it within 10 minutes.",
   network: "Could not reach the server. Check the connection and try again. Nothing was deleted.",
   failed: "The account could not be deleted. Try again later. Nothing on this phone was deleted.",
 };
@@ -31,6 +33,7 @@ export async function deleteAccount(): Promise<{ ok: true } | { ok: false; reaso
     if (error) {
       const status = (error as { context?: Response }).context?.status;
       if (status === 401) return { ok: false, reason: "sign_in" };
+      if (status === 403) return { ok: false, reason: "reauth" };
       return { ok: false, reason: status ? "failed" : "network" };
     }
     // The session belongs to an account that no longer exists; drop it without a server call.
@@ -52,6 +55,10 @@ export async function wipeDevice(): Promise<void> {
     const notify = await import("@/lib/native/notify");
     await notify.syncNativeReminders({ ...DEFAULT_SCHEDULE, enabled: false }, () => null).catch(() => {});
     await notify.clearNativeLive().catch(() => {});
+    await clearCameraShots();
+    const { HealthSyncService } = await import("@/lib/health-sync");
+    const { useWorkoutStore } = await import("@/store/useWorkoutStore");
+    await HealthSyncService.forgetWorkouts(useWorkoutStore.getState().sessions.map((s) => s.id));
   }
   const persistence = getActivePersistence();
   await persistence?.flush().catch(() => {});

@@ -144,7 +144,7 @@ function Hero({ m }: { m: PhaseTelemetry }) {
             <span>{shown(phase.targetWeightKg)}</span>
           </div>
         </div>
-        <p className="num text-xs text-text-muted">{meso.finished ? t("Block finished") : t("{n} days left", { n: meso.daysLeft })}</p>
+        <p className="num text-xs text-text-muted">{meso.finished ? t("Block finished") : t.n(meso.daysLeft, "{n} day left", "{n} days left")}</p>
       </div>
     </section>
   );

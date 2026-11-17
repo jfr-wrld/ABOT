@@ -37,11 +37,17 @@ export interface NearbyGym {
 const GYM_WORDS = "gym|fitness|crossfit|weightlifting|bodybuilding";
 
 /**
+ * Three decimals, about 110 m: plenty for a 3 km search, and the map services do not learn the
+ * house the lifter is standing in. Distances are still measured on the phone from the exact spot.
+ */
+export const coarse = (deg: number): string => (Math.round(deg * 1000) / 1000).toFixed(3);
+
+/**
  * Fitness centres and gyms, plus sports centres that are gyms by their sport or their name: many
  * are mapped as a plain sports centre ("Gold's Gym"), with no sport tag.
  */
 export function overpassQuery(lat: number, lng: number, radiusM = NEARBY_SEARCH_M): string {
-  const around = `(around:${Math.round(radiusM)},${lat.toFixed(6)},${lng.toFixed(6)})`;
+  const around = `(around:${Math.round(radiusM)},${coarse(lat)},${coarse(lng)})`;
   return [
     "[out:json][timeout:10];",
     "(",
@@ -110,7 +116,9 @@ export function parseNominatim(json: unknown, from: { lat: number; lng: number }
 }
 
 /** Left, top, right, bottom of a square `halfM` metres either side of the point. */
-export function viewbox(lat: number, lng: number, halfM = NOMINATIM_BOX_M): string {
+export function viewbox(exactLat: number, exactLng: number, halfM = NOMINATIM_BOX_M): string {
+  const lat = Number(coarse(exactLat));
+  const lng = Number(coarse(exactLng));
   const dLat = halfM / 111_320;
   const dLng = halfM / (111_320 * Math.cos((lat * Math.PI) / 180));
   return [lng - dLng, lat + dLat, lng + dLng, lat - dLat].map((n) => n.toFixed(5)).join(",");

@@ -244,49 +244,53 @@ function WorkoutScreen() {
         </button>
       </div>
 
-      <ExercisePicker
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        inWorkout={inWorkout}
-        suggestionsTitle={nextUp ? t("Still to train today · {routine}", { routine: nextUp.routine.name }) : undefined}
-        suggestions={nextUp?.list ?? []}
-        onPick={(ex) => {
-          addExercise(ex.id, defaultRestSeconds);
-          setPickerOpen(false);
-        }}
-        onPickMany={(list) => {
-          for (const ex of list) addExercise(ex.id, defaultRestSeconds);
-          setPickerOpen(false);
-        }}
-      />
+      {pickerOpen && (
+        <ExercisePicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          inWorkout={inWorkout}
+          suggestionsTitle={nextUp ? t("Still to train today · {routine}", { routine: nextUp.routine.name }) : undefined}
+          suggestions={nextUp?.list ?? []}
+          onPick={(ex) => {
+            addExercise(ex.id, defaultRestSeconds);
+            setPickerOpen(false);
+          }}
+          onPickMany={(list) => {
+            for (const ex of list) addExercise(ex.id, defaultRestSeconds);
+            setPickerOpen(false);
+          }}
+        />
+      )}
 
-      <FinishDialog
-        open={finishOpen}
-        session={active}
-        prs={prs}
-        exercisesById={byId}
-        unit={weightUnit}
-        onClose={() => setFinishOpen(false)}
-        onMarkRemaining={() => completeAllRemaining(previousByExercise)}
-        onConfirm={async () => {
-          // A second tap while the save is awaited would find no workout and go Home instead.
-          if (finishing.current) return;
-          finishing.current = true;
-          // A workout still called "Evening Workout" is named after what it trained.
-          const named = isTimeOfDayName(active.name, t) ? muscleWorkoutName(active, byId, t) : null;
-          if (named) useWorkoutStore.getState().renameActive(named);
-          const done = finishActive();
-          if (done) autoSyncFinished(done, byId);
-          // The finished workout reaches storage before the screen moves on: closing the app
-          // right after Finish brought it back as a workout in progress. Capped, so a stuck
-          // write never holds the lifter on this screen.
-          await Promise.race([getActivePersistence()?.flush(), new Promise((r) => setTimeout(r, 1500))]);
-          setFinishOpen(false);
-          router.push(done ? summaryPath(done.id) : "/");
-          // The page stays mounted (it shows the routines next), so the next workout can finish.
-          finishing.current = false;
-        }}
-      />
+      {finishOpen && (
+        <FinishDialog
+          open={finishOpen}
+          session={active}
+          prs={prs}
+          exercisesById={byId}
+          unit={weightUnit}
+          onClose={() => setFinishOpen(false)}
+          onMarkRemaining={() => completeAllRemaining(previousByExercise)}
+          onConfirm={async () => {
+            // A second tap while the save is awaited would find no workout and go Home instead.
+            if (finishing.current) return;
+            finishing.current = true;
+            // A workout still called "Evening Workout" is named after what it trained.
+            const named = isTimeOfDayName(active.name, t) ? muscleWorkoutName(active, byId, t) : null;
+            if (named) useWorkoutStore.getState().renameActive(named);
+            const done = finishActive();
+            if (done) autoSyncFinished(done, byId);
+            // The finished workout reaches storage before the screen moves on: closing the app
+            // right after Finish brought it back as a workout in progress. Capped, so a stuck
+            // write never holds the lifter on this screen.
+            await Promise.race([getActivePersistence()?.flush(), new Promise((r) => setTimeout(r, 1500))]);
+            setFinishOpen(false);
+            router.push(done ? summaryPath(done.id) : "/");
+            // The page stays mounted (it shows the routines next), so the next workout can finish.
+            finishing.current = false;
+          }}
+        />
+      )}
 
       <Sheet
         open={discardOpen}

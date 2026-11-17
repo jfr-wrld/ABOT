@@ -157,6 +157,19 @@ the checkout: `supabase functions deploy midtrans-checkout`. After it:
 - The web visit counter stops at 1,000,000 per day and page. Treat those numbers as indicative:
   anyone holding the public key can call it.
 
+## Paid orders kept, record ceiling (2026-11-19)
+
+Apply `supabase/migrations/20261119_keep_paid_orders_and_record_caps.sql` in the SQL editor, then
+redeploy `supabase functions deploy delete-account`. After it:
+
+- Deleting an account keeps its payment orders, with no account attached. Founder seats that were
+  sold stay sold, a later refund still finds its order, and revenue totals stay whole.
+- A payment that settles after its buyer deleted the account is recorded as paid; nobody gets PRO.
+- Deleting an account needs a sign-in in the last 10 minutes. The app tells the lifter to sign out
+  and in again first.
+- Each account holds at most 200 MB of synced records, and a record dated more than a day ahead is
+  refused.
+
 ## Going live
 
 1. Turn the test buttons off: run `update public.app_remote_config set payments_sandbox = false;`.

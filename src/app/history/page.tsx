@@ -416,7 +416,7 @@ function ExerciseCard({
                 <li key={s.id} className={`flex min-h-10 items-center gap-3 rounded-lg px-1 text-sm ${s.completed ? "" : "opacity-45"}`}>
                   <SetTypeChip type={s.type} number={num} />
                   <span className="num w-28 shrink-0">
-                    {setText(s, def?.logType, unit, { isBodyweight: def?.isBodyweight, reps: (n) => t("{n} reps", { n: String(n) }) })}
+                    {setText(s, def?.logType, unit, { isBodyweight: def?.isBodyweight, reps: (n) => t.n(n, "{n} rep", "{n} reps") })}
                   </span>
                   <span aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-800/80">
                     <motion.span

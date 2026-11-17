@@ -90,6 +90,8 @@ public class LiveWorkoutPlugin extends Plugin {
         s.pauseLabel = call.getString("pauseLabel", "Pause");
         s.resumeLabel = call.getString("resumeLabel", "Resume");
         s.pausedChip = call.getString("pausedChip", "Paused");
+        s.lockTitle = call.getString("lockTitle", "Workout in progress");
+        s.lockRest = call.getString("lockRest", "Resting");
         s.progressDone = call.getInt("progressDone", 0);
         s.photo = call.getString("photo", null);
         StringBuilder segments = new StringBuilder();
@@ -235,7 +237,10 @@ public class LiveWorkoutPlugin extends Plugin {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(Notification.CATEGORY_STOPWATCH)
-            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            // Locked, the phone shows lockScreen(): the clock and rest buttons, without the
+            // workout's name, the weights or the exercise photo, and without Log set.
+            .setVisibility(Notification.VISIBILITY_PRIVATE)
+            .setPublicVersion(lockScreen(ctx, s, resting))
             .setContentIntent(openApp(ctx));
         if (s.paused) {
             b.setContentTitle(s.pausedTitle).setContentText(s.text + " · " + clock(s.pausedElapsed)).setShowWhen(false);
@@ -251,7 +256,7 @@ public class LiveWorkoutPlugin extends Plugin {
                 b.addAction(button(ctx, "add30", s.addLabel, 4, R.drawable.ic_action_add));
                 b.addAction(button(ctx, "skip", s.skipLabel, 3, R.drawable.ic_action_skip));
             }
-            if (s.canLog) b.addAction(button(ctx, "log", s.logLabel, 5, R.drawable.ic_action_log));
+            if (s.canLog) b.addAction(logButton(ctx, s.logLabel));
             if (!resting) b.addAction(button(ctx, "pause", s.pauseLabel, 2, R.drawable.ic_action_pause));
         }
         if (Build.VERSION.SDK_INT >= 36) {
@@ -268,6 +273,32 @@ public class LiveWorkoutPlugin extends Plugin {
         promoted.putBoolean("android.requestPromotedOngoing", true);
         if (s.paused && s.pausedChip != null) promoted.putString("android.shortCriticalText", s.pausedChip);
         b.addExtras(promoted);
+        return b.build();
+    }
+
+    /** The locked-screen copy: a generic title and the clock, and buttons that log nothing. */
+    private static Notification lockScreen(Context ctx, LiveState s, boolean resting) {
+        Notification.Builder b = builder(ctx, CHANNEL)
+            .setSmallIcon(R.drawable.ic_stat_abot)
+            .setColor(ACCENT)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setCategory(Notification.CATEGORY_STOPWATCH)
+            .setContentIntent(openApp(ctx));
+        if (s.paused) {
+            b.setContentTitle(s.pausedChip).setShowWhen(false);
+            b.addAction(button(ctx, "resume", s.resumeLabel, 1, R.drawable.ic_action_resume));
+            return b.build();
+        }
+        b.setContentTitle(resting ? s.lockRest : s.lockTitle)
+            .setShowWhen(true)
+            .setUsesChronometer(true)
+            .setWhen(resting ? s.restEndsAt : s.clockStart);
+        if (Build.VERSION.SDK_INT >= 24) b.setChronometerCountDown(resting);
+        if (resting) {
+            b.addAction(button(ctx, "add30", s.addLabel, 4, R.drawable.ic_action_add));
+            b.addAction(button(ctx, "skip", s.skipLabel, 3, R.drawable.ic_action_skip));
+        }
         return b.build();
     }
 
@@ -319,6 +350,15 @@ public class LiveWorkoutPlugin extends Plugin {
         Intent i = new Intent(ctx, LiveWorkoutReceiver.class).setAction(ACTION_BUTTON).putExtra(EXTRA_ID, id);
         PendingIntent pi = PendingIntent.getBroadcast(ctx, request, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         return new Notification.Action.Builder(Icon.createWithResource(ctx, icon), label, pi).build();
+    }
+
+    /** Log set writes to the workout, so on Android 12+ it asks to unlock first. */
+    private static Notification.Action logButton(Context ctx, String label) {
+        Intent i = new Intent(ctx, LiveWorkoutReceiver.class).setAction(ACTION_BUTTON).putExtra(EXTRA_ID, "log");
+        PendingIntent pi = PendingIntent.getBroadcast(ctx, 5, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification.Action.Builder a = new Notification.Action.Builder(Icon.createWithResource(ctx, R.drawable.ic_action_log), label, pi);
+        if (Build.VERSION.SDK_INT >= 31) a.setAuthenticationRequired(true);
+        return a.build();
     }
 
     private static PendingIntent openApp(Context ctx) {

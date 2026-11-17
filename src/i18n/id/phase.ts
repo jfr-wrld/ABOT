@@ -275,6 +275,7 @@ export const phase: Record<string, string> = {
   wk: "mgg",
   "{kcal} kcal today · {phase}": "{kcal} kkal hari ini · {phase}",
   "{n} days left": "{n} hari lagi",
+  "{n} day left": "{n} hari lagi",
   Upper: "Atas",
   Lower: "Bawah",
   "Full body": "Seluruh tubuh",

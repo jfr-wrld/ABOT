@@ -46,7 +46,6 @@ class HealthConnectPlugin : Plugin() {
 
     private val permissions = setOf(
         HealthPermission.getWritePermission(ExerciseSessionRecord::class),
-        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         HealthPermission.getWritePermission(ActiveCaloriesBurnedRecord::class),
         HealthPermission.getReadPermission(WeightRecord::class),
         HealthPermission.getReadPermission(SleepSessionRecord::class),
@@ -54,7 +53,6 @@ class HealthConnectPlugin : Plugin() {
 
     private val permissionNames = mapOf(
         HealthPermission.getWritePermission(ExerciseSessionRecord::class) to "writeExercise",
-        HealthPermission.getReadPermission(ExerciseSessionRecord::class) to "readExercise",
         HealthPermission.getWritePermission(ActiveCaloriesBurnedRecord::class) to "writeCalories",
         HealthPermission.getReadPermission(WeightRecord::class) to "readWeight",
         HealthPermission.getReadPermission(SleepSessionRecord::class) to "readSleep",
@@ -178,6 +176,25 @@ class HealthConnectPlugin : Plugin() {
             val out = JSObject()
             out.put("written", records.size)
             call.resolve(out)
+        }
+    }
+
+    /**
+     * Removes workouts ABOT wrote (Delete my data): each session's record and its calories, by
+     * the client ids writeWorkout gave them. Records other apps wrote are untouched.
+     */
+    @PluginMethod
+    fun deleteWorkouts(call: PluginCall) {
+        val ids = call.getArray("ids")?.toList<String>() ?: emptyList()
+        if (ids.isEmpty()) {
+            call.resolve()
+            return
+        }
+        val c = client(call) ?: return
+        launch(call) {
+            c.deleteRecords(ExerciseSessionRecord::class, emptyList(), ids.map { "abot-session-$it" })
+            c.deleteRecords(ActiveCaloriesBurnedRecord::class, emptyList(), ids.map { "abot-kcal-$it" })
+            call.resolve()
         }
     }
 

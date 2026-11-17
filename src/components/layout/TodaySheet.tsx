@@ -83,7 +83,7 @@ export function TodaySheet({ open, onClose, routine, doneToday }: { open: boolea
             open
             items={sum.lines.map((l) => ({
               name: byId[l.exerciseId]?.name ?? t("Removed exercise"),
-              detail: l.reps ? `${l.sets}×${l.reps}` : t("{n} sets", { n: l.sets }),
+              detail: l.reps ? `${l.sets}×${l.reps}` : t.n(l.sets, "{n} set", "{n} sets"),
               superset: !!l.superset,
             }))}
           />

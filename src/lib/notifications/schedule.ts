@@ -143,7 +143,7 @@ const ics = (s: string) => s.replace(/[\\;,]/g, (c) => `\\${c}`).replace(/\n/g, 
  * time, with an alarm at the lead time. The phone's calendar then reminds even when ABOT is
  * closed, which a website cannot do on its own.
  */
-export function buildIcs(s: WorkoutSchedule, routineNames: Record<string, string>, now: number): string {
+export function buildIcs(s: WorkoutSchedule, routineNames: Record<string, string>, now: number, t: T = currentT()): string {
   const stamp = new Date(now).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ABOT//Workout schedule//EN", "CALSCALE:GREGORIAN"];
   for (const wd of [1, 2, 3, 4, 5, 6, 0] as Weekday[]) {
@@ -154,7 +154,7 @@ export function buildIcs(s: WorkoutSchedule, routineNames: Record<string, string
     const end = new Date(start.getTime() + 60 * MIN);
     const local = (d: Date) =>
       `${dayKey(d).replace(/-/g, "")}T${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}00`;
-    const name = (day.routineId && routineNames[day.routineId]) || "Free session";
+    const name = (day.routineId && routineNames[day.routineId]) || t("Free session");
     lines.push(
       "BEGIN:VEVENT",
       `UID:abot-schedule-${BYDAY[wd]}@abot.local`,
@@ -163,10 +163,10 @@ export function buildIcs(s: WorkoutSchedule, routineNames: Record<string, string
       `DTEND:${local(end)}`,
       `RRULE:FREQ=WEEKLY;BYDAY=${BYDAY[wd]}`,
       `SUMMARY:${ics(`ABOT: ${name}`)}`,
-      `DESCRIPTION:${ics("Open ABOT and start the workout.")}`,
+      `DESCRIPTION:${ics(t("Open ABOT and start the workout."))}`,
     );
     if (s.leadMinutes > 0) {
-      lines.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${ics(`Pack your gym bag. ${name} soon.`)}`, `TRIGGER:-PT${s.leadMinutes}M`, "END:VALARM");
+      lines.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${ics(t("Pack your gym bag. {name} soon.", { name }))}`, `TRIGGER:-PT${s.leadMinutes}M`, "END:VALARM");
     }
     lines.push("END:VEVENT");
   }

@@ -7,7 +7,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 describe("overpassQuery", () => {
   it("asks for fitness places, and sports centres named or tagged as gyms", () => {
     const q = overpassQuery(-6.26, 106.81, 1500);
-    expect(q).toContain('nwr["leisure"="fitness_centre"](around:1500,-6.260000,106.810000);');
+    expect(q).toContain('nwr["leisure"="fitness_centre"](around:1500,-6.260,106.810);');
     expect(q).toContain('nwr["amenity"="gym"]');
     expect(q).toContain('nwr["leisure"="sports_centre"]["name"~"gym|fitness|crossfit|weightlifting|bodybuilding",i]');
     expect(q).toMatch(/^\[out:json\]/);

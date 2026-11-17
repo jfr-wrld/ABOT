@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useHydration } from "@/store/hydration";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useT } from "@/i18n";
@@ -18,6 +19,7 @@ export function StorageAlert() {
   const writeError = useHydration((s) => s.writeError);
   const activeId = useWorkoutStore((s) => s.active?.id ?? null);
   const unreadable = error?.kind === "unreadable";
+  const [noted, setNoted] = useState(false);
 
   // Ask once per workout started while nothing can be saved.
   const [askFor, setAskFor] = useState<string | null>(null);
@@ -48,7 +50,8 @@ export function StorageAlert() {
     setAskFor(null);
   };
 
-  const issue = error
+  // Private browsing does not change while the tab is open: once read, the lifter can put it away.
+  const issue = error && !(noted && !unreadable)
     ? {
         text:
           error.kind === "unreadable"
@@ -78,6 +81,17 @@ export function StorageAlert() {
                 {i === 0 && unreadable && (
                   <button type="button" onClick={() => location.reload()} className="min-h-11 font-semibold underline underline-offset-4">
                     {t("Reload ABOT")}
+                  </button>
+                )}
+                {/* The banner says "Export a backup from Settings": the way there is one tap. */}
+                {!(i === 0 && unreadable) && (
+                  <Link href="/settings?section=data" className="flex min-h-11 items-center font-semibold underline underline-offset-4">
+                    {t("Export a backup")}
+                  </Link>
+                )}
+                {i === 0 && !unreadable && (
+                  <button type="button" onClick={() => setNoted(true)} className="min-h-11 font-semibold">
+                    {t("Got it")}
                   </button>
                 )}
                 <details className="text-xs text-text-muted">

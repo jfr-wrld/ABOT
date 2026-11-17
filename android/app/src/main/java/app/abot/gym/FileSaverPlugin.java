@@ -44,6 +44,26 @@ public class FileSaverPlugin extends Plugin {
         write(call);
     }
 
+    /**
+     * Deletes the photos the WebView's camera picker left in the app's own Pictures folder.
+     * Capacitor writes each camera shot there as a temp JPEG and never removes it; by the time
+     * this runs (app start, Delete my data) the app has already read what it needed from them.
+     */
+    @PluginMethod
+    public void clearCaptures(PluginCall call) {
+        int removed = 0;
+        File dir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File[] files = dir == null ? null : dir.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isFile() && f.delete()) removed++;
+            }
+        }
+        JSObject ret = new JSObject();
+        ret.put("removed", removed);
+        call.resolve(ret);
+    }
+
     @PermissionCallback
     private void storagePermissionCallback(PluginCall call) {
         if (getPermissionState("storage") == PermissionState.GRANTED) {

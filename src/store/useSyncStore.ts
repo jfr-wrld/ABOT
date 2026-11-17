@@ -48,6 +48,13 @@ interface SyncStoreState {
   lastError: string | null;
   errorStage: ErrorStage | null;
   notice: SignInNotice | null;
+  /**
+   * Signed in as a different account than the one this phone last synced with: nothing uploads
+   * until the lifter says this phone's data may go into that account (the email shown).
+   */
+  switchTo: string | null;
+  confirmSwitch: () => Promise<void>;
+  cancelSwitch: () => Promise<void>;
   /** returnTo: the in-app path to come back to after Google, e.g. "/profile". */
   signIn: (returnTo?: string) => Promise<void>;
   clearNotice: () => void;
@@ -57,6 +64,8 @@ interface SyncStoreState {
 }
 
 let running: Promise<void> | null = null;
+/** The account waiting for the lifter's answer in the switch dialog. */
+let pendingSwitch: { user: User; returning: boolean } | null = null;
 let again = false;
 
 export const useSyncStore = create<SyncStoreState>()((set, get) => ({
@@ -70,6 +79,20 @@ export const useSyncStore = create<SyncStoreState>()((set, get) => ({
   lastError: null,
   errorStage: null,
   notice: null,
+  switchTo: null,
+
+  async confirmSwitch() {
+    const p = pendingSwitch;
+    pendingSwitch = null;
+    set({ switchTo: null });
+    if (p) await onSignedIn(p.user, p.returning, true);
+  },
+
+  async cancelSwitch() {
+    pendingSwitch = null;
+    set({ switchTo: null });
+    await get().signOut();
+  },
 
   async signIn(returnTo) {
     set({ phase: "signing_in", lastError: null, errorStage: null, notice: null });
@@ -227,12 +250,18 @@ function returningFromGoogle(): boolean {
   }
 }
 
-async function onSignedIn(user: User, returning = false): Promise<void> {
+async function onSignedIn(user: User, returning = false, confirmed = false): Promise<void> {
   const repo = getActiveRepository();
   if (!repo) return;
   const state = (await repo.kv.get("syncState")) ?? SIGNED_OUT;
   const switched = state.userId !== null && state.userId !== user.id;
-  // A different account on this device: everything here uploads to the new account.
+  // A different account on this phone: its data (workouts, gyms, body weight, photos in the
+  // profile) would upload into that account. On a shared phone that is someone else's, so ask.
+  if (switched && !confirmed) {
+    pendingSwitch = { user, returning };
+    useSyncStore.setState({ phase: "signing_in", switchTo: user.email ?? "" });
+    return;
+  }
   if (switched) await repo.sync.markAllPending();
   await repo.kv.set("syncState", {
     ...state,

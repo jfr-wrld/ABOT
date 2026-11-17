@@ -197,7 +197,7 @@ function ExerciseCardView({
             <h2 id={`ex-${item.id}`} className="truncate text-sm font-semibold">
               {name}
             </h2>
-            <p className="num text-xs text-text-muted">{t("{n} sets", { n: item.sets.length })}</p>
+            <p className="num text-xs text-text-muted">{t.n(item.sets.length, "{n} set", "{n} sets")}</p>
           </div>
           <ChevronRight aria-hidden="true" size={18} className="shrink-0 text-text-muted" />
         </div>
@@ -217,7 +217,7 @@ function ExerciseCardView({
   if (foldable && !reopened) {
     // Working sets only: warm-ups would inflate the total.
     const volumeKg = item.sets.reduce((sum, x) => (x.type === "warmup" ? sum : sum + (x.weightKg ?? 0) * (x.reps ?? 0)), 0);
-    const parts = [t("{n} sets", { n: item.sets.length })];
+    const parts = [t.n(item.sets.length, "{n} set", "{n} sets")];
     if (logType === "weight_reps" && volumeKg > 0) parts.push(`${Math.round(toDisplay(volumeKg, unit)).toLocaleString(t.locale)} ${unit}`);
     return (
       <section

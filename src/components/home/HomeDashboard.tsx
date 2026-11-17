@@ -673,7 +673,7 @@ function HeroLifts({ routine, byId }: { routine: Routine; byId: Record<string, E
       <LiftList
         items={sum.lines.map((l) => ({
           name: byId[l.exerciseId]?.name ?? t("Removed exercise"),
-          detail: l.reps ? `${l.sets}×${l.reps}` : t("{n} sets", { n: l.sets }),
+          detail: l.reps ? `${l.sets}×${l.reps}` : t.n(l.sets, "{n} set", "{n} sets"),
           superset: !!l.superset,
         }))}
       />
@@ -942,8 +942,8 @@ function startOfNext(next: NextProtocol, now: number): number {
 
 function ActiveCard() {
   const t = useT();
-  const now = useNow(1000);
   const active = useWorkoutStore((s) => s.active)!;
+  const now = useNow(1000, active.pausedAt === undefined);
   const { byId } = useAllExercises();
   const live = liveSet(active);
   // The next exercise with a set still to do, after the one on the bar now.
@@ -1420,7 +1420,7 @@ function TodayStrip({ next }: { next: NextProtocol | null }) {
   const router = useRouter();
   const active = useWorkoutStore((s) => s.active);
   const { byId } = useAllExercises();
-  const now = useNow(1000, active !== null);
+  const now = useNow(1000, active !== null && active.pausedAt === undefined);
   const live = active ? liveSet(active) : null;
   const paused = active?.pausedAt !== undefined && active !== null;
   return (

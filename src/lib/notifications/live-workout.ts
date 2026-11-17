@@ -85,6 +85,9 @@ export interface NativeLive {
   resumeLabel?: string;
   /** Short text for the status bar chip while paused, when no clock runs (Android 16). */
   pausedChip?: string;
+  /** On a locked screen only these show, never the exercise, weight or photo. */
+  lockTitle?: string;
+  lockRest?: string;
   /** Sets per exercise, and sets done: a segmented progress bar (Android 16 ProgressStyle). */
   progressSegments?: number[];
   progressDone?: number;

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { isNativeApp } from "@/lib/native/files";
+import { clearCameraShots, isNativeApp } from "@/lib/native/files";
 import { onLiveAction, setupNativeNotifications } from "@/lib/native/notify";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { applyCapsuleAction } from "@/lib/live-capsule";
@@ -46,6 +46,8 @@ export function NativeShell() {
   useEffect(() => {
     if (!isNativeApp()) return;
     document.documentElement.classList.add("native-app");
+    // Camera shots from the last run were read into the app then; their full-size copies go.
+    void clearCameraShots();
     const cleanups: (() => void)[] = [];
     let cancelled = false;
     const keep = (fn: () => void) => (cancelled ? fn() : cleanups.push(fn));

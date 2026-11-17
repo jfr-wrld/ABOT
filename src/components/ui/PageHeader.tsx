@@ -1,24 +1,28 @@
 import { BackLink } from "@/components/navigation/BackLink";
 import { ChevronLeft } from "@/components/icons";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 export function PageHeader({
   title,
   back,
   action,
   subtitle,
+  onBack,
 }: {
   title: string;
   /** Href of the parent page; renders a labelled back link. */
   back?: { href: string; label: string };
   action?: ReactNode;
   subtitle?: ReactNode;
+  /** Runs before the back link leaves; preventDefault() keeps the page (say, to ask first). */
+  onBack?: (e: MouseEvent<HTMLAnchorElement>) => void;
 }) {
   return (
     <header className="px-4 pt-4">
       {back && (
         <BackLink
           href={back.href}
+          onClick={onBack}
           className="glass-icon rounded-full inline-flex min-h-11 items-center gap-1 pr-3 pl-1 text-sm text-text"
         >
           <ChevronLeft aria-hidden="true" size={18} />

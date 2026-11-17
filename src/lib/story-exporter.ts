@@ -12,7 +12,7 @@ import { MUSCLE_GROUP_LABELS, type PRKind, type WeightUnit } from "@/types/worko
 import { regionsFor, type Region } from "@/components/anatomy/regions";
 import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT } from "@/components/anatomy/bodyPaths.generated";
 import type { StoryData, StorySet } from "@/lib/story-data";
-import { currentT } from "@/i18n";
+import { currentT, type T } from "@/i18n";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 import { MARK_PATH } from "@/components/brand/mark-path";
 import { END_CARD_AT, STILL_TIME, STORY_SECONDS, backOut, beat, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
@@ -252,10 +252,15 @@ export type { ShareResult };
  * Opens the system share sheet with the PNG. Call it straight from the tap: Safari only allows
  * sharing during the user's gesture, so the blob must already exist.
  */
+/** What the share sheet says with a workout story, in the app's language. */
+export function workoutShareText(t: T = currentT()): { title: string; text: string } {
+  return { title: t("ABOT Workout Story"), text: t("Crushed today's workout with ABOT ⚡") };
+}
+
 export function shareStoryPng(
   blob: Blob,
   fileName: string,
-  text: { title: string; text: string } = { title: "ABOT Workout Story", text: "Crushed today's workout with ABOT ⚡" },
+  text: { title: string; text: string } = workoutShareText(),
 ): Promise<ShareResult> {
   return shareFile(new File([blob], fileName, { type: "image/png" }), text);
 }

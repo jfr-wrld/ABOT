@@ -59,8 +59,10 @@ export function Sheet({
             <X aria-hidden="true" size={20} />
           </button>
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{children}</div>
-        {footer && (
+        {/* Closed, the contents are not drawn: a closed picker or menu re-rendered with every
+            keystroke of the screen behind it. */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{open && children}</div>
+        {open && footer && (
           <footer className="border-t border-line px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] sm:pb-3">
             {footer}
           </footer>

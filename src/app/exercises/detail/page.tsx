@@ -479,7 +479,7 @@ function HistoryCard({ session, exercise, unit }: { session: WorkoutSession; exe
             <li key={st.id} className="num flex items-center gap-3 text-sm">
               <SetTypeChip type={st.type} number={num} />
               <span className="w-28 shrink-0">
-                {setText(st, exercise.logType, unit, { isBodyweight: exercise.isBodyweight, reps: (n) => t("{n} reps", { n: String(n) }) })}
+                {setText(st, exercise.logType, unit, { isBodyweight: exercise.isBodyweight, reps: (n) => t.n(n, "{n} rep", "{n} reps") })}
               </span>
               <span aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-track">
                 <motion.span

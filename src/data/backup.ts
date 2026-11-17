@@ -9,7 +9,7 @@ import { WORKOUT_PHOTO_MAX_BYTES } from "@/lib/photo";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { DEFAULT_ENTITLEMENT, type EntitlementState } from "@/lib/entitlements";
 import { COVER_PRESET_IDS } from "@/lib/cover-presets";
-import { normalizePlan } from "@/lib/training-plan";
+import { normalizePlan } from "@/lib/plan-normalize";
 import type { Weekday, WorkoutSchedule } from "@/lib/notifications/schedule";
 
 export interface AbotBackup {

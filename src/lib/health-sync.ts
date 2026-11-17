@@ -21,6 +21,7 @@ interface HealthConnectNative {
   readLatestWeight(): Promise<{ kg?: number; at?: number; source?: string }>;
   readLastSleep(): Promise<{ minutes?: number; startMs?: number; endMs?: number; source?: string }>;
   openHealthConnect(): Promise<void>;
+  deleteWorkouts(opts: { ids: string[] }): Promise<void>;
 }
 
 // Never resolve a Promise to this object: Capacitor plugin proxies answer `then`.
@@ -83,11 +84,24 @@ export const HealthSyncService = {
         endMs: Math.max(workout.finishedAt, workout.startedAt + 60_000),
         title: workout.name,
         kcal,
-        version: workout.finishedAt,
+        // Always higher than the last send: Health Connect replaces a record only for a higher
+        // version, and an edited workout can end earlier than before (finishedAt went down).
+        version: Date.now(),
       });
       return { ok: true, kcal };
     } catch (e) {
       return { ok: false, reason: message(e) };
+    }
+  },
+
+  /** Delete my data: the workouts ABOT wrote to Health Connect go too. Quiet when it is not there. */
+  async forgetWorkouts(ids: string[]): Promise<void> {
+    if (!isNativeApp() || ids.length === 0) return;
+    try {
+      const { status } = await HealthConnect.availability();
+      if (status === "available") await HealthConnect.deleteWorkouts({ ids });
+    } catch {
+      // No permission or no Health Connect: there is nothing ABOT may delete there.
     }
   },
 

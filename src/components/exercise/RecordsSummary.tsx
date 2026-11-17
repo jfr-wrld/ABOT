@@ -63,7 +63,7 @@ export function RecordsSummary({ exercise, locationId }: { exercise: Exercise; l
         <dl className={`mt-2 grid gap-2 ${exercise.isBodyweight ? "grid-cols-1" : "grid-cols-3"}`}>
           {exercise.isBodyweight
             ? // Most work in one set: at the same body weight, the most reps.
-              tile("best_set_volume", t("Best set"), (r) => t("{n} reps", { n: r.reps }), () => "")
+              tile("best_set_volume", t("Best set"), (r) => t.n(r.reps, "{n} rep", "{n} reps"), () => "")
             : [
                 tile("heaviest_weight", t("Heaviest weight"), (r) => formatWeight(r.weightKg, weightUnit), (r) => t("× {reps}", { reps: r.reps })),
                 tile("best_1rm", t("Best 1RM (est.)"), (r) => formatWeight(r.value, weightUnit), (r) => `${formatWeight(r.weightKg, weightUnit, false)} × ${r.reps}`),

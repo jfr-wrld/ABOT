@@ -115,7 +115,7 @@ export function WorkoutCalendar({
                   <span className="min-w-0 truncate text-sm font-semibold">{s.name}</span>
                   <span className="min-w-0 truncate pl-2 text-right text-xs text-text-muted">
                     {gyms[s.locationId ?? ""] ? `${gyms[s.locationId!]} · ` : ""}
-                    {formatDuration(sessionDurationSec(s))} · {t("{n} sets", { n: countSets(s).completed })}
+                    {formatDuration(sessionDurationSec(s))} · {t.n(countSets(s).completed, "{n} set", "{n} sets")}
                   </span>
                 </Link>
               </li>

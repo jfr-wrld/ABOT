@@ -116,7 +116,12 @@ function Group({ title, items, now, unread = false }: { title: string; items: In
                 <span className={`block text-sm ${unread ? "font-semibold text-text" : "text-text-muted"}`}>{text}</span>
                 <span className="num mt-0.5 block text-xs text-text-muted">{relativeDay(i.at, now, t)}</span>
               </span>
-              {unread && <span aria-label={t("New")} className="size-2 shrink-0 rounded-full bg-accent" />}
+              {unread && (
+                <span className="size-2 shrink-0 rounded-full bg-accent">
+                  {/* A plain span's aria-label is not read out; text is. */}
+                  <span className="sr-only">{t("New")}</span>
+                </span>
+              )}
               {i.href && <ChevronRight aria-hidden="true" size={16} className="shrink-0 text-text-muted" />}
             </>
           );

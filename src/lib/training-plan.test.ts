@@ -106,3 +106,12 @@ describe("training plan", () => {
     expect(ok?.routineStamps).toEqual({ r: 5 });
   });
 });
+
+describe("normalizePlan stays in step with the plan builder", () => {
+  it("accepts every split and day count the builder offers", async () => {
+    const { SPLIT_LABEL, PLAN_DAYS, normalizePlan } = await import("./training-plan");
+    for (const split of Object.keys(SPLIT_LABEL))
+      for (const days of PLAN_DAYS)
+        expect(normalizePlan({ goal: "muscle", level: "new", days, weekdays: [1], place: "gym", split })).not.toBeNull();
+  });
+});

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Routine } from "@/types/workout";
 import { Tabs, tabPanelProps } from "@/components/ui/Tabs";
-import { TemplateVault } from "@/components/routines/TemplateVault";
+import dynamic from "next/dynamic";
 import { RoutineCard } from "@/components/routines/RoutineCard";
 import { routineEditPath } from "@/lib/routes";
 import { useT, type T } from "@/i18n";
@@ -25,6 +25,9 @@ import { LIST_ITEM } from "@/components/motion/listItem";
 import { useShake } from "@/lib/useShake";
 import { EmptyArt } from "@/components/ui/EmptyArt";
 import { ViewToggle, useViewMode } from "@/components/ui/ViewToggle";
+// Its templates draw on the whole exercise catalogue (about 180 KB): loaded once the list shows,
+// so the logger (which mounts this library) does not wait for it.
+const TemplateVault = dynamic(() => import("@/components/routines/TemplateVault").then((m) => m.TemplateVault));
 
 /**
  * The Workout tab when no workout is running: an empty start, then My Routines and the Template

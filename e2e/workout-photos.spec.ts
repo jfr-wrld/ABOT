@@ -193,7 +193,8 @@ test.describe("gyms from the map", () => {
     await expect(list.getByRole("button").first()).toContainText("Iron Temple Kemang");
     await expect(list.getByRole("button").first()).toContainText("Jl. Kemang Raya 12");
     await expect(page.getByText("Map data © OpenStreetMap contributors")).toBeVisible();
-    expect(queries[0]).toContain("around:3000,-6.260700,106.813700");
+    // Rounded to about 110 m before it leaves the phone.
+    expect(queries[0]).toContain("around:3000,-6.261,106.814");
     await expectNoHorizontalOverflow(page);
 
     await list.getByRole("button", { name: "Add Iron Temple Kemang" }).click();
