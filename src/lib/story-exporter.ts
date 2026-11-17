@@ -15,6 +15,7 @@ import type { StoryData, StorySet } from "@/lib/story-data";
 import { currentT, type T } from "@/i18n";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 import { MARK_PATH } from "@/components/brand/mark-path";
+import { STORY_OBJECT_PATHS } from "@/lib/story-objects.generated";
 import { END_CARD_AT, STILL_TIME, STORY_SECONDS, backOut, beat, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
 
 /**
@@ -32,6 +33,10 @@ export const STORY_KEYS = [
   "Vault unchanged", "Also lifted", "New record", "No record fell this time. Top sets from the session:",
   "No loaded sets in this workout.", "Total volume", "Line-up", "Strength edition", "The cover story", "{n} sets",
   "Logged with ABOT", "{n} set",
+  "Like lifting {n} cat", "Like lifting {n} cats", "Like lifting {n} bike", "Like lifting {n} bikes",
+  "Like lifting {n} fridge", "Like lifting {n} fridges", "Like lifting {n} car", "Like lifting {n} cars",
+  "Like lifting {n} elephant", "Like lifting {n} elephants", "Like lifting {n} bus", "Like lifting {n} buses",
+  "Like lifting {n} plane", "Like lifting {n} planes",
 ];
 
 export const STORY_WIDTH = 1080;
@@ -99,6 +104,45 @@ export interface StoryOptions {
   founderBadge?: string | null;
   /** Clean only: where its text block sits. Bottom left when not given. */
   textPosition?: TextPosition;
+  /** Clean only: a muscle map or a "like lifting 2 cars" picture above the text. None when not given. */
+  cleanExtra?: CleanExtra;
+}
+
+export type CleanExtra = "none" | "muscles" | "compare";
+
+export const CLEAN_EXTRAS: { id: CleanExtra; label: string }[] = [
+  { id: "none", label: "Text only" },
+  { id: "muscles", label: "Muscle map" },
+  { id: "compare", label: "Comparison" },
+];
+
+/**
+ * Everyday things by their weight, for "like lifting 2 elephants". Rounded, typical weights:
+ * a house cat, a road bike, a fridge, a family car, an African elephant, a city bus, and a
+ * narrow-body airliner empty.
+ */
+export const LIFT_OBJECTS = [
+  { id: "cat", kg: 4, one: "Like lifting {n} cat", other: "Like lifting {n} cats" },
+  { id: "bicycle", kg: 15, one: "Like lifting {n} bike", other: "Like lifting {n} bikes" },
+  { id: "fridge", kg: 90, one: "Like lifting {n} fridge", other: "Like lifting {n} fridges" },
+  { id: "car", kg: 1500, one: "Like lifting {n} car", other: "Like lifting {n} cars" },
+  { id: "elephant", kg: 6000, one: "Like lifting {n} elephant", other: "Like lifting {n} elephants" },
+  { id: "bus", kg: 12000, one: "Like lifting {n} bus", other: "Like lifting {n} buses" },
+  { id: "airplane", kg: 41000, one: "Like lifting {n} plane", other: "Like lifting {n} planes" },
+] as const;
+
+export type LiftObject = (typeof LIFT_OBJECTS)[number];
+
+/**
+ * The biggest thing the volume covers at least once, and how many of it: 9,000 kg is 1.5
+ * elephants. Counts under 10 keep one decimal, so the number reads as earned, not inflated.
+ * Below one cat, it is a share of a cat.
+ */
+export function liftComparison(volumeKg: number): { object: LiftObject; count: number } {
+  const object = [...LIFT_OBJECTS].reverse().find((o) => volumeKg >= o.kg) ?? LIFT_OBJECTS[0];
+  const raw = volumeKg / object.kg;
+  const count = raw < 10 ? Math.round(raw * 10) / 10 : Math.round(raw);
+  return { object, count };
 }
 
 /** The nine places Clean can put its text: rows top, middle, bottom by columns left, centre, right. */
@@ -1581,6 +1625,71 @@ function drawHandle(s: Scene) {
 /* ------------------------------------------------------------------ */
 
 const CLEAN_MARGIN = 72;
+const CLEAN_MAP_W = 440;
+const CLEAN_MAP_H = Math.round((CLEAN_MAP_W * 1360) / 1448);
+const CLEAN_OBJECT = 210;
+
+const objectCache = new Map<string, { path: Path2D; evenOdd: boolean; opacity: number }[]>();
+
+/** A thing to lift, `size` square, from its Solar shape (or the elephant, drawn here). */
+function drawLiftObject(ctx: Ctx, id: string, x: number, y: number, size: number, color: string) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(size / 24, size / 24);
+  ctx.fillStyle = color;
+  if (id === "elephant") {
+    drawElephant(ctx, color);
+  } else {
+    let parts = objectCache.get(id);
+    if (!parts) {
+      parts = (STORY_OBJECT_PATHS[id] ?? []).map((p) => ({ path: new Path2D(p.d), evenOdd: p.evenOdd, opacity: p.opacity }));
+      objectCache.set(id, parts);
+    }
+    for (const p of parts) {
+      ctx.globalAlpha = p.opacity;
+      ctx.fill(p.path, p.evenOdd ? "evenodd" : "nonzero");
+    }
+  }
+  ctx.restore();
+}
+
+/** Solar has no elephant: one in the same flat, rounded style, on a 24-unit grid, facing left. */
+function drawElephant(ctx: Ctx, color: string) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(8, 7, 13.4, 8.6, 3.8);
+  ctx.arc(7.4, 10.4, 4.3, 0, Math.PI * 2);
+  ctx.fill();
+  for (const [lx, top] of [[9.2, 13.6], [12.4, 13.6], [15.9, 13.6], [18.8, 13.2]] as const) {
+    ctx.beginPath();
+    ctx.roundRect(lx, top, 2.6, 20.4 - top, 1);
+    ctx.fill();
+  }
+  ctx.strokeStyle = color;
+  ctx.lineCap = "round";
+  // Trunk.
+  ctx.lineWidth = 2.3;
+  ctx.beginPath();
+  ctx.moveTo(4.4, 11.6);
+  ctx.quadraticCurveTo(2.6, 14.6, 3.4, 18.4);
+  ctx.stroke();
+  // Tail.
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(21.2, 9.4);
+  ctx.lineTo(22.7, 12.8);
+  ctx.stroke();
+  // Ear and eye, as darker marks on the shape.
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.38)";
+  ctx.lineWidth = 0.75;
+  ctx.beginPath();
+  ctx.ellipse(10, 10.6, 2.5, 3.3, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.beginPath();
+  ctx.arc(6.5, 9.6, 0.55, 0, Math.PI * 2);
+  ctx.fill();
+}
 
 /**
  * Where Clean's text block of height `h` goes: its anchor x, its top, and how its lines align.
@@ -1613,9 +1722,14 @@ function clean(s: Scene) {
   const stats = [formatVolume(data.volumeKg, unit), formatDuration(data.durationSec), t.n(data.setsDone, "{n} set", "{n} sets")].join(" · ");
   const handle = data.handle?.trim();
   const showMark = !opts.hideWatermark;
+  const extra = opts.cleanExtra ?? "none";
+  const compare = extra === "compare" ? liftComparison(data.volumeKg) : null;
+  // Above the text: the muscle map, or the thing lifted with its line.
+  const extraH = extra === "muscles" ? CLEAN_MAP_H + 36 : compare ? CLEAN_OBJECT + 18 + 44 + 36 : 0;
   // Line by line: the date, the title, the figures, then the handle and the mark when they show.
-  const h = 28 + 24 + 72 + (title.length - 1) * 80 + 18 + 34 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
+  const h = extraH + 28 + 24 + 72 + (title.length - 1) * 80 + 18 + 34 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
   const { x, top, align } = cleanBlockOrigin(position, h);
+  const leftOf = (w: number) => (align === "left" ? x : align === "right" ? x - w : x - w / 2);
 
   // The shade behind the text (with a photo) or a faint Volt glow (without one).
   const cx = align === "left" ? x + inner * 0.35 : align === "right" ? x - inner * 0.35 : x;
@@ -1651,7 +1765,18 @@ function clean(s: Scene) {
   ctx.save();
   ctx.globalAlpha = p;
   ctx.translate(0, (1 - p) * 24);
-  let y = top + 28;
+  let y = top;
+  if (extra === "muscles") {
+    drawBody(ctx, leftOf(CLEAN_MAP_W), y, CLEAN_MAP_W, regionHeat(data).heat);
+    y += CLEAN_MAP_H + 36;
+  } else if (compare) {
+    drawLiftObject(ctx, compare.object.id, leftOf(CLEAN_OBJECT), y, CLEAN_OBJECT, VOLT);
+    const n = compare.count.toLocaleString(t.locale, { maximumFractionDigits: 1 });
+    y += CLEAN_OBJECT + 18 + 44;
+    text(s, t.n(compare.count, compare.object.one, compare.object.other, { n }), x, y, { size: 44, weight: 800, color: VOLT, align, maxWidth: inner });
+    y += 36;
+  }
+  y += 28;
   text(s, dateLabel(data), x, y, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 });
   y += 24 + 72;
   for (const line of title) {

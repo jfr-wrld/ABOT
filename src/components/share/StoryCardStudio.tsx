@@ -36,6 +36,8 @@ import {
   type StoryPresetId,
   TEXT_POSITIONS,
   type TextPosition,
+  CLEAN_EXTRAS,
+  type CleanExtra,
 } from "@/lib/story-exporter";
 import { openSaved, type SaveResult } from "@/lib/native/files";
 import { openPhotoInput } from "@/lib/native/photo-input";
@@ -194,6 +196,7 @@ function Studio({
   const [tab, setTab] = useState<Tab>("layout");
   const [preset, setPreset] = useState<StoryPresetId>("clean");
   const [textPosition, setTextPosition] = useState<TextPosition>("bottom-left");
+  const [cleanExtra, setCleanExtra] = useState<CleanExtra>("none");
   const [fonts, setFonts] = useState<StoryFonts | null>(null);
   const [fontsFailed, setFontsFailed] = useState(false);
   const [photo, setPhoto] = useState<StoryPhoto | null>(null);
@@ -226,8 +229,8 @@ function Studio({
   const presetLocked = !proActive && isProPreset(preset);
   const founderBadge = founderBadgeOn && isFounder ? founderUnitCode : null;
   const opts = useMemo<StoryOptions>(
-    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge, textPosition }),
-    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge, textPosition],
+    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge, textPosition, cleanExtra }),
+    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge, textPosition, cleanExtra],
   );
   const exportKey = useMemo(() => ({ card, opts }), [card, opts]);
   // Image (the PNG, as before) or Video (the same card in motion, PRO for a workout).
@@ -296,7 +299,7 @@ function Studio({
     return () => cancelAnimationFrame(raf);
     // The preset itself does not change any thumbnail.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card, photo, overlay, grayscale, fonts, tab, textPosition]);
+  }, [card, photo, overlay, grayscale, fonts, tab, textPosition, cleanExtra]);
 
   // The PNG is made ahead of the tap: Safari only opens the share sheet inside the tap itself.
   useEffect(() => {
@@ -511,7 +514,9 @@ function Studio({
           </ul>
         )}
 
-        {tab === "text" && preset === "clean" && <TextPositionPicker value={textPosition} onChange={setTextPosition} />}
+        {tab === "text" && preset === "clean" && (
+          <TextPositionPicker value={textPosition} onChange={setTextPosition} extra={cleanExtra} onExtra={setCleanExtra} />
+        )}
 
         {tab === "pro" && (
           <div className="flex h-full flex-col justify-center gap-2">
@@ -703,7 +708,17 @@ function isProPreset(id: StoryPresetId): boolean {
  * Where Clean's text goes: a small story-shaped frame of nine spots. Arrow keys move between
  * them, as in any radio group; only the chosen spot is in the tab order.
  */
-function TextPositionPicker({ value, onChange }: { value: TextPosition; onChange: (p: TextPosition) => void }) {
+function TextPositionPicker({
+  value,
+  onChange,
+  extra,
+  onExtra,
+}: {
+  value: TextPosition;
+  onChange: (p: TextPosition) => void;
+  extra: CleanExtra;
+  onExtra: (e: CleanExtra) => void;
+}) {
   const t = useT();
   const group = useRef<HTMLDivElement>(null);
   const move = (dx: number, dy: number) => {
@@ -750,10 +765,30 @@ function TextPositionPicker({ value, onChange }: { value: TextPosition; onChange
           );
         })}
       </div>
-      <p className="min-w-0 text-xs text-text-muted">
-        <span className="block text-sm font-semibold text-text">{t(TEXT_POSITIONS.find((p) => p.id === value)!.label)}</span>
-        {t("Put the text where the photo has room for it.")}
-      </p>
+      {/* What sits above the text: nothing, the muscles worked, or what the volume equals. */}
+      <div role="radiogroup" aria-label={t("Above the text")} className="flex min-w-0 flex-1 flex-col gap-1">
+        {CLEAN_EXTRAS.map((e) => {
+          const on = e.id === extra;
+          return (
+            <button
+              key={e.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => {
+                if (!on) feedback.tick();
+                onExtra(e.id);
+              }}
+              className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 text-left text-sm font-semibold transition-colors ${
+                on ? "border-accent bg-accent/10 text-text" : "border-line-strong bg-surface-2 text-text-muted hover:text-text"
+              }`}
+            >
+              <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${on ? "bg-accent" : "bg-text-muted/40"}`} />
+              <span className="truncate">{t(e.label)}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

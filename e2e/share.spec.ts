@@ -96,6 +96,16 @@ test("Clean puts its few lines where the lifter chooses, and only Clean has the 
     .not.toBe(before);
   await expectNoHorizontalOverflow(page);
 
+  // Above the text: the muscles worked, or what the volume equals.
+  const above = dialog.getByRole("radiogroup", { name: "Above the text" });
+  await expect(above.getByRole("radio", { name: "Text only" })).toHaveAttribute("aria-checked", "true");
+  for (const name of ["Muscle map", "Comparison"]) {
+    const was = await dialog.getByRole("img", { name: /story card/ }).evaluate((c: HTMLCanvasElement) => c.toDataURL());
+    await above.getByRole("radio", { name }).click();
+    await expect(above.getByRole("radio", { name })).toHaveAttribute("aria-checked", "true");
+    await expect.poll(() => dialog.getByRole("img", { name: /story card/ }).evaluate((c: HTMLCanvasElement) => c.toDataURL())).not.toBe(was);
+  }
+
   const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Download High-Res PNG" }).click()]);
   expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-clean\.png$/);
 
