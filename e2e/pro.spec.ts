@@ -104,7 +104,7 @@ test("Story Studio: free layouts export, PRO layouts and the watermark switch as
   await page.getByRole("button", { name: "Share to IG Story" }).click();
   const studio = page.getByRole("dialog", { name: "Share to Instagram Story" });
   await expect(studio.getByRole("button", { name: "Download High-Res PNG" })).toBeEnabled();
-  await studio.getByRole("button", { name: "Brutalist Receipt", exact: true }).click();
+  await studio.getByRole("button", { name: "Sidebar", exact: true }).click();
   await expect(studio.getByText("PRO layout preview")).toBeVisible();
   await studio.getByRole("button", { name: "Download High-Res PNG" }).click();
   const pay = page.getByRole("dialog", { name: "ABOT Pro" });

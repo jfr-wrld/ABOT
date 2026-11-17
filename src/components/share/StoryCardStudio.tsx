@@ -359,8 +359,6 @@ function Studio({
   }, [workoutPhotos, pickWorkoutPhoto]);
 
   const current = STORY_PRESETS.find((p) => p.id === preset) ?? STORY_PRESETS[0];
-  // The Editorial cover is always black and white.
-  const forcedGray = preset === "editorial";
   const description =
     t("{layout} story card: {title}, {volume}, {duration}, {sets} sets", {
       layout: current.name,
@@ -623,12 +621,11 @@ function Studio({
                 <button
                   type="button"
                   role="switch"
-                  aria-checked={forcedGray || grayscale}
-                  aria-label={forcedGray ? t("Grayscale photo (always on for Monochrome Steel)") : t("Grayscale photo")}
-                  disabled={forcedGray}
+                  aria-checked={grayscale}
+                  aria-label={t("Grayscale photo")}
                   onClick={() => setGrayscale((g) => !g)}
                   className={`h-9 shrink-0 rounded-full border px-3 text-xs font-semibold transition-colors disabled:opacity-50 ${
-                    forcedGray || grayscale ? "border-accent bg-accent text-black" : "border-line-strong bg-surface-2 text-text"
+                    grayscale ? "border-accent bg-accent text-black" : "border-line-strong bg-surface-2 text-text"
                   }`}
                 >
                   B&amp;W
@@ -708,7 +705,7 @@ const TABS: { id: Tab; label: string; icon: typeof Camera }[] = [
 
 /**
  * Clean is always free. Of the other layouts, those after the free ones (two by default; Mission
- * Control sets it) are ABOT Pro. Counting Clean apart keeps Matchday and Thermal Matrix free.
+ * Control sets it) are ABOT Pro. Counting Clean apart keeps the first two sport layouts free.
  */
 function isProPreset(id: StoryPresetId): boolean {
   if (id === "clean") return false;

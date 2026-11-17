@@ -87,6 +87,13 @@ export const DYNAMIC_KEYS: string[] = [
   "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su",
   // STORY_PRESETS blurbs (layout tooltips in the Story Studio; copied, story-exporter needs a DOM)
   "Your photo first, a few quiet lines",
+  "Your volume, poster size, over your photo",
+  "Your best set of the day, front and centre",
+  "Your photo, the numbers stacked beside it",
+  "Every lift listed under your photo",
+  "Four big numbers in a grid under your photo",
+  "Muscle map lit by sets worked",
+  "Records first, engraved in gold",
   // TEXT_POSITIONS labels (Clean's text spots)
   "Top left", "Top", "Top right", "Left", "Center", "Right", "Bottom left", "Bottom", "Bottom right",
   "Middle",
@@ -95,7 +102,7 @@ export const DYNAMIC_KEYS: string[] = [
   "Full-time scoreboard: your volume is the score",
   "Muscle map lit by sets worked",
   "Every set itemised like a till slip",
-  "A magazine cover, your top lift the story",
+  "Four big numbers in a grid under your photo",
   "Level cleared: score, XP and a star per record",
   "Each lift a plate on the bar, sized by its volume",
   "Records first, engraved in gold",

@@ -27,7 +27,7 @@ export function useStoryVideo({
   /** The card the video shows; a different object means a different video. */
   key: object;
   draw: ((ctx: CanvasRenderingContext2D, time: number) => void) | null;
-  /** The name without extension, e.g. "abot-story-2026-11-13-matchday". */
+  /** The name without extension, e.g. "abot-story-2026-11-13-clean". */
   fileName: string;
   shareText: { title: string; text: string };
 }) {

@@ -1,7 +1,7 @@
 /**
  * Renders a few frames of every composition to PNG, for reviewing the motion without Studio.
  *   npm run frames                      all compositions, frames 0, 1 s, 2 s, 3 s, 4.5 s, 6 s, 6.7 s
- *   npm run frames -- workout-arcade    one composition
+ *   npm run frames -- workout-headline    one composition
  * Test renders only (--is-production=false). Set REMOTION_BROWSER to use an installed Chrome
  * instead of the one Remotion downloads (for a machine that cannot reach remotion.media).
  */
@@ -10,7 +10,7 @@ import { mkdirSync } from "node:fs";
 
 const ids = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ["matchday", "thermal-matrix", "brutalist-receipt", "editorial", "arcade", "loaded-bar", "trophy-vault", "volt-poster"].map((p) => `workout-${p}`).concat("streak");
+  : ["clean", "headline", "top-set", "sidebar", "lineup", "grid", "thermal-matrix", "trophy-vault"].map((p) => `workout-${p}`).concat("streak");
 const frames = [0, 30, 60, 90, 135, 180, 201].join(",");
 for (const id of ids) {
   const out = `out/frames/${id}`;

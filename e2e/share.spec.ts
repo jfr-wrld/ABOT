@@ -2,7 +2,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, reachSummary, waitForSavedSetting } from "./helpers";
 
-const LAYOUTS = ["Clean", "Matchday", "Thermal Matrix", "Brutalist Receipt", "Editorial", "Arcade", "Loaded Bar", "Trophy Vault", "Volt Poster"];
+const LAYOUTS = ["Clean", "Headline", "Top Set", "Sidebar", "Lineup", "Grid", "Thermal Matrix", "Trophy Vault"];
 
 /** Logs one bench set and finishes; the app lands on the new summary page. */
 async function finishOneSet(page: Page) {
@@ -63,7 +63,7 @@ test("the studio switches between every layout and downloads a 1080 x 1920 PNG",
     page.waitForEvent("download"),
     dialog.getByRole("button", { name: "Download High-Res PNG" }).click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-volt-poster\.png$/);
+  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-trophy-vault\.png$/);
   const file = await download.path();
   const { readFileSync } = await import("node:fs");
   const head = readFileSync(file).subarray(16, 24);
@@ -121,7 +121,7 @@ test("Clean puts its few lines where the lifter chooses, and only Clean has the 
 
   // Another layout places its own text: the tab goes.
   await dialog.getByRole("tab", { name: "Layout" }).click();
-  await dialog.getByRole("button", { name: "Matchday", exact: true }).click();
+  await dialog.getByRole("button", { name: "Headline", exact: true }).click();
   await expect(dialog.getByRole("tab", { name: "Text" })).toHaveCount(0);
 });
 
@@ -141,11 +141,6 @@ test("a background photo brings the overlay and grayscale controls", async ({ pa
   await expect(gray).toHaveAttribute("aria-checked", "false");
   await gray.click();
   await expect(gray).toHaveAttribute("aria-checked", "true");
-  await dialog.getByRole("tab", { name: "Layout" }).click();
-  // The Editorial cover is always black and white.
-  await dialog.getByRole("button", { name: "Editorial", exact: true }).click();
-  await dialog.getByRole("tab", { name: /^Photo/ }).click();
-  await expect(gray).toBeDisabled();
 
   await dialog.getByRole("button", { name: "Remove background photo" }).click();
   await expect(slider).toHaveCount(0);
@@ -220,14 +215,14 @@ test("the studio opens and exports with the network cut", async ({ page, context
   await finishOneSet(page);
   await context.setOffline(true);
   const dialog = await openStudio(page);
-  await dialog.getByRole("button", { name: "Brutalist Receipt", exact: true }).click();
+  await dialog.getByRole("button", { name: "Lineup", exact: true }).click();
   // A new layout remakes the PNG; the button is disabled until it is ready.
   await expect(dialog.getByRole("button", { name: "Download High-Res PNG" })).toBeEnabled();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     dialog.getByRole("button", { name: "Download High-Res PNG" }).click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(/-brutalist-receipt\.png$/);
+  expect(download.suggestedFilename()).toMatch(/-lineup\.png$/);
   await context.setOffline(false);
 });
 
