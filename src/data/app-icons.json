@@ -1,0 +1,8 @@
+[
+  { "id": "classic", "label": "Classic", "bg": "#09090b", "fg": "#ccff00" },
+  { "id": "inverse", "label": "Inverse", "bg": "#ccff00", "fg": "#09090b" },
+  { "id": "night", "label": "Night", "bg": "#000000", "fg": "#ffffff" },
+  { "id": "paper", "label": "Paper", "bg": "#ffffff", "fg": "#09090b" },
+  { "id": "ocean", "label": "Ocean", "bg": "#1d4ed8", "fg": "#ffffff" },
+  { "id": "ember", "label": "Ember", "bg": "#ea580c", "fg": "#ffffff" }
+]

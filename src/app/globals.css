@@ -152,11 +152,11 @@
   background-color: #18181b;
 }
 
-/* The app icon as a small tile (Get the app): black with the Volt mark, exactly as on the phone,
-   in both themes (owner, 2026-11-16). Black reads on white, so nothing needs to change there. */
+/* The app icon as a small tile: the chosen icon's colours (Settings > Appearance > App icon,
+   lib/app-icons), exactly as on the phone, in both themes. Classic is black with the Volt mark. */
 .logo-tile {
-  background: #000;
-  color: #ccff00;
+  background: var(--logo-bg, #09090b);
+  color: var(--logo-fg, #ccff00);
 }
 
 /* Volt where its contrast holds, on light pages (owner, 2026-11-16): pressable fills big enough

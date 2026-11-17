@@ -19,6 +19,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AppPermissionsPlugin.class);
         registerPlugin(HealthConnectPlugin.class);
         registerPlugin(AppUpdatePlugin.class);
+        registerPlugin(AppIconPlugin.class);
         super.onCreate(savedInstanceState);
         // A full load of a deep route (/permissions/) shows that route, not Home.
         getBridge().setWebViewClient(new RoutePageClient(getBridge()));

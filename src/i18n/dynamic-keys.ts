@@ -99,6 +99,8 @@ export const DYNAMIC_KEYS: string[] = [
   "Middle",
   // ACCENT_SWATCHES names (Settings > Appearance)
   "Volt", "Blue", "Red", "Orange", "Purple", "Pink", "Cyan", "White",
+  // APP_ICONS names (Settings > Appearance > App icon)
+  "Classic", "Inverse", "Night", "Paper", "Ocean", "Ember",
   // CLEAN_EXTRAS labels
   "Text", "Muscles", "Radar", "Compare",
   "Full-time scoreboard: your volume is the score",

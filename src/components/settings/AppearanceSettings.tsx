@@ -8,15 +8,19 @@ import { ACCENT_SWATCHES, DEFAULT_ACCENT, isHex, isVeryDark } from "@/lib/accent
 import { feedback } from "@/lib/feedback";
 import { useT } from "@/i18n";
 import { Choice } from "./controls";
+import { AbotMark } from "@/components/brand/AbotMark";
+import { APP_ICONS } from "@/lib/app-icons";
+import { isNativeApp } from "@/lib/native/files";
 
 /**
  * Settings > General > Appearance: the primary colour (eight swatches or any colour from the
- * picker, with a small live preview) and raised 3D or flat components.
+ * picker, with a small live preview), the app icon, and raised 3D or flat components.
  */
 export function AppearanceSettings() {
   const t = useT();
   const accent = useSettingsStore((s) => s.accentColor);
   const style = useSettingsStore((s) => s.componentStyle);
+  const icon = useSettingsStore((s) => s.appIcon);
   const update = useSettingsStore((s) => s.update);
   const picker = useRef<HTMLInputElement>(null);
   const current = isHex(accent) ? accent.toLowerCase() : DEFAULT_ACCENT;
@@ -89,6 +93,39 @@ export function AppearanceSettings() {
           <span className="chip rounded-full px-3 py-1.5 text-xs font-semibold text-accent-text">{t("Push")}</span>
           <span className="size-8 rounded-full border-4 border-accent" />
         </div>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 text-sm font-semibold">{t("App icon")}</legend>
+        <div role="radiogroup" aria-label={t("App icon")} className="grid grid-cols-6 gap-2">
+          {APP_ICONS.map((ic) => {
+            const on = ic.id === icon;
+            return (
+              <button
+                key={ic.id}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                aria-label={t(ic.label)}
+                title={t(ic.label)}
+                onClick={() => {
+                  if (!on) feedback.tick();
+                  update({ appIcon: ic.id });
+                }}
+                className={`flex aspect-square min-h-11 items-center justify-center rounded-[14px] border-2 p-0.5 ${on ? "border-text" : "border-transparent"}`}
+              >
+                <span className="flex size-full items-center justify-center rounded-[11px] border border-ink/10" style={{ background: ic.bg, color: ic.fg }}>
+                  <AbotMark size={24} />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-text-muted">
+          {isNativeApp()
+            ? t("The icon on your home screen changes too. Some phones close ABOT once while they redraw it.")
+            : t("Used for the logo in the app and the browser tab.")}
+        </p>
       </fieldset>
 
       <Choice

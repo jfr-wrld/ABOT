@@ -37,3 +37,14 @@ test("flat components lose their raise", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-style", "flat");
   expect(await preview.evaluate((el) => getComputedStyle(el).boxShadow)).toBe("none");
 });
+
+test("a chosen app icon colours the logo tile in the app", async ({ page }) => {
+  await page.goto("/settings?section=general");
+  const icons = page.getByRole("radiogroup", { name: "App icon" });
+  await expect(icons.getByRole("radio", { name: "Classic" })).toHaveAttribute("aria-checked", "true");
+  await icons.getByRole("radio", { name: "Ocean" }).click();
+  await waitForSavedSetting(page, "appIcon", "ocean");
+  await page.goto("/");
+  const tile = page.locator(".logo-tile").first();
+  await expect.poll(() => tile.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(29, 78, 216)");
+});
