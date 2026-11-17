@@ -573,6 +573,13 @@ function timeOf(ts: number) {
 }
 
 /** "12.3k kg" -> ["12.3k", "kg"] so the figure and the unit can be sized apart. */
+/** The whole figure for a hero number ("12,450" and "kg"); a million and up reads "1.2M". */
+function bigVolume(kg: number, unit: WeightUnit, locale: string): [string, string] {
+  const v = unit === "kg" ? kg : kg / 0.45359237;
+  const figure = v >= 1e6 ? `${(v / 1e6).toLocaleString(locale, { maximumFractionDigits: 1 })}M` : Math.round(v).toLocaleString(locale);
+  return [figure, unit];
+}
+
 function volumeParts(kg: number, unit: WeightUnit): [string, string] {
   const v = formatVolume(kg, unit);
   const i = v.lastIndexOf(" ");
@@ -1821,16 +1828,15 @@ function clean(s: Scene) {
   // Above the text, in its own units: the muscle map, or the thing lifted with its two lines.
   const radar = extra === "radar" ? radarAxes(data) : null;
   const extraH = extra === "muscles" ? CLEAN_MAP_H + 36 : radar ? CLEAN_RADAR_H + 18 + 44 + 36 : compare ? CLEAN_OBJECT + 18 + 52 + 12 + 32 + 40 : 0;
-  const textH = (lines: number) => 28 + 24 + 72 + (lines - 1) * 80 + 18 + 34 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
-  let title = wrap(s, data.title, inner / kText, 72, 800, 2);
+  // The workout's name and date small; volume, time and sets are the story.
+  const textH = () => 34 + 32 + 56 + 128 + 56 + 72 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
   const room = SAFE_BOTTOM - SAFE_TOP;
-  const tall = extraH * kExtra + textH(title.length) * kText;
+  const tall = extraH * kExtra + textH() * kText;
   if (tall > room) {
     kText *= room / tall;
     kExtra *= room / tall;
-    title = wrap(s, data.title, inner / kText, 72, 800, 2);
   }
-  const h = extraH * kExtra + textH(title.length) * kText;
+  const h = extraH * kExtra + textH() * kText;
   const { x, top, align } = cleanBlockOrigin(position, h);
   // Inside the block, x = 0 is the anchor: lines align to it, pictures sit beside it.
   const leftOf = (w: number) => (align === "left" ? 0 : align === "right" ? -w : -w / 2);
@@ -1941,26 +1947,64 @@ function clean(s: Scene) {
   ctx.translate(0, extraH * kExtra);
   ctx.scale(kText, kText);
   const width = inner / kText;
-  // The text follows the picture, line by line.
+  // The text follows the picture: name and date, then the figures, each counting into place.
   const from = extra === "none" ? 0.15 : extra === "muscles" ? 1.5 : extra === "radar" ? 2 : 2.05;
-  let y = 28;
-  enter(from, () => text(s, dateLabel(data), 0, 28, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 }));
-  y += 24 + 72;
-  for (const line of title) {
-    const at = y;
-    enter(from + 0.12, () => text(s, line, 0, at, { size: 72, weight: 800, align, tracking: -1.5 }));
-    y += 80;
-  }
-  y += 18 + 34 - 80;
-  // Volume counts up with the stats line.
-  const volRun = beat(time, from + 0.24, 0.9, easeOut);
-  const statsNow = [formatVolume(countUp(data.volumeKg, volRun), unit), formatDuration(data.durationSec), t.n(data.setsDone, "{n} set", "{n} sets")].join(" · ");
-  const statsY = y;
-  enter(from + 0.24, () => text(s, statsNow, 0, statsY, { size: 34, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.92)", align, maxWidth: width }));
+  const soft = "rgba(244, 244, 245, 0.62)";
+  /** Where a group `w` wide starts so it sits on the block's alignment. */
+  const startOf = (w: number) => (align === "left" ? 0 : align === "right" ? -w : -w / 2);
+  const measure = (str: string, size: number, weight: number, family: Family = "sans") => {
+    setFont(s, size, weight, family);
+    return ctx.measureText(str).width;
+  };
+  let y = 34;
+  enter(from, () => text(s, data.title, 0, 34, { size: 34, weight: 700, align, maxWidth: width }));
+  y += 32;
+  const dateY = y;
+  enter(from + 0.06, () => text(s, dateLabel(data), 0, dateY, { size: 22, weight: 500, family: "mono", color: soft, align, tracking: 1 }));
+
+  // Volume, the hero: its label, then the figure counting up with the unit beside it.
+  y += 56;
+  const volLabelY = y;
+  enter(from + 0.14, () => text(s, TL("Total volume"), 0, volLabelY, { size: 22, weight: 600, family: "mono", color: VOLT, align, tracking: 3 }));
+  y += 128;
+  const volY = y;
+  const run = beat(time, from + 0.2, 0.9, easeOut);
+  const [volNow, volUnit] = bigVolume(countUp(data.volumeKg, run), unit, t.locale);
+  const [volEnd] = bigVolume(data.volumeKg, unit, t.locale);
+  // Sized on the final figure, so the number does not grow while it counts.
+  let volSize = 136;
+  while (volSize > 72 && measure(volEnd, volSize, 800) + 14 + measure(volUnit, volSize * 0.36, 700) > width) volSize -= 4;
+  const unitSize = Math.round(volSize * 0.36);
+  const volW = measure(volEnd, volSize, 800) + 14 + measure(volUnit, unitSize, 700);
+  enter(from + 0.2, () => {
+    const x0 = startOf(volW);
+    const w = text(s, volNow, x0, volY, { size: volSize, weight: 800, tracking: -volSize * 0.03 });
+    text(s, volUnit, x0 + Math.max(w, measure(volEnd, volSize, 800) - 2) + 14, volY, { size: unitSize, weight: 700, color: soft });
+  });
+
+  // Time and sets side by side, each with its label.
+  y += 56;
+  const rowLabelY = y;
+  y += 72;
+  const rowY = y;
+  const cols = [
+    { label: TL("Time"), value: formatDuration(data.durationSec) },
+    { label: TL("Sets"), value: String(data.setsDone) },
+  ].map((c) => ({ ...c, w: Math.max(measure(c.value, 68, 800), measure(c.label, 22, 600, "mono") + 3 * c.label.length) }));
+  const gap = 72;
+  const rowW = cols[0]!.w + gap + cols[1]!.w;
+  enter(from + 0.4, () => {
+    let cx0 = startOf(rowW);
+    for (const c of cols) {
+      text(s, c.label, cx0, rowLabelY, { size: 22, weight: 600, family: "mono", color: soft, tracking: 3 });
+      text(s, c.value, cx0, rowY, { size: 68, weight: 800, tracking: -1.5 });
+      cx0 += c.w + gap;
+    }
+  });
   if (handle) {
     y += 16 + 30;
     const at = y;
-    enter(from + 0.36, () => text(s, `@${handle}`, 0, at, { size: 30, weight: 700, family: "mono", color: VOLT, align, maxWidth: width }));
+    enter(from + 0.5, () => text(s, `@${handle}`, 0, at, { size: 30, weight: 700, family: "mono", color: VOLT, align, maxWidth: width }));
   }
   if (showMark) {
     y += 34 + 20;
@@ -1968,7 +2012,7 @@ function clean(s: Scene) {
     const size = 40;
     setFont(s, size * 0.82, 800, "sans");
     const w = size * 1.28 + ctx.measureText("ABOT").width;
-    enter(from + 0.48, () => wordmark(s, leftOf(w), at, size, VOLT));
+    enter(from + 0.6, () => wordmark(s, leftOf(w), at, size, VOLT));
   }
   ctx.restore();
 }
