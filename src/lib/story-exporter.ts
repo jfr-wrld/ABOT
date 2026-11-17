@@ -15,7 +15,7 @@ import type { StoryData, StorySet } from "@/lib/story-data";
 import { currentT, type T } from "@/i18n";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 import { MARK_PATH } from "@/components/brand/mark-path";
-import { STORY_OBJECT_PATHS } from "@/lib/story-objects.generated";
+import { LIFT_SHAPES, type ObjectLayer, type ObjectTone } from "@/lib/story-objects";
 import { END_CARD_AT, STILL_TIME, STORY_SECONDS, backOut, beat, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
 
 /**
@@ -33,10 +33,11 @@ export const STORY_KEYS = [
   "Vault unchanged", "Also lifted", "New record", "No record fell this time. Top sets from the session:",
   "No loaded sets in this workout.", "Total volume", "Line-up", "Strength edition", "The cover story", "{n} sets",
   "Logged with ABOT", "{n} set",
-  "Like lifting {n} cat", "Like lifting {n} cats", "Like lifting {n} bike", "Like lifting {n} bikes",
-  "Like lifting {n} fridge", "Like lifting {n} fridges", "Like lifting {n} car", "Like lifting {n} cars",
-  "Like lifting {n} elephant", "Like lifting {n} elephants", "Like lifting {n} bus", "Like lifting {n} buses",
-  "Like lifting {n} plane", "Like lifting {n} planes",
+  "You lifted {n} cat", "You lifted {n} cats", "You lifted {n} bike", "You lifted {n} bikes",
+  "You lifted {n} fridge", "You lifted {n} fridges", "You lifted {n} car", "You lifted {n} cars",
+  "You lifted {n} elephant", "You lifted {n} elephants", "You lifted {n} bus", "You lifted {n} buses",
+  "You lifted {n} plane", "You lifted {n} planes", "You lifted {n} motorbike", "You lifted {n} motorbikes",
+  "You lifted {n} blue whale", "You lifted {n} blue whales",
 ];
 
 export const STORY_WIDTH = 1080;
@@ -117,18 +118,20 @@ export const CLEAN_EXTRAS: { id: CleanExtra; label: string }[] = [
 ];
 
 /**
- * Everyday things by their weight, for "like lifting 2 elephants". Rounded, typical weights:
- * a house cat, a road bike, a fridge, a family car, an African elephant, a city bus, and a
- * narrow-body airliner empty.
+ * Everyday things by their weight, for "you lifted 2 elephants". Rounded, typical weights:
+ * a house cat, a road bike, a fridge, a scooter-style motorbike, a family car, an African
+ * elephant, a city bus, a narrow-body airliner empty, and a blue whale.
  */
 export const LIFT_OBJECTS = [
-  { id: "cat", kg: 4, one: "Like lifting {n} cat", other: "Like lifting {n} cats" },
-  { id: "bicycle", kg: 15, one: "Like lifting {n} bike", other: "Like lifting {n} bikes" },
-  { id: "fridge", kg: 90, one: "Like lifting {n} fridge", other: "Like lifting {n} fridges" },
-  { id: "car", kg: 1500, one: "Like lifting {n} car", other: "Like lifting {n} cars" },
-  { id: "elephant", kg: 6000, one: "Like lifting {n} elephant", other: "Like lifting {n} elephants" },
-  { id: "bus", kg: 12000, one: "Like lifting {n} bus", other: "Like lifting {n} buses" },
-  { id: "airplane", kg: 41000, one: "Like lifting {n} plane", other: "Like lifting {n} planes" },
+  { id: "cat", kg: 4, one: "You lifted {n} cat", other: "You lifted {n} cats" },
+  { id: "bicycle", kg: 15, one: "You lifted {n} bike", other: "You lifted {n} bikes" },
+  { id: "fridge", kg: 90, one: "You lifted {n} fridge", other: "You lifted {n} fridges" },
+  { id: "motorbike", kg: 110, one: "You lifted {n} motorbike", other: "You lifted {n} motorbikes" },
+  { id: "car", kg: 1500, one: "You lifted {n} car", other: "You lifted {n} cars" },
+  { id: "elephant", kg: 6000, one: "You lifted {n} elephant", other: "You lifted {n} elephants" },
+  { id: "bus", kg: 12000, one: "You lifted {n} bus", other: "You lifted {n} buses" },
+  { id: "airplane", kg: 41000, one: "You lifted {n} plane", other: "You lifted {n} planes" },
+  { id: "whale", kg: 150000, one: "You lifted {n} blue whale", other: "You lifted {n} blue whales" },
 ] as const;
 
 export type LiftObject = (typeof LIFT_OBJECTS)[number];
@@ -1629,66 +1632,37 @@ const CLEAN_MAP_W = 440;
 const CLEAN_MAP_H = Math.round((CLEAN_MAP_W * 1360) / 1448);
 const CLEAN_OBJECT = 210;
 
-const objectCache = new Map<string, { path: Path2D; evenOdd: boolean; opacity: number }[]>();
+const shapeCache = new Map<string, { path: Path2D; layer: ObjectLayer }[]>();
+const TONE: Record<Exclude<ObjectTone, "main">, string> = {
+  shade: "rgba(0, 0, 0, 0.3)",
+  deep: "rgba(0, 0, 0, 0.6)",
+  light: "rgba(255, 255, 255, 0.92)",
+};
 
-/** A thing to lift, `size` square, from its Solar shape (or the elephant, drawn here). */
+/** A thing to lift, `size` square, from its drawing in story-objects (a 48-unit grid). */
 function drawLiftObject(ctx: Ctx, id: string, x: number, y: number, size: number, color: string) {
+  let parts = shapeCache.get(id);
+  if (!parts) {
+    parts = (LIFT_SHAPES[id] ?? []).map((layer) => ({ path: new Path2D(layer.d), layer }));
+    shapeCache.set(id, parts);
+  }
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(size / 24, size / 24);
-  ctx.fillStyle = color;
-  if (id === "elephant") {
-    drawElephant(ctx, color);
-  } else {
-    let parts = objectCache.get(id);
-    if (!parts) {
-      parts = (STORY_OBJECT_PATHS[id] ?? []).map((p) => ({ path: new Path2D(p.d), evenOdd: p.evenOdd, opacity: p.opacity }));
-      objectCache.set(id, parts);
-    }
-    for (const p of parts) {
-      ctx.globalAlpha = p.opacity;
-      ctx.fill(p.path, p.evenOdd ? "evenodd" : "nonzero");
+  ctx.scale(size / 48, size / 48);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  for (const { path, layer } of parts) {
+    const paint = layer.tone === "main" ? color : TONE[layer.tone];
+    if (layer.stroke) {
+      ctx.strokeStyle = paint;
+      ctx.lineWidth = layer.stroke;
+      ctx.stroke(path);
+    } else {
+      ctx.fillStyle = paint;
+      ctx.fill(path);
     }
   }
   ctx.restore();
-}
-
-/** Solar has no elephant: one in the same flat, rounded style, on a 24-unit grid, facing left. */
-function drawElephant(ctx: Ctx, color: string) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.roundRect(8, 7, 13.4, 8.6, 3.8);
-  ctx.arc(7.4, 10.4, 4.3, 0, Math.PI * 2);
-  ctx.fill();
-  for (const [lx, top] of [[9.2, 13.6], [12.4, 13.6], [15.9, 13.6], [18.8, 13.2]] as const) {
-    ctx.beginPath();
-    ctx.roundRect(lx, top, 2.6, 20.4 - top, 1);
-    ctx.fill();
-  }
-  ctx.strokeStyle = color;
-  ctx.lineCap = "round";
-  // Trunk.
-  ctx.lineWidth = 2.3;
-  ctx.beginPath();
-  ctx.moveTo(4.4, 11.6);
-  ctx.quadraticCurveTo(2.6, 14.6, 3.4, 18.4);
-  ctx.stroke();
-  // Tail.
-  ctx.lineWidth = 0.9;
-  ctx.beginPath();
-  ctx.moveTo(21.2, 9.4);
-  ctx.lineTo(22.7, 12.8);
-  ctx.stroke();
-  // Ear and eye, as darker marks on the shape.
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.38)";
-  ctx.lineWidth = 0.75;
-  ctx.beginPath();
-  ctx.ellipse(10, 10.6, 2.5, 3.3, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
-  ctx.beginPath();
-  ctx.arc(6.5, 9.6, 0.55, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 /**

@@ -33,13 +33,16 @@ describe("what the volume equals", () => {
   it("picks the biggest thing lifted at least once", () => {
     expect(liftComparison(9000)).toMatchObject({ object: { id: "elephant" }, count: 1.5 });
     expect(liftComparison(1500)).toMatchObject({ object: { id: "car" }, count: 1 });
-    expect(liftComparison(480)).toMatchObject({ object: { id: "fridge" }, count: 5.3 });
-    expect(liftComparison(250_000)).toMatchObject({ object: { id: "airplane" }, count: 6.1 });
+    expect(liftComparison(480)).toMatchObject({ object: { id: "motorbike" }, count: 4.4 });
+    expect(liftComparison(100)).toMatchObject({ object: { id: "fridge" }, count: 1.1 });
+    expect(liftComparison(120_000)).toMatchObject({ object: { id: "airplane" }, count: 2.9 });
+    expect(liftComparison(250_000)).toMatchObject({ object: { id: "whale" }, count: 1.7 });
+    expect(liftComparison(200)).toMatchObject({ object: { id: "motorbike" }, count: 1.8 });
   });
 
   it("rounds to whole things from ten up, and gives a share of a cat below one", () => {
     expect(liftComparison(14_000).count).toBe(1.2);
-    expect(liftComparison(5_000_000).count).toBe(122);
+    expect(liftComparison(5_000_000).count).toBe(33);
     expect(liftComparison(2)).toMatchObject({ object: { id: "cat" }, count: 0.5 });
   });
 });
