@@ -128,12 +128,12 @@ test("Clean puts its few lines where the lifter chooses, and only Clean has the 
 test("a background photo brings the overlay and grayscale controls", async ({ page }) => {
   await finishOneSet(page);
   const dialog = await openStudio(page);
-  await expect(dialog.getByLabel("Overlay opacity")).toHaveCount(0);
+  await expect(dialog.getByLabel("Darken photo")).toHaveCount(0);
   await dialog.locator('input[type="file"]').setInputFiles(path.join(__dirname, "fixtures", "frame0.jpg"));
 
-  const slider = dialog.getByLabel("Overlay opacity");
-  await expect(slider).toHaveAttribute("min", "0.2");
-  await expect(slider).toHaveAttribute("max", "0.85");
+  const slider = dialog.getByLabel("Darken photo");
+  await expect(slider).toHaveAttribute("min", "0");
+  await expect(slider).toHaveAttribute("max", "0.9");
   await slider.fill("0.8");
   await expect(dialog.getByText("80%")).toBeVisible();
 
@@ -158,7 +158,7 @@ test("the background can come from the camera or the gallery", async ({ page }) 
   const [gallery] = await Promise.all([page.waitForEvent("filechooser"), dialog.getByRole("button", { name: "Gallery", exact: true }).click()]);
   expect(await gallery.element().getAttribute("capture")).toBeNull();
   await gallery.setFiles(path.join(__dirname, "fixtures", "frame0.jpg"));
-  await expect(dialog.getByLabel("Overlay opacity")).toBeVisible();
+  await expect(dialog.getByLabel("Darken photo")).toBeVisible();
 });
 
 test("a file that is not an image is refused with a message", async ({ page }) => {

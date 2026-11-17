@@ -244,7 +244,7 @@ export const exercises: Record<string, string> = {
   "Reading…": "Membaca…",
   Gallery: "Galeri",
   "Remove background photo": "Hapus foto latar",
-  "Overlay opacity": "Ketebalan lapisan",
+  "Darken photo": "Gelapkan foto",
   "Grayscale photo (always on for Monochrome Steel)": "Foto hitam putih (selalu aktif untuk Monochrome Steel)",
   "Grayscale photo": "Foto hitam putih",
   "A mirror selfie or the gym floor works best. It stays on this phone.":

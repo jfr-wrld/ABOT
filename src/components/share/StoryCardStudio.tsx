@@ -605,7 +605,7 @@ function Studio({
             {photo ? (
               <div className="flex items-center gap-3">
                 <label htmlFor="story-overlay" className="shrink-0 text-xs text-text-muted">
-                  {t("Overlay opacity")}
+                  {t("Darken photo")}
                 </label>
                 <input
                   id="story-overlay"

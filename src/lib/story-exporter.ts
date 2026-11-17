@@ -91,7 +91,7 @@ export interface StoryPhoto {
 export interface StoryOptions {
   preset: StoryPresetId;
   photo: StoryPhoto | null;
-  /** How dark the tint over the photo is, 0.2 to 0.85. */
+  /** How dark the shade over the photo is, 0 (the photo as it is) to 0.9. */
   overlay: number;
   grayscale: boolean;
   /** ABOT Pro: leave out the ABOT mark and name. */
@@ -186,7 +186,7 @@ export const TEXT_POSITIONS: { id: TextPosition; label: string }[] = [
   { id: "bottom-right", label: "Bottom right" },
 ];
 
-export const OVERLAY_RANGE = { min: 0.2, max: 0.85, step: 0.05, initial: 0.55 } as const;
+export const OVERLAY_RANGE = { min: 0, max: 0.9, step: 0.05, initial: 0.55 } as const;
 
 /* ------------------------------------------------------------------ */
 /* Palette                                                             */
@@ -748,6 +748,7 @@ function cinematic(s: Scene, shade: { bottomFrom?: number; side?: number } = {})
   if (opts.photo) {
     ctx.drawImage(opts.photo.layer(opts.grayscale), 0, 0, W, H);
     const a = opts.overlay;
+    dimPhoto(s);
     const top = ctx.createLinearGradient(0, 0, 0, SAFE_TOP + 220);
     top.addColorStop(0, `rgba(0, 0, 0, ${Math.min(0.8, a * 0.9)})`);
     top.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -776,6 +777,17 @@ function cinematic(s: Scene, shade: { bottomFrom?: number; side?: number } = {})
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
   }
+}
+
+/**
+ * Past about a third on the Overlay slider the whole photo darkens too, not only the shade
+ * behind the text: a bright gym photo can be brought down, a dark one left as it is.
+ */
+function dimPhoto(s: Scene) {
+  const dim = Math.max(0, s.opts.overlay - 0.35) * 0.7;
+  if (dim <= 0) return;
+  s.ctx.fillStyle = `rgba(0, 0, 0, ${dim})`;
+  s.ctx.fillRect(0, 0, W, H);
 }
 
 /** Small spaced capitals: the labels over the numbers. */
@@ -1449,7 +1461,10 @@ function clean(s: Scene) {
   const position = opts.textPosition ?? "bottom-left";
   ctx.fillStyle = OBSIDIAN;
   ctx.fillRect(0, 0, W, H);
-  if (opts.photo) ctx.drawImage(opts.photo.layer(opts.grayscale), 0, 0, W, H);
+  if (opts.photo) {
+    ctx.drawImage(opts.photo.layer(opts.grayscale), 0, 0, W, H);
+    dimPhoto(s);
+  }
 
   const inner = W - 2 * CLEAN_MARGIN;
   const t = currentT();
