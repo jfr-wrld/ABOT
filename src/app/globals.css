@@ -984,3 +984,35 @@ input.bg-well:not(:focus) {
   background-image: none;
   box-shadow: none;
 }
+/* Flat on light pages: the lime fills redefine their own face and shadow on the element, so
+   the `none` set on <html> never reached them. The colour stays; the bevel goes. */
+[data-style="flat"][data-theme="light"]
+  :is(
+    :is(button, a).bg-accent:not(:disabled, [role="switch"]),
+    span.bg-accent.min-h-12,
+    .today-fab:not(.today-fab-live),
+    .wallet-card
+  ):not(.force-dark *) {
+  --neo-accent-face: none;
+  --raise-accent: none;
+}
+/* Flat: the round icon and photo buttons keep their glass (tint, blur, outline; Visual effects
+   decides the blur) but lose the top highlight, the inner shade and the drop shadow. A press
+   darkens instead of sinking, like the other flat buttons. */
+[data-style="flat"] :is(.glass-icon, .glass-btn),
+[data-style="flat"] :where([data-theme="light"]) .glass-icon:not(.force-dark *) {
+  background-image: none;
+  box-shadow: none;
+}
+[data-style="flat"] :is(.glass-icon, .glass-btn):active {
+  translate: none;
+  box-shadow: none;
+  filter: brightness(0.9);
+}
+/* Flat: red buttons keep the red outline, the day's card stops casting onto the week card, and
+   the selected half of a segmented control is told apart by its fill alone. */
+[data-style="flat"] .raised-danger:not(:disabled, :focus-visible),
+[data-style="flat"] .wallet-front > .rounded-card,
+[data-style="flat"] .shadow-sm {
+  box-shadow: none;
+}
