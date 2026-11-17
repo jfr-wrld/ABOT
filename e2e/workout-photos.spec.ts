@@ -54,6 +54,19 @@ test("a photo added on the summary stays with the workout on this phone, and can
   await expect(detail.getByRole("button", { name: "Add photo" })).toBeVisible();
 });
 
+test("several photos are picked in one go, and only six fit", async ({ page }) => {
+  await finishToSummary(page);
+  const photos = page.getByRole("region", { name: "Photos" });
+  await photos.getByLabel("Workout photo file").setInputFiles([PHOTO, PHOTO_2]);
+  await expect(photos.getByRole("button", { name: "Open photo 2 of 2" })).toBeVisible();
+  await expect(photos).toContainText("2/6");
+
+  await photos.getByLabel("Workout photo file").setInputFiles([PHOTO, PHOTO_2, PHOTO, PHOTO_2, PHOTO, PHOTO_2]);
+  await expect(photos.getByRole("button", { name: "Open photo 6 of 6" })).toBeVisible();
+  await expect(photos.getByRole("alert")).toContainText("Added 4. A workout keeps up to 6 photos.");
+  await expect(photos.getByRole("button", { name: "Add photo" })).toHaveCount(0);
+});
+
 test("a finished workout can be tagged with a gym, and the gym shows on Home", async ({ page }) => {
   await finishToSummary(page);
   const detailUrl = page.url().replace(/\/workout\/summary\?/, "/history?");

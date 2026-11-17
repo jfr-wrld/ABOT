@@ -16,6 +16,7 @@ import { exerciseById } from "./useExerciseStore";
 import { useSettingsStore } from "./useSettingsStore";
 import { bodyLoadFor } from "@/data/bodyweight-load";
 import { hasMeasure } from "@/lib/set-metrics";
+import { previousFor } from "@/lib/calc";
 
 /** A ticked set records the body weight it lifted (bodyweight exercises); unticking clears it. */
 function ticked(st: WorkoutSet, exerciseId: string, completed: boolean, at: number): WorkoutSet {
@@ -126,7 +127,14 @@ export function finishedFromDraft(draft: WorkoutSession): WorkoutSession | null 
         .filter((st) => hasMeasure(st, logType))
         // A set added in the editor is done work: it is ticked with the workout's end time, and a
         // bodyweight lift takes today's body weight (a set from the original keeps its own).
-        .map((st) => (st.completed && st.completedAt !== undefined ? st : ticked(st, ex.exerciseId, true, at)));
+        .map((st) =>
+          st.completed && st.completedAt !== undefined
+            ? // Kept inside the workout, so a shortened workout does not leave sets after its end.
+              st.completedAt > at || st.completedAt < draft.startedAt
+              ? { ...st, completedAt: Math.min(at, Math.max(draft.startedAt, st.completedAt)) }
+              : st
+            : ticked(st, ex.exerciseId, true, at),
+        );
       return { ...ex, sets };
     })
     .filter((ex) => ex.sets.length > 0);
@@ -430,7 +438,7 @@ export const useWorkoutStore = create<WorkoutState>()(
             const measured = (st.reps ?? 0) > 0 || (st.durationSec ?? 0) > 0 || (st.distanceM ?? 0) > 0;
             if (st.completed || !measured) return st;
             n++;
-            const weightKg = st.weightKg ?? previous?.[ex.exerciseId]?.[i]?.weightKg ?? null;
+            const weightKg = st.weightKg ?? previousFor(ex.sets, i, previous?.[ex.exerciseId])?.weightKg ?? null;
             return ticked(weightKg === st.weightKg ? st : { ...st, weightKg }, ex.exerciseId, true, now);
           }),
         }));

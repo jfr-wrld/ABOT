@@ -68,12 +68,14 @@ const DEFAULT_STORED_SETTINGS: StoredSettings = { ...DEFAULT_SETTINGS, showRpe: 
 let loadingFromRepo = false;
 
 /** Replaces in-memory state with what the repository holds. */
-export async function hydrateStores(repo: Repository): Promise<void> {
+export async function hydrateStores(repo: Repository, opts: { keepActive?: boolean } = {}): Promise<void> {
   const snap = await repo.snapshot();
   const restTimer = (await repo.kv.get("restTimer")) ?? null;
   loadingFromRepo = true;
   try {
-    useWorkoutStore.setState({ sessions: snap.sessions, active: snap.activeWorkout, restTimer });
+    // After a sync the running workout stays as it is in memory: sync never changes it, and a set
+    // ticked while the snapshot was read would otherwise be replaced by the older stored copy.
+    useWorkoutStore.setState(opts.keepActive ? { sessions: snap.sessions } : { sessions: snap.sessions, active: snap.activeWorkout, restTimer });
     useRoutineStore.setState({ routines: snap.routines });
     useExerciseStore.setState({
       custom: snap.exercises.map((e: Exercise) => normalizeExercise(e)),

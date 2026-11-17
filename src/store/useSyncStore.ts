@@ -172,7 +172,7 @@ async function runSync(set: (s: Partial<SyncStoreState>) => void): Promise<void>
     const result = await syncOnce(repo, createSupabaseRemote(supabase as unknown as SupabaseLike));
     if (result.changedLocal) {
       // Reload what other devices changed. Pending writes go first, so nothing in memory is lost.
-      await persistence.runExclusive(() => hydrateStores(repo));
+      await persistence.runExclusive(() => hydrateStores(repo, { keepActive: true }));
     }
     const state = await repo.kv.get("syncState");
     set({ phase: "idle", lastSyncedAt: state?.lastSyncedAt ?? Date.now() });

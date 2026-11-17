@@ -1,5 +1,5 @@
 import type { Exercise, MuscleGroup, PersonalRecord, WorkoutSession } from "@/types/workout";
-import { detectSessionPRs, isWorkingSet } from "./calc";
+import { isWorkingSet, recordsBeaten } from "./calc";
 
 /** Primary muscles by working sets, and secondary ones that were not also primary. */
 export function workedMuscles(s: WorkoutSession, byId: Record<string, Exercise>): { primary: MuscleGroup[]; secondary: MuscleGroup[] } {
@@ -30,7 +30,7 @@ export function sessionRecords(
       .filter((o) => o.status === "completed" && o.id !== session.id && o.startedAt < session.startedAt)
       .flatMap((o) => o.exercises.map((e) => e.exerciseId)),
   );
-  const records = detectSessionPRs(session, all, byId).filter((p) => before.has(p.exerciseId));
+  const records = recordsBeaten(session, all, byId);
   const newLifts = [
     ...new Set(session.exercises.filter((e) => e.sets.some(isWorkingSet) && !before.has(e.exerciseId)).map((e) => e.exerciseId)),
   ];

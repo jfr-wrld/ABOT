@@ -51,3 +51,13 @@ describe("guessUnit", () => {
     expect(guessUnit(["en"])).toBe("kg");
   });
 });
+
+describe("numbers follow the app's language", () => {
+  it("groups and marks decimals the Indonesian way when asked", async () => {
+    const { formatVolume, formatWeight } = await import("./units");
+    expect(formatVolume(1360, "kg", "id-ID")).toBe("1.360 kg");
+    expect(formatVolume(1360, "kg", "en-US")).toBe("1,360 kg");
+    expect(formatVolume(12_345, "kg", "id-ID")).toBe("12,3k kg");
+    expect(formatWeight(82.5, "kg", true, "id-ID")).toBe("82,5 kg");
+  });
+});

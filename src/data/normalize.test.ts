@@ -183,3 +183,12 @@ describe("adopted catalog exercises", () => {
     expect(e.isCustom).toBeUndefined();
   });
 });
+
+describe("normalizeSession keeps pauses", () => {
+  it("does not turn a paused half hour into training time after a restore", () => {
+    const s = normalizeSession({ id: "p", startedAt: 1000, finishedAt: 5_401_000, status: "completed", exercises: [], pausedMs: 1_800_000 })!;
+    expect(s.pausedMs).toBe(1_800_000);
+    const live = normalizeSession({ id: "q", startedAt: 1000, status: "active", exercises: [], pausedAt: 2000, pausedMs: 0 })!;
+    expect(live.pausedAt).toBe(2000);
+  });
+});

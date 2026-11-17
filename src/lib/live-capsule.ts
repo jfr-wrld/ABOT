@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { Exercise, WeightUnit, WorkoutSession } from "@/types/workout";
-import { previousSets, sessionVolume } from "@/lib/calc";
+import type { Exercise, WeightUnit, WorkoutSession, WorkoutSet } from "@/types/workout";
+import { previousFor, previousSets, sessionVolume } from "@/lib/calc";
 import { supersetNext, type SupersetHandoff } from "@/lib/superset";
 import { formatVolume, formatWeight } from "@/lib/units";
 import { currentT, type T } from "@/i18n";
@@ -85,7 +85,10 @@ export function nextTarget(
 
 function target(session: WorkoutSession, sessions: WorkoutSession[], byId: Record<string, Exercise>, t: T, ex: WorkoutSession["exercises"][number], i: number): CapsuleTarget {
   const st = ex.sets[i]!;
-  const before = st.reps === null || st.weightKg === null ? previousSets(ex.exerciseId, sessions, session.id, { byId, locationId: session.locationId })?.[i] : undefined;
+  const before =
+    st.reps === null || st.weightKg === null
+      ? previousFor(ex.sets, i, previousSets(ex.exerciseId, sessions, session.id, { byId, locationId: session.locationId }))
+      : undefined;
   const ticked = session.exercises.map((e) => (e.id === ex.id ? { ...e, sets: e.sets.map((s, j) => (j === i ? { ...s, completed: true } : s)) } : e));
   return {
     sessionExerciseId: ex.id,
@@ -94,7 +97,8 @@ function target(session: WorkoutSession, sessions: WorkoutSession[], byId: Recor
     name: byId[ex.exerciseId]?.name ?? t("Exercise"),
     set: i + 1,
     of: ex.sets.length,
-    weightKg: st.reps === null ? (before?.weightKg ?? st.weightKg) : st.weightKg,
+    // What the lifter typed wins; only a blank field takes last time's value.
+    weightKg: st.weightKg ?? before?.weightKg ?? null,
     reps: st.reps ?? before?.reps ?? null,
     restSec: supersetNext(ticked, ex.id) ? 0 : ex.restSeconds,
   };
@@ -202,7 +206,11 @@ export function applyCapsuleAction(id: string, w: WorkoutActions, byId: Record<s
       const next = nextTarget(w.active, w.sessions, byId, currentT(), w.handoff ?? null);
       if (!loggable(next)) return;
       const st = w.active.exercises.find((e) => e.id === next.sessionExerciseId)?.sets.find((s) => s.id === next.setId);
-      if (st && st.reps === null) w.updateSet(next.sessionExerciseId, next.setId, { reps: next.reps, weightKg: next.weightKg });
+      // Fill only the blank fields, so a typed weight is never replaced by last time's.
+      const fill: Partial<Pick<WorkoutSet, "reps" | "weightKg">> = {};
+      if (st?.reps === null) fill.reps = next.reps;
+      if (st?.weightKg === null && next.weightKg !== null) fill.weightKg = next.weightKg;
+      if (Object.keys(fill).length) w.updateSet(next.sessionExerciseId, next.setId, fill);
       w.completeSet(next.sessionExerciseId, next.setId, true);
       return;
     }

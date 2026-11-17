@@ -23,13 +23,19 @@ export interface ShownPhoto {
   height: number;
 }
 
+export interface PhotoError {
+  key: string;
+  vars?: Record<string, number>;
+}
+
 export interface WorkoutPhotosState {
   photos: ShownPhoto[];
   status: "loading" | "ready" | "error";
-  add(file: File): Promise<void>;
+  /** Adds several at once, in the order picked, up to the room left. */
+  add(files: File[]): Promise<void>;
   remove(id: string): Promise<void>;
-  /** A message key for the last failed add or remove, or null. */
-  error: string | null;
+  /** A message key (with its values) for the last failed add or remove, or null. */
+  error: PhotoError | null;
 }
 
 /**
@@ -40,8 +46,14 @@ export function useWorkoutPhotos(sessionId: string | undefined): WorkoutPhotosSt
   const hydrated = useHydration((s) => s.hydrated);
   const [photos, setPhotos] = useState<ShownPhoto[]>([]);
   const [status, setStatus] = useState<WorkoutPhotosState["status"]>("loading");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<PhotoError | null>(null);
   const urls = useRef(new Map<string, string>());
+  // How many the workout holds, ahead of React's render, so photos added one after another in a
+  // batch each see the count left by the one before.
+  const count = useRef(0);
+  useEffect(() => {
+    count.current = photos.length;
+  }, [photos.length]);
 
   useEffect(() => {
     const repo = getActiveRepository();
@@ -70,24 +82,33 @@ export function useWorkoutPhotos(sessionId: string | undefined): WorkoutPhotosSt
   }, [hydrated, sessionId]);
 
   const add = useCallback(
-    async (file: File) => {
+    async (files: File[]) => {
       const repo = getActiveRepository();
-      if (!repo || !sessionId) return;
+      if (!repo || !sessionId || files.length === 0) return;
       setError(null);
-      if (photos.length >= MAX_WORKOUT_PHOTOS) return setError("This workout already has 6 photos. Delete one to add another.");
-      try {
-        const { blob, width, height } = await fitJpeg(file);
-        const row = { id: newId(), sessionId, createdAt: Date.now(), blob, width, height };
-        await repo.photos.add(row);
-        const url = URL.createObjectURL(blob);
-        urls.current.set(row.id, url);
-        setPhotos((p) => [...p, { id: row.id, url, blob, width, height }]);
-      } catch (e) {
-        const full = e instanceof DOMException && (e.name === "QuotaExceededError" || e.name === "AbortError");
-        setError(full ? "This phone has no room left for photos. Free up space and try again." : e instanceof Error ? e.message : "This photo could not be used.");
+      const room = MAX_WORKOUT_PHOTOS - count.current;
+      if (room <= 0) return setError({ key: "This workout already has 6 photos. Delete one to add another." });
+      // One at a time: each photo is decoded and shrunk on its own, so six large camera files
+      // never sit in memory together.
+      for (const file of files.slice(0, room)) {
+        try {
+          const { blob, width, height } = await fitJpeg(file);
+          const row = { id: newId(), sessionId, createdAt: Date.now(), blob, width, height };
+          await repo.photos.add(row);
+          const url = URL.createObjectURL(blob);
+          urls.current.set(row.id, url);
+          count.current++;
+          setPhotos((p) => [...p, { id: row.id, url, blob, width, height }]);
+        } catch (e) {
+          const full = e instanceof DOMException && (e.name === "QuotaExceededError" || e.name === "AbortError");
+          return setError({
+            key: full ? "This phone has no room left for photos. Free up space and try again." : e instanceof Error ? e.message : "This photo could not be used.",
+          });
+        }
       }
+      if (files.length > room) setError({ key: "Added {n}. A workout keeps up to 6 photos.", vars: { n: room } });
     },
-    [photos.length, sessionId],
+    [sessionId],
   );
 
   const remove = useCallback(async (id: string) => {
@@ -96,12 +117,13 @@ export function useWorkoutPhotos(sessionId: string | undefined): WorkoutPhotosSt
     setError(null);
     try {
       await repo.photos.remove(id);
+      count.current = Math.max(0, count.current - 1);
       const url = urls.current.get(id);
       if (url) URL.revokeObjectURL(url);
       urls.current.delete(id);
       setPhotos((p) => p.filter((x) => x.id !== id));
     } catch {
-      setError("The photo could not be deleted. Try again.");
+      setError({ key: "The photo could not be deleted. Try again." });
     }
   }, []);
 
@@ -121,10 +143,11 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
   const { photos, status } = state;
   const room = photos.length < MAX_WORKOUT_PHOTOS;
 
-  async function pick(file: File | undefined) {
-    if (!file) return;
+  async function pick(list: FileList | null) {
+    const files = list ? [...list] : [];
+    if (files.length === 0) return;
     setBusy(true);
-    await state.add(file);
+    await state.add(files);
     setBusy(false);
     if (input.current) input.current.value = "";
   }
@@ -188,7 +211,7 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
 
       {state.error && (
         <p role="alert" className="mt-2 text-sm text-failure">
-          {t(state.error)}
+          {t(state.error.key, state.error.vars)}
         </p>
       )}
       <p className="mt-1.5 text-[11px] text-text-muted">{t("Photos stay on this phone and go into backup files. They are not synced.")}</p>
@@ -197,10 +220,12 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
         ref={input}
         type="file"
         accept="image/*"
+        // Several from the gallery in one go; the camera still takes one shot per tap.
+        multiple
         aria-label={t("Workout photo file")}
         className="sr-only"
         tabIndex={-1}
-        onChange={(e) => void pick(e.target.files?.[0])}
+        onChange={(e) => void pick(e.target.files)}
       />
       <Sheet open={choosing} onClose={() => setChoosing(false)} title={t("Add photo")}>
         <div className="grid grid-cols-2 gap-2 pb-2">
@@ -210,7 +235,7 @@ export function WorkoutPhotos({ state, sessionName }: { state: WorkoutPhotosStat
           </Button>
           <Button onClick={() => choose("gallery")} className="min-h-14">
             <ImageIcon aria-hidden="true" size={18} />
-            {t("Choose photo")}
+            {t("Choose photos")}
           </Button>
         </div>
       </Sheet>

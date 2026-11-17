@@ -54,3 +54,17 @@ test("a workout done without the app is logged afterwards, on its own day", asyn
   await expect(page.getByText("Gym without signal")).toBeVisible();
   await expect(page.getByText("Yesterday").first()).toBeVisible();
 });
+
+test("a weighted pull-up's added load can be corrected afterwards", async ({ page }) => {
+  await page.goto("/history/all");
+  await page.getByRole("link", { name: "Log a past workout" }).click();
+  await page.waitForURL(/\/history\/edit$/);
+  await page.getByRole("button", { name: "Add exercise" }).click();
+  await page.getByLabel("Search exercises").fill("Pull Up");
+  await page.getByRole("dialog").getByRole("button", { name: /^Pull Up/ }).first().click();
+  await expect(page.getByLabel("Set 1 added weight in kg")).toBeVisible();
+  await page.getByLabel("Set 1 added weight in kg").fill("20");
+  await page.getByLabel("Set 1 reps").fill("6");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.waitForURL(/\/history\?id=/);
+});

@@ -1262,7 +1262,6 @@ function RecoveryBody({ recovery, now }: { recovery: ReturnType<typeof regionTel
   );
 }
 
-const DAY = 86_400_000;
 const MUSCLE_GROUPS = (Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[]).filter((m) => m !== "full_body" && m !== "cardio");
 
 /**
@@ -1283,13 +1282,20 @@ function WeekCard({ now, stats, byId }: { now: number; stats: WeekStats; byId: R
   const fig = useMemo(() => {
     const start = startOfWeek(at, firstDayOfWeek);
     const week = sessions.filter((s) => s.status === "completed" && s.startedAt >= start && s.startedAt <= at);
+    // Calendar days, not 24-hour steps: in a week the clocks change, 24-hour steps land an hour off.
+    const edge = (i: number) => {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      return d.getTime();
+    };
+    const bounds = Array.from({ length: 8 }, (_, i) => edge(i));
     const perDay = Array.from({ length: 7 }, (_, i) =>
-      week.filter((s) => s.startedAt >= start + i * DAY && s.startedAt < start + (i + 1) * DAY).reduce((n, s) => n + sessionVolume(s, byId), 0),
+      week.filter((s) => s.startedAt >= bounds[i]! && s.startedAt < bounds[i + 1]!).reduce((n, s) => n + sessionVolume(s, byId), 0),
     );
     const records = Object.values(prCounts(week, sessions, byId)).reduce((a, b) => a + b, 0);
     return {
       perDay,
-      today: Math.min(6, Math.floor((at - start) / DAY)),
+      today: Math.max(0, bounds.findIndex((b) => b > at) - 1),
       sets: week.reduce((n, s) => n + countSets(s).completed, 0),
       seconds: week.reduce((n, s) => n + sessionDurationSec(s, at), 0),
       records,

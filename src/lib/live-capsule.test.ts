@@ -163,3 +163,43 @@ describe("applyCapsuleAction", () => {
     expect(w.completeSet).not.toHaveBeenCalled();
   });
 });
+
+describe("Log set fills only blank fields", () => {
+  const last: WorkoutSession = {
+    id: "last",
+    name: "Push A",
+    startedAt: start - 3 * 86_400_000,
+    finishedAt: start - 3 * 86_400_000 + 3_600_000,
+    status: "completed",
+    exercises: [{ id: "l", exerciseId: "bench-press-barbell", restSeconds: 90, sets: [set(true, 90, 8)] }],
+  };
+  const run = (typed: WorkoutSet) => {
+    const active: WorkoutSession = { ...session, exercises: [{ id: "a", exerciseId: "bench-press-barbell", restSeconds: 90, sets: [typed] }] };
+    const w = {
+      active,
+      sessions: [last],
+      restTimer: null,
+      pauseActive: vi.fn(),
+      resumeActive: vi.fn(),
+      skipRest: vi.fn(),
+      adjustRest: vi.fn(),
+      updateSet: vi.fn(),
+      completeSet: vi.fn(),
+    };
+    applyCapsuleAction("log", w, byId);
+    return w;
+  };
+
+  it("keeps a typed weight and takes only last time's reps", () => {
+    const typed = set(false, 100, null);
+    const w = run(typed);
+    expect(w.updateSet).toHaveBeenCalledWith("a", typed.id, { reps: 8 });
+    expect(w.completeSet).toHaveBeenCalledWith("a", typed.id, true);
+  });
+
+  it("fills a blank weight from last time when reps are planned", () => {
+    const typed = set(false, null, 8);
+    const w = run(typed);
+    expect(w.updateSet).toHaveBeenCalledWith("a", typed.id, { weightKg: 90 });
+  });
+});

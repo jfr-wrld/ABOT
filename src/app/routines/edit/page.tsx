@@ -22,7 +22,7 @@ import { ExercisePicker } from "@/components/workout/ExercisePicker";
 import { SetTypeChip, setTypeA11yName } from "@/components/workout/SetTypeChip";
 import { SetTypeMenu } from "@/components/workout/SetTypeMenu";
 import { formatClock } from "@/lib/calc";
-import { fromDisplay, toDisplay } from "@/lib/units";
+import { fromDisplay, toInput } from "@/lib/units";
 import type { RoutineExercise, RoutineSet } from "@/types/workout";
 import { EquipmentIcon } from "@/components/icons/EquipmentIcon";
 import { EQUIPMENT_LABELS } from "@/types/workout";
@@ -275,7 +275,7 @@ function Editor() {
                         <NumberField
                           aria-label={t("{name} target weight in {unit}", { name, unit: weightUnit })}
                           placeholder="0"
-                          value={s.targetWeightKg === null ? null : toDisplay(s.targetWeightKg, weightUnit)}
+                          value={s.targetWeightKg === null ? null : toInput(s.targetWeightKg, weightUnit)}
                           onCommit={(v) =>
                             patchSet(ex.id, s.id, { targetWeightKg: v === null ? null : fromDisplay(v, weightUnit) })
                           }

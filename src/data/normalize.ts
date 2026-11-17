@@ -153,6 +153,9 @@ export function normalizeSession(raw: unknown): WorkoutSession | null {
     status: STATUSES.includes(raw.status as SessionStatus) ? (raw.status as SessionStatus) : "completed",
     exercises,
     notes: str(raw.notes),
+    // Without these a paused workout's pause would count as training time after a restore.
+    pausedAt: time(raw.pausedAt),
+    pausedMs: time(raw.pausedMs),
   };
 }
 

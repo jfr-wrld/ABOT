@@ -94,7 +94,8 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
    * images itself and is read as it is; the next write splits it.
    */
   const IMAGES_KEY = "settingsImages" as KvKey;
-  let lastImages: string | null = null;
+  /** The images row as last written. Reset when a transaction fails, so a retry writes it again. */
+  let lastImages: Record<string, unknown> | null = null;
 
   async function readSettings(): Promise<unknown> {
     const s = (await db.kv.get("settings"))?.value as Record<string, unknown> | undefined;
@@ -110,10 +111,15 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
     const images: Record<string, unknown> = {};
     if (value && typeof value === "object" && "profilePhoto" in value) images.profilePhoto = profilePhoto;
     if (value && typeof value === "object" && "profileCover" in value) images.profileCover = profileCover;
-    const json = JSON.stringify(images);
-    if (json !== lastImages) {
+    // Compared field by field: the photos are tens of KB, and stringifying them on every
+    // settings change (a theme switch, each letter of a name) cost more than the write it saved.
+    const same =
+      lastImages !== null &&
+      Object.keys(images).length === Object.keys(lastImages).length &&
+      Object.entries(images).every(([k, v]) => k in lastImages! && lastImages![k] === v);
+    if (!same) {
       await db.kv.put({ key: IMAGES_KEY, value: images });
-      lastImages = json;
+      lastImages = images;
     }
     await db.kv.put({ key: "settings", value: rest });
   }
@@ -140,7 +146,13 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
   }
 
   /** Every write and its sync mark land together, or not at all. */
-  const rw = <T>(fn: () => Promise<T>) => db.transaction("rw", [...SYNCED_TABLES.map((t) => db[t])], fn);
+  const rw = <T>(fn: () => Promise<T>) =>
+    db.transaction("rw", [...SYNCED_TABLES.map((t) => db[t])], fn).catch((e: unknown) => {
+      // The images row may not have committed: without this a retry after a full disk skipped it
+      // as unchanged, and the old photo came back on the next start.
+      lastImages = null;
+      throw e;
+    });
 
   function table<T extends { id: string }>(n: TableName): Table<T> {
     const t = db[n] as unknown as Dexie.Table<{ id: string }, string>;

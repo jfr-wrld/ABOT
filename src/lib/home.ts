@@ -5,7 +5,7 @@
  */
 import type { Exercise, Routine, WorkoutSession } from "@/types/workout";
 import type { WorkoutSchedule, Weekday } from "@/lib/notifications/schedule";
-import { detectSessionPRs, sessionVolume } from "./calc";
+import { beatenCounts, sessionVolume } from "./calc";
 import { startOfDay, startOfWeek } from "./analytics";
 import type { T } from "@/i18n";
 
@@ -154,26 +154,16 @@ export function nextProtocol(
 
 /**
  * Lifts that beat an earlier record in each session (one per lift, not one per record kind). A
- * lift done for the first time sets no record worth a badge: there was nothing to beat.
+ * lift with nothing to beat yet, here or at this gym, sets no record worth a badge.
  */
 export function prCounts(
   recent: WorkoutSession[],
   all: WorkoutSession[],
   byId?: Record<string, Exercise>,
 ): Record<string, number> {
-  const done = completed(all);
+  const counts = beatenCounts(all, byId);
   const out: Record<string, number> = {};
-  for (const s of recent) {
-    if (s.status !== "completed") continue;
-    const before = new Set(
-      done.filter((o) => o.id !== s.id && o.startedAt < s.startedAt).flatMap((o) => o.exercises.map((e) => e.exerciseId)),
-    );
-    out[s.id] = new Set(
-      detectSessionPRs(s, all, byId)
-        .map((p) => p.exerciseId)
-        .filter((id) => before.has(id)),
-    ).size;
-  }
+  for (const s of recent) if (s.status === "completed") out[s.id] = counts[s.id] ?? 0;
   return out;
 }
 

@@ -285,3 +285,28 @@ describe("all-gyms view still applies the load factor", () => {
     expect(exerciseHistory("bench-press-dumbbell", [d], { byId: SEED_EXERCISES_BY_ID, allGyms: true })[0]!.volumeKg).toBe(400);
   });
 });
+
+describe("previousFor", () => {
+  it("lines warm-ups up with warm-ups and working sets with working sets", async () => {
+    const { previousFor } = await import("./calc");
+    const last = [set({ id: "w1", type: "warmup", weightKg: 40 }), set({ id: "w2", type: "warmup", weightKg: 60 }), set({ id: "k1", weightKg: 100 }), set({ id: "k2", weightKg: 102.5 })];
+    const today = [{ type: "normal" as const }, { type: "normal" as const }, { type: "normal" as const }];
+    expect(previousFor(today, 0, last)?.weightKg).toBe(100);
+    expect(previousFor(today, 1, last)?.weightKg).toBe(102.5);
+    expect(previousFor(today, 2, last)).toBeUndefined();
+    expect(previousFor([{ type: "warmup" }, { type: "normal" }], 0, last)?.weightKg).toBe(40);
+  });
+});
+
+describe("recordsBeaten and beatenCounts", () => {
+  it("counts a record only when there was one to beat", async () => {
+    const { beatenCounts, recordsBeaten } = await import("./calc");
+    const a = session("a", 1000, [set({ id: "a1", weightKg: 100 })]);
+    const b = session("b", 2000, [set({ id: "b1", weightKg: 110 })]);
+    const first = session("c", 3000, [set({ id: "c1", weightKg: 50 })], "squat-barbell");
+    const all = [a, b, first];
+    expect(recordsBeaten(first, all).length).toBe(0);
+    expect(recordsBeaten(b, all).length).toBeGreaterThan(0);
+    expect(beatenCounts(all)).toEqual({ a: 0, b: 1, c: 0 });
+  });
+});

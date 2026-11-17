@@ -88,9 +88,19 @@ function SessionEditor() {
   const patchSet = (exId: string, setId: string, p: Partial<WorkoutSet>) =>
     patch((d) => ({ ...d, exercises: d.exercises.map((e) => (e.id === exId ? { ...e, sets: e.sets.map((s) => (s.id === setId ? { ...s, ...p } : s)) } : e)) }));
 
+  // Moving the workout moves its sets with it: records and the recovery map date each set by its
+  // own completedAt, so a workout moved to Tuesday must not leave its sets on today.
   const setWhen = (date: string, time: string) => {
     const at = new Date(`${date}T${time}`).getTime();
-    if (Number.isFinite(at)) patch((d) => ({ ...d, startedAt: at }));
+    if (!Number.isFinite(at)) return;
+    patch((d) => {
+      const by = at - d.startedAt;
+      return {
+        ...d,
+        startedAt: at,
+        exercises: d.exercises.map((e) => ({ ...e, sets: e.sets.map((s) => (s.completedAt === undefined ? s : { ...s, completedAt: s.completedAt + by })) })),
+      };
+    });
   };
 
   function save() {
@@ -99,7 +109,8 @@ function SessionEditor() {
     if (dur <= 0) return setError(t("Enter how long the workout took"));
     if (draft.startedAt > Date.now()) return setError(t("The start time cannot be in the future"));
     if (!draft.name.trim()) return setError(t("Give the workout a name"));
-    const ok = saveSession({ ...draft, name: draft.name.trim(), finishedAt: draft.startedAt + dur });
+    // Logged afterwards, "started 30 minutes ago, 90 minutes long" would end in the future.
+    const ok = saveSession({ ...draft, name: draft.name.trim(), finishedAt: Math.min(draft.startedAt + dur, Date.now()) });
     if (!ok) return setError(t("Add at least one set with reps or a time"));
     router.replace(historyPath(draft.id));
   }
@@ -157,8 +168,11 @@ function SessionEditor() {
           const def = byId[ex.exerciseId];
           const logType = def?.logType;
           const timed = isTimed(logType);
-          const weighted = logType !== "reps_only" && !timed;
-          const sign = ex.assisted ? -1 : 1;
+          // Like the logger: every lift that is not timed has a weight box, bodyweight ones for the
+          // added load or the assistance (weighted pull-ups are reps_only but carry +20 kg).
+          const weighted = !timed;
+          const bw = !!def?.isBodyweight;
+          const sign = bw && ex.assisted ? -1 : 1;
           const name = def?.name ?? t("Removed exercise");
           return (
             <section key={ex.id} aria-label={name} className="panel flex flex-col gap-2 p-3">
@@ -183,7 +197,7 @@ function SessionEditor() {
                   </>
                 ) : (
                   <>
-                    {weighted && <span className="flex-1 text-center">{unit}</span>}
+                    {weighted && <span className="flex-1 text-center">{bw ? `${ex.assisted ? "−" : "+"}${unit}` : unit}</span>}
                     <span className="flex-1 text-center">{t("Reps")}</span>
                   </>
                 )}
@@ -216,7 +230,13 @@ function SessionEditor() {
                         <>
                           {weighted && (
                             <NumberField
-                              aria-label={t("Set {n} weight in {unit}", { n, unit })}
+                              aria-label={
+                                bw
+                                  ? ex.assisted
+                                    ? t("Set {n} assistance in {unit}", { n, unit })
+                                    : t("Set {n} added weight in {unit}", { n, unit })
+                                  : t("Set {n} weight in {unit}", { n, unit })
+                              }
                               placeholder={unit}
                               step={0.5}
                               value={st.weightKg === null ? null : toInput(Math.abs(st.weightKg), unit)}

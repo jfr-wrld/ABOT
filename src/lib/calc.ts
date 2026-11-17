@@ -151,14 +151,19 @@ export function buildPRTable(
   const ordered = [...sessions]
     .filter((s) => s.status === "completed")
     .sort((a, b) => a.startedAt - b.startedAt);
+  for (const session of ordered) addToPRTable(table, session, byId, opts?.allGyms);
+  return table;
+}
 
-  for (const session of ordered) {
+/** Folds one session's sets into `table`, in place. Sessions must come oldest first. */
+function addToPRTable(table: PRTable, session: WorkoutSession, byId?: Record<string, Exercise>, allGyms?: boolean): void {
+  {
     for (const ex of session.exercises) {
       for (const set of ex.sets) {
         if (!isLoadedSet(set)) continue;
         const w = setLoadKg(set) as number;
         const r = set.reps as number;
-        const bucket = (table[keyFor(ex.exerciseId, session, byId, opts?.allGyms)] ??= {});
+        const bucket = (table[keyFor(ex.exerciseId, session, byId, allGyms)] ??= {});
         for (const kind of PR_KINDS) {
           const value = prValue(kind, w, r, volumeFactor(byId?.[ex.exerciseId]?.loadMode ?? "total"));
           const current = bucket[kind];
@@ -178,7 +183,6 @@ export function buildPRTable(
       }
     }
   }
-  return table;
 }
 
 /**
@@ -243,6 +247,43 @@ export function detectSessionPRs(
   return found;
 }
 
+/**
+ * Records that beat a value already on the books. A first leg press at a second gym, or a first
+ * pull-up after importing ones with no load, has nothing to beat there: it sets a starting
+ * point, not a record worth a badge or a count.
+ */
+export function recordsBeaten(
+  session: WorkoutSession,
+  allSessions: WorkoutSession[],
+  byId?: Record<string, Exercise>,
+  baseline: PRTable = priorPRTable(session, allSessions, byId),
+): PersonalRecord[] {
+  return detectSessionPRs(session, allSessions, byId, baseline).filter(
+    (p) => baseline[keyFor(p.exerciseId, session, byId)]?.[p.kind] !== undefined,
+  );
+}
+
+const beatenCache = new WeakMap<WorkoutSession[], { byId?: Record<string, Exercise>; counts: Record<string, number> }>();
+
+/**
+ * Lifts with a beaten record, per finished session, in one pass from oldest to newest with a
+ * running table. Measuring each session against a table rebuilt from everything before it grew
+ * with the square of the history. Cached per sessions array.
+ */
+export function beatenCounts(sessions: WorkoutSession[], byId?: Record<string, Exercise>): Record<string, number> {
+  const hit = beatenCache.get(sessions);
+  if (hit && hit.byId === byId) return hit.counts;
+  const table: PRTable = {};
+  const counts: Record<string, number> = {};
+  const ordered = sessions.filter((s) => s.status === "completed").sort((a, b) => a.startedAt - b.startedAt);
+  for (const s of ordered) {
+    counts[s.id] = new Set(recordsBeaten(s, [], byId, table).map((p) => p.exerciseId)).size;
+    addToPRTable(table, s, byId);
+  }
+  beatenCache.set(sessions, { byId, counts });
+  return counts;
+}
+
 /* ------------------------------------------------------------------ */
 /* History / analytics helpers                                         */
 /* ------------------------------------------------------------------ */
@@ -265,6 +306,25 @@ export function previousSets(
     }
   }
   return null;
+}
+
+/**
+ * Last time's set that matches set `i` of today: warm-ups line up with warm-ups and working
+ * sets with working sets, each by its place among its own kind. By plain position, two warm-ups
+ * last time would put 40 and 60 kg against today's first working sets.
+ */
+export function previousFor(
+  sets: readonly Pick<WorkoutSet, "type">[],
+  i: number,
+  previous: readonly WorkoutSet[] | null | undefined,
+): WorkoutSet | undefined {
+  const set = sets[i];
+  if (!set || !previous?.length) return undefined;
+  const warm = (x: Pick<WorkoutSet, "type">) => x.type === "warmup";
+  const kind = warm(set);
+  let k = 0;
+  for (let j = 0; j < i; j++) if (warm(sets[j]!) === kind) k++;
+  return previous.filter((p) => warm(p) === kind)[k];
 }
 
 export function exerciseHistory(

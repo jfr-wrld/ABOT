@@ -32,7 +32,7 @@ import { ReorderSheet } from "./ReorderSheet";
 import { SupersetSheet } from "./SupersetSheet";
 import { SUPERSET_COLORS, type SupersetLabel } from "@/lib/superset";
 import { Button } from "@/components/ui/Button";
-import { formatClock } from "@/lib/calc";
+import { formatClock, previousFor } from "@/lib/calc";
 import { useT, type T } from "@/i18n";
 import { muscleText } from "@/lib/home";
 import { PlateCalculatorModal } from "./PlateCalculatorModal";
@@ -40,7 +40,7 @@ import { OverloadBanner } from "./OverloadBanner";
 import { BodyweightLoad } from "./BodyweightLoad";
 import { ExerciseExtras } from "./ExerciseExtras";
 import { ExerciseSwapModal } from "./ExerciseSwapModal";
-import { fromDisplay, toDisplay } from "@/lib/units";
+import { fromDisplay, toInput, toDisplay } from "@/lib/units";
 import { feedback } from "@/lib/feedback";
 
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
@@ -141,7 +141,7 @@ function ExerciseCardView({
   const nextSet = nextIndex >= 0 ? item.sets[nextIndex] : undefined;
   const plateTarget =
     nextSet?.weightKg ??
-    (nextIndex >= 0 ? previous?.[nextIndex]?.weightKg : null) ??
+    (nextIndex >= 0 ? previousFor(item.sets, nextIndex, previous)?.weightKg : null) ??
     [...item.sets].reverse().find((x) => x.weightKg !== null)?.weightKg ??
     null;
 
@@ -342,7 +342,7 @@ function ExerciseCardView({
           onClose={() => setPlatesOpen(false)}
           unit={unit}
           locationId={locationId}
-          initialTarget={plateTarget === null ? null : toDisplay(plateTarget, unit)}
+          initialTarget={plateTarget === null ? null : Number(toInput(plateTarget, unit))}
           onUse={nextSet ? (w) => store.updateSet(item.id, nextSet.id, { weightKg: fromDisplay(w, unit) }) : undefined}
           setNumber={nextIndex >= 0 ? (numbers[nextIndex] ?? null) : null}
         />
@@ -379,7 +379,7 @@ function ExerciseCardView({
             key={set.id}
             set={set}
             number={numbers[i] ?? null}
-            previous={previous?.[i]}
+            previous={previousFor(item.sets, i, previous)}
             unit={unit}
             showRpe={showRpe}
             isBodyweight={exercise?.isBodyweight ?? false}

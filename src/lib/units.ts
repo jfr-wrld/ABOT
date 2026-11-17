@@ -1,5 +1,6 @@
 import type { WeightUnit } from "@/types/workout";
 import { kgToLbs, lbsToKg } from "./calc";
+import { currentT } from "@/i18n";
 
 /** kg from storage -> number in the user's unit, rounded for display. */
 export function toDisplay(kg: number, unit: WeightUnit): number {
@@ -46,15 +47,23 @@ export function fromDisplay(value: number, unit: WeightUnit): number {
   return unit === "kg" ? value : lbsToKg(value);
 }
 
-export function formatWeight(kg: number, unit: WeightUnit, withUnit = true): string {
+/**
+ * The app's language decides how numbers read, not the phone's: on an English phone an
+ * Indonesian reader takes "1,360 kg" for 1.36 kg, since the comma is the decimal mark there.
+ */
+function appLocale(): string {
+  return currentT().locale;
+}
+
+export function formatWeight(kg: number, unit: WeightUnit, withUnit = true, locale: string = appLocale()): string {
   // The same rounding as the input boxes: 102.25 kg reads 102.25 (it read 102.3), 100 kg in lbs 220.5.
-  const s = String(toInput(kg, unit));
+  const s = toInput(kg, unit).toLocaleString(locale, { maximumFractionDigits: 2, useGrouping: false });
   return withUnit ? `${s} ${unit}` : s;
 }
 
 /** Big numbers in the header: 12 345 -> "12.3k". */
-export function formatVolume(kg: number, unit: WeightUnit): string {
+export function formatVolume(kg: number, unit: WeightUnit, locale: string = appLocale()): string {
   const v = toDisplay(kg, unit);
-  if (v >= 10_000) return `${(v / 1000).toFixed(1)}k ${unit}`;
-  return `${Math.round(v).toLocaleString()} ${unit}`;
+  if (v >= 10_000) return `${(v / 1000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k ${unit}`;
+  return `${Math.round(v).toLocaleString(locale)} ${unit}`;
 }
