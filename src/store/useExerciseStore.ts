@@ -4,7 +4,7 @@ import type { Exercise, ExerciseDraft } from "@/types/workout";
 import { normalizeExercise } from "@/data/normalize";
 import { buildExerciseIndex } from "@/lib/sets";
 import { newId } from "@/lib/id";
-import { loadExtendedLibrary, withoutBuiltIn } from "@/data/extended-library";
+import { loadExtendedLibrary } from "@/data/extended-library";
 
 let extendedLoading: Promise<void> | null = null;
 
@@ -14,9 +14,6 @@ interface ExerciseState {
   loadSeed: () => Promise<void>;
   /** Custom exercises plus catalog exercises the user has logged (persisted, backed up). */
   custom: Exercise[];
-  /** The optional downloaded catalog (stored separately, not backed up). */
-  catalog: Exercise[];
-  setCatalog: (rows: Exercise[]) => void;
   /** The extended library that ships with the app (data/extended-library); empty until it loads. */
   extended: Exercise[];
   /** True once loading the extended library has finished, loaded or not. */
@@ -45,8 +42,6 @@ export const useExerciseStore = create<ExerciseState>()(
         }
       },
       custom: [],
-      catalog: [],
-      setCatalog: (catalog) => set({ catalog }),
       extended: [],
       extendedTried: false,
       loadExtended: async () => {
@@ -89,13 +84,13 @@ export const useExerciseStore = create<ExerciseState>()(
 );
 
 /**
- * One index for the whole app, rebuilt only when the custom or catalog lists change. Built per
+ * One index for the whole app, rebuilt only when the custom or extended lists change. Built per
  * component before, so a workout with eight cards sorted about 1,000 exercises eight times.
  */
-let cached: { seed: unknown; custom: unknown; catalog: unknown; extended: unknown; index: ReturnType<typeof buildExerciseIndex> } | null = null;
-function sharedIndex(seed: Exercise[], custom: Exercise[], catalog: Exercise[], extended: Exercise[]) {
-  if (!cached || cached.seed !== seed || cached.custom !== custom || cached.catalog !== catalog || cached.extended !== extended) {
-    cached = { seed, custom, catalog, extended, index: buildExerciseIndex(seed, custom, withoutBuiltIn(extended, catalog)) };
+let cached: { seed: unknown; custom: unknown; extended: unknown; index: ReturnType<typeof buildExerciseIndex> } | null = null;
+function sharedIndex(seed: Exercise[], custom: Exercise[], extended: Exercise[]) {
+  if (!cached || cached.seed !== seed || cached.custom !== custom || cached.extended !== extended) {
+    cached = { seed, custom, extended, index: buildExerciseIndex(seed, custom, extended) };
   }
   return cached.index;
 }
@@ -103,9 +98,8 @@ function sharedIndex(seed: Exercise[], custom: Exercise[], catalog: Exercise[], 
 export function useAllExercises() {
   const seed = useExerciseStore((s) => s.seed);
   const custom = useExerciseStore((s) => s.custom);
-  const catalog = useExerciseStore((s) => s.catalog);
   const extended = useExerciseStore((s) => s.extended);
-  return useMemo(() => sharedIndex(seed, custom, catalog, extended), [seed, custom, catalog, extended]);
+  return useMemo(() => sharedIndex(seed, custom, extended), [seed, custom, extended]);
 }
 
 /** Loads the extended library now, for a screen that lists or searches exercises (idempotent). */
@@ -117,6 +111,6 @@ export function useExtendedLibrary(when = true): void {
 
 /** One exercise by id, outside React (seed, extended library or custom); undefined when unknown. */
 export function exerciseById(id: string): Exercise | undefined {
-  const { seed, custom, catalog, extended } = useExerciseStore.getState();
-  return sharedIndex(seed, custom, catalog, extended).byId[id];
+  const { seed, custom, extended } = useExerciseStore.getState();
+  return sharedIndex(seed, custom, extended).byId[id];
 }

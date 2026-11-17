@@ -55,8 +55,8 @@ export function routineInfo(id: string | null): RoutineInfo | null {
   if (!id) return null;
   const r = useRoutineStore.getState().routines.find((x) => x.id === id);
   if (!r) return null;
-  const { seed, custom, catalog } = useExerciseStore.getState();
-  const { byId } = buildExerciseIndex(seed, custom, catalog);
+  const { seed, custom, extended } = useExerciseStore.getState();
+  const { byId } = buildExerciseIndex(seed, custom, extended);
   const muscles = [...new Set(r.exercises.flatMap((e) => byId[e.exerciseId]?.primaryMuscles ?? []))]
     .slice(0, 3)
     .map((m) => MUSCLE_GROUP_LABELS[m]);

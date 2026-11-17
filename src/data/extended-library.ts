@@ -24,10 +24,3 @@ export async function loadExtendedLibrary(): Promise<Exercise[]> {
   const atlas = ATLAS_INPUTS.map((row) => ({ ...normalizeExercise(row), isCatalog: true }));
   return [...fedb, ...atlas];
 }
-
-/** Rows stored by the old "Load full exercise catalog" download that the built-in library already has. */
-export function withoutBuiltIn(extended: Exercise[], downloaded: Exercise[]): Exercise[] {
-  if (extended.length === 0) return downloaded;
-  const ids = new Set(extended.map((e) => e.id));
-  return [...extended, ...downloaded.filter((e) => !ids.has(e.id))];
-}

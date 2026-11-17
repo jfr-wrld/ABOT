@@ -301,3 +301,34 @@ describe("wipe (Delete my data)", () => {
     expect(await again.sync.pending()).toEqual([]);
   });
 });
+
+describe("dexie settings images", () => {
+  it("keeps the photo and cover in their own row, rewritten only when they change", async () => {
+    const { AbotDB } = await import("./dexie");
+    const db = new AbotDB(`t-${crypto.randomUUID()}`);
+    const repo = createDexieRepository(db.name, db);
+    const photo = "data:image/jpeg;base64,AAAA";
+    const base = { weightUnit: "kg", theme: "dark", profilePhoto: photo, profileCover: "preset:neon-grid" } as never;
+    await repo.kv.set("settings", base);
+    expect((await db.kv.get("settings"))?.value).not.toHaveProperty("profilePhoto");
+    expect(await repo.kv.get("settings")).toEqual(base);
+
+    const puts: string[] = [];
+    const put = db.kv.put.bind(db.kv);
+    db.kv.put = ((row: { key: string }) => (puts.push(row.key), put(row as never))) as typeof db.kv.put;
+    await repo.kv.set("settings", { ...(base as object), theme: "light" } as never);
+    expect(puts).toEqual(["settings"]);
+    await repo.kv.set("settings", { ...(base as object), profilePhoto: null } as never);
+    expect(puts).toContain("settingsImages");
+    expect((await repo.snapshot()).settings).toMatchObject({ theme: "dark", profilePhoto: null, profileCover: "preset:neon-grid" });
+  });
+
+  it("reads a settings row saved before the split as it is", async () => {
+    const { AbotDB } = await import("./dexie");
+    const db = new AbotDB(`t-${crypto.randomUUID()}`);
+    await db.open();
+    await db.kv.put({ key: "settings", value: { weightUnit: "lbs", profilePhoto: "data:image/jpeg;base64,BBBB" } });
+    const repo = createDexieRepository(db.name, db);
+    expect(await repo.kv.get("settings")).toEqual({ weightUnit: "lbs", profilePhoto: "data:image/jpeg;base64,BBBB" });
+  });
+});

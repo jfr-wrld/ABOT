@@ -71,17 +71,12 @@ let loadingFromRepo = false;
 export async function hydrateStores(repo: Repository): Promise<void> {
   const snap = await repo.snapshot();
   const restTimer = (await repo.kv.get("restTimer")) ?? null;
-  // Catalog cardio downloaded before timed sets existed was stored as weight and reps.
-  const catalog = (await repo.catalog.all()).map((e) =>
-    e.category === "cardio" && e.logType === "weight_reps" ? { ...e, logType: "distance_duration" as const } : e,
-  );
   loadingFromRepo = true;
   try {
     useWorkoutStore.setState({ sessions: snap.sessions, active: snap.activeWorkout, restTimer });
     useRoutineStore.setState({ routines: snap.routines });
     useExerciseStore.setState({
       custom: snap.exercises.map((e: Exercise) => normalizeExercise(e)),
-      catalog,
       mediaOverrides: snap.exerciseMedia,
     });
     useLocationStore.setState({ locations: snap.locations });
@@ -360,5 +355,36 @@ export async function bootstrapStores(
   setActiveRepository(repo);
   activePersistence = attachPersistence(repo);
   useHydration.getState().setHydrated({ durable, error });
+  // Once saving is on, so the adopted exercises are written before the old table is emptied.
+  void migrateLegacyCatalog(repo).catch(() => {});
   return { persistence: activePersistence };
+}
+
+/**
+ * The old "Load full exercise catalog" download is gone (the full library ships with the app), but
+ * a device that used it still holds its table. Rows its history, routines or favourites name are
+ * kept as the lifter's own exercises (as logging one does), then the table is emptied, so it is
+ * no longer read and merged on every start. Returns how many were kept.
+ */
+export async function migrateLegacyCatalog(repo: Repository): Promise<number> {
+  const rows = await repo.catalog.all();
+  if (rows.length === 0) return 0;
+  const used = new Set<string>();
+  const w = useWorkoutStore.getState();
+  for (const s of w.active ? [...w.sessions, w.active] : w.sessions) for (const e of s.exercises) used.add(e.exerciseId);
+  for (const r of useRoutineStore.getState().routines) for (const e of r.exercises) used.add(e.exerciseId);
+  for (const id of useSettingsStore.getState().favoriteExercises ?? []) used.add(id);
+  const { custom, seed, adopt } = useExerciseStore.getState();
+  const owned = new Set([...custom, ...seed].map((e) => e.id));
+  let kept = 0;
+  for (const row of rows) {
+    if (!used.has(row.id) || owned.has(row.id)) continue;
+    // Catalog cardio downloaded before timed sets existed was stored as weight and reps.
+    const fixed = row.category === "cardio" && row.logType === "weight_reps" ? { ...row, logType: "distance_duration" as const } : row;
+    adopt({ ...normalizeExercise(fixed), isCatalog: true });
+    kept++;
+  }
+  await activePersistence?.flush();
+  await repo.catalog.clear();
+  return kept;
 }

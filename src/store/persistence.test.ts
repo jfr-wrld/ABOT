@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryRepository, type Repository } from "@/data/repo";
 import { attachPersistence, hydrateStores } from "./persistence";
 import { useWorkoutStore } from "./useWorkoutStore";
@@ -321,6 +321,24 @@ describe("bootstrapStores (final review #3)", () => {
     expect(r.persistence).not.toBeNull();
     detach = r.persistence!.detach;
     expect(useHydration.getState().error).toBeNull();
+  });
+});
+
+describe("the old downloaded catalog (audit 2026-11-16)", () => {
+  it("keeps the rows history names as the lifter's own, then empties the table", async () => {
+    const repo = mem();
+    const base = { equipment: "barbell", category: "compound", primaryMuscles: ["quads"], secondaryMuscles: [], logType: "weight_reps", isCatalog: true } as const;
+    await repo.catalog.replaceAll([
+      { ...base, id: "fedb-Zercher_Squats", name: "Zercher Squats" } as never,
+      { ...base, id: "fedb-Unused", name: "Never logged" } as never,
+    ]);
+    const s = { ...finished("old"), exercises: [{ id: "e1", exerciseId: "fedb-Zercher_Squats", restSeconds: 90, sets: [] }] };
+    await repo.sessions.put(s);
+    const r = await bootstrapStores({ repo, durable: true, error: null }, { getItem: () => null });
+    detach = r.persistence!.detach;
+    await vi.waitFor(async () => expect(await repo.catalog.all()).toEqual([]));
+    expect(useExerciseStore.getState().custom.map((e) => e.id)).toEqual(["fedb-Zercher_Squats"]);
+    expect((await repo.snapshot()).exercises.map((e) => e.name)).toEqual(["Zercher Squats"]);
   });
 });
 

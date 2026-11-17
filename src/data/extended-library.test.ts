@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { exerciseKey } from "./exerciseKey.mjs";
-import { loadExtendedLibrary, withoutBuiltIn } from "./extended-library";
+import { loadExtendedLibrary } from "./extended-library";
 import { SEED_EXERCISES } from "./exercises";
-import { normalizeExercise } from "./normalize";
 
 describe("exerciseKey", () => {
   it("matches the same lift named either way round", () => {
@@ -44,15 +43,5 @@ describe("the extended library", async () => {
     const names = new Set(atlas.map((e) => e.name));
     expect(names).toContain("Bayesian Curl (Cable)");
     expect(names).toContain("Pendulum Squat (Machine)");
-  });
-});
-
-describe("withoutBuiltIn", () => {
-  const row = (id: string) => ({ ...normalizeExercise({ id, name: id, equipment: "barbell", primaryMuscles: ["chest"] }), isCatalog: true });
-  it("drops rows of the old download that the built-in library already has", () => {
-    const built = [row("fedb-A")];
-    expect(withoutBuiltIn(built, [row("fedb-A"), row("fedb-Z")]).map((e) => e.id)).toEqual(["fedb-A", "fedb-Z"]);
-    const old = [row("fedb-A")];
-    expect(withoutBuiltIn([], old)).toBe(old);
   });
 });

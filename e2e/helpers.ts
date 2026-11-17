@@ -100,9 +100,13 @@ export async function waitForSavedSetting(page: Page, field: string, value: unkn
           new Promise<unknown>((resolve) => {
             const open = indexedDB.open("abot");
             open.onsuccess = () => {
-              const req = open.result.transaction("kv").objectStore("kv").get("settings");
-              req.onsuccess = () => {
-                resolve(f.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], req.result?.value));
+              // The photo and cover sit in their own row (data/repo/dexie): merged back as the app reads it.
+              const store = open.result.transaction("kv").objectStore("kv");
+              const req = store.get("settings");
+              const images = store.get("settingsImages");
+              images.onsuccess = () => {
+                const merged = { ...(req.result?.value ?? {}), ...(images.result?.value ?? {}) };
+                resolve(f.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], merged));
                 open.result.close();
               };
             };

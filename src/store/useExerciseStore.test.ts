@@ -10,7 +10,6 @@ const cat: Exercise = { ...SEED_EXERCISES[0]!, id: "fedb-Zercher_Squats", name: 
 
 describe("adopt", () => {
   it("copies a catalog exercise into the owned list once", () => {
-    useExerciseStore.getState().setCatalog([cat]);
     useExerciseStore.getState().adopt(cat);
     useExerciseStore.getState().adopt(cat);
     expect(useExerciseStore.getState().custom.map((e) => e.id)).toEqual([cat.id]);

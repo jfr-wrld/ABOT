@@ -86,7 +86,46 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
     });
   }
 
+  /*
+   * The profile photo and cover (data URLs, tens of KB each) live in their own row, written only
+   * when one of them changes: in one settings row, every setting changed (a favourite star, the
+   * theme, a sleep pull) rewrote both. Reads merge them back, so the rest of the app, backups and
+   * the cloud record still see one settings value. A row saved before this split still holds the
+   * images itself and is read as it is; the next write splits it.
+   */
+  const IMAGES_KEY = "settingsImages" as KvKey;
+  let lastImages: string | null = null;
+
+  async function readSettings(): Promise<unknown> {
+    const s = (await db.kv.get("settings"))?.value as Record<string, unknown> | undefined;
+    if (!s) return undefined;
+    if ("profilePhoto" in s || "profileCover" in s) return s;
+    const images = (await db.kv.get(IMAGES_KEY))?.value as Record<string, unknown> | undefined;
+    return images ? { ...s, ...images } : s;
+  }
+
+  async function writeSettings(value: unknown) {
+    const { profilePhoto, profileCover, ...rest } = (value ?? {}) as Record<string, unknown>;
+    // Only the keys the value has: a missing one must still fall back to its default on read.
+    const images: Record<string, unknown> = {};
+    if (value && typeof value === "object" && "profilePhoto" in value) images.profilePhoto = profilePhoto;
+    if (value && typeof value === "object" && "profileCover" in value) images.profileCover = profileCover;
+    const json = JSON.stringify(images);
+    if (json !== lastImages) {
+      await db.kv.put({ key: IMAGES_KEY, value: images });
+      lastImages = json;
+    }
+    await db.kv.put({ key: "settings", value: rest });
+  }
+
+  async function dropSettings() {
+    await db.kv.delete("settings");
+    await db.kv.delete(IMAGES_KEY);
+    lastImages = null;
+  }
+
   async function kvValue(k: KvKey): Promise<unknown> {
+    if (k === "settings") return readSettings();
     return (await db.kv.get(k))?.value;
   }
 
@@ -96,7 +135,8 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
       const prev = k === "settings" ? undefined : await kvValue(k);
       for (const c of kvChanges(k, prev, value)) await mark(c.kind, c.id, c.deleted);
     }
-    await db.kv.put({ key: k, value });
+    if (k === "settings") await writeSettings(value);
+    else await db.kv.put({ key: k, value });
   }
 
   /** Every write and its sync mark land together, or not at all. */
@@ -183,6 +223,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
     },
     kv: {
       async get<K extends KvKey>(key: K) {
+        if (key === "settings") return (await readSettings()) as KvValues[K] | undefined;
         const row = await db.kv.get(key);
         return row ? (row.value as KvValues[K]) : undefined;
       },
@@ -196,7 +237,8 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
       async remove(key) {
         await rw(async () => {
           if (TRACKED_KV.includes(key)) for (const c of kvChanges(key, await kvValue(key), undefined)) await mark(c.kind, c.id, c.deleted);
-          await db.kv.delete(key);
+          if (key === "settings") await dropSettings();
+          else await db.kv.delete(key);
         });
       },
     },
@@ -278,7 +320,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
           await putRows(n, data[n]);
         }
         if (data.settings) await setKv("settings", data.settings, true);
-        else await db.kv.delete("settings");
+        else await dropSettings();
         await db.kv.put({ key: "activeWorkout", value: data.activeWorkout });
         await db.kv.put({ key: "restTimer", value: null });
         await setKv("exerciseMedia", data.exerciseMedia, true);
@@ -309,7 +351,7 @@ export function createDexieRepository(name = "abot", db: AbotDB = new AbotDB(nam
         routines: await db.routines.toArray(),
         exercises: await db.exercises.toArray(),
         locations: await db.locations.toArray(),
-        settings: ((await db.kv.get("settings"))?.value as KvValues["settings"] | undefined) ?? null,
+        settings: ((await readSettings()) as KvValues["settings"] | undefined) ?? null,
         activeWorkout: ((await db.kv.get("activeWorkout"))?.value as KvValues["activeWorkout"] | undefined) ?? null,
         exerciseMedia: ((await db.kv.get("exerciseMedia"))?.value as KvValues["exerciseMedia"] | undefined) ?? {},
         bodyweightLog: ((await db.kv.get("bodyweightLog"))?.value as KvValues["bodyweightLog"] | undefined) ?? [],
