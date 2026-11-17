@@ -82,29 +82,39 @@ test("Clean puts its few lines where the lifter chooses, and only Clean has the 
   await expect(dialog.getByRole("img", { name: /^Clean story card/ })).toBeVisible();
 
   await dialog.getByRole("tab", { name: "Text" }).click();
-  const spots = dialog.getByRole("radiogroup", { name: "Text position" });
-  await expect(spots.getByRole("radio")).toHaveCount(9);
-  await expect(spots.getByRole("radio", { name: "Bottom left", exact: true })).toHaveAttribute("aria-checked", "true");
-  const before = await dialog.getByRole("img", { name: /story card/ }).evaluate((c: HTMLCanvasElement) => c.toDataURL());
-  await spots.getByRole("radio", { name: "Top right", exact: true }).click();
-  await expect(spots.getByRole("radio", { name: "Top right", exact: true })).toHaveAttribute("aria-checked", "true");
-  // Arrow keys move between spots, as in any radio group.
-  await page.keyboard.press("ArrowDown");
-  await expect(spots.getByRole("radio", { name: "Right", exact: true })).toHaveAttribute("aria-checked", "true");
-  await expect
-    .poll(() => dialog.getByRole("img", { name: /story card/ }).evaluate((c: HTMLCanvasElement) => c.toDataURL()))
-    .not.toBe(before);
-  await expectNoHorizontalOverflow(page);
+  const card = dialog.getByRole("img", { name: /story card/ });
+  const drawn = () => card.evaluate((c: HTMLCanvasElement) => c.toDataURL());
+  const rows = dialog.getByRole("radiogroup", { name: "Vertical position" });
+  const cols = dialog.getByRole("radiogroup", { name: "Horizontal position" });
+  // Bottom left to start; row and column together make nine spots.
+  await expect(rows.getByRole("radio", { name: "Bottom" })).toHaveAttribute("aria-checked", "true");
+  await expect(cols.getByRole("radio", { name: "Left" })).toHaveAttribute("aria-checked", "true");
+  let before = await drawn();
+  await rows.getByRole("radio", { name: "Top" }).click();
+  await cols.getByRole("radio", { name: "Right" }).click();
+  await expect(rows.getByRole("radio", { name: "Top" })).toHaveAttribute("aria-checked", "true");
+  // Arrow keys move along a group, as in any radio group.
+  await page.keyboard.press("ArrowLeft");
+  await expect(cols.getByRole("radio", { name: "Center" })).toHaveAttribute("aria-checked", "true");
+  await expect.poll(drawn).not.toBe(before);
 
-  // Above the text: the muscles worked, or what the volume equals.
+  // Above the text: the muscles worked, or what the volume equals; each with its own size.
   const above = dialog.getByRole("radiogroup", { name: "Above the text" });
   await expect(above.getByRole("radio", { name: "Text only" })).toHaveAttribute("aria-checked", "true");
+  await expect(dialog.getByLabel("Picture")).toHaveCount(0);
   for (const name of ["Muscle map", "Comparison"]) {
-    const was = await dialog.getByRole("img", { name: /story card/ }).evaluate((c: HTMLCanvasElement) => c.toDataURL());
+    before = await drawn();
     await above.getByRole("radio", { name }).click();
     await expect(above.getByRole("radio", { name })).toHaveAttribute("aria-checked", "true");
-    await expect.poll(() => dialog.getByRole("img", { name: /story card/ }).evaluate((c: HTMLCanvasElement) => c.toDataURL())).not.toBe(was);
+    await expect.poll(drawn).not.toBe(before);
   }
+  before = await drawn();
+  await dialog.getByLabel("Picture").fill("1.4");
+  await expect.poll(drawn).not.toBe(before);
+  before = await drawn();
+  await dialog.getByLabel("Text", { exact: true }).fill("0.8");
+  await expect.poll(drawn).not.toBe(before);
+  await expectNoHorizontalOverflow(page);
 
   const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Download High-Res PNG" }).click()]);
   expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-clean\.png$/);

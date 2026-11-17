@@ -34,7 +34,7 @@ import {
   type StoryOptions,
   type StoryPhoto,
   type StoryPresetId,
-  TEXT_POSITIONS,
+  SIZE_RANGE,
   type TextPosition,
   CLEAN_EXTRAS,
   type CleanExtra,
@@ -197,6 +197,8 @@ function Studio({
   const [preset, setPreset] = useState<StoryPresetId>("clean");
   const [textPosition, setTextPosition] = useState<TextPosition>("bottom-left");
   const [cleanExtra, setCleanExtra] = useState<CleanExtra>("none");
+  const [textScale, setTextScale] = useState<number>(SIZE_RANGE.initial);
+  const [extraScale, setExtraScale] = useState<number>(SIZE_RANGE.initial);
   const [fonts, setFonts] = useState<StoryFonts | null>(null);
   const [fontsFailed, setFontsFailed] = useState(false);
   const [photo, setPhoto] = useState<StoryPhoto | null>(null);
@@ -229,8 +231,8 @@ function Studio({
   const presetLocked = !proActive && isProPreset(preset);
   const founderBadge = founderBadgeOn && isFounder ? founderUnitCode : null;
   const opts = useMemo<StoryOptions>(
-    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge, textPosition, cleanExtra }),
-    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge, textPosition, cleanExtra],
+    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge, textPosition, cleanExtra, textScale, extraScale }),
+    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge, textPosition, cleanExtra, textScale, extraScale],
   );
   const exportKey = useMemo(() => ({ card, opts }), [card, opts]);
   // Image (the PNG, as before) or Video (the same card in motion, PRO for a workout).
@@ -299,7 +301,7 @@ function Studio({
     return () => cancelAnimationFrame(raf);
     // The preset itself does not change any thumbnail.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card, photo, overlay, grayscale, fonts, tab, textPosition, cleanExtra]);
+  }, [card, photo, overlay, grayscale, fonts, tab, textPosition, cleanExtra, textScale, extraScale]);
 
   // The PNG is made ahead of the tap: Safari only opens the share sheet inside the tap itself.
   useEffect(() => {
@@ -477,7 +479,7 @@ function Studio({
       </div>
 
       {/* One panel at a time, fixed height, so nothing below the preview scrolls. */}
-      <div className="h-[148px] shrink-0 px-4 pt-2">
+      <div className="h-[152px] shrink-0 px-4 pt-2">
         {tab === "layout" && (
           <ul aria-label={t("Layouts")} className="-mx-4 flex h-full snap-x gap-2 overflow-x-auto px-4 pb-1">
             {STORY_PRESETS.map((p) => {
@@ -515,7 +517,16 @@ function Studio({
         )}
 
         {tab === "text" && preset === "clean" && (
-          <TextPositionPicker value={textPosition} onChange={setTextPosition} extra={cleanExtra} onExtra={setCleanExtra} />
+          <CleanTextControls
+            position={textPosition}
+            onPosition={setTextPosition}
+            extra={cleanExtra}
+            onExtra={setCleanExtra}
+            textScale={textScale}
+            onTextScale={setTextScale}
+            extraScale={extraScale}
+            onExtraScale={setExtraScale}
+          />
         )}
 
         {tab === "pro" && (
@@ -704,90 +715,175 @@ function isProPreset(id: StoryPresetId): boolean {
   return STORY_PRESETS.filter((p) => p.id !== "clean").findIndex((p) => p.id === id) >= tunables().story.freePresets;
 }
 
-/**
- * Where Clean's text goes: a small story-shaped frame of nine spots. Arrow keys move between
- * them, as in any radio group; only the chosen spot is in the tab order.
- */
-function TextPositionPicker({
+type Row = "top" | "middle" | "bottom";
+type Col = "left" | "center" | "right";
+const ROWS: { id: Row; label: string }[] = [
+  { id: "top", label: "Top" },
+  { id: "middle", label: "Middle" },
+  { id: "bottom", label: "Bottom" },
+];
+const COLS: { id: Col; label: string }[] = [
+  { id: "left", label: "Left" },
+  { id: "center", label: "Center" },
+  { id: "right", label: "Right" },
+];
+
+function splitPosition(p: TextPosition): [Row, Col] {
+  const row: Row = p.startsWith("top") ? "top" : p.startsWith("bottom") ? "bottom" : "middle";
+  const col: Col = p.endsWith("left") ? "left" : p.endsWith("right") ? "right" : "center";
+  return [row, col];
+}
+
+function joinPosition(row: Row, col: Col): TextPosition {
+  if (row === "middle") return col;
+  return (col === "center" ? row : `${row}-${col}`) as TextPosition;
+}
+
+/** Three small buttons in one pill; arrow keys move between them, as in any radio group. */
+function Segmented<V extends string>({
+  label,
+  options,
   value,
   onChange,
-  extra,
-  onExtra,
+  glyph,
 }: {
-  value: TextPosition;
-  onChange: (p: TextPosition) => void;
-  extra: CleanExtra;
-  onExtra: (e: CleanExtra) => void;
+  label: string;
+  options: { id: V; label: string }[];
+  value: V;
+  onChange: (v: V) => void;
+  glyph?: (v: V, on: boolean) => React.ReactNode;
 }) {
   const t = useT();
   const group = useRef<HTMLDivElement>(null);
-  const move = (dx: number, dy: number) => {
-    const i = TEXT_POSITIONS.findIndex((p) => p.id === value);
-    const col = Math.min(2, Math.max(0, (i % 3) + dx));
-    const row = Math.min(2, Math.max(0, Math.floor(i / 3) + dy));
-    const next = TEXT_POSITIONS[row * 3 + col]!.id;
-    onChange(next);
-    group.current?.querySelector<HTMLButtonElement>(`[data-spot="${next}"]`)?.focus();
+  const pick = (v: V, focus = false) => {
+    if (v !== value) feedback.tick();
+    onChange(v);
+    if (focus) group.current?.querySelector<HTMLButtonElement>(`[data-v="${v}"]`)?.focus();
   };
   return (
-    <div className="flex h-full items-center gap-4">
-      <div
-        ref={group}
-        role="radiogroup"
-        aria-label={t("Text position")}
-        onKeyDown={(e) => {
-          const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
-          if (!d) return;
-          e.preventDefault();
-          move(d[0]!, d[1]!);
-        }}
-        className="grid shrink-0 grid-cols-3 gap-1 rounded-xl border border-line-strong bg-surface-2 p-1"
-      >
-        {TEXT_POSITIONS.map((p) => {
-          const on = p.id === value;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              role="radio"
-              data-spot={p.id}
-              aria-checked={on}
-              aria-label={t(p.label)}
-              tabIndex={on ? 0 : -1}
-              onClick={() => {
-                if (!on) feedback.tick();
-                onChange(p.id);
-              }}
-              className="flex size-11 items-center justify-center rounded-lg hover:bg-surface"
-            >
-              <span aria-hidden="true" className={`block h-1.5 rounded-full transition-all ${on ? "w-6 bg-accent" : "w-3 bg-text-muted/40"}`} />
-            </button>
-          );
-        })}
+    <div
+      ref={group}
+      role="radiogroup"
+      aria-label={label}
+      onKeyDown={(e) => {
+        const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        const i = options.findIndex((o) => o.id === value);
+        pick(options[Math.min(options.length - 1, Math.max(0, i + step))]!.id, true);
+      }}
+      className="flex min-w-0 flex-1 gap-0.5 rounded-ctl bg-surface-2 p-0.5"
+    >
+      {options.map((o) => {
+        const on = o.id === value;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            role="radio"
+            data-v={o.id}
+            aria-checked={on}
+            aria-label={glyph ? t(o.label) : undefined}
+            title={glyph ? t(o.label) : undefined}
+            tabIndex={on ? 0 : -1}
+            onClick={() => pick(o.id)}
+            className={`flex h-10 min-w-0 flex-1 items-center justify-center rounded-[10px] px-1 text-xs font-semibold transition-colors ${
+              on ? "bg-surface text-text" : "text-text-muted hover:text-text"
+            }`}
+          >
+            {glyph ? glyph(o.id, on) : <span className="truncate">{t(o.label)}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A tiny story frame with a bar where the text would sit. */
+function SpotGlyph({ row, col, on }: { row?: Row; col?: Col; on: boolean }) {
+  const bar = on ? "bg-accent" : "bg-text-muted";
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex h-5 w-4 flex-col rounded-[3px] border p-[2px] ${on ? "border-text" : "border-text-muted/60"} ${
+        row === "top" ? "justify-start" : row === "bottom" ? "justify-end" : "justify-center"
+      } ${col === "left" ? "items-start" : col === "right" ? "items-end" : "items-center"}`}
+    >
+      <span className={`block h-[3px] rounded-full ${bar} ${row ? "w-full" : "w-[6px]"}`} />
+    </span>
+  );
+}
+
+function SizeSlider({ id, label, value, onChange }: { id: string; label: string; value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      <label htmlFor={id} className="shrink-0 text-xs text-text-muted">
+        {label}
+      </label>
+      <input
+        id={id}
+        type="range"
+        min={SIZE_RANGE.min}
+        max={SIZE_RANGE.max}
+        step={SIZE_RANGE.step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-11 min-w-0 flex-1 cursor-pointer accent-[#ccff00]"
+      />
+      <span className="num w-9 shrink-0 text-right text-xs text-text-muted">{Math.round(value * 100)}%</span>
+    </div>
+  );
+}
+
+/**
+ * Clean's text controls in three slim rows: what sits above the text, where the block goes
+ * (row and column, so nine spots in six buttons), and how big the text and the picture are.
+ */
+function CleanTextControls({
+  position,
+  onPosition,
+  extra,
+  onExtra,
+  textScale,
+  onTextScale,
+  extraScale,
+  onExtraScale,
+}: {
+  position: TextPosition;
+  onPosition: (p: TextPosition) => void;
+  extra: CleanExtra;
+  onExtra: (e: CleanExtra) => void;
+  textScale: number;
+  onTextScale: (v: number) => void;
+  extraScale: number;
+  onExtraScale: (v: number) => void;
+}) {
+  const t = useT();
+  const [row, col] = splitPosition(position);
+  return (
+    <div className="flex h-full flex-col justify-center gap-1.5">
+      <Segmented label={t("Above the text")} options={CLEAN_EXTRAS} value={extra} onChange={onExtra} />
+      <div className="flex gap-2">
+        <Segmented
+          label={t("Vertical position")}
+          options={ROWS}
+          value={row}
+          onChange={(r) => onPosition(joinPosition(r, col))}
+          glyph={(r, on) => <SpotGlyph row={r} on={on} />}
+        />
+        <Segmented
+          label={t("Horizontal position")}
+          options={COLS}
+          value={col}
+          onChange={(c) => onPosition(joinPosition(row, c))}
+          glyph={(c, on) => <SpotGlyph col={c} on={on} />}
+        />
       </div>
-      {/* What sits above the text: nothing, the muscles worked, or what the volume equals. */}
-      <div role="radiogroup" aria-label={t("Above the text")} className="flex min-w-0 flex-1 flex-col gap-1">
-        {CLEAN_EXTRAS.map((e) => {
-          const on = e.id === extra;
-          return (
-            <button
-              key={e.id}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => {
-                if (!on) feedback.tick();
-                onExtra(e.id);
-              }}
-              className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 text-left text-sm font-semibold transition-colors ${
-                on ? "border-accent bg-accent/10 text-text" : "border-line-strong bg-surface-2 text-text-muted hover:text-text"
-              }`}
-            >
-              <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${on ? "bg-accent" : "bg-text-muted/40"}`} />
-              <span className="truncate">{t(e.label)}</span>
-            </button>
-          );
-        })}
+      <div className="flex gap-3">
+        <SizeSlider id="clean-text-size" label={t("Text")} value={textScale} onChange={onTextScale} />
+        {extra !== "none" && (
+          <SizeSlider id="clean-extra-size" label={extra === "muscles" ? t("Map") : t("Picture")} value={extraScale} onChange={onExtraScale} />
+        )}
       </div>
     </div>
   );

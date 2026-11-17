@@ -111,6 +111,15 @@ export interface StoryOptions {
   textPosition?: TextPosition;
   /** Clean only: a muscle map or a "like lifting 2 cars" picture above the text. None when not given. */
   cleanExtra?: CleanExtra;
+  /** Clean only: how big the text and the picture above it are, each from SIZE_RANGE (1 is as designed). */
+  textScale?: number;
+  extraScale?: number;
+}
+
+export const SIZE_RANGE = { min: 0.7, max: 1.5, step: 0.05, initial: 1 } as const;
+
+function clampSize(k: number | undefined): number {
+  return Math.min(SIZE_RANGE.max, Math.max(SIZE_RANGE.min, k ?? SIZE_RANGE.initial));
 }
 
 export type CleanExtra = "none" | "muscles" | "compare";
@@ -1695,19 +1704,30 @@ function clean(s: Scene) {
   if (opts.photo) ctx.drawImage(opts.photo.layer(opts.grayscale), 0, 0, W, H);
 
   const inner = W - 2 * CLEAN_MARGIN;
-  const title = wrap(s, data.title, inner, 72, 800, 2);
   const t = currentT();
+  const extra = opts.cleanExtra ?? "none";
+  const compare = extra === "compare" ? liftComparison(data.volumeKg) : null;
+  // The lifter's sizes, shrunk together if the block would not fit between the safe lines.
+  let kText = clampSize(opts.textScale);
+  let kExtra = extra === "none" ? 1 : clampSize(opts.extraScale);
   const stats = [formatVolume(data.volumeKg, unit), formatDuration(data.durationSec), t.n(data.setsDone, "{n} set", "{n} sets")].join(" · ");
   const handle = data.handle?.trim();
   const showMark = !opts.hideWatermark;
-  const extra = opts.cleanExtra ?? "none";
-  const compare = extra === "compare" ? liftComparison(data.volumeKg) : null;
-  // Above the text: the muscle map, or the thing lifted with its line.
+  // Above the text, in its own units: the muscle map, or the thing lifted with its two lines.
   const extraH = extra === "muscles" ? CLEAN_MAP_H + 36 : compare ? CLEAN_OBJECT + 18 + 52 + 12 + 32 + 40 : 0;
-  // Line by line: the date, the title, the figures, then the handle and the mark when they show.
-  const h = extraH + 28 + 24 + 72 + (title.length - 1) * 80 + 18 + 34 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
+  const textH = (lines: number) => 28 + 24 + 72 + (lines - 1) * 80 + 18 + 34 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
+  let title = wrap(s, data.title, inner / kText, 72, 800, 2);
+  const room = SAFE_BOTTOM - SAFE_TOP;
+  const tall = extraH * kExtra + textH(title.length) * kText;
+  if (tall > room) {
+    kText *= room / tall;
+    kExtra *= room / tall;
+    title = wrap(s, data.title, inner / kText, 72, 800, 2);
+  }
+  const h = extraH * kExtra + textH(title.length) * kText;
   const { x, top, align } = cleanBlockOrigin(position, h);
-  const leftOf = (w: number) => (align === "left" ? x : align === "right" ? x - w : x - w / 2);
+  // Inside the block, x = 0 is the anchor: lines align to it, pictures sit beside it.
+  const leftOf = (w: number) => (align === "left" ? 0 : align === "right" ? -w : -w / 2);
 
   // The shade behind the text (with a photo) or a faint Volt glow (without one).
   const cx = align === "left" ? x + inner * 0.35 : align === "right" ? x - inner * 0.35 : x;
@@ -1742,41 +1762,49 @@ function clean(s: Scene) {
   const p = beat(s.time, 0.15, 0.55, easeOut);
   ctx.save();
   ctx.globalAlpha = p;
-  ctx.translate(0, (1 - p) * 24);
-  let y = top;
-  if (extra === "muscles") {
-    drawBody(ctx, leftOf(CLEAN_MAP_W), y, CLEAN_MAP_W, regionHeat(data).heat);
-    y += CLEAN_MAP_H + 36;
-  } else if (compare) {
-    drawLiftObject(ctx, compare.object.id, leftOf(CLEAN_OBJECT), y, CLEAN_OBJECT, VOLT);
-    const n = compare.count.toLocaleString(t.locale, { maximumFractionDigits: 1 });
-    // The count, loud; then a line for the fun of it.
-    y += CLEAN_OBJECT + 18 + 52;
-    text(s, t.n(compare.count, compare.object.one, compare.object.other, { n }), x, y, { size: 56, weight: 800, color: VOLT, align, maxWidth: inner, tracking: -1 });
-    y += 12 + 32;
-    text(s, t(compare.object.quip), x, y, { size: 32, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.9)", align, maxWidth: inner });
-    y += 40;
+  ctx.translate(x, top + (1 - p) * 24);
+
+  if (extraH > 0) {
+    ctx.save();
+    ctx.scale(kExtra, kExtra);
+    const width = inner / kExtra;
+    let y = 0;
+    if (extra === "muscles") {
+      drawBody(ctx, leftOf(CLEAN_MAP_W), y, CLEAN_MAP_W, regionHeat(data).heat);
+    } else if (compare) {
+      drawLiftObject(ctx, compare.object.id, leftOf(CLEAN_OBJECT), y, CLEAN_OBJECT, VOLT);
+      const n = compare.count.toLocaleString(t.locale, { maximumFractionDigits: 1 });
+      // The count, loud; then a line for the fun of it.
+      y += CLEAN_OBJECT + 18 + 52;
+      text(s, t.n(compare.count, compare.object.one, compare.object.other, { n }), 0, y, { size: 56, weight: 800, color: VOLT, align, maxWidth: width, tracking: -1 });
+      y += 12 + 32;
+      text(s, t(compare.object.quip), 0, y, { size: 32, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.9)", align, maxWidth: width });
+    }
+    ctx.restore();
   }
-  y += 28;
-  text(s, dateLabel(data), x, y, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 });
+
+  ctx.translate(0, extraH * kExtra);
+  ctx.scale(kText, kText);
+  const width = inner / kText;
+  let y = 28;
+  text(s, dateLabel(data), 0, y, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 });
   y += 24 + 72;
   for (const line of title) {
-    text(s, line, x, y, { size: 72, weight: 800, align, tracking: -1.5 });
+    text(s, line, 0, y, { size: 72, weight: 800, align, tracking: -1.5 });
     y += 80;
   }
   y += 18 + 34 - 80;
-  text(s, stats, x, y, { size: 34, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.92)", align, maxWidth: inner });
+  text(s, stats, 0, y, { size: 34, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.92)", align, maxWidth: width });
   if (handle) {
     y += 16 + 30;
-    text(s, `@${handle}`, x, y, { size: 30, weight: 700, family: "mono", color: VOLT, align, maxWidth: inner });
+    text(s, `@${handle}`, 0, y, { size: 30, weight: 700, family: "mono", color: VOLT, align, maxWidth: width });
   }
   if (showMark) {
     y += 34 + 20;
     const size = 40;
     setFont(s, size * 0.82, 800, "sans");
     const w = size * 1.28 + ctx.measureText("ABOT").width;
-    const from = align === "left" ? x : align === "right" ? x - w : x - w / 2;
-    wordmark(s, from, y, size, VOLT);
+    wordmark(s, leftOf(w), y, size, VOLT);
   }
   ctx.restore();
 }

@@ -89,6 +89,7 @@ export const DYNAMIC_KEYS: string[] = [
   "Your photo first, a few quiet lines",
   // TEXT_POSITIONS labels (Clean's text spots)
   "Top left", "Top", "Top right", "Left", "Center", "Right", "Bottom left", "Bottom", "Bottom right",
+  "Middle",
   // CLEAN_EXTRAS labels
   "Text only", "Muscle map", "Comparison",
   "Full-time scoreboard: your volume is the score",
