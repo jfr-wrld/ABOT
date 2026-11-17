@@ -34,3 +34,21 @@ test("browsing exercises says how many more there are without a photo", async ({
   await more.click();
   await expect(more).toHaveCount(0);
 });
+
+test("Back through Settings and its sections goes up one level each time, never in a loop", async ({ page }) => {
+  await page.goto("/profile");
+  await page.getByRole("link", { name: /^Settings/ }).first().click();
+  await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === "/settings" && !u.search);
+  await page.getByRole("link", { name: /^General/ }).first().click();
+  await page.waitForURL(/section=general/);
+
+  // The header's "‹ Settings", then "‹ Profile": each goes back in history, adding no entry, so
+  // the phone's Back afterwards cannot walk into a page already left.
+  const entries = await page.evaluate(() => history.length);
+  await page.locator("main header").getByRole("link", { name: "Settings" }).click();
+  await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === "/settings" && !u.search);
+  await page.locator("main header").getByRole("link", { name: "Profile" }).click();
+  await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === "/profile");
+
+  expect(await page.evaluate(() => history.length)).toBe(entries);
+});

@@ -86,7 +86,7 @@ function Memory() {
   }, []);
 
   useEffect(() => {
-    visit(pathname, popped.current);
+    visit(urlKey(pathname, search ? `?${search}` : ""), popped.current);
     popped.current = false;
   }, [pathname, search]);
 

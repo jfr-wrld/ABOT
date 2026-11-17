@@ -98,7 +98,7 @@ function SessionEditor() {
   // Back to where the editor was opened from, without a new history entry: Cancel used to push
   // the workout page, so the phone's Back then reopened the editor.
   const leave = () => {
-    if (previousIs(back.href.split(/[?#]/)[0]!)) router.back();
+    if (previousIs(back.href)) router.back();
     else router.replace(back.href);
   };
   const tryLeave = () => (dirty ? setAsking(true) : leave());

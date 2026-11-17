@@ -28,10 +28,30 @@ describe("nav memory", () => {
     expect(previousIs("/profile")).toBe(false);
   });
 
-  it("does not count a search-only change as a new page", () => {
+  it("counts a section of the same page as its own entry, so Back from it does not loop", () => {
     visit("/profile", false);
-    visit("/profile", false);
+    visit("/settings", false);
+    visit("/settings?section=general", false);
+    // Back from the General section reaches Settings itself...
+    expect(previousIs("/settings")).toBe(true);
+    visit("/settings", true);
+    // ...and Back from Settings reaches Profile, not the section again.
+    expect(previousIs("/profile")).toBe(true);
+  });
+
+  it("matches a bare parent path whatever its query, and a query exactly", () => {
+    visit("/profile?tab=lifts", false);
     visit("/progress/trend", false);
     expect(previousIs("/profile")).toBe(true);
+    expect(previousIs("/profile?tab=lifts")).toBe(true);
+    expect(previousIs("/profile?tab=body")).toBe(false);
+  });
+
+  it("does not take one workout's page for another's", () => {
+    visit("/history?id=a", false);
+    visit("/history?id=b", false);
+    visit("/history/edit?id=b", false);
+    expect(previousIs("/history?id=b")).toBe(true);
+    expect(previousIs("/history?id=a")).toBe(false);
   });
 });

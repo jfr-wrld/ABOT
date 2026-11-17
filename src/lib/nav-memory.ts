@@ -8,7 +8,11 @@
  */
 
 const positions = new Map<string, number>();
-/** Pathnames visited in this tab, oldest first; a search-only change replaces the top. */
+/**
+ * Addresses (pathname plus search) visited in this tab, oldest first. Every new address is a new
+ * entry, a search-only one too: Settings sections and one workout's page after another are
+ * separate history entries, and counting them as one made Back loop between two pages.
+ */
 const trail: string[] = [];
 
 export const urlKey = (path: string, search: string) => path + search;
@@ -21,17 +25,27 @@ export function rememberedScroll(key: string): number | undefined {
   return positions.get(key);
 }
 
-/** Records a visit. `pop`: it came from the browser's back or forward. */
-export function visit(pathname: string, pop: boolean): void {
+/** Records a visit to `url` (pathname plus search). `pop`: it came from the browser's back or forward. */
+export function visit(url: string, pop: boolean): void {
   const top = trail[trail.length - 1];
-  if (top === pathname) return;
-  if (pop && trail[trail.length - 2] === pathname) trail.pop();
-  else trail.push(pathname);
+  if (top === url) return;
+  if (pop && trail[trail.length - 2] === url) trail.pop();
+  else trail.push(url);
 }
 
-/** The page before this one in the trail is `pathname`, so history.back() reaches it. */
-export function previousIs(pathname: string): boolean {
-  return trail.length >= 2 && trail[trail.length - 2] === pathname;
+/**
+ * The entry before this one is `target`, so history.back() reaches it. A target with a query must
+ * match exactly; a bare path matches that page with any query (Profile on its Lifts tab).
+ */
+export function previousIs(target: string): boolean {
+  if (trail.length < 2) return false;
+  const prev = trail[trail.length - 2]!;
+  return target.includes("?") ? prev === target : prev.split("?")[0] === target;
+}
+
+/** Some page of this app is behind this one in the tab, so history.back() stays in ABOT. */
+export function hasPrevious(): boolean {
+  return trail.length >= 2;
 }
 
 /** For tests. */

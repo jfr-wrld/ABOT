@@ -19,7 +19,8 @@ export function BackLink({ href, onClick, ...rest }: ComponentProps<typeof Link>
       onClick={(e) => {
         onClick?.(e);
         if (e.defaultPrevented) return;
-        if (previousIs(normalizePath(href.split(/[?#]/)[0]!))) {
+        const [path, query] = href.split("#")[0]!.split("?");
+        if (previousIs(normalizePath(path!) + (query ? `?${query}` : ""))) {
           e.preventDefault();
           router.back();
         }

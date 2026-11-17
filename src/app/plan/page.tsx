@@ -10,6 +10,7 @@ import { useRoutineStore } from "@/store/useRoutineStore";
 import { useReminderStore } from "@/store/useReminderStore";
 import { useWorkoutStore } from "@/store/useWorkoutStore";
 import { useT } from "@/i18n";
+import { hasPrevious } from "@/lib/nav-memory";
 
 /** Set up or adjust the training week from Home: the same steps as at install, prefilled. */
 export default function PlanPage() {
@@ -17,7 +18,9 @@ export default function PlanPage() {
   const t = useT();
   const plan = useSettingsStore((s) => s.trainingPlan);
   const [saved, setSaved] = useState<AppliedPlan | null>(null);
-  const back = () => (window.history.length > 1 ? router.back() : router.replace("/"));
+  // Back to wherever the plan was opened from. history.length also counts pages from before ABOT
+  // (a search result, another site), where history.back() would leave the app.
+  const back = () => (hasPrevious() ? router.back() : router.replace("/"));
 
   return (
     <main className="fixed inset-0 z-30 flex h-dvh flex-col overflow-hidden bg-bg px-5 pt-[calc(16px+env(safe-area-inset-top))]">

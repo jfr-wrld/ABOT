@@ -71,9 +71,9 @@ test("Delete my data: this phone only clears everything and starts over", async 
   await page.getByRole("dialog", { name: "Delete my data" }).getByRole("button", { name: "Delete from phone" }).click();
   // A fresh device: the intro again, and no workouts.
   await page.waitForURL("**/onboarding");
-  // Only what the app writes again on start (the theme mirror) is back.
+  // Only what the app writes again on start (the theme, colour and component-style mirrors) is back.
   const left = await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("abot.")));
-  expect(left.filter((k) => k !== "abot.theme")).toEqual([]);
+  expect(left.filter((k) => !["abot.theme", "abot.accent", "abot.style"].includes(k))).toEqual([]);
   await page.evaluate(() => localStorage.setItem("abot.onboarded", "1"));
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Start an empty workout" })).toBeVisible();
