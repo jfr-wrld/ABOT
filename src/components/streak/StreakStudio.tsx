@@ -63,7 +63,9 @@ function Studio({ onClose }: { onClose: () => void }) {
   const [message, setMessage] = useState<Message | null>(null);
   const preview = useRef<HTMLCanvasElement>(null);
   const thumbs = useRef<Partial<Record<StreakThemeId, HTMLCanvasElement | null>>>({});
-  const opts = useMemo(() => ({ theme, hideWatermark: false }), [theme]);
+  // Cards are drawn in the lifter's colour (Settings > Appearance).
+  const accent = useSettingsStore((s) => s.accentColor);
+  const opts = useMemo(() => ({ theme, hideWatermark: false, accent }), [theme, accent]);
   const blob = png?.theme === theme ? png.blob : null;
   // Image or Video; the streak video is free (it is how a streak gets shown off).
   const [format, setFormat] = useState<"image" | "video">("image");

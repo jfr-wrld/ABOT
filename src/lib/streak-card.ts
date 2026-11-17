@@ -7,7 +7,8 @@
 import { FLAME_CORE, FLAME_MIDDLE, FLAME_OUTER } from "@/components/streak/flame-path";
 import { MARK_PATH } from "@/components/brand/mark-path";
 import type { StreakCardData } from "@/lib/streak-moment";
-import { STORY_HEIGHT as H, STORY_WIDTH as W, closingCard, type StoryFonts } from "@/lib/story-exporter";
+import { STORY_HEIGHT as H, STORY_WIDTH as W, closingCard, setStoryAccent, type StoryFonts } from "@/lib/story-exporter";
+import { accentTokens } from "@/lib/accent";
 import { STILL_TIME, backOut, beat, easeOut, linear as linearEase } from "@/lib/story-motion";
 
 type Ctx = CanvasRenderingContext2D;
@@ -45,9 +46,13 @@ export interface StreakCardOptions {
   theme: StreakThemeId;
   /** ABOT Pro: leave out the ABOT mark and name. */
   hideWatermark?: boolean;
+  /** The lifter's primary colour (Settings > Appearance); Volt when not given. */
+  accent?: string;
 }
 
-const VOLT = "#ccff00";
+/** The accent the streak cards are drawn in, set per render from StreakCardOptions.accent. */
+let VOLT = "#ccff00";
+let VOLT_RGB = "204,255,0";
 const OBSIDIAN = "#09090b";
 const PLATE = "M27 8 L73 8 L96 50 L73 92 L27 92 L4 50 Z";
 
@@ -239,15 +244,17 @@ function classic(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOption
 }
 
 const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
-  "volt-flame": {
+  // A getter, so it reads the accent of the card being drawn.
+  get "volt-flame"(): Palette {
+    return {
     face: "display",
     bg: (ctx) => {
       ctx.fillStyle = OBSIDIAN;
       ctx.fillRect(0, 0, W, H);
-      glowAt(ctx, W / 2, 700, 700, "rgba(204,255,0,0.22)");
+      glowAt(ctx, W / 2, 700, 700, `rgba(${VOLT_RGB},0.22)`);
     },
     flame: [VOLT, "#facc15", "#fffbe6"],
-    glow: "rgba(204,255,0,0.6)",
+    glow: `rgba(${VOLT_RGB},0.6)`,
     number: VOLT,
     label: VOLT,
     text: "#f4f4f5",
@@ -255,6 +262,7 @@ const PALETTES: Partial<Record<StreakThemeId, Palette>> = {
     plateOn: VOLT,
     plateOff: "rgba(255,255,255,0.22)",
     mark: VOLT,
+    };
   },
   inferno: {
     face: "display",
@@ -423,7 +431,7 @@ function poster(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptions
 function heatmap(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptions) {
   ctx.fillStyle = "#0b0f0a";
   ctx.fillRect(0, 0, W, H);
-  flame(ctx, 170, 400, 200, [VOLT, "#facc15", "#fffbe6"], "rgba(204,255,0,0.5)");
+  flame(ctx, 170, 400, 200, [VOLT, "#facc15", "#fffbe6"], `rgba(${VOLT_RGB},0.5)`);
   text(ctx, String(d.weeks), 280, 390, { size: 240, weight: 800, family: f.sans, color: "#f4f4f5", align: "left", tracking: -8 });
   text(ctx, d.weeks === 1 ? "WEEK STREAK" : "WEEK STREAK", 290, 450, { size: 38, weight: 700, family: f.mono, color: VOLT, align: "left", tracking: 8 });
   const cols = 3;
@@ -437,7 +445,7 @@ function heatmap(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOption
     const y = y0 + Math.floor(i / cols) * (tile * 0.62 + gap);
     const h = tile * 0.62;
     const current = i === d.row.length - 1;
-    ctx.fillStyle = lit ? (current ? VOLT : "rgba(204,255,0,0.55)") : "rgba(255,255,255,0.06)";
+    ctx.fillStyle = lit ? (current ? VOLT : `rgba(${VOLT_RGB},0.55)`) : "rgba(255,255,255,0.06)";
     ctx.beginPath();
     ctx.roundRect(x, y, tile, h, 22);
     ctx.fill();
@@ -451,7 +459,7 @@ function heatmap(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOption
 function badge(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptions) {
   ctx.fillStyle = "#101113";
   ctx.fillRect(0, 0, W, H);
-  glowAt(ctx, W / 2, 900, 600, "rgba(204,255,0,0.12)");
+  glowAt(ctx, W / 2, 900, 600, `rgba(${VOLT_RGB},0.12)`);
   const cx = W / 2;
   const cy = 920;
   ctx.strokeStyle = VOLT;
@@ -481,7 +489,7 @@ function badge(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptions)
   const n = String(d.weeks);
   const size = fit(ctx, n, 440, 300, 800, f.sans);
   text(ctx, n, cx, cy + size * 0.36, { size, weight: 800, family: f.sans, color: VOLT, tracking: -8 });
-  flame(ctx, cx, 505, 200, [VOLT, "#facc15", "#fffbe6"], "rgba(204,255,0,0.55)");
+  flame(ctx, cx, 505, 200, [VOLT, "#facc15", "#fffbe6"], `rgba(${VOLT_RGB},0.55)`);
   text(ctx, d.weeks === 1 ? "week in a row" : "weeks in a row", cx, 1420, { size: 52, weight: 700, family: f.sans, color: "#f4f4f5" });
   plateRow(ctx, d.row, 1540, VOLT, "rgba(255,255,255,0.22)");
   footer(ctx, d, f, o, "#f4f4f5", VOLT, "#a1a1aa");
@@ -521,6 +529,10 @@ function terminal(ctx: Ctx, d: StreakCardData, f: StoryFonts, o: StreakCardOptio
  * card unless the watermark is off.
  */
 export function renderStreakCard(ctx: Ctx, d: StreakCardData, o: StreakCardOptions, f: StoryFonts, time = STILL_TIME): void {
+  const accent = accentTokens(o.accent);
+  VOLT = accent["--brand"]!;
+  VOLT_RGB = accent["--brand-rgb"]!.split(" ").join(",");
+  setStoryAccent(o.accent);
   ctx.save();
   ctx.clearRect(0, 0, W, H);
   const p = PALETTES[o.theme];

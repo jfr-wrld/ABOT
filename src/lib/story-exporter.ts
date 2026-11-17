@@ -13,6 +13,7 @@ import { regionsFor, type Region } from "@/components/anatomy/regions";
 import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT } from "@/components/anatomy/bodyPaths.generated";
 import type { StoryData, StorySet } from "@/lib/story-data";
 import { currentT, type T } from "@/i18n";
+import { accentTokens } from "@/lib/accent";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 import { MARK_PATH } from "@/components/brand/mark-path";
 import { LIFT_SHAPES, type ObjectLayer, type ObjectTone } from "@/lib/story-objects";
@@ -102,6 +103,8 @@ export interface StoryOptions {
   textPosition?: TextPosition;
   /** Clean only: a muscle map or a "like lifting 2 cars" picture above the text. None when not given. */
   cleanExtra?: CleanExtra;
+  /** The lifter's primary colour (Settings > Appearance); Volt when not given. */
+  accent?: string;
   /** Clean only: how big the text and the picture above it are, each from SIZE_RANGE (1 is as designed). */
   textScale?: number;
   extraScale?: number;
@@ -198,7 +201,20 @@ const STEEL = "#27272a";
 const STEEL_LINE = "#71717a";
 const TEXT = "#f4f4f5";
 const MUTED = "#a1a1aa";
-const VOLT = "#ccff00";
+/** The accent the cards are drawn in: Volt, or the lifter's colour (StoryOptions.accent). */
+let VOLT = "#ccff00";
+/** Black or white, for words drawn on the accent (the Headline tape). */
+let ON_VOLT = "#000000";
+
+/**
+ * Sets the colour the next cards are drawn in, made visible on the dark cards the same way the
+ * app does (lib/accent). The streak cards share the closing card, so they call it too.
+ */
+export function setStoryAccent(hex: string | undefined): void {
+  const t = accentTokens(hex);
+  VOLT = t["--brand"]!;
+  ON_VOLT = t["--brand-on"]!;
+}
 
 const W = STORY_WIDTH;
 const H = STORY_HEIGHT;
@@ -955,7 +971,7 @@ function headline(s: Scene) {
   // Two straps of tape crossing high on the frame, the session's name and volume on them.
   const tag = `${data.title} · ${bigVolume(data.volumeKg, s.unit, currentT().locale).join(" ")} · ABOT`.toLocaleUpperCase(currentT().locale);
   tape(s, SAFE_TOP + 250, 0.1, tag, "rgba(244, 244, 245, 0.14)", "rgba(244, 244, 245, 0.85)", 0.15);
-  tape(s, SAFE_TOP + 250, -0.14, tag, VOLT, "#0b0b0d", 0);
+  tape(s, SAFE_TOP + 250, -0.14, tag, VOLT, ON_VOLT, 0);
   premiumHeader(s, m);
 
   // From the bottom up: the stats row, the hairline, the figure, its label, the title.
@@ -1711,6 +1727,7 @@ function drawFounderBadge(s: Scene) {
 }
 
 export function renderStory(ctx: Ctx, data: StoryData, opts: StoryOptions, fonts: StoryFonts, time = STILL_TIME): void {
+  setStoryAccent(opts.accent);
   const scene: Scene = { ctx, fonts, time, data, unit: data.unit, opts, onPhoto: opts.photo !== null };
   ctx.save();
   ctx.clearRect(0, 0, W, H);

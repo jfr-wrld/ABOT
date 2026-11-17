@@ -211,6 +211,8 @@ function Studio({
   const t = useT();
   // The card carries the lifter's @handle from the profile (Profile > About).
   const handle = useSettingsStore((st) => st.profileHandle);
+  // Cards are drawn in the lifter's colour (Settings > Appearance).
+  const accent = useSettingsStore((st) => st.accentColor);
   const card = useMemo<StoryData>(() => ({ ...data, handle: handle || null }), [data, handle]);
 
   const preview = useRef<HTMLCanvasElement>(null);
@@ -231,8 +233,8 @@ function Studio({
   const presetLocked = !proActive && isProPreset(preset);
   const founderBadge = founderBadgeOn && isFounder ? founderUnitCode : null;
   const opts = useMemo<StoryOptions>(
-    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge, textPosition, cleanExtra, textScale, extraScale }),
-    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge, textPosition, cleanExtra, textScale, extraScale],
+    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge, textPosition, cleanExtra, textScale, extraScale, accent }),
+    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge, textPosition, cleanExtra, textScale, extraScale, accent],
   );
   const exportKey = useMemo(() => ({ card, opts }), [card, opts]);
   // Image (the PNG, as before) or Video (the same card in motion, PRO for a workout).
@@ -301,7 +303,7 @@ function Studio({
     return () => cancelAnimationFrame(raf);
     // The preset itself does not change any thumbnail.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card, photo, overlay, grayscale, fonts, tab, textPosition, cleanExtra, textScale, extraScale]);
+  }, [card, photo, overlay, grayscale, fonts, tab, textPosition, cleanExtra, textScale, extraScale, accent]);
 
   // The PNG is made ahead of the tap: Safari only opens the share sheet inside the tap itself.
   useEffect(() => {
@@ -437,14 +439,14 @@ function Studio({
           style={{ aspectRatio: `${STORY_WIDTH} / ${STORY_HEIGHT}` }}
         />
         {presetLocked && (
-          <div className="force-dark absolute inset-x-8 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 rounded-card border border-[#ccff00]/50 bg-black/85 p-4 text-center backdrop-blur">
-            <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[#ccff00]">
+          <div className="force-dark absolute inset-x-8 top-1/2 flex -translate-y-1/2 flex-col items-center gap-2 rounded-card border border-accent/50 bg-black/85 p-4 text-center backdrop-blur">
+            <p className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-accent-text">
               <Lock aria-hidden="true" size={12} /> {t("PRO layout preview")}
             </p>
             <button
               type="button"
               onClick={() => openPaywall("story_studio_pro_presets")}
-              className="min-h-11 rounded-ctl bg-[#ccff00] px-4 font-mono text-xs font-black uppercase tracking-[0.1em] text-black"
+              className="min-h-11 rounded-ctl bg-accent px-4 font-mono text-xs font-black uppercase tracking-[0.1em] text-on-accent"
             >
               {t("Unlock with ABOT Pro")}
             </button>
@@ -615,7 +617,7 @@ function Studio({
                   step={OVERLAY_RANGE.step}
                   value={overlay}
                   onChange={(e) => setOverlay(Number(e.target.value))}
-                  className="h-11 min-w-0 flex-1 cursor-pointer accent-[#ccff00]"
+                  className="h-11 min-w-0 flex-1 cursor-pointer accent-(--color-accent)"
                 />
                 <span className="num w-9 shrink-0 text-right text-xs text-text-muted">{Math.round(overlay * 100)}%</span>
                 <button
@@ -825,7 +827,7 @@ function SizeSlider({ id, label, value, onChange }: { id: string; label: string;
         step={SIZE_RANGE.step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-11 min-w-0 flex-1 cursor-pointer accent-[#ccff00]"
+        className="h-11 min-w-0 flex-1 cursor-pointer accent-(--color-accent)"
       />
       <span className="num w-9 shrink-0 text-right text-xs text-text-muted">{Math.round(value * 100)}%</span>
     </div>
