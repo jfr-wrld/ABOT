@@ -271,6 +271,12 @@ export interface UserSettings {
   theme: AppTheme;
   /** Glass and motion: "auto" picks light effects on modest phones (lib/effects). */
   visualEffects: VisualEffects;
+  /** The primary colour, #rrggbb; Volt by default (lib/accent). */
+  accentColor: string;
+  /** Raised 3D buttons and cards, or flat ones. */
+  componentStyle: ComponentStyle;
+  /** The logo, in the app and as the phone's launcher icon (lib/app-icons). */
+  appIcon: AppIconId;
   /** Tick, latch and PR sounds with matching vibration on taps (Phase 2 tactile feedback). */
   tapFeedback: boolean;
   /** Send each finished workout to Health Connect (Android app). */
@@ -288,6 +294,9 @@ export interface UserSettings {
 export type AppLanguage = "auto" | "en" | "id";
 export type AppTheme = "system" | "dark" | "light";
 export type VisualEffects = "auto" | "full" | "lite";
+export type ComponentStyle = "3d" | "flat";
+export const APP_ICON_IDS = ["classic", "inverse", "night", "paper", "ocean", "ember"] as const;
+export type AppIconId = (typeof APP_ICON_IDS)[number];
 
 /** One weigh-in per local calendar day; `id` is that day as "YYYY-MM-DD". */
 export interface BodyweightEntry {
@@ -353,6 +362,9 @@ export const DEFAULT_SETTINGS: UserSettings = {
   language: "auto",
   theme: "system",
   visualEffects: "auto",
+  accentColor: "#ccff00",
+  componentStyle: "3d",
+  appIcon: "classic",
   tapFeedback: true,
   healthAutoSync: false,
   lastSleep: null,

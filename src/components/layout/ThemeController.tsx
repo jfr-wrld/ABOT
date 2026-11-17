@@ -9,11 +9,16 @@ import type { AppTheme } from "@/types/workout";
 /** Mirrors the theme choice for THEME_SCRIPT, which reads it before the first paint. */
 export const THEME_KEY = "abot.theme";
 
+/** Mirrors the colour tokens and the component style for THEME_SCRIPT (AppearanceController). */
+export const ACCENT_KEY = "abot.accent";
+export const STYLE_KEY = "abot.style";
+
 /**
  * Runs in <head> before the page paints: sets data-theme from the last saved choice, so a light
- * page never flashes dark first. Kept tiny and dependency-free.
+ * page never flashes dark first, and puts back the lifter's colour and component style, so the
+ * page does not flash Volt or 3D before the settings load. Kept tiny and dependency-free.
  */
-export const THEME_SCRIPT = `try{var t=localStorage.getItem("${THEME_KEY}")||"system";var l=t==="light"||(t==="system"&&matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.dataset.theme=l?"light":"dark"}catch(e){}`;
+export const THEME_SCRIPT = `try{var d=document.documentElement;var t=localStorage.getItem("${THEME_KEY}")||"system";var l=t==="light"||(t==="system"&&matchMedia("(prefers-color-scheme: light)").matches);d.dataset.theme=l?"light":"dark";var a=JSON.parse(localStorage.getItem("${ACCENT_KEY}")||"null");if(a)for(var k in a)if(k.indexOf("--brand")===0||k.indexOf("--logo")===0)d.style.setProperty(k,a[k]);var s=localStorage.getItem("${STYLE_KEY}");if(s)d.dataset.style=s}catch(e){}`;
 
 const BAR = { dark: "#09090b", light: "#f4f4f2" } as const;
 

@@ -11,10 +11,10 @@
   --color-line-strong: #71717a;
   --color-text: #f4f4f5;
   --color-text-muted: #a1a1aa;
-  --color-accent: #ccff00; /* High-Voltage Volt */
-  --color-accent-solid: #ccff00;
-  --color-on-accent: #000000;
-  --color-accent-tint: rgb(204 255 0 / 0.08);
+  --color-accent: var(--brand); /* High-Voltage Volt, or the lifter's colour (lib/accent.ts) */
+  --color-accent-solid: var(--brand);
+  --color-on-accent: var(--brand-on);
+  --color-accent-tint: rgb(var(--brand-rgb) / 0.08);
   --color-pr: #f5c542; /* gold: personal records only (owner, 2026-11-15) */
   --color-warmup: #7dd3fc; /* sky: light warm-up sets, kept clear of the record gold */
   --color-caution: #fb923c; /* orange: the coach calling a step back */
@@ -29,8 +29,8 @@
   /* Theme-aware tints: "ink" is white on the dark theme and black on the light one, so
      border-ink/[0.07] and bg-ink/[0.05] read as hairlines and hovers on either. */
   --color-ink: #ffffff;
-  --color-accent-text: #ccff00; /* text-accent; a darker lime on light pages */
-  --color-accent-dim: #4d5c12; /* earlier weeks in bar charts */
+  --color-accent-text: var(--brand-text); /* text-accent; black on light pages */
+  --color-accent-dim: var(--brand-dim); /* earlier weeks in bar charts */
   --color-press: #24242a;
   --color-press-strong: #2c2c33;
   --color-track: #27272a; /* empty part of rings and bars */
@@ -41,8 +41,8 @@
   --color-search: #17171b; /* the search pill */
   --color-edge: rgb(255 255 255 / 0.08); /* thin outline of raised things */
   --color-lip: #2b2b31; /* the short side under a raised button or card */
-  --color-accent-edge: #b3e600;
-  --color-accent-lip: #7fa300;
+  --color-accent-edge: var(--brand-edge);
+  --color-accent-lip: var(--brand-lip);
   /* Raised, the GoPay way: a face that shades from light at the top to a touch darker at the
      bottom, a grey shade inside the bottom edge in place of a solid side, a fine highlight on top,
      and a soft shadow that fades out under it. */
@@ -52,7 +52,7 @@
   --raise-btn: inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 -2px 1px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.45), 0 4px 10px -4px rgb(0 0 0 / 0.6);
   --raise-chip: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -1.5px 1px rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.4), 0 3px 6px -3px rgb(0 0 0 / 0.5);
   --raise-card: inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 -3px 2px rgb(0 0 0 / 0.25), 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 22px -12px rgb(0 0 0 / 0.7);
-  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -2px 1px rgb(60 90 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3), 0 5px 12px -5px rgb(150 200 0 / 0.55);
+  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -2px 1px rgb(var(--brand-deep-rgb) / 0.35), 0 1px 2px rgb(0 0 0 / 0.3), 0 5px 12px -5px rgb(var(--brand-glow-rgb) / 0.55);
   --raise-pressed: inset 0 2px 3px rgb(0 0 0 / 0.35);
   --sink: inset 0 2px 3px rgb(0 0 0 / 0.45), inset 0 -1px 0 rgb(255 255 255 / 0.05);
 
@@ -62,7 +62,26 @@
   --radius-ctl: 10px;
   --radius-card: 16px;
 
-  --shadow-volt: 0 0 0 1px rgb(204 255 0 / 0.5), 0 0 22px rgb(204 255 0 / 0.28);
+  --shadow-volt: 0 0 0 1px rgb(var(--brand-rgb) / 0.5), 0 0 22px rgb(var(--brand-rgb) / 0.28);
+}
+
+/* The primary colour. Volt by default; AccentController (and the pre-paint script) set these on
+   <html> from Settings > General > Appearance, derived in lib/accent.ts. */
+:root {
+  --brand: #ccff00;
+  --brand-text: #ccff00;
+  --brand-on: #000000;
+  --brand-rgb: 204 255 0;
+  --brand-dim: #4d5c12;
+  --brand-edge: #b3e600;
+  --brand-lip: #7fa300;
+  --brand-deep-rgb: 60 90 0;
+  --brand-glow-rgb: 150 200 0;
+  --brand-light: #ccff00;
+  --brand-light-on: #000000;
+  --brand-light-edge: #8db300;
+  --brand-light-deep-rgb: 80 110 0;
+  --brand-light-glow-rgb: 110 150 0;
 }
 
 /* Light theme (Settings > General > Theme). Same token names; contrast checked against white:
@@ -152,14 +171,14 @@
     .today-fab:not(.today-fab-live),
     .wallet-card
   ):not(.force-dark *) {
-  --color-accent: #ccff00;
-  --color-on-accent: #000000;
-  --color-accent-edge: #8db300;
+  --color-accent: var(--brand-light);
+  --color-on-accent: var(--brand-light-on);
+  --color-accent-edge: var(--brand-light-edge);
   --neo-accent-face: linear-gradient(180deg, rgb(255 255 255 / 0.35), rgb(255 255 255 / 0) 55%, rgb(0 0 0 / 0.06));
-  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 1px rgb(80 110 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.12), 0 5px 12px -5px rgb(110 150 0 / 0.55);
+  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 1px rgb(var(--brand-light-deep-rgb) / 0.3), 0 1px 2px rgb(0 0 0 / 0.12), 0 5px 12px -5px rgb(var(--brand-light-glow-rgb) / 0.55);
 }
 [data-theme="light"] :is(:is(button, a).bg-accent:not(:disabled, [role="switch"]), span.bg-accent.min-h-12):not(.force-dark *) {
-  background-color: #ccff00;
+  background-color: var(--brand-light);
 }
 
 /* Superset labels: the group colour (--ss) as text. On white the pastel group colours fall under
@@ -183,11 +202,11 @@
   --color-line-strong: #71717a;
   --color-text: #f4f4f5;
   --color-text-muted: #a1a1aa;
-  --color-accent: #ccff00;
-  --color-on-accent: #000000;
-  --color-accent-text: #ccff00;
-  --color-accent-tint: rgb(204 255 0 / 0.08);
-  --color-accent-dim: #4d5c12;
+  --color-accent: var(--brand);
+  --color-on-accent: var(--brand-on);
+  --color-accent-text: var(--brand-text);
+  --color-accent-tint: rgb(var(--brand-rgb) / 0.08);
+  --color-accent-dim: var(--brand-dim);
   --color-pr: #f5c542;
   --color-warmup: #7dd3fc;
   --color-caution: #fb923c;
@@ -208,8 +227,8 @@
   --color-search: #17171b; /* the search pill */
   --color-edge: rgb(255 255 255 / 0.08); /* thin outline of raised things */
   --color-lip: #2b2b31; /* the short side under a raised button or card */
-  --color-accent-edge: #b3e600;
-  --color-accent-lip: #7fa300;
+  --color-accent-edge: var(--brand-edge);
+  --color-accent-lip: var(--brand-lip);
   /* Raised, the GoPay way: a face that shades from light at the top to a touch darker at the
      bottom, a grey shade inside the bottom edge in place of a solid side, a fine highlight on top,
      and a soft shadow that fades out under it. */
@@ -219,7 +238,7 @@
   --raise-btn: inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 -2px 1px rgb(0 0 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.45), 0 4px 10px -4px rgb(0 0 0 / 0.6);
   --raise-chip: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -1.5px 1px rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.4), 0 3px 6px -3px rgb(0 0 0 / 0.5);
   --raise-card: inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 -3px 2px rgb(0 0 0 / 0.25), 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 22px -12px rgb(0 0 0 / 0.7);
-  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -2px 1px rgb(60 90 0 / 0.35), 0 1px 2px rgb(0 0 0 / 0.3), 0 5px 12px -5px rgb(150 200 0 / 0.55);
+  --raise-accent: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 -2px 1px rgb(var(--brand-deep-rgb) / 0.35), 0 1px 2px rgb(0 0 0 / 0.3), 0 5px 12px -5px rgb(var(--brand-glow-rgb) / 0.55);
   --raise-pressed: inset 0 2px 3px rgb(0 0 0 / 0.35);
   --sink: inset 0 2px 3px rgb(0 0 0 / 0.45), inset 0 -1px 0 rgb(255 255 255 / 0.05);
   --color-zinc-100: #f4f4f5;
@@ -227,8 +246,24 @@
   --color-zinc-600: #52525b;
   --color-zinc-700: #3f3f46;
   --color-zinc-800: #27272a;
-  --shadow-volt: 0 0 0 1px rgb(204 255 0 / 0.5), 0 0 22px rgb(204 255 0 / 0.28);
+  --shadow-volt: 0 0 0 1px rgb(var(--brand-rgb) / 0.5), 0 0 22px rgb(var(--brand-rgb) / 0.28);
   color: var(--color-text);
+}
+
+/* Flat components (Settings > General > Appearance): no face gradient, no raise, no sink. The
+   tokens go to none, so every raised thing (buttons, cards, chips, tiles, the dock disc) is plain
+   at once; edges stay, so shapes still read. Glass follows Visual effects, not this. */
+[data-style="flat"],
+[data-style="flat"] .force-dark {
+  --neo-face: none;
+  --neo-card-face: none;
+  --neo-accent-face: none;
+  --raise-btn: none;
+  --raise-chip: none;
+  --raise-card: none;
+  --raise-accent: none;
+  --raise-pressed: none;
+  --sink: none;
 }
 
 @layer base {
@@ -354,7 +389,7 @@
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.2),
     inset 0 -1px 0 rgb(255 255 255 / 0.05),
-    0 0 14px rgb(204 255 0 / 0.14),
+    0 0 14px rgb(var(--brand-rgb) / 0.14),
     0 10px 30px rgb(0 0 0 / 0.4);
   &::before {
     content: "";
@@ -777,18 +812,18 @@ input.bg-well:not(:focus) {
 /* While a workout runs, the disc takes the workout bar's look (owner, 2026-11-15): dark, a Volt
    stopwatch and a Volt edge, in both themes, so "a workout is on" reads apart from "start one". */
 .today-fab.today-fab-live {
-  color: #ccff00;
+  color: var(--brand-text);
   background-color: #141418;
   background-image: radial-gradient(120% 70% at 50% 0%, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0) 60%);
-  border-color: color-mix(in oklab, #ccff00 55%, transparent);
+  border-color: color-mix(in oklab, var(--brand) 55%, transparent);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.2),
     inset 0 -3px 3px rgb(0 0 0 / 0.35),
-    0 0 14px rgb(204 255 0 / 0.22),
+    0 0 14px rgb(var(--brand-rgb) / 0.22),
     0 6px 14px -4px rgb(0 0 0 / 0.5);
 }
 :where([data-theme="light"]) .today-fab.today-fab-live {
-  color: #ccff00;
+  color: var(--brand-text);
 }
 @media (prefers-reduced-motion: reduce) {
   .today-fab:active {
@@ -903,7 +938,7 @@ input.bg-well:not(:focus) {
   box-shadow:
     inset 1.5px 1.5px 0.5px -0.5px rgb(255 255 255 / 0.45),
     inset -1px -1px 0.5px -0.5px rgb(255 255 255 / 0.2),
-    0 0 14px rgb(204 255 0 / 0.14),
+    0 0 14px rgb(var(--brand-rgb) / 0.14),
     0 10px 30px rgb(0 0 0 / 0.4);
 }
 /* Over a light page the backdrop needs darkening harder to keep the bar's figures readable. */
@@ -934,4 +969,18 @@ input.bg-well:not(:focus) {
 }
 [data-effects="lite"] .tap:active {
   scale: none;
+}
+
+/* Flat: a press darkens a little instead of sinking. */
+[data-style="flat"] :is(:is(button, a):is(.bg-surface-2, .bg-accent), .raised, .raised-danger, .chip):not(:disabled):active,
+[data-style="flat"] .chip:is(button, label):is([aria-pressed="true"], [aria-checked="true"], :has(input:checked)) {
+  translate: none;
+}
+[data-style="flat"] :is(:is(button, a):is(.bg-surface-2, .bg-accent), .raised, .raised-danger, .chip):not(:disabled):active {
+  filter: brightness(0.9);
+}
+/* Flat: the dock disc and the wallet card lose their own highlight and shadow too. */
+[data-style="flat"] :is(.today-fab, .today-fab.today-fab-live, .wallet-card) {
+  background-image: none;
+  box-shadow: none;
 }

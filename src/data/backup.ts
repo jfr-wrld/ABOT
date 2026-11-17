@@ -1,7 +1,8 @@
 import { normalizePhase } from "@/lib/phase-engine";
 import { normalizeHandle } from "@/lib/profile";
 import type { GymLocation } from "@/types/workout";
-import { DEFAULT_SETTINGS, PROFILE_LIMITS, type BodyweightEntry, FoodLogEntry, type MyFood } from "@/types/workout";
+import { APP_ICON_IDS, DEFAULT_SETTINGS, PROFILE_LIMITS, type AppIconId, type BodyweightEntry, FoodLogEntry, type MyFood } from "@/types/workout";
+import { isHex } from "@/lib/accent";
 import { normalizeRoutine, normalizeSession, normalizeStoredExercise } from "./normalize";
 import type { Repository, RepoSnapshot, StoredSettings } from "./repo";
 import { mergeLog, type WorkoutPhoto } from "./repo/types";
@@ -144,6 +145,9 @@ function normalizeSettings(raw: unknown): StoredSettings | null {
     language: raw.language === "en" || raw.language === "id" ? raw.language : "auto",
     theme: raw.theme === "dark" || raw.theme === "light" ? raw.theme : "system",
     visualEffects: raw.visualEffects === "full" || raw.visualEffects === "lite" ? raw.visualEffects : "auto",
+    accentColor: isHex(raw.accentColor) ? raw.accentColor.toLowerCase() : DEFAULT_SETTINGS.accentColor,
+    componentStyle: raw.componentStyle === "flat" ? "flat" : "3d",
+    appIcon: APP_ICON_IDS.includes(raw.appIcon as AppIconId) ? (raw.appIcon as AppIconId) : "classic",
     tapFeedback: raw.tapFeedback !== false,
     healthAutoSync: raw.healthAutoSync === true,
     lastSleep: normalizeSleep(raw.lastSleep),

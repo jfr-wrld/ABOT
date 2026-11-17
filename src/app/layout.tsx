@@ -21,6 +21,7 @@ import { NativeShell } from "@/components/layout/NativeShell";
 import { AutoGym } from "@/components/layout/AutoGym";
 import { THEME_SCRIPT, ThemeController } from "@/components/layout/ThemeController";
 import { EffectsController } from "@/components/layout/EffectsController";
+import { AppearanceController } from "@/components/layout/AppearanceController";
 import { LangAttr } from "@/components/layout/LangAttr";
 import { LoadingStatus } from "@/components/ui/Loading";
 import { AudioUnlock } from "@/components/layout/AudioUnlock";
@@ -89,6 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MotionFeatures>
           <ThemeController />
           <EffectsController />
+          <AppearanceController />
           <LangAttr />
           <AudioUnlock />
           <RemoteConfigLoader />

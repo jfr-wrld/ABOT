@@ -18,6 +18,7 @@ import { NotificationAccess } from "./NotificationAccess";
 import { RestAlertSetting } from "./RestAlertSetting";
 import { AppPermissionsSection } from "./AppPermissions";
 import { Choice, Toggle } from "./controls";
+import { AppearanceSettings } from "./AppearanceSettings";
 import { useT } from "@/i18n";
 import { LANGUAGE_LABEL, THEME_LABEL } from "./labels";
 import { playSetComplete } from "@/lib/sound-effects";
@@ -50,6 +51,7 @@ export function GeneralSection() {
         options={(["system", "dark", "light"] as const).map((v) => ({ value: v, label: t(THEME_LABEL[v]) }))}
         onChange={(theme) => s.update({ theme })}
       />
+      <AppearanceSettings />
       <Choice
         name="effects"
         label={t("Visual effects")}

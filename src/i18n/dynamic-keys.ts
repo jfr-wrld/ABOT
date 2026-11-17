@@ -97,6 +97,8 @@ export const DYNAMIC_KEYS: string[] = [
   // TEXT_POSITIONS labels (Clean's text spots)
   "Top left", "Top", "Top right", "Left", "Center", "Right", "Bottom left", "Bottom", "Bottom right",
   "Middle",
+  // ACCENT_SWATCHES names (Settings > Appearance)
+  "Volt", "Blue", "Red", "Orange", "Purple", "Pink", "Cyan", "White",
   // CLEAN_EXTRAS labels
   "Text", "Muscles", "Radar", "Compare",
   "Full-time scoreboard: your volume is the score",
