@@ -8,7 +8,7 @@
  */
 import { formatClock, formatDuration } from "@/lib/calc";
 import { formatVolume, formatWeight } from "@/lib/units";
-import { MUSCLE_GROUP_LABELS, type PRKind, type WeightUnit } from "@/types/workout";
+import { MUSCLE_GROUP_LABELS, type WeightUnit } from "@/types/workout";
 import { regionsFor, type Region } from "@/components/anatomy/regions";
 import { BODY_BACK, BODY_FRONT, OUTLINE_BACK, OUTLINE_FRONT } from "@/components/anatomy/bodyPaths.generated";
 import type { StoryData, StorySet } from "@/lib/story-data";
@@ -48,7 +48,7 @@ export const STORY_KEYS = [
 export const STORY_WIDTH = 1080;
 export const STORY_HEIGHT = 1920;
 
-export type StoryPresetId = "clean" | "headline" | "top-set" | "sidebar" | "lineup" | "grid" | "thermal-matrix" | "trophy-vault";
+export type StoryPresetId = "clean" | "headline" | "top-set" | "sidebar" | "lineup" | "grid" | "thermal-matrix" | "medal";
 
 /**
  * The layouts, each its own look: typeface, palette, texture and the way it moves. Clean is always
@@ -62,7 +62,7 @@ export const STORY_PRESETS: { id: StoryPresetId; name: string; blurb: string }[]
   { id: "lineup", name: "Lineup", blurb: "Every lift listed under your photo" },
   { id: "grid", name: "Grid", blurb: "Four big numbers in a grid under your photo" },
   { id: "thermal-matrix", name: "Thermal Matrix", blurb: "Muscle map lit by sets worked" },
-  { id: "trophy-vault", name: "Trophy Vault", blurb: "Records first, engraved in gold" },
+  { id: "medal", name: "Medal", blurb: "A medal on two ribbons for the day's records" },
 ];
 
 /** Font stacks for `ctx.font`: the app's two faces and the five Story Studio theme faces. */
@@ -193,16 +193,12 @@ export const OVERLAY_RANGE = { min: 0.2, max: 0.85, step: 0.05, initial: 0.55 } 
 /* ------------------------------------------------------------------ */
 
 const OBSIDIAN = "#09090b";
-const CARBON = "#121215";
 const CARBON_2 = "#1c1c21";
 const STEEL = "#27272a";
 const STEEL_LINE = "#71717a";
 const TEXT = "#f4f4f5";
 const MUTED = "#a1a1aa";
 const VOLT = "#ccff00";
-const CYAN = "#00f0ff";
-/** Trophy badges only: the one place a record gets a medal colour. */
-const GOLD = "#f5c84c";
 
 const W = STORY_WIDTH;
 const H = STORY_HEIGHT;
@@ -493,15 +489,6 @@ function wordmark(s: Scene, x: number, y: number, size: number, color: string, w
   return size * 1.28 + w;
 }
 
-function paintBackground(s: Scene, base: string, forceGray = false) {
-  const { ctx, opts } = s;
-  ctx.fillStyle = base;
-  ctx.fillRect(0, 0, W, H);
-  if (!opts.photo) return;
-  ctx.drawImage(opts.photo.layer(forceGray || opts.grayscale), 0, 0, W, H);
-  ctx.fillStyle = withAlpha(base, opts.overlay);
-  ctx.fillRect(0, 0, W, H);
-}
 
 function withAlpha(hex: string, alpha: number): string {
   const n = parseInt(hex.slice(1), 16);
@@ -555,16 +542,6 @@ function bestLabel(s: Scene, ex: StoryData["exercises"][number]): string {
   return top ? setLabel(top, s.unit) : `${ex.sets.length} sets`;
 }
 
-function prValue(pr: StoryData["prs"][number], unit: WeightUnit): { main: string; sub: string } {
-  const kg = (v: number) => formatWeight(v, unit);
-  const set = `${formatWeight(pr.weightKg, unit, false)} × ${pr.reps}`;
-  const map: Record<PRKind, { main: string; sub: string }> = {
-    heaviest_weight: { main: kg(pr.weightKg), sub: `${set} ${unit}` },
-    best_1rm: { main: kg(pr.valueKg), sub: `est. 1RM from ${set}` },
-    best_set_volume: { main: formatVolume(pr.valueKg, unit), sub: `one set: ${set}` },
-  };
-  return map[pr.kind];
-}
 
 function setsNumber(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
@@ -709,153 +686,6 @@ function thermalMatrix(s: Scene) {
 }
 
 
-const SHORT_KIND: Record<PRKind, string> = { heaviest_weight: "Weight", best_1rm: "1RM", best_set_volume: "Volume" };
-const KIND_ORDER: PRKind[] = ["heaviest_weight", "best_1rm", "best_set_volume"];
-
-function groupRecords(prs: StoryData["prs"]): { name: string; records: StoryData["prs"] }[] {
-  const by = new Map<string, StoryData["prs"]>();
-  for (const pr of prs) by.set(pr.exerciseName, [...(by.get(pr.exerciseName) ?? []), pr]);
-  return [...by.entries()].map(([name, records]) => ({
-    name,
-    records: [...records].sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind)),
-  }));
-}
-
-const TROPHY =
-  "M30 18 H70 V40 C70 54 61 64 50 66 C39 64 30 54 30 40 Z M30 24 H18 C18 38 24 46 32 47 M70 24 H82 C82 38 76 46 68 47 M44 66 H56 V76 H44 Z M34 76 H66 V84 H34 Z";
-let trophyPath: Path2D | null = null;
-
-/** Hexagon medal with a cup inside; `filled` badges are records, hollow ones are empty slots. */
-function trophyBadge(ctx: Ctx, cx: number, cy: number, r: number, ring: string, filled: boolean) {
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const a = (Math.PI / 3) * i;
-    ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-  }
-  ctx.closePath();
-  ctx.fillStyle = filled ? CARBON : "transparent";
-  ctx.fill();
-  ctx.strokeStyle = ring;
-  ctx.lineWidth = 6;
-  if (!filled) ctx.setLineDash([12, 10]);
-  ctx.stroke();
-  if (filled) {
-    trophyPath ??= new Path2D(TROPHY);
-    const k = (r * 1.1) / 100;
-    ctx.scale(k, k);
-    ctx.translate(-50, -52);
-    ctx.lineWidth = 5;
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = ring;
-    ctx.setLineDash([]);
-    ctx.stroke(trophyPath);
-  }
-  ctx.restore();
-}
-
-/** PR Trophy Vault: medals for every record, then each record with its weight and top tonnage. */
-function trophyVault(s: Scene) {
-  const { ctx, data, unit } = s;
-  paintBackground(s, OBSIDIAN);
-  const x = 80;
-  const inner = W - 2 * x;
-  const prs = data.prs;
-
-  wordmark(s, x, SAFE_TOP - 64, 52, VOLT);
-  caps(s, tl("Trophy vault"), x, SAFE_TOP, { color: GOLD });
-  caps(s, dateLabel(data), W - x, SAFE_TOP, { align: "right" });
-
-  // One medal and one card per lift: a lift can break weight, 1RM and set volume at once.
-  const lifts = groupRecords(prs);
-  const slots = Math.max(3, Math.min(5, lifts.length));
-  const r = 66;
-  const gap = (inner - slots * r * 2) / (slots - 1 || 1);
-  for (let i = 0; i < slots; i++) {
-    const cx = x + r + i * (r * 2 + gap);
-    const has = i < lifts.length;
-    trophyBadge(ctx, cx, SAFE_TOP + 130, r, has ? (i % 2 === 0 ? GOLD : CYAN) : STEEL_LINE, has);
-  }
-  if (lifts.length > 5) caps(s, `+${lifts.length - 5} more`, W - x, SAFE_TOP + 240, { align: "right", color: GOLD });
-
-  let y = SAFE_TOP + 330;
-  const heading = prs.length > 0 ? tl(prs.length === 1 ? "{n} new record" : "{n} new records", { n: prs.length }) : tl("Vault unchanged");
-  text(s, heading, x, y, { size: fitSize(s, heading, inner, 112, 60, 900, "serif"), weight: 900, family: "serif", tracking: -2 });
-  y += 56;
-  const sub = prs.length > 0 ? `on ${lifts.length} ${lifts.length === 1 ? "lift" : "lifts"}, ${data.title}` : data.title;
-  text(s, sub, x, y, { size: 38, weight: 400, family: "serif", color: MUTED, maxWidth: inner });
-  y += 40;
-
-  const maxTonnage = (name: string) =>
-    data.exercises.find((e) => e.name === name)?.sets.reduce((m, st) => Math.max(m, st.volumeKg), 0) ?? 0;
-
-  if (lifts.length > 0) {
-    const cardH = 230;
-    const fit = Math.max(1, Math.floor((SAFE_BOTTOM - y) / (cardH + 24)));
-    const shown = lifts.slice(0, fit);
-    for (const [k, lift] of shown.entries()) {
-      const drop = stagger(s.time, k, 0.9, 0.35, 0.55, backOut);
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, Math.max(0, drop));
-      ctx.translate(0, (1 - drop) * -180);
-      rrect(ctx, x, y, inner, cardH, 28);
-      ctx.fillStyle = CARBON;
-      ctx.fill();
-      ctx.strokeStyle = withAlpha(GOLD, 0.45);
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      const lead = lift.records[0];
-      const v = prValue(lead, unit);
-      text(s, TL("New record"), x + 36, y + 58, { size: 28, weight: 600, family: "serif", color: GOLD, tracking: 6 });
-      caps(s, lift.records.map((p) => SHORT_KIND[p.kind]).join(" + "), x + inner - 36, y + 58, { align: "right" });
-      const vw = text(s, v.main, x + inner - 36, y + 144, { size: 68, weight: 900, family: "serif", color: GOLD, align: "right" });
-      text(s, lift.name, x + 36, y + 138, { size: 44, weight: 600, family: "serif", maxWidth: inner - vw - 100 });
-      text(s, v.sub, x + 36, y + 196, { size: 28, family: "mono", color: MUTED, maxWidth: inner / 2 });
-      text(s, `max set ${formatVolume(maxTonnage(lift.name), unit)}`, x + inner - 36, y + 196, {
-        size: 28,
-        family: "mono",
-        color: MUTED,
-        align: "right",
-      });
-      ctx.restore();
-      y += cardH + 24;
-    }
-    if (shown.length < lifts.length) caps(s, `+${lifts.length - shown.length} more lifts`, x, y + 20);
-    else {
-      // Room left: the other lifts of the day, as a quieter list.
-      const rest = data.exercises.filter((e) => !lifts.some((l) => l.name === e.name) && e.best);
-      if (rest.length && y + 160 < SAFE_BOTTOM) {
-        y += 40;
-        caps(s, tl("Also lifted"), x, y, { color: GOLD });
-        y += 30;
-        for (const ex of rest.slice(0, Math.floor((SAFE_BOTTOM - y) / 84))) {
-          hline(ctx, x, W - x, y, STEEL);
-          const rw = text(s, bestLabel(s, ex), W - x, y + 58, { size: 36, weight: 600, family: "serif", align: "right" });
-          text(s, ex.name, x, y + 58, { size: 36, weight: 400, family: "serif", maxWidth: inner - rw - 30 });
-          y += 84;
-        }
-      }
-    }
-  } else {
-    text(s, tl("No record fell this time. Top sets from the session:"), x, y + 30, { size: 32, color: MUTED, maxWidth: inner });
-    y += 80;
-    const top = [...data.exercises].filter((e) => e.best).sort((a, b) => (b.best?.volumeKg ?? 0) - (a.best?.volumeKg ?? 0));
-    for (const ex of top.slice(0, 4)) {
-      hline(ctx, x, W - x, y, STEEL);
-      const rw = text(s, bestLabel(s, ex), W - x, y + 66, { size: 40, weight: 700, family: "mono", align: "right" });
-      text(s, ex.name, x, y + 66, { size: 38, weight: 600, maxWidth: inner - rw - 30 });
-      y += 100;
-    }
-    if (top.length === 0) text(s, tl("No loaded sets in this workout."), x, y + 40, { size: 32, color: MUTED });
-  }
-
-  const best = data.exercises.reduce((m, e) => Math.max(m, ...e.sets.map((st) => st.volumeKg)), 0);
-  hline(ctx, x, W - x, H - 190, STEEL);
-  caps(s, data.kind === "session" ? "Session max set tonnage" : "Max set tonnage", x, H - 128);
-  text(s, formatVolume(best, unit), W - x, H - 122, { size: 44, weight: 800, family: "mono", color: GOLD, align: "right" });
-}
-
 /* ------------------------------------------------------------------ */
 /* @handle                                                             */
 /* ------------------------------------------------------------------ */
@@ -881,8 +711,7 @@ const HANDLE_SPOTS: Record<StoryPresetId, HandleSpot | null> = {
   // Between the load bars and the stats row.
   "thermal-matrix": { x: W - 84, y: 1652, align: "right", color: VOLT },
   grid: null,
-  // Above the tonnage footer.
-  "trophy-vault": { x: 80, y: 1690, align: "left", color: GOLD },
+  medal: null,
 };
 
 function drawHandle(s: Scene) {
@@ -998,6 +827,110 @@ function topSetOf(data: StoryData): { name: string; set: StorySet; record: boole
   return best;
 }
 
+/* ------------------------------------------------------------------ */
+/* Signature elements: one per sport layout                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A strap of tape across the frame at `y`, tilted by `angle`, with `words` repeated along it.
+ * It slides in from the left in the video; in the still it lies across the whole width.
+ */
+function tape(s: Scene, y: number, angle: number, words: string, fill: string, ink: string, start: number) {
+  const { ctx } = s;
+  const p = beat(s.time, start, 0.7, easeOut);
+  if (p <= 0) return;
+  const len = W * 1.7;
+  ctx.save();
+  ctx.translate(W / 2, y);
+  ctx.rotate(angle);
+  ctx.translate(-len / 2 - (1 - p) * len, 0);
+  ctx.fillStyle = fill;
+  ctx.fillRect(0, -34, len, 68);
+  const seg = `${words}   •   `;
+  setFont(s, 26, 700, "mono");
+  setTracking(ctx, 3);
+  const w = ctx.measureText(seg).width;
+  setTracking(ctx, 0);
+  // The words run along the strap while the clip plays.
+  const drift = (s.time * 70) % w;
+  for (let x = -drift; x < len; x += w) text(s, seg, x, 10, { size: 26, weight: 700, family: "mono", color: ink, tracking: 3, shadow: false });
+  ctx.restore();
+}
+
+/** A plate's rim as a dial: ticks all round, the major ones longer, and a Volt arc sweeping `sweep` of it. */
+function dial(s: Scene, cx: number, cy: number, r: number, sweep: number, start: number) {
+  const { ctx } = s;
+  const fade = beat(s.time, start, 0.5);
+  if (fade <= 0) return;
+  ctx.save();
+  ctx.globalAlpha *= fade;
+  ctx.strokeStyle = "rgba(244, 244, 245, 0.22)";
+  ctx.lineCap = "round";
+  for (let d = 0; d < 360; d += 5) {
+    const a = (d * Math.PI) / 180;
+    const len = d % 30 === 0 ? 34 : 16;
+    ctx.lineWidth = d % 30 === 0 ? 3 : 2;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    ctx.lineTo(cx + Math.cos(a) * (r - len), cy + Math.sin(a) * (r - len));
+    ctx.stroke();
+  }
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 56, 0, Math.PI * 2);
+  ctx.stroke();
+  const p = beat(s.time, start + 0.2, 1.2, easeInOut);
+  ctx.strokeStyle = VOLT;
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 18, -Math.PI / 2, -Math.PI / 2 + sweep * p * Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** A machine's weight stack: `count` plates from the bottom up, the first `lit` in Volt, the pin above them. */
+function weightStack(s: Scene, x: number, top: number, bottom: number, count: number, lit: number, start: number) {
+  const { ctx } = s;
+  const gap = 8;
+  const h = (bottom - top - gap * (count - 1)) / count;
+  for (let i = 0; i < count; i++) {
+    const y = bottom - (i + 1) * h - i * gap;
+    const on = i < lit && stagger(s.time, i, start, 0.06, 0.25) > 0.5;
+    ctx.fillStyle = on ? VOLT : "rgba(244, 244, 245, 0.14)";
+    rrect(ctx, x, y, 46, h, 4);
+    ctx.fill();
+  }
+  // The pin sits in the top lit plate.
+  if (lit > 0 && beat(s.time, start + lit * 0.06, 0.3) > 0) {
+    const y = bottom - lit * h - (lit - 1) * gap + h / 2;
+    ctx.fillStyle = TEXT;
+    ctx.beginPath();
+    ctx.arc(x - 18, y, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(x - 18, y - 2, 30, 4);
+  }
+}
+
+/** L-shaped marks at the four corners of a box, like a camera's framing guides. */
+function cornerMarks(ctx: Ctx, x: number, y: number, w: number, h: number, len: number, color: string) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  for (const [cx, cy, dx, dy] of [
+    [x, y, 1, 1],
+    [x + w, y, -1, 1],
+    [x, y + h, 1, -1],
+    [x + w, y + h, -1, -1],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + dy * len);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx + dx * len, cy);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 /**
  * Headline: the photo full screen, a deep shade along the bottom, and the volume as one huge
  * condensed figure with time, sets and records under a hairline.
@@ -1007,6 +940,10 @@ function headline(s: Scene) {
   const m = 72;
   const inner = W - 2 * m;
   cinematic(s, { bottomFrom: H * 0.38 });
+  // Two straps of tape crossing high on the frame, the session's name and volume on them.
+  const tag = `${data.title} · ${bigVolume(data.volumeKg, s.unit, currentT().locale).join(" ")} · ABOT`.toLocaleUpperCase(currentT().locale);
+  tape(s, SAFE_TOP + 250, 0.1, tag, "rgba(244, 244, 245, 0.14)", "rgba(244, 244, 245, 0.85)", 0.15);
+  tape(s, SAFE_TOP + 250, -0.14, tag, VOLT, "#0b0b0d", 0);
   premiumHeader(s, m);
 
   // From the bottom up: the stats row, the hairline, the figure, its label, the title.
@@ -1058,6 +995,8 @@ function topSet(s: Scene) {
   arrive(s, 0, () => text(s, data.title, m, SAFE_TOP + 20, { size: 34, weight: 700, family: "grotesk", maxWidth: inner }), 0);
 
   const best = topSetOf(data);
+  // A plate's rim behind the number: the arc runs further round when the set was a record.
+  dial(s, W - 120, SAFE_BOTTOM - 520, 330, best?.record ? 0.85 : 0.6, 0.1);
   const t = currentT();
   const totals = [`${bigVolume(data.volumeKg, unit, t.locale).join(" ")}`, formatDuration(data.durationSec), t.n(data.setsDone, "{n} set", "{n} sets")].join("   ·   ");
   const bottom = SAFE_BOTTOM;
@@ -1125,6 +1064,8 @@ function sidebar(s: Scene) {
   const rowH = 210;
   const blockH = 70 + rows.length * rowH;
   let y = Math.round((H - blockH) / 2) + 40;
+  // A weight stack beside the numbers: one plate lit per set, up to the top of the stack.
+  weightStack(s, W * 0.44 - 92, y + 60, y + blockH - 30, 16, Math.min(16, data.setsDone), 0.4);
   arrive(s, 0.1, () => text(s, data.title, right, y, { size: 40, weight: 700, family: "grotesk", align: "right", maxWidth: W * 0.62 }));
   y += 70;
   rows.forEach((r, i) => {
@@ -1154,6 +1095,7 @@ function lineup(s: Scene) {
   cinematic(s, { bottomFrom: H * 0.3 });
   premiumHeader(s, m);
   const lifts = data.exercises.slice(0, 5);
+  const maxVol = Math.max(0, ...lifts.map((e) => e.volumeKg));
   const listH = lifts.length * 70;
   let y = SAFE_BOTTOM - listH - 300;
   arrive(s, 0.1, () => text(s, data.title, m, y, { size: 56, weight: 700, family: "grotesk", maxWidth: inner }));
@@ -1187,6 +1129,12 @@ function lineup(s: Scene) {
       const rw = text(s, right, W - m, at + 48, { size: 28, weight: 600, family: "mono", color: SOFT, align: "right" });
       text(s, ex.name, m, at + 48, { size: 32, weight: 600, family: "grotesk", maxWidth: inner - rw - 30 });
     });
+    // Each lift's share of the volume, as a bar that fills under its name.
+    const share = maxVol > 0 ? ex.volumeKg / maxVol : 0;
+    const grow = beat(s.time, 0.9 + i * 0.12, 0.8, easeOut);
+    // Drawn on the rule under the row, so it reads as a gauge and not an underline.
+    ctx.fillStyle = VOLT;
+    ctx.fillRect(m, at + 69, inner * share * grow, 4);
   });
   if (data.exercises.length > lifts.length)
     arrive(s, 1.5, () => label(s, `+${data.exercises.length - lifts.length}`, m, y + lifts.length * 70 + 44, { size: 22 }));
@@ -1217,6 +1165,18 @@ function grid(s: Scene) {
   const cellW = inner / 2;
   const cellH = 220;
   const top = SAFE_BOTTOM - 2 * cellH;
+  // The day, huge and drawn in outline only, behind the title.
+  const day = new Date(data.startedAt).toLocaleDateString(currentT().locale, { weekday: "short" }).replace(".", "").toLocaleUpperCase(currentT().locale);
+  arrive(s, 0, () => {
+    const size = fitSize(s, day, inner + 40, 420, 200, 400, "display");
+    setFont(s, size, 400, "display");
+    ctx.save();
+    ctx.strokeStyle = "rgba(244, 244, 245, 0.28)";
+    ctx.lineWidth = 3;
+    ctx.strokeText(day, m - 8, top - 130);
+    ctx.restore();
+  }, 0);
+  arrive(s, 0.3, () => cornerMarks(ctx, m - 20, top - 20, inner + 40, 2 * cellH + 40, 44, VOLT), 0);
   arrive(s, 0.1, () => text(s, data.title, m, top - 56, { size: 52, weight: 700, family: "grotesk", maxWidth: inner }));
   arrive(s, 0.25, () => {
     hline(ctx, m, W - m, top, RULE, 2);
@@ -1239,6 +1199,103 @@ function grid(s: Scene) {
   });
   const handle = data.handle?.trim();
   if (handle) arrive(s, 1.4, () => text(s, `@${handle}`, W - m, SAFE_BOTTOM + 60, { size: 26, weight: 700, family: "mono", color: SOFT, align: "right" }));
+}
+
+/**
+ * Medal: a medal hanging on two ribbon straps from the top of the frame, the day's record count
+ * on its face (or the volume when no record fell), the best set and the totals under it. In the
+ * video it drops in and swings to rest.
+ */
+function medal(s: Scene) {
+  const { ctx, data, unit } = s;
+  const m = 72;
+  const inner = W - 2 * m;
+  cinematic(s, { bottomFrom: H * 0.42 });
+  premiumHeader(s, m);
+  const t = currentT();
+  const records = new Set(data.prs.map((p) => p.exerciseName)).size;
+  const cx = W / 2;
+  const cy = SAFE_TOP + 470;
+  const r = 165;
+  const drop = beat(s.time, 0.1, 0.8, backOut);
+  const swing = s.time < 3 ? Math.sin(s.time * 6) * Math.exp(-s.time * 1.6) * 0.12 * beat(s.time, 0.1, 0.3) : 0;
+  ctx.save();
+  ctx.translate(cx, -40);
+  ctx.rotate(swing);
+  ctx.translate(-cx, 40 - (1 - drop) * 500);
+  // Two straps, each striped Volt and charcoal, meeting at the ring above the medal.
+  for (const side of [-1, 1]) {
+    const x0 = cx + side * 230;
+    const x1 = cx + side * 26;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x0 - 48, -10);
+    ctx.lineTo(x0 + 48, -10);
+    ctx.lineTo(x1 + 30, cy - r - 20);
+    ctx.lineTo(x1 - 30, cy - r - 20);
+    ctx.closePath();
+    ctx.fillStyle = "#1c1c21";
+    ctx.fill();
+    ctx.clip();
+    ctx.strokeStyle = VOLT;
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.moveTo((x0 + x1) / 2, -10);
+    ctx.lineTo(x1, cy - r - 20);
+    ctx.stroke();
+    ctx.restore();
+  }
+  // The ring and the medal: a charcoal face, a Volt rim, a hairline inside it.
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = TEXT;
+  ctx.beginPath();
+  ctx.arc(cx, cy - r - 16, 22, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#16161a";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = 12;
+  ctx.strokeStyle = VOLT;
+  ctx.stroke();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(244, 244, 245, 0.3)";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 26, 0, Math.PI * 2);
+  ctx.stroke();
+  const face = records > 0 ? String(records) : bigVolume(data.volumeKg, unit, t.locale)[0];
+  const faceLabel = records > 0 ? (records === 1 ? TL("New record") : TL("Records")) : unit.toUpperCase();
+  const size = fitSize(s, face, r * 1.5, 170, 70, 400, "display");
+  text(s, face, cx, cy + size * 0.32, { size, family: "display", align: "center", shadow: false });
+  text(s, faceLabel, cx, cy + size * 0.32 + 46, { size: 22, weight: 700, family: "grotesk", color: VOLT, align: "center", tracking: 4, shadow: false });
+  ctx.restore();
+
+  // Under the medal: the title, the best set, the totals.
+  const best = topSetOf(data);
+  let y = cy + r + 150;
+  arrive(s, 0.9, () => text(s, data.title, cx, y, { size: 52, weight: 700, family: "grotesk", align: "center", maxWidth: inner }));
+  y += 60;
+  if (best) {
+    const at = y;
+    const line = `${best.name} · ${best.set.weightKg ? `${formatWeight(best.set.weightKg, unit, false)} ${unit} × ${best.set.reps ?? 0}` : `${best.set.reps ?? 0}`}`;
+    arrive(s, 1.0, () => text(s, line, cx, at, { size: 30, weight: 600, family: "grotesk", color: SOFT, align: "center", maxWidth: inner }));
+  }
+  const rowY = SAFE_BOTTOM;
+  const cols = [
+    [tl("Total volume"), bigVolume(data.volumeKg, unit, t.locale).join(" ").toUpperCase()],
+    [tl("Time"), formatDuration(data.durationSec).toUpperCase()],
+    [tl("Sets"), String(data.setsDone)],
+  ];
+  arrive(s, 1.2, () => {
+    hline(ctx, m, W - m, rowY - 130, RULE, 2);
+    cols.forEach(([l, v], i) => {
+      const x = m + (i * inner) / 3;
+      label(s, l!, x, rowY - 76);
+      text(s, v!, x, rowY, { size: fitSize(s, v!, inner / 3 - 24, 64, 40, 400, "display"), family: "display", tracking: 1 });
+    });
+  });
+  const handle = data.handle?.trim();
+  if (handle) arrive(s, 1.4, () => text(s, `@${handle}`, W - m, rowY + 64, { size: 26, weight: 700, family: "mono", color: SOFT, align: "right" }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -1603,7 +1660,7 @@ const PAINTERS: Record<StoryPresetId, (s: Scene) => void> = {
   lineup,
   grid,
   "thermal-matrix": thermalMatrix,
-  "trophy-vault": trophyVault,
+  medal,
 };
 
 /**

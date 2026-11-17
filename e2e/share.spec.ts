@@ -2,7 +2,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, reachSummary, waitForSavedSetting } from "./helpers";
 
-const LAYOUTS = ["Clean", "Headline", "Top Set", "Sidebar", "Lineup", "Grid", "Thermal Matrix", "Trophy Vault"];
+const LAYOUTS = ["Clean", "Headline", "Top Set", "Sidebar", "Lineup", "Grid", "Thermal Matrix", "Medal"];
 
 /** Logs one bench set and finishes; the app lands on the new summary page. */
 async function finishOneSet(page: Page) {
@@ -63,7 +63,7 @@ test("the studio switches between every layout and downloads a 1080 x 1920 PNG",
     page.waitForEvent("download"),
     dialog.getByRole("button", { name: "Download High-Res PNG" }).click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-trophy-vault\.png$/);
+  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-medal\.png$/);
   const file = await download.path();
   const { readFileSync } = await import("node:fs");
   const head = readFileSync(file).subarray(16, 24);

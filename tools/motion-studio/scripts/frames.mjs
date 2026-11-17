@@ -10,7 +10,7 @@ import { mkdirSync } from "node:fs";
 
 const ids = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ["clean", "headline", "top-set", "sidebar", "lineup", "grid", "thermal-matrix", "trophy-vault"].map((p) => `workout-${p}`).concat("streak");
+  : ["clean", "headline", "top-set", "sidebar", "lineup", "grid", "thermal-matrix", "medal"].map((p) => `workout-${p}`).concat("streak");
 const frames = [0, 30, 60, 90, 135, 180, 201].join(",");
 for (const id of ids) {
   const out = `out/frames/${id}`;

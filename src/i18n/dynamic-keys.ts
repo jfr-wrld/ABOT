@@ -93,7 +93,7 @@ export const DYNAMIC_KEYS: string[] = [
   "Every lift listed under your photo",
   "Four big numbers in a grid under your photo",
   "Muscle map lit by sets worked",
-  "Records first, engraved in gold",
+  "A medal on two ribbons for the day's records",
   // TEXT_POSITIONS labels (Clean's text spots)
   "Top left", "Top", "Top right", "Left", "Center", "Right", "Bottom left", "Bottom", "Bottom right",
   "Middle",
@@ -105,7 +105,7 @@ export const DYNAMIC_KEYS: string[] = [
   "Four big numbers in a grid under your photo",
   "Level cleared: score, XP and a star per record",
   "Each lift a plate on the bar, sized by its volume",
-  "Records first, engraved in gold",
+  "A medal on two ribbons for the day's records",
   "Swiss poster in black on Volt",
   // Errors thrown by data/backup, lib/photo, story-exporter and data/catalog, shown with t()
   "This device cannot make videos. Download the image instead.",

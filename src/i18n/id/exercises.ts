@@ -273,6 +273,7 @@ export const exercises: Record<string, string> = {
   "Bottom right": "Kanan bawah",
   "Above the text": "Di atas teks",
   "Top set": "Set terbaik",
+  "A medal on two ribbons for the day's records": "Medali berpita untuk rekor hari ini",
   "Four big numbers in a grid under your photo": "Empat angka besar dalam kotak di bawah fotomu",
   "Your volume, poster size, over your photo": "Volumemu sebesar poster, di atas fotomu",
   "Your best set of the day, front and centre": "Set terbaikmu hari ini, paling depan",
