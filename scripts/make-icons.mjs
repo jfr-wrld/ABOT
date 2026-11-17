@@ -124,6 +124,7 @@ const MAP = {
   SquarePlus: ["add-square"],
   Star: ["star"],
   Sun: ["sun"],
+  TextSquare: ["text-square"],
   Timer: ["stopwatch"],
   Trash2: ["trash-bin-minimalistic"],
   TrendingDown: ["graph-down"],

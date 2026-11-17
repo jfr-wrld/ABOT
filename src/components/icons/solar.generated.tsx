@@ -108,6 +108,7 @@ export { Sparkles } from "./solar/Sparkles";
 export { SquarePlus } from "./solar/SquarePlus";
 export { Star } from "./solar/Star";
 export { Sun } from "./solar/Sun";
+export { TextSquare } from "./solar/TextSquare";
 export { Timer } from "./solar/Timer";
 export { Trash2 } from "./solar/Trash2";
 export { TrendingDown } from "./solar/TrendingDown";

@@ -31,13 +31,14 @@ export const STORY_KEYS = [
   "{n} new record", "{n} new records", "{n} sets on file", "Keep this slip.", "Next time, beat it.", "Trophy vault",
   "Vault unchanged", "Also lifted", "New record", "No record fell this time. Top sets from the session:",
   "No loaded sets in this workout.", "Total volume", "Line-up", "Strength edition", "The cover story", "{n} sets",
-  "Logged with ABOT",
+  "Logged with ABOT", "{n} set",
 ];
 
 export const STORY_WIDTH = 1080;
 export const STORY_HEIGHT = 1920;
 
 export type StoryPresetId =
+  | "clean"
   | "matchday"
   | "thermal-matrix"
   | "brutalist-receipt"
@@ -48,10 +49,11 @@ export type StoryPresetId =
   | "volt-poster";
 
 /**
- * The eight layouts, each its own look: typeface, palette, texture and the way it moves. The
- * first `tunables().story.freePresets` (2) are free, so the order sets what is PRO.
+ * The layouts, each its own look: typeface, palette, texture and the way it moves. Clean is always
+ * free; of the rest, the first `tunables().story.freePresets` (2) are, so the order sets what is PRO.
  */
 export const STORY_PRESETS: { id: StoryPresetId; name: string; blurb: string }[] = [
+  { id: "clean", name: "Clean", blurb: "Your photo first, a few quiet lines" },
   { id: "matchday", name: "Matchday", blurb: "Full-time scoreboard: your volume is the score" },
   { id: "thermal-matrix", name: "Thermal Matrix", blurb: "Muscle map lit by sets worked" },
   { id: "brutalist-receipt", name: "Brutalist Receipt", blurb: "Every set itemised like a till slip" },
@@ -95,7 +97,24 @@ export interface StoryOptions {
   hideWatermark?: boolean;
   /** Founder pass holders: "FOUNDER // #0421" stamped in the top corner. */
   founderBadge?: string | null;
+  /** Clean only: where its text block sits. Bottom left when not given. */
+  textPosition?: TextPosition;
 }
+
+/** The nine places Clean can put its text: rows top, middle, bottom by columns left, centre, right. */
+export type TextPosition = "top-left" | "top" | "top-right" | "left" | "center" | "right" | "bottom-left" | "bottom" | "bottom-right";
+
+export const TEXT_POSITIONS: { id: TextPosition; label: string }[] = [
+  { id: "top-left", label: "Top left" },
+  { id: "top", label: "Top" },
+  { id: "top-right", label: "Top right" },
+  { id: "left", label: "Left" },
+  { id: "center", label: "Center" },
+  { id: "right", label: "Right" },
+  { id: "bottom-left", label: "Bottom left" },
+  { id: "bottom", label: "Bottom" },
+  { id: "bottom-right", label: "Bottom right" },
+];
 
 export const OVERLAY_RANGE = { min: 0.2, max: 0.85, step: 0.05, initial: 0.55 } as const;
 
@@ -1522,6 +1541,8 @@ interface HandleSpot {
  * space, in the layout's text colour. `null` means the painter prints it itself.
  */
 const HANDLE_SPOTS: Record<StoryPresetId, HandleSpot | null> = {
+  // Inside its own text block.
+  clean: null,
   // Under the date line, beside the score band.
   matchday: { x: W - 72, y: 1236, align: "right", color: MUTED },
   // Between the load bars and the stats row.
@@ -1555,7 +1576,107 @@ function drawHandle(s: Scene) {
   });
 }
 
+/* ------------------------------------------------------------------ */
+/* Clean                                                               */
+/* ------------------------------------------------------------------ */
+
+const CLEAN_MARGIN = 72;
+
+/**
+ * Where Clean's text block of height `h` goes: its anchor x, its top, and how its lines align.
+ * The rows stay inside the safe area, so top sits under Instagram's top bar (and under the
+ * founder badge, which ends above SAFE_TOP) and bottom above the reply box.
+ */
+export function cleanBlockOrigin(position: TextPosition, h: number): { x: number; top: number; align: CanvasTextAlign } {
+  const row = position.startsWith("top") ? "top" : position.startsWith("bottom") ? "bottom" : "middle";
+  const col = position.endsWith("left") ? "left" : position.endsWith("right") ? "right" : "center";
+  const x = col === "left" ? CLEAN_MARGIN : col === "right" ? W - CLEAN_MARGIN : W / 2;
+  const top = row === "top" ? SAFE_TOP : row === "bottom" ? SAFE_BOTTOM - h : Math.round((H - h) / 2);
+  return { x, top, align: col };
+}
+
+/**
+ * The photo itself, and a few quiet lines wherever the lifter puts them: the date, the workout's
+ * name, and volume, time and sets on one line. The photo gets no flat tint: a soft shade sits
+ * only on the side of the text, as strong as the Overlay slider says.
+ */
+function clean(s: Scene) {
+  const { ctx, data, unit, opts } = s;
+  const position = opts.textPosition ?? "bottom-left";
+  ctx.fillStyle = OBSIDIAN;
+  ctx.fillRect(0, 0, W, H);
+  if (opts.photo) ctx.drawImage(opts.photo.layer(opts.grayscale), 0, 0, W, H);
+
+  const inner = W - 2 * CLEAN_MARGIN;
+  const title = wrap(s, data.title, inner, 72, 800, 2);
+  const t = currentT();
+  const stats = [formatVolume(data.volumeKg, unit), formatDuration(data.durationSec), t.n(data.setsDone, "{n} set", "{n} sets")].join(" · ");
+  const handle = data.handle?.trim();
+  const showMark = !opts.hideWatermark;
+  // Line by line: the date, the title, the figures, then the handle and the mark when they show.
+  const h = 28 + 24 + 72 + (title.length - 1) * 80 + 18 + 34 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
+  const { x, top, align } = cleanBlockOrigin(position, h);
+
+  // The shade behind the text (with a photo) or a faint Volt glow (without one).
+  const cx = align === "left" ? x + inner * 0.35 : align === "right" ? x - inner * 0.35 : x;
+  const cy = top + h / 2;
+  if (opts.photo) {
+    const a = opts.overlay;
+    let g: CanvasGradient;
+    if (top <= SAFE_TOP) {
+      g = ctx.createLinearGradient(0, 0, 0, top + h + 260);
+      g.addColorStop(0, `rgba(0, 0, 0, ${a})`);
+      g.addColorStop(1, "rgba(0, 0, 0, 0)");
+    } else if (top + h >= SAFE_BOTTOM) {
+      g = ctx.createLinearGradient(0, top - 260, 0, H);
+      g.addColorStop(0, "rgba(0, 0, 0, 0)");
+      g.addColorStop(1, `rgba(0, 0, 0, ${a})`);
+    } else {
+      g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 640);
+      g.addColorStop(0, `rgba(0, 0, 0, ${a * 0.85})`);
+      g.addColorStop(1, "rgba(0, 0, 0, 0)");
+    }
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  } else {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 720);
+    g.addColorStop(0, withAlpha(VOLT, 0.1));
+    g.addColorStop(1, withAlpha(VOLT, 0));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // In the video the block fades in and rises a little; a still has it in place.
+  const p = beat(s.time, 0.15, 0.55, easeOut);
+  ctx.save();
+  ctx.globalAlpha = p;
+  ctx.translate(0, (1 - p) * 24);
+  let y = top + 28;
+  text(s, dateLabel(data), x, y, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 });
+  y += 24 + 72;
+  for (const line of title) {
+    text(s, line, x, y, { size: 72, weight: 800, align, tracking: -1.5 });
+    y += 80;
+  }
+  y += 18 + 34 - 80;
+  text(s, stats, x, y, { size: 34, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.92)", align, maxWidth: inner });
+  if (handle) {
+    y += 16 + 30;
+    text(s, `@${handle}`, x, y, { size: 30, weight: 700, family: "mono", color: VOLT, align, maxWidth: inner });
+  }
+  if (showMark) {
+    y += 34 + 20;
+    const size = 40;
+    setFont(s, size * 0.82, 800, "sans");
+    const w = size * 1.28 + ctx.measureText("ABOT").width;
+    const from = align === "left" ? x : align === "right" ? x - w : x - w / 2;
+    wordmark(s, from, y, size, VOLT);
+  }
+  ctx.restore();
+}
+
 const PAINTERS: Record<StoryPresetId, (s: Scene) => void> = {
+  clean,
   matchday,
   "thermal-matrix": thermalMatrix,
   "brutalist-receipt": brutalistReceipt,

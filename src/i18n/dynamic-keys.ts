@@ -80,12 +80,15 @@ export const DYNAMIC_KEYS: string[] = [
   "Summary", "History", "How to",
   "Motion", "Video", "Anatomy",
   "Concentric", "Eccentric", "Hold", "Carry", "Alternate",
-  "Layout", "Photo",
+  "Layout", "Text", "Photo",
   // SPLITS labels (template filter chips)
   ...SPLITS.map((s) => s.label),
   // WorkoutCalendar weekday heads
   "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su",
   // STORY_PRESETS blurbs (layout tooltips in the Story Studio; copied, story-exporter needs a DOM)
+  "Your photo first, a few quiet lines",
+  // TEXT_POSITIONS labels (Clean's text spots)
+  "Top left", "Top", "Top right", "Left", "Center", "Right", "Bottom left", "Bottom", "Bottom right",
   "Full-time scoreboard: your volume is the score",
   "Muscle map lit by sets worked",
   "Every set itemised like a till slip",

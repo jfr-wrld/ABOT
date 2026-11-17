@@ -2,7 +2,7 @@
 
 import { founderLabel } from "@/lib/entitlements";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Download, Film, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, Trash2, X } from "@/components/icons";
+import { Camera, Download, Film, Gem, Image as ImageIcon, ImagePlus, LayoutTemplate, Lock, Share2, TextSquare, Trash2, X } from "@/components/icons";
 import { useReducedMotionConfig } from "framer-motion";
 import { useStoryVideo } from "./useStoryVideo";
 import { FormatSwitch, VideoActions } from "./VideoActions";
@@ -34,6 +34,8 @@ import {
   type StoryOptions,
   type StoryPhoto,
   type StoryPresetId,
+  TEXT_POSITIONS,
+  type TextPosition,
 } from "@/lib/story-exporter";
 import { openSaved, type SaveResult } from "@/lib/native/files";
 import { openPhotoInput } from "@/lib/native/photo-input";
@@ -190,7 +192,8 @@ function Studio({
   // The PNG remembers which card it was made from; any other card means it is being remade.
   const [made, setMade] = useState<{ from: object | null; blob: Blob | null; fileName: string }>({ from: null, blob: null, fileName: "" });
   const [tab, setTab] = useState<Tab>("layout");
-  const [preset, setPreset] = useState<StoryPresetId>("matchday");
+  const [preset, setPreset] = useState<StoryPresetId>("clean");
+  const [textPosition, setTextPosition] = useState<TextPosition>("bottom-left");
   const [fonts, setFonts] = useState<StoryFonts | null>(null);
   const [fontsFailed, setFontsFailed] = useState(false);
   const [photo, setPhoto] = useState<StoryPhoto | null>(null);
@@ -219,12 +222,12 @@ function Studio({
     };
   }, []);
 
-  // Layouts 1 and 2 are free; from the third on, and a card without the ABOT mark, are PRO.
+  // Clean and the next two layouts are free; the rest, and a card without the ABOT mark, are PRO.
   const presetLocked = !proActive && isProPreset(preset);
   const founderBadge = founderBadgeOn && isFounder ? founderUnitCode : null;
   const opts = useMemo<StoryOptions>(
-    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge }),
-    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge],
+    () => ({ preset, photo, overlay, grayscale, hideWatermark: hideWatermark && proActive, founderBadge, textPosition }),
+    [preset, photo, overlay, grayscale, hideWatermark, proActive, founderBadge, textPosition],
   );
   const exportKey = useMemo(() => ({ card, opts }), [card, opts]);
   // Image (the PNG, as before) or Video (the same card in motion, PRO for a workout).
@@ -293,7 +296,7 @@ function Studio({
     return () => cancelAnimationFrame(raf);
     // The preset itself does not change any thumbnail.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card, photo, overlay, grayscale, fonts, tab]);
+  }, [card, photo, overlay, grayscale, fonts, tab, textPosition]);
 
   // The PNG is made ahead of the tap: Safari only opens the share sheet inside the tap itself.
   useEffect(() => {
@@ -471,7 +474,7 @@ function Studio({
       </div>
 
       {/* One panel at a time, fixed height, so nothing below the preview scrolls. */}
-      <div className="h-[136px] shrink-0 px-4 pt-2">
+      <div className="h-[148px] shrink-0 px-4 pt-2">
         {tab === "layout" && (
           <ul aria-label={t("Layouts")} className="-mx-4 flex h-full snap-x gap-2 overflow-x-auto px-4 pb-1">
             {STORY_PRESETS.map((p) => {
@@ -507,6 +510,8 @@ function Studio({
             })}
           </ul>
         )}
+
+        {tab === "text" && preset === "clean" && <TextPositionPicker value={textPosition} onChange={setTextPosition} />}
 
         {tab === "pro" && (
           <div className="flex h-full flex-col justify-center gap-2">
@@ -634,8 +639,8 @@ function Studio({
         }}
       />
 
-      <div role="tablist" aria-label={t("Edit")} className="mx-4 mt-2 grid shrink-0 grid-cols-3 gap-1 rounded-ctl bg-surface-2 p-1">
-        {TABS.map(({ id, label, icon: Icon }) => (
+      <div role="tablist" aria-label={t("Edit")} className={`mx-4 mt-2 grid shrink-0 gap-1 rounded-ctl bg-surface-2 p-1 ${preset === "clean" ? "grid-cols-4" : "grid-cols-3"}`}>
+        {TABS.filter(({ id }) => id !== "text" || preset === "clean").map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
@@ -676,16 +681,81 @@ function Studio({
   );
 }
 
-type Tab = "layout" | "photo" | "pro";
+type Tab = "layout" | "text" | "photo" | "pro";
 const TABS: { id: Tab; label: string; icon: typeof Camera }[] = [
   { id: "layout", label: "Layout", icon: LayoutTemplate },
+  // Only while Clean is chosen: the other layouts place their own text.
+  { id: "text", label: "Text", icon: TextSquare },
   { id: "photo", label: "Photo", icon: ImagePlus },
   { id: "pro", label: "Pro", icon: Gem },
 ];
 
-/** Layouts after the free ones (two by default; Mission Control sets it) are ABOT Pro. */
+/**
+ * Clean is always free. Of the other layouts, those after the free ones (two by default; Mission
+ * Control sets it) are ABOT Pro. Counting Clean apart keeps Matchday and Thermal Matrix free.
+ */
 function isProPreset(id: StoryPresetId): boolean {
-  return STORY_PRESETS.findIndex((p) => p.id === id) >= tunables().story.freePresets;
+  if (id === "clean") return false;
+  return STORY_PRESETS.filter((p) => p.id !== "clean").findIndex((p) => p.id === id) >= tunables().story.freePresets;
+}
+
+/**
+ * Where Clean's text goes: a small story-shaped frame of nine spots. Arrow keys move between
+ * them, as in any radio group; only the chosen spot is in the tab order.
+ */
+function TextPositionPicker({ value, onChange }: { value: TextPosition; onChange: (p: TextPosition) => void }) {
+  const t = useT();
+  const group = useRef<HTMLDivElement>(null);
+  const move = (dx: number, dy: number) => {
+    const i = TEXT_POSITIONS.findIndex((p) => p.id === value);
+    const col = Math.min(2, Math.max(0, (i % 3) + dx));
+    const row = Math.min(2, Math.max(0, Math.floor(i / 3) + dy));
+    const next = TEXT_POSITIONS[row * 3 + col]!.id;
+    onChange(next);
+    group.current?.querySelector<HTMLButtonElement>(`[data-spot="${next}"]`)?.focus();
+  };
+  return (
+    <div className="flex h-full items-center gap-4">
+      <div
+        ref={group}
+        role="radiogroup"
+        aria-label={t("Text position")}
+        onKeyDown={(e) => {
+          const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+          if (!d) return;
+          e.preventDefault();
+          move(d[0]!, d[1]!);
+        }}
+        className="grid shrink-0 grid-cols-3 gap-1 rounded-xl border border-line-strong bg-surface-2 p-1"
+      >
+        {TEXT_POSITIONS.map((p) => {
+          const on = p.id === value;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              role="radio"
+              data-spot={p.id}
+              aria-checked={on}
+              aria-label={t(p.label)}
+              tabIndex={on ? 0 : -1}
+              onClick={() => {
+                if (!on) feedback.tick();
+                onChange(p.id);
+              }}
+              className="flex size-11 items-center justify-center rounded-lg hover:bg-surface"
+            >
+              <span aria-hidden="true" className={`block h-1.5 rounded-full transition-all ${on ? "w-6 bg-accent" : "w-3 bg-text-muted/40"}`} />
+            </button>
+          );
+        })}
+      </div>
+      <p className="min-w-0 text-xs text-text-muted">
+        <span className="block text-sm font-semibold text-text">{t(TEXT_POSITIONS.find((p) => p.id === value)!.label)}</span>
+        {t("Put the text where the photo has room for it.")}
+      </p>
+    </div>
+  );
 }
 
 /** One switch row in the Pro tab: label, its badge, and the switch. */

@@ -2,7 +2,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { addExercise, expectNoHorizontalOverflow, freshStart, logSet, startEmptyWorkout, reachSummary, waitForSavedSetting } from "./helpers";
 
-const LAYOUTS = ["Matchday", "Thermal Matrix", "Brutalist Receipt", "Editorial", "Arcade", "Loaded Bar", "Trophy Vault", "Volt Poster"];
+const LAYOUTS = ["Clean", "Matchday", "Thermal Matrix", "Brutalist Receipt", "Editorial", "Arcade", "Loaded Bar", "Trophy Vault", "Volt Poster"];
 
 /** Logs one bench set and finishes; the app lands on the new summary page. */
 async function finishOneSet(page: Page) {
@@ -72,6 +72,37 @@ test("the studio switches between every layout and downloads a 1080 x 1920 PNG",
 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("Clean puts its few lines where the lifter chooses, and only Clean has the Text tab", async ({ page }) => {
+  await finishOneSet(page);
+  const dialog = await openStudio(page);
+  // The default layout, free for everyone.
+  await expect(dialog.getByRole("button", { name: "Clean", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(dialog.getByRole("img", { name: /^Clean story card/ })).toBeVisible();
+
+  await dialog.getByRole("tab", { name: "Text" }).click();
+  const spots = dialog.getByRole("radiogroup", { name: "Text position" });
+  await expect(spots.getByRole("radio")).toHaveCount(9);
+  await expect(spots.getByRole("radio", { name: "Bottom left", exact: true })).toHaveAttribute("aria-checked", "true");
+  const before = await dialog.getByRole("img", { name: /story card/ }).evaluate((c: HTMLCanvasElement) => c.toDataURL());
+  await spots.getByRole("radio", { name: "Top right", exact: true }).click();
+  await expect(spots.getByRole("radio", { name: "Top right", exact: true })).toHaveAttribute("aria-checked", "true");
+  // Arrow keys move between spots, as in any radio group.
+  await page.keyboard.press("ArrowDown");
+  await expect(spots.getByRole("radio", { name: "Right", exact: true })).toHaveAttribute("aria-checked", "true");
+  await expect
+    .poll(() => dialog.getByRole("img", { name: /story card/ }).evaluate((c: HTMLCanvasElement) => c.toDataURL()))
+    .not.toBe(before);
+  await expectNoHorizontalOverflow(page);
+
+  const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Download High-Res PNG" }).click()]);
+  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-clean\.png$/);
+
+  // Another layout places its own text: the tab goes.
+  await dialog.getByRole("tab", { name: "Layout" }).click();
+  await dialog.getByRole("button", { name: "Matchday", exact: true }).click();
+  await expect(dialog.getByRole("tab", { name: "Text" })).toHaveCount(0);
 });
 
 test("a background photo brings the overlay and grayscale controls", async ({ page }) => {
@@ -224,7 +255,7 @@ test("Video makes the card in motion as a short MP4, saved and shared from the s
   // Made frame by frame: 7 seconds at 30 fps.
   await expect(dialog.getByRole("button", { name: /^(Share|Save) video$/ })).toBeVisible({ timeout: 90_000 });
   const [download] = await Promise.all([page.waitForEvent("download"), dialog.getByRole("button", { name: "Save video" }).first().click()]);
-  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-matchday\.(mp4|webm)$/);
+  expect(download.suggestedFilename()).toMatch(/^abot-story-\d{4}-\d{2}-\d{2}-clean\.(mp4|webm)$/);
   const bytes = await (await import("node:fs/promises")).readFile((await download.path())!);
   expect(bytes.length).toBeGreaterThan(20_000);
   if (download.suggestedFilename().endsWith(".mp4")) expect(bytes.subarray(4, 8).toString("latin1")).toBe("ftyp");
