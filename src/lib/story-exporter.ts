@@ -16,7 +16,7 @@ import { currentT, type T } from "@/i18n";
 import { canShareFiles, saveFile, shareFile, type SaveResult, type ShareResult } from "@/lib/native/files";
 import { MARK_PATH } from "@/components/brand/mark-path";
 import { LIFT_SHAPES, type ObjectLayer, type ObjectTone } from "@/lib/story-objects";
-import { END_CARD_AT, STILL_TIME, STORY_SECONDS, backOut, beat, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
+import { END_CARD_AT, STILL_TIME, STORY_SECONDS, backOut, beat, clamp01, countUp, easeInOut, easeOut, linear, stagger, typed, type Ease } from "@/lib/story-motion";
 
 /**
  * Story text in the app's language (shared stories were drawn in English in Indonesian mode).
@@ -1710,7 +1710,6 @@ function clean(s: Scene) {
   // The lifter's sizes, shrunk together if the block would not fit between the safe lines.
   let kText = clampSize(opts.textScale);
   let kExtra = extra === "none" ? 1 : clampSize(opts.extraScale);
-  const stats = [formatVolume(data.volumeKg, unit), formatDuration(data.durationSec), t.n(data.setsDone, "{n} set", "{n} sets")].join(" · ");
   const handle = data.handle?.trim();
   const showMark = !opts.hideWatermark;
   // Above the text, in its own units: the muscle map, or the thing lifted with its two lines.
@@ -1758,27 +1757,66 @@ function clean(s: Scene) {
     ctx.fillRect(0, 0, W, H);
   }
 
-  // In the video the block fades in and rises a little; a still has it in place.
-  const p = beat(s.time, 0.15, 0.55, easeOut);
+  // In the video things arrive one after another; every beat has landed by STILL_TIME, so the
+  // picture is the last frame before the closing card.
+  const time = s.time;
+  /** Fades a line in while it rises 18 units into place. */
+  const enter = (start: number, draw: () => void) => {
+    const q = beat(time, start, 0.45, easeOut);
+    if (q <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = q;
+    ctx.translate(0, (1 - q) * 18);
+    draw();
+    ctx.restore();
+  };
   ctx.save();
-  ctx.globalAlpha = p;
-  ctx.translate(x, top + (1 - p) * 24);
+  ctx.translate(x, top);
 
   if (extraH > 0) {
     ctx.save();
     ctx.scale(kExtra, kExtra);
     const width = inner / kExtra;
-    let y = 0;
     if (extra === "muscles") {
-      drawBody(ctx, leftOf(CLEAN_MAP_W), y, CLEAN_MAP_W, regionHeat(data).heat);
+      // The figure fades in grey, then each worked muscle lights up, the most worked first.
+      const { heat } = regionHeat(data);
+      const order = Object.entries(heat).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
+      const lit: typeof heat = {};
+      order.forEach(([r, v], i) => {
+        const q = stagger(time, i, 0.45, 0.09, 0.5);
+        if (q > 0.02) lit[r as Region] = (v ?? 0) * q;
+      });
+      ctx.globalAlpha = beat(time, 0, 0.4);
+      drawBody(ctx, leftOf(CLEAN_MAP_W), 0, CLEAN_MAP_W, lit);
     } else if (compare) {
-      drawLiftObject(ctx, compare.object.id, leftOf(CLEAN_OBJECT), y, CLEAN_OBJECT, VOLT);
-      const n = compare.count.toLocaleString(t.locale, { maximumFractionDigits: 1 });
-      // The count, loud; then a line for the fun of it.
-      y += CLEAN_OBJECT + 18 + 52;
-      text(s, t.n(compare.count, compare.object.one, compare.object.other, { n }), 0, y, { size: 56, weight: 800, color: VOLT, align, maxWidth: width, tracking: -1 });
+      // The thing lands with a little bounce, then floats gently until the still.
+      const pop = beat(time, 0.05, 0.6, backOut);
+      const float = time > 2.4 && time < 5.8 ? Math.sin(((time - 2.4) / 3.4) * Math.PI * 2) * Math.sin(((time - 2.4) / 3.4) * Math.PI) * 6 : 0;
+      const cxObj = leftOf(CLEAN_OBJECT) + CLEAN_OBJECT / 2;
+      ctx.save();
+      ctx.globalAlpha = clamp01(pop * 1.5);
+      ctx.translate(cxObj, CLEAN_OBJECT / 2 + float);
+      ctx.scale(0.55 + 0.45 * pop, 0.55 + 0.45 * pop);
+      ctx.translate(-cxObj, -CLEAN_OBJECT / 2);
+      drawLiftObject(ctx, compare.object.id, leftOf(CLEAN_OBJECT), 0, CLEAN_OBJECT, VOLT);
+      ctx.restore();
+      // The count runs up to the figure, then gives a small punch.
+      let y = CLEAN_OBJECT + 18 + 52;
+      const run = beat(time, 0.45, 1.1, easeOut);
+      const shown = countUp(compare.count, run, compare.count < 10 ? 1 : 0);
+      const n = shown.toLocaleString(t.locale, { maximumFractionDigits: 1, minimumFractionDigits: compare.count < 10 && run < 1 ? 1 : 0 });
+      const punch = 1 + 0.08 * Math.sin(Math.PI * beat(time, 1.55, 0.35, linear));
+      if (run > 0) {
+        ctx.save();
+        ctx.globalAlpha = clamp01(run * 3);
+        ctx.translate(0, y);
+        ctx.scale(punch, punch);
+        // The plural follows the final figure, so the word does not flicker while counting.
+        text(s, t.n(compare.count, compare.object.one, compare.object.other, { n }), 0, 0, { size: 56, weight: 800, color: VOLT, align, maxWidth: width, tracking: -1 });
+        ctx.restore();
+      }
       y += 12 + 32;
-      text(s, t(compare.object.quip), 0, y, { size: 32, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.9)", align, maxWidth: width });
+      enter(1.7, () => text(s, t(compare.object.quip), 0, y, { size: 32, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.9)", align, maxWidth: width }));
     }
     ctx.restore();
   }
@@ -1786,25 +1824,34 @@ function clean(s: Scene) {
   ctx.translate(0, extraH * kExtra);
   ctx.scale(kText, kText);
   const width = inner / kText;
+  // The text follows the picture, line by line.
+  const from = extra === "none" ? 0.15 : extra === "muscles" ? 1.5 : 2.05;
   let y = 28;
-  text(s, dateLabel(data), 0, y, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 });
+  enter(from, () => text(s, dateLabel(data), 0, 28, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 }));
   y += 24 + 72;
   for (const line of title) {
-    text(s, line, 0, y, { size: 72, weight: 800, align, tracking: -1.5 });
+    const at = y;
+    enter(from + 0.12, () => text(s, line, 0, at, { size: 72, weight: 800, align, tracking: -1.5 }));
     y += 80;
   }
   y += 18 + 34 - 80;
-  text(s, stats, 0, y, { size: 34, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.92)", align, maxWidth: width });
+  // Volume counts up with the stats line.
+  const volRun = beat(time, from + 0.24, 0.9, easeOut);
+  const statsNow = [formatVolume(countUp(data.volumeKg, volRun), unit), formatDuration(data.durationSec), t.n(data.setsDone, "{n} set", "{n} sets")].join(" · ");
+  const statsY = y;
+  enter(from + 0.24, () => text(s, statsNow, 0, statsY, { size: 34, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.92)", align, maxWidth: width }));
   if (handle) {
     y += 16 + 30;
-    text(s, `@${handle}`, 0, y, { size: 30, weight: 700, family: "mono", color: VOLT, align, maxWidth: width });
+    const at = y;
+    enter(from + 0.36, () => text(s, `@${handle}`, 0, at, { size: 30, weight: 700, family: "mono", color: VOLT, align, maxWidth: width }));
   }
   if (showMark) {
     y += 34 + 20;
+    const at = y;
     const size = 40;
     setFont(s, size * 0.82, 800, "sans");
     const w = size * 1.28 + ctx.measureText("ABOT").width;
-    wordmark(s, leftOf(w), y, size, VOLT);
+    enter(from + 0.48, () => wordmark(s, leftOf(w), at, size, VOLT));
   }
   ctx.restore();
 }
