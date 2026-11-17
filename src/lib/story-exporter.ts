@@ -33,11 +33,15 @@ export const STORY_KEYS = [
   "Vault unchanged", "Also lifted", "New record", "No record fell this time. Top sets from the session:",
   "No loaded sets in this workout.", "Total volume", "Line-up", "Strength edition", "The cover story", "{n} sets",
   "Logged with ABOT", "{n} set",
-  "You lifted {n} cat", "You lifted {n} cats", "You lifted {n} bike", "You lifted {n} bikes",
-  "You lifted {n} fridge", "You lifted {n} fridges", "You lifted {n} car", "You lifted {n} cars",
-  "You lifted {n} elephant", "You lifted {n} elephants", "You lifted {n} bus", "You lifted {n} buses",
-  "You lifted {n} plane", "You lifted {n} planes", "You lifted {n} motorbike", "You lifted {n} motorbikes",
-  "You lifted {n} blue whale", "You lifted {n} blue whales",
+  "{n} cat lifted!", "{n} cats lifted!", "Not one of them was impressed.",
+  "{n} bike lifted!", "{n} bikes lifted!", "Leg day? Arms did the pedalling.",
+  "{n} fridge lifted!", "{n} fridges lifted!", "Moving day, sorted.",
+  "{n} motorbike lifted!", "{n} motorbikes lifted!", "No kickstand needed.",
+  "{n} car lifted!", "{n} cars lifted!", "Who needs a tow truck?",
+  "{n} elephant lifted!", "{n} elephants lifted!", "The whole herd felt that.",
+  "{n} bus lifted!", "{n} buses lifted!", "Next stop: a new PR.",
+  "{n} plane lifted!", "{n} planes lifted!", "Cleared for takeoff.",
+  "{n} blue whale lifted!", "{n} blue whales lifted!", "Strength, ocean sized.",
 ];
 
 export const STORY_WIDTH = 1080;
@@ -118,20 +122,20 @@ export const CLEAN_EXTRAS: { id: CleanExtra; label: string }[] = [
 ];
 
 /**
- * Everyday things by their weight, for "you lifted 2 elephants". Rounded, typical weights:
+ * Everyday things by their weight, for "2 elephants lifted!" and a line to go with it. Rounded, typical weights:
  * a house cat, a road bike, a fridge, a scooter-style motorbike, a family car, an African
  * elephant, a city bus, a narrow-body airliner empty, and a blue whale.
  */
 export const LIFT_OBJECTS = [
-  { id: "cat", kg: 4, one: "You lifted {n} cat", other: "You lifted {n} cats" },
-  { id: "bicycle", kg: 15, one: "You lifted {n} bike", other: "You lifted {n} bikes" },
-  { id: "fridge", kg: 90, one: "You lifted {n} fridge", other: "You lifted {n} fridges" },
-  { id: "motorbike", kg: 110, one: "You lifted {n} motorbike", other: "You lifted {n} motorbikes" },
-  { id: "car", kg: 1500, one: "You lifted {n} car", other: "You lifted {n} cars" },
-  { id: "elephant", kg: 6000, one: "You lifted {n} elephant", other: "You lifted {n} elephants" },
-  { id: "bus", kg: 12000, one: "You lifted {n} bus", other: "You lifted {n} buses" },
-  { id: "airplane", kg: 41000, one: "You lifted {n} plane", other: "You lifted {n} planes" },
-  { id: "whale", kg: 150000, one: "You lifted {n} blue whale", other: "You lifted {n} blue whales" },
+  { id: "cat", kg: 4, one: "{n} cat lifted!", other: "{n} cats lifted!", quip: "Not one of them was impressed." },
+  { id: "bicycle", kg: 15, one: "{n} bike lifted!", other: "{n} bikes lifted!", quip: "Leg day? Arms did the pedalling." },
+  { id: "fridge", kg: 90, one: "{n} fridge lifted!", other: "{n} fridges lifted!", quip: "Moving day, sorted." },
+  { id: "motorbike", kg: 110, one: "{n} motorbike lifted!", other: "{n} motorbikes lifted!", quip: "No kickstand needed." },
+  { id: "car", kg: 1500, one: "{n} car lifted!", other: "{n} cars lifted!", quip: "Who needs a tow truck?" },
+  { id: "elephant", kg: 6000, one: "{n} elephant lifted!", other: "{n} elephants lifted!", quip: "The whole herd felt that." },
+  { id: "bus", kg: 12000, one: "{n} bus lifted!", other: "{n} buses lifted!", quip: "Next stop: a new PR." },
+  { id: "airplane", kg: 41000, one: "{n} plane lifted!", other: "{n} planes lifted!", quip: "Cleared for takeoff." },
+  { id: "whale", kg: 150000, one: "{n} blue whale lifted!", other: "{n} blue whales lifted!", quip: "Strength, ocean sized." },
 ] as const;
 
 export type LiftObject = (typeof LIFT_OBJECTS)[number];
@@ -1699,7 +1703,7 @@ function clean(s: Scene) {
   const extra = opts.cleanExtra ?? "none";
   const compare = extra === "compare" ? liftComparison(data.volumeKg) : null;
   // Above the text: the muscle map, or the thing lifted with its line.
-  const extraH = extra === "muscles" ? CLEAN_MAP_H + 36 : compare ? CLEAN_OBJECT + 18 + 44 + 36 : 0;
+  const extraH = extra === "muscles" ? CLEAN_MAP_H + 36 : compare ? CLEAN_OBJECT + 18 + 52 + 12 + 32 + 40 : 0;
   // Line by line: the date, the title, the figures, then the handle and the mark when they show.
   const h = extraH + 28 + 24 + 72 + (title.length - 1) * 80 + 18 + 34 + (handle ? 16 + 30 : 0) + (showMark ? 34 + 40 : 0);
   const { x, top, align } = cleanBlockOrigin(position, h);
@@ -1746,9 +1750,12 @@ function clean(s: Scene) {
   } else if (compare) {
     drawLiftObject(ctx, compare.object.id, leftOf(CLEAN_OBJECT), y, CLEAN_OBJECT, VOLT);
     const n = compare.count.toLocaleString(t.locale, { maximumFractionDigits: 1 });
-    y += CLEAN_OBJECT + 18 + 44;
-    text(s, t.n(compare.count, compare.object.one, compare.object.other, { n }), x, y, { size: 44, weight: 800, color: VOLT, align, maxWidth: inner });
-    y += 36;
+    // The count, loud; then a line for the fun of it.
+    y += CLEAN_OBJECT + 18 + 52;
+    text(s, t.n(compare.count, compare.object.one, compare.object.other, { n }), x, y, { size: 56, weight: 800, color: VOLT, align, maxWidth: inner, tracking: -1 });
+    y += 12 + 32;
+    text(s, t(compare.object.quip), x, y, { size: 32, weight: 600, family: "grotesk", color: "rgba(244, 244, 245, 0.9)", align, maxWidth: inner });
+    y += 40;
   }
   y += 28;
   text(s, dateLabel(data), x, y, { size: 28, weight: 500, family: "mono", color: "rgba(244, 244, 245, 0.78)", align, tracking: 1 });
