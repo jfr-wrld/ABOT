@@ -5,6 +5,7 @@ import type { Exercise, WorkoutSession } from "@/types/workout";
 import { RangeTabs } from "./RangeTabs";
 import { AXES, AXIS_LABEL, IDEAL_SHARE, MIN_SETS, analyzeSymmetry, type Axis } from "@/lib/symmetry-analyzer";
 import { useT } from "@/i18n";
+import { point, poly } from "./radar-geometry";
 import { useEntitlements } from "@/store/useEntitlements";
 import { ProBadge, ProLock } from "@/components/paywall/ProBadge";
 
@@ -13,11 +14,6 @@ const R = 100;
 /** A balanced share sits at two thirds of the radius; 1.5x the ideal reaches the rim. */
 const CAP = 1.5;
 
-const point = (i: number, r: number) => {
-  const a = ((i * 60 - 90) * Math.PI) / 180;
-  return [Math.cos(a) * r, Math.sin(a) * r] as const;
-};
-const poly = (rs: number[]) => rs.map((r, i) => point(i, r).map((v) => v.toFixed(1)).join(",")).join(" ");
 
 const GRADE_TEXT = { OPTIMAL: "Optimal", BALANCED: "Balanced", IMBALANCED: "Imbalanced", CRITICAL: "Critical" } as const;
 /** Good grades in the accent, a lean in the caution orange, a real gap in the failure red: the app's own meanings. */

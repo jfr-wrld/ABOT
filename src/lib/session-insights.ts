@@ -1,5 +1,6 @@
 import type { Exercise, MuscleGroup, PersonalRecord, WorkoutSession } from "@/types/workout";
 import { isWorkingSet, recordsBeaten } from "./calc";
+import { AXES, AXIS_MUSCLES, type Axis } from "./symmetry-analyzer";
 
 /** Primary muscles by working sets, and secondary ones that were not also primary. */
 export function workedMuscles(s: WorkoutSession, byId: Record<string, Exercise>): { primary: MuscleGroup[]; secondary: MuscleGroup[] } {
@@ -14,6 +15,45 @@ export function workedMuscles(s: WorkoutSession, byId: Record<string, Exercise>)
   }
   const primary = [...prim.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => m);
   return { primary, secondary: [...sec].filter((m) => !prim.has(m)) };
+}
+
+export interface MuscleWork {
+  /** Every muscle the working sets reached, most worked first; `primary` when it was a main muscle of any of them. */
+  muscles: { muscle: MuscleGroup; sets: number; primary: boolean }[];
+  /** Sets per balance axis; each set counts once per axis, at its strongest muscle there. */
+  axes: Record<Axis, number>;
+  dominant: Axis | null;
+}
+
+/**
+ * How much each muscle has worked in one session, by the balance radar's rule
+ * (lib/symmetry-analyzer): a working set counts 1 for its main muscles and 0.5 for its helpers.
+ * Unlike that radar it reads a workout still running, so the live sheet can show it.
+ */
+export function muscleWork(s: WorkoutSession, byId: Record<string, Exercise>): MuscleWork {
+  const sets = new Map<MuscleGroup, number>();
+  const main = new Set<MuscleGroup>();
+  const axes = Object.fromEntries(AXES.map((a) => [a, 0])) as Record<Axis, number>;
+  for (const ex of s.exercises) {
+    const def = byId[ex.exerciseId];
+    const n = ex.sets.filter(isWorkingSet).length;
+    if (!def || !n) continue;
+    const weight = new Map<MuscleGroup, number>();
+    for (const m of def.secondaryMuscles) weight.set(m, 0.5);
+    for (const m of def.primaryMuscles) {
+      weight.set(m, 1);
+      main.add(m);
+    }
+    for (const [m, w] of weight) sets.set(m, (sets.get(m) ?? 0) + w * n);
+    const full = weight.has("full_body");
+    for (const a of AXES) axes[a] += n * Math.max(full ? 0.5 : 0, ...AXIS_MUSCLES[a].map((m) => weight.get(m) ?? 0));
+  }
+  const muscles = [...sets.entries()]
+    .map(([muscle, n]) => ({ muscle, sets: n, primary: main.has(muscle) }))
+    .sort((a, b) => b.sets - a.sets || Number(b.primary) - Number(a.primary));
+  const top = Math.max(0, ...AXES.map((a) => axes[a]));
+  const dominant = top > 0 ? AXES.find((a) => axes[a] === top)! : null;
+  return { muscles, axes, dominant };
 }
 
 /**

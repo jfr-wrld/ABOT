@@ -40,6 +40,26 @@ test("the header's muscle map fills in as sets are ticked", async ({ page }) => 
   await expect(sheet.getByRole("listitem").filter({ hasText: "Biceps" })).toBeVisible();
 });
 
+test("the muscles sheet shows the work as a radar or as bars, and keeps the choice", async ({ page }) => {
+  await logSet(page, 1, null, "8");
+  await page.getByRole("button", { name: /^Muscles worked: / }).click();
+  const sheet = page.getByRole("dialog", { name: "Muscles worked" });
+  const views = sheet.getByRole("group", { name: "Show muscles as" });
+  await expect(views.getByRole("button", { name: "Map" })).toHaveAttribute("aria-pressed", "true");
+
+  await views.getByRole("button", { name: "Radar" }).click();
+  await expect(sheet.getByText("Most worked: Pull")).toBeVisible();
+
+  await views.getByRole("button", { name: "Bar" }).click();
+  const bars = sheet.getByRole("list", { name: "Sets per muscle" }).getByRole("listitem");
+  await expect(bars.first()).toContainText("Lats");
+  await expect(bars.first()).toContainText("1");
+
+  await page.reload();
+  await page.getByRole("button", { name: /^Muscles worked: / }).click();
+  await expect(page.getByRole("dialog", { name: "Muscles worked" }).getByRole("group", { name: "Show muscles as" }).getByRole("button", { name: "Bar" })).toHaveAttribute("aria-pressed", "true");
+});
+
 test("an added set starts with the last set's numbers", async ({ page }) => {
   await page.getByRole("button", { name: "Options for Pull Up" }).press("Escape").catch(() => {});
   await logSet(page, 1, null, "8");

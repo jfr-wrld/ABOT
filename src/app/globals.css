@@ -508,6 +508,13 @@
   }
 }
 
+/* A bar in the muscles sheet growing to its length, on the compositor (scale, not width). */
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
 /* Rest left, as one compositor animation from the share left now down to zero. */
 @keyframes rest-bar {
   from {
