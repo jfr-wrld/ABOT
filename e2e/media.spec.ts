@@ -109,6 +109,8 @@ test("a TikTok share link is opened once and saved as the full video link", asyn
   answer = { status: 200, body: { embed_product_id: "7301234567890123456", author_unique_id: "coach.ari" } };
   await media.getByRole("button", { name: "Save video" }).click();
   await expect(media.locator("iframe")).toHaveAttribute("src", /tiktok\.com\/player\/v1\/7301234567890123456/);
+  // If TikTok will not play inside the app, the saved link opens it outside.
+  await expect(media.getByRole("link", { name: "Open in TikTok" })).toHaveAttribute("href", "https://www.tiktok.com/@coach.ari/video/7301234567890123456");
   await page.reload();
   await page.getByRole("tab", { name: "How to" }).click();
   await expect(page.locator("iframe")).toHaveAttribute("src", /7301234567890123456/);

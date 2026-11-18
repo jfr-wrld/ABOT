@@ -3,6 +3,7 @@ package app.abot.gym;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.webkit.CookieManager;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
@@ -26,6 +27,10 @@ public class MainActivity extends BridgeActivity {
         reopenPageAfterRestart(savedInstanceState);
         // The rest timer beeps from a timer, not a tap; the WebView would otherwise mute it.
         getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
+        // The TikTok and YouTube players run in an iframe from their own site, so their cookies are
+        // third-party here, which WebView refuses by default (Chrome does not). Without its cookie
+        // the TikTok player shows "Unable to load player".
+        CookieManager.getInstance().setAcceptThirdPartyCookies(getBridge().getWebView(), true);
         openWorkoutIfAsked(getIntent());
     }
 

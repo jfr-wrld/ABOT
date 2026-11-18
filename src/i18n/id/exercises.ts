@@ -143,6 +143,7 @@ export const exercises: Record<string, string> = {
   "Remove custom video": "Hapus video sendiri",
   "Search YouTube": "Cari di YouTube",
   "Search TikTok": "Cari di TikTok",
+  "Open in TikTok": "Buka di TikTok",
 
   // Muscle map
   none: "tidak ada",

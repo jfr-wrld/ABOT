@@ -236,6 +236,11 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
   const [draft, setDraft] = useState(override ?? "");
   const [error, setError] = useState<string | null>(null);
   const video = sourceFor(exercise, override);
+  // The saved full link, for "Open in TikTok" when TikTok will not play inside the app.
+  const tiktokLink =
+    video?.kind === "tiktok"
+      ? [override, exercise.media.customVideoUrl, exercise.media.tiktokUrl].find((c) => c && parseVideoUrl(c)?.kind === "tiktok")?.trim()
+      : undefined;
   const links = searchLinks(exercise.name);
   const inputId = useId();
   const t = useT();
@@ -298,6 +303,17 @@ function VideoPanel({ exercise }: { exercise: Exercise }) {
             className="h-full w-full border-0"
           />
         </div>
+      )}
+      {online && tiktokLink && (
+        <a
+          href={tiktokLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mx-auto inline-flex min-h-11 items-center gap-2 px-3 text-sm font-semibold text-text-muted hover:text-text"
+        >
+          {t("Open in TikTok")}
+          <ExternalLink aria-hidden="true" size={16} />
+        </a>
       )}
 
       {editing ? (
