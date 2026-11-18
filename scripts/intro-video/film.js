@@ -1091,7 +1091,7 @@ function outro(t) {
     ctx.shadowBlur = 0;
     text("Download", 0, 22, { size: 60, weight: 800, color: OBS, alpha: p });
     ctx.restore();
-    text("abot-app.vercel.app", W / 2, 1640, { size: 40, weight: 700, family: MONO, color: VOLT, alpha: clamp(kb) * p });
+    text("abotapp.web.id", W / 2, 1640, { size: 40, weight: 700, family: MONO, color: VOLT, alpha: clamp(kb) * p });
   }
   ctx.globalAlpha = 1;
   flash(t, T.outroHit, 0.4, 0.5);
