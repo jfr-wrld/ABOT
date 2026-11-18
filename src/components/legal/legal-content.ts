@@ -28,7 +28,7 @@ export const PRIVACY: Record<LegalLang, LegalDoc> = {
     sections: [
       {
         heading: "Who we are",
-        blocks: [{ p: `ABOT ("we") runs the ABOT app on the web (abot-app.vercel.app) and on Android. Questions about privacy: ${CONTACT_EMAIL}.` }],
+        blocks: [{ p: `ABOT ("we") runs the ABOT app on the web (abotapp.web.id) and on Android. Questions about privacy: ${CONTACT_EMAIL}.` }],
       },
       {
         heading: "What stays on your phone",
@@ -135,7 +135,7 @@ export const PRIVACY: Record<LegalLang, LegalDoc> = {
     sections: [
       {
         heading: "Siapa kami",
-        blocks: [{ p: `ABOT ("kami") menjalankan aplikasi ABOT di web (abot-app.vercel.app) dan Android. Pertanyaan soal privasi: ${CONTACT_EMAIL}.` }],
+        blocks: [{ p: `ABOT ("kami") menjalankan aplikasi ABOT di web (abotapp.web.id) dan Android. Pertanyaan soal privasi: ${CONTACT_EMAIL}.` }],
       },
       {
         heading: "Yang tetap di HP-mu",

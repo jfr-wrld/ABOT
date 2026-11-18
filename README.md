@@ -226,8 +226,8 @@ in again after installing.
   details on Midtrans' page, never in ABOT.
 - The Android app asks GitHub for a newer release when it starts (and at most every 30 minutes
   when it comes back), and downloads an update only when you tap Update now.
-- The full texts: [Privacy Policy](https://abot-app.vercel.app/privacy) and
-  [Terms of Use](https://abot-app.vercel.app/terms).
+- The full texts: [Privacy Policy](https://abotapp.web.id/privacy) and
+  [Terms of Use](https://abotapp.web.id/terms).
 
 ## Build from source
 
